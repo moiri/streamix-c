@@ -1,1 +1,5 @@
 *.swp
+*.tab.c
+*.tab.h
+*.yy.c
+parser

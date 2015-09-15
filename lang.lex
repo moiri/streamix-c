@@ -12,7 +12,9 @@
  */
 
 %{
-
+    #include "lang.tab.h"  // to get the token types that we return
+    #define YY_DECL extern int yylex()
+    void yyerror (char const *);
 %}
 
 %%
@@ -27,11 +29,11 @@ box             return BOX;
 wrap            return WRAP;
 stateless       return STATELESS;
 decoupled       return DECOUPLED;
-sync            return sync;
+sync            return SYNC;
 
     /* identifiers */
 [a-zA-Z_$][a-zA-Z_$0-9]* {
-                yylval.string = ;
+                yylval.sval = strdup(yytext);
                 return IDENTIFIER;
 }
 
@@ -45,8 +47,6 @@ sync            return sync;
 .               yyerror("invalid character");
 %%
 
-main()
-{
-  yylex();
+void yyerror(const char *s) {
+    fprintf(stdout, "%s\n", s);
 }
-
