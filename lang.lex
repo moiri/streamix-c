@@ -18,6 +18,9 @@
 %}
 
 %%
+    /* skip whitespaces and CR */
+[ \t\n]         ;
+
     /* keywords */
 on              return ON;
 up              return UP;
@@ -38,10 +41,7 @@ sync            return SYNC;
 }
 
     /* operators */
-[.|(){};:,]     return *yytext;
-
-    /* skip whitespaces */
-[ \t]           ;
+[.|(){}:,]     return *yytext;
 
     /* anything else is an error */
 .               yyerror("invalid character");

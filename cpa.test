@@ -1,0 +1,46 @@
+box RS (speed: out up) on func_rs
+box B (break_abs: in up) on func_b
+box ABS (
+    speed: in down,
+    break_abs: out down,
+    break_cmd: in up,
+    block: out up,
+    abs: out up,
+    dc: in up
+) on func_abs
+box MB (
+    break_cmd: out down,
+    block: in down
+) on func_mb
+box DC (
+    abs: in down,
+    dc: out down,
+    dc: out up,
+    cpa: in up,
+    dist: in side
+) on func_dc
+box DS (
+    dist: out up,
+    dist: out side
+) on func_ds
+box CPA (
+    dist: in down,
+    dc: in down,
+    cpa: out down,
+    car_l_in: in side,
+    car_l_out: out side,
+    car_r_in: in side,
+    car_r_out: out side
+) on func_cpa
+
+wrap W {
+    up {
+        car_in (car_l_in) : in,
+        car_out (car_l_out) : out
+    },
+    down {
+        car_in (car_r_in) : in,
+        car_out (car_r_out) : out
+    },
+    side {}
+} on ((RS|B).ABS.(DC|MB)|DS).CPA

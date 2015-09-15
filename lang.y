@@ -2,7 +2,6 @@
 /* Prologue */
     #include <stdio.h>
     extern int yylex();
-    extern int yyparse();
     extern int yyerror(const char *);
     extern FILE *yyin;
 %}
@@ -13,23 +12,29 @@
     float fval;
     char *sval;
 }
-%token IDENTIFIER
 %token ON UP DOWN SIDE IN OUT BOX WRAP STATELESS DECOUPLED SYNC
+%token <sval> IDENTIFIER
 %left '|'
 %left '.'
 
 %%
 /* Grammar rules */
+stmts:
+    %empty
+|   stmts stmt
+;
+
 stmt:
-    ';'
-|   net ';'
+    net         { fprintf(stdout, "net\n"); }
 |   decl_box
 |   decl_wrapper
 ;
 
 /* box declarartion */
 decl_box:
-    opt_state BOX IDENTIFIER '(' decl_port opt_decl_port ')' ON IDENTIFIER
+    opt_state BOX IDENTIFIER '(' decl_port opt_decl_port ')' ON IDENTIFIER {
+        fprintf(stdout, "box %s\n", $3);
+    }
 ;
 
 opt_state:
@@ -43,8 +48,8 @@ opt_decl_port:
 ;
 
 decl_port:
-    IDENTIFIER ':' port_mode port_class
-|   IDENTIFIER ':' SYNC '(' syncport opt_syncport ')'
+    IDENTIFIER ':' port_mode port_class                 { fprintf(stdout, " port %s\n", $1); }
+|   IDENTIFIER ':' SYNC '(' syncport opt_syncport ')'   { fprintf(stdout, " syncport\n"); }
 ;
 
 opt_syncport:
@@ -74,10 +79,10 @@ port_class:
 
 /* net declaration */
 net:
-    IDENTIFIER
-|   net '.' net
-|   net '|' net
-|   '(' net ')'
+    IDENTIFIER  { fprintf(stdout, "  ID\n"); }
+|   net '.' net { fprintf(stdout, " Serial combination\n"); }
+|   net '|' net { fprintf(stdout, " Parallel combination\n"); }
+|   '(' net ')' { fprintf(stdout, " Subexpression\n"); }
 ;
 
 /* wrapper declaration */
@@ -107,10 +112,14 @@ decl_wport:
 /* Epilogue */
 int main(int argc, char **argv) {
     // open a file handle to a particular file:
-    FILE *myfile = fopen("a.lang.file", "r");
+    if (argc != 2) {
+        fprintf(stdout, "Missing argument!\n");
+        return -1;
+    }
+    FILE *myfile = fopen(argv[1], "r");
     // make sure it is valid:
     if (!myfile) {
-        fprintf(stdout, "I can't open a.lang.file!\n");
+        fprintf(stdout, "Cannot open file '%s'!\n", argv[1]);
         return -1;
     }
     // set flex to read from it instead of defaulting to STDIN:
