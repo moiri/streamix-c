@@ -12,14 +12,17 @@
  */
 
 %{
+    #include <stdio.h>
     #include "lang.tab.h"  // to get the token types that we return
     #define YY_DECL extern int yylex()
     void yyerror (char const *);
+    int num_lines = 0;
+    extern char* src_file_name;
 %}
-
 %%
     /* skip whitespaces and CR */
-[ \t\n]         ;
+[ \t]           ;
+\n              num_lines++;
 
     /* keywords */
 on              return ON;
@@ -48,5 +51,5 @@ sync            return SYNC;
 %%
 
 void yyerror(const char *s) {
-    fprintf(stdout, "%s\n", s);
+    printf("%s:%d: %s\n", src_file_name, num_lines, s);
 }

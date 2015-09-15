@@ -33,7 +33,7 @@ box CPA (
     car_r_out: out side
 ) on func_cpa
 
-wrap W {
+wrap Car {
     up {
         car_in (car_l_in) : in,
         car_out (car_l_out) : out
@@ -44,3 +44,5 @@ wrap W {
     },
     side {}
 } on ((RS|B).ABS.(DC|MB)|DS).CPA
+
+Car.Car.Car

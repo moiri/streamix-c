@@ -1,15 +1,31 @@
 %{
 /* Prologue */
     #include <stdio.h>
+    #include "symtab.h"
     extern int yylex();
+    extern int yyparse();
     extern int yyerror(const char *);
     extern FILE *yyin;
+    char* src_file_name;
+    void install ( char *sym_name ) {
+        symrec *s;
+        s = getsym (sym_name);
+        if (s == 0)
+            s = putsym (sym_name);
+        else
+            printf( "%s is already defined\n", sym_name );
+    }
+    void context_check( char *sym_name ) {
+        if ( getsym( sym_name ) == 0 )
+            printf( "%s is an undeclared identifier\n", sym_name );
+    }
 %}
 
 /* Bison declarations */
+%define parse.error verbose
+%define parse.lac full
 %union {
     int ival;
-    float fval;
     char *sval;
 }
 %token ON UP DOWN SIDE IN OUT BOX WRAP STATELESS DECOUPLED SYNC
@@ -25,7 +41,7 @@ stmts:
 ;
 
 stmt:
-    net         { fprintf(stdout, "net\n"); }
+    net
 |   decl_box
 |   decl_wrapper
 ;
@@ -33,7 +49,7 @@ stmt:
 /* box declarartion */
 decl_box:
     opt_state BOX IDENTIFIER '(' decl_port opt_decl_port ')' ON IDENTIFIER {
-        fprintf(stdout, "box %s\n", $3);
+        install($3);
     }
 ;
 
@@ -48,8 +64,8 @@ opt_decl_port:
 ;
 
 decl_port:
-    IDENTIFIER ':' port_mode port_class                 { fprintf(stdout, " port %s\n", $1); }
-|   IDENTIFIER ':' SYNC '(' syncport opt_syncport ')'   { fprintf(stdout, " syncport\n"); }
+    IDENTIFIER ':' port_mode port_class
+|   IDENTIFIER ':' SYNC '(' syncport opt_syncport ')'
 ;
 
 opt_syncport:
@@ -79,10 +95,10 @@ port_class:
 
 /* net declaration */
 net:
-    IDENTIFIER  { fprintf(stdout, "  ID\n"); }
-|   net '.' net { fprintf(stdout, " Serial combination\n"); }
-|   net '|' net { fprintf(stdout, " Parallel combination\n"); }
-|   '(' net ')' { fprintf(stdout, " Subexpression\n"); }
+    IDENTIFIER  { context_check($1); }
+|   net '.' net
+|   net '|' net
+|   '(' net ')'
 ;
 
 /* wrapper declaration */
@@ -92,6 +108,7 @@ decl_wrapper:
         DOWN '{' wportlist '}' ','
         SIDE '{' wportlist '}'
     '}' ON net
+    { install($2); }
 ;
 
 wportlist:
@@ -113,13 +130,14 @@ decl_wport:
 int main(int argc, char **argv) {
     // open a file handle to a particular file:
     if (argc != 2) {
-        fprintf(stdout, "Missing argument!\n");
+        printf("Missing argument!\n");
         return -1;
     }
-    FILE *myfile = fopen(argv[1], "r");
+    src_file_name = argv[1];
+    FILE *myfile = fopen(src_file_name, "r");
     // make sure it is valid:
     if (!myfile) {
-        fprintf(stdout, "Cannot open file '%s'!\n", argv[1]);
+        printf("Cannot open file '%s'!\n", src_file_name);
         return -1;
     }
     // set flex to read from it instead of defaulting to STDIN:
