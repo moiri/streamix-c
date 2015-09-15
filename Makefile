@@ -13,5 +13,5 @@ $(PROJECT).tab.c $(PROJECT).tab.h: $(PROJECT).y
 clean:
 	rm -f $(PROJECT).tab.c
 	rm -f $(PROJECT).tab.h
-	rm -f $(PROJECT)
+	rm -f $(PARSER)
 	rm -f lex.yy.c
