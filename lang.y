@@ -2,10 +2,12 @@
 /* Prologue */
     #include <stdio.h>
     #include "symtab.h"
+    #include <string.h>
     extern int yylex();
     extern int yyparse();
     extern int yyerror(const char *);
     extern FILE *yyin;
+    extern int num_errors;
     char* src_file_name;
     void install ( char *sym_name ) {
         symrec *s;
@@ -13,12 +15,13 @@
         if (s == 0)
             s = putsym (sym_name);
         else
-            printf( "%s is already defined\n", sym_name );
+            yyerror(strcat(sym_name, " is already defined"));
     }
     void context_check( char *sym_name ) {
         if ( getsym( sym_name ) == 0 )
-            printf( "%s is an undeclared identifier\n", sym_name );
+            yyerror(strcat(sym_name, " is an undeclared identifier"));
     }
+    
 %}
 
 /* Bison declarations */
@@ -147,4 +150,6 @@ int main(int argc, char **argv) {
     do {
         yyparse();
     } while (!feof(yyin));
+
+    if (num_errors > 0) printf(" Error count: %d\n", num_errors);
 }

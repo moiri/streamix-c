@@ -16,7 +16,8 @@
     #include "lang.tab.h"  // to get the token types that we return
     #define YY_DECL extern int yylex()
     void yyerror (char const *);
-    int num_lines = 0;
+    int num_lines = 1;
+    int num_errors = 0;
     extern char* src_file_name;
 %}
 %%
@@ -51,5 +52,6 @@ sync            return SYNC;
 %%
 
 void yyerror(const char *s) {
-    printf("%s:%d: %s\n", src_file_name, num_lines, s);
+    num_errors++;
+    printf("%s:%d: error: %s\n", src_file_name, num_lines, s);
 }
