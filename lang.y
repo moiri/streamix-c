@@ -1,3 +1,12 @@
+/* 
+ * The grammar of the coordination language xyz
+ *
+ * @file    lang.y
+ * @author  Simon Maurer
+ *
+ * */
+
+
 %{
 /* Prologue */
     #include <stdio.h>
@@ -9,19 +18,30 @@
     extern FILE *yyin;
     extern int num_errors;
     char* src_file_name;
-    void install ( char *sym_name ) {
+    void install ( char *name, int scope ) {
         symrec *s;
-        s = getsym (sym_name);
+        s = getsym_net (name, scope);
         if (s == 0)
-            s = putsym (sym_name);
-        else
-            yyerror(strcat(sym_name, " is already defined"));
+            s = putsym_net (name, scope);
+        else {
+            const char *error = " is already defined in this scope";
+            char msg[strlen(name) + strlen(error)];
+            strcpy(msg, name);
+            strcat(msg, error);
+            yyerror(msg);
+        }
     }
-    void context_check( char *sym_name ) {
-        if ( getsym( sym_name ) == 0 )
-            yyerror(strcat(sym_name, " is an undeclared identifier"));
+    void context_check ( char *name, int scope ) {
+        symrec *s;
+        s = getsym_net (name, scope);
+        if ( s == 0 ) {
+            const char *error = " is an undeclared identifier in this scope";
+            char msg[strlen(name) + strlen(error)];
+            strcpy(msg, name);
+            strcat(msg, error);
+            yyerror(msg);
+        }
     }
-    
 %}
 
 /* Bison declarations */
@@ -52,7 +72,7 @@ stmt:
 /* box declarartion */
 decl_box:
     opt_state BOX IDENTIFIER '(' decl_port opt_decl_port ')' ON IDENTIFIER {
-        install($3);
+        install($3, 1);
     }
 ;
 
@@ -98,7 +118,7 @@ port_class:
 
 /* net declaration */
 net:
-    IDENTIFIER  { context_check($1); }
+    IDENTIFIER  { context_check($1, 1); }
 |   net '.' net
 |   net '|' net
 |   '(' net ')'
@@ -106,12 +126,21 @@ net:
 
 /* wrapper declaration */
 decl_wrapper:
-    WRAP IDENTIFIER '{'
-        UP '{' wportlist '}' ','
-        DOWN '{' wportlist '}' ','
-        SIDE '{' wportlist '}'
-    '}' ON net
-    { install($2); }
+    WRAP IDENTIFIER '{' decl_upport ',' decl_downport ',' decl_sideport '}' ON net {
+        install($2, 1);
+    }
+;
+
+decl_upport:
+    UP '{' wportlist '}'
+;
+
+decl_downport:
+    DOWN '{' wportlist '}'
+;
+
+decl_sideport:
+    SIDE '{' wportlist '}'
 ;
 
 wportlist:

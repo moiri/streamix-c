@@ -1,24 +1,38 @@
 #include <stdlib.h> /* For malloc in symbol table */
 #include <string.h> /* For strcmp in symbol table */
+#include <stdio.h>
 #include "symtab.h"
 
 symrec *sym_table = (symrec *)0;
 
-symrec *putsym ( char *sym_name ) {
+symrec *putsym_net ( char *name, int scope ) {
     symrec *ptr;
+    /* printf("put %s", name); */
     ptr = (symrec *) malloc (sizeof(symrec));
-    ptr->name = (char *) malloc (strlen(sym_name)+1);
-    strcpy (ptr->name, sym_name);
+    ptr->rec.rec_net.name = (char *) malloc (strlen(name)+1);
+    strcpy (ptr->rec.rec_net.name, name);
+    /* printf(" -> %p\n", ptr); */
+    ptr->rec.rec_net.scope = scope;
     ptr->next = (struct symrec *)sym_table;
     sym_table = ptr;
+    /* printf("(%p)", ptr->next); */
+    /* printf(" sym_table: %p\n", sym_table); */
     return ptr;
 }
 
-symrec *getsym ( char *sym_name ) {
+symrec *getsym_net ( char *name, int scope ) {
     symrec *ptr;
-    for (ptr = sym_table; ptr != (symrec *) 0;
-            ptr = (symrec *)ptr->next)
-        if (strcmp (ptr->name, sym_name) == 0)
+    /* printf("get %s <-? ", name); */
+    for (ptr = sym_table; ptr != (symrec *)0; ptr = ptr->next) {
+        /* printf("%p / ", ptr); */
+        if ((strcmp (ptr->rec.rec_net.name, name) == 0)
+            && (ptr->rec.rec_net.scope == scope)) {
+            /* printf(" => hit: %p\n", ptr); */
+            /* printf(" sym_table: %p\n", sym_table); */
             return ptr;
+        }
+    }
+    /* printf(" => no hit: %p\n", ptr); */
+    /* printf(" sym_table: %p\n", sym_table); */
     return 0;
 }
