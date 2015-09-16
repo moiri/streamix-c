@@ -32,17 +32,21 @@ box CPA (
     car_r_in: in side,
     car_r_out: out side
 ) on func_cpa
+box A (
+    dist: out down,
+    sync {
+        a: up,
+        b: up,
+        a: down decoupled,
+        c: side
+    }
+) on func_a
 
 wrap Car {
-    up {
-        car_in (car_l_in) : in,
-        car_out (car_l_out) : out
-    },
-    down {
-        car_in (car_r_in) : in,
-        car_out (car_r_out) : out
-    },
-    side {}
+    car_in (car_l_in) : in up,
+    car_out (car_l_out) : out up,
+    car_in (car_r_in) : in down,
+    car_out (car_r_out) : out down
 } on ((RS|B).ABS.(DC|MB)|DS).CPA
 
 Car.Car.Car

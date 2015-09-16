@@ -22,11 +22,11 @@
 
     /* keywords */
 on              return ON;
-up              return UP;
-down            return DOWN;
-side            return SIDE;
-in              return IN;
-out             return OUT;
+up              {yylval.ival = 0;return UP;}
+down            {yylval.ival = 1;return DOWN;}
+side            {yylval.ival = 2;return SIDE;}
+in              {yylval.ival = 0;return IN;}
+out             {yylval.ival = 1;return OUT;}
 box             return BOX;
 wrap            return WRAP;
 stateless       return STATELESS;

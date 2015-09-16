@@ -18,11 +18,22 @@
     extern FILE *yyin;
     extern int num_errors;
     char* src_file_name;
-    void install ( char *name, int scope ) {
-        symrec *s;
-        s = getsym_net (name, scope);
-        if (s == 0)
-            s = putsym_net (name, scope);
+    int port_mode, port_class;
+    void install ( char *name, int type ) {
+        if (getsym_net (name) == 0)
+            putsym_net (name, type);
+        else {
+            const char *error = " is already defined";
+            char msg[strlen(name) + strlen(error)];
+            strcpy(msg, name);
+            strcat(msg, error);
+            yyerror(msg);
+        }
+    }
+    void install_port ( char *name, int pclass, int mode ) {
+        printf("install port %s, %d, %d\n", name, pclass, mode);
+        if (getsym_port (name, pclass, mode) == 0)
+            putsym_port (name, pclass, mode);
         else {
             const char *error = " is already defined in this scope";
             char msg[strlen(name) + strlen(error)];
@@ -31,11 +42,18 @@
             yyerror(msg);
         }
     }
-    void context_check ( char *name, int scope ) {
-        symrec *s;
-        s = getsym_net (name, scope);
-        if ( s == 0 ) {
-            const char *error = " is an undeclared identifier in this scope";
+    void context_check ( char *name ) {
+        if (getsym_net (name) == 0) {
+            const char *error = " is an undeclared identifier";
+            char msg[strlen(name) + strlen(error)];
+            strcpy(msg, name);
+            strcat(msg, error);
+            yyerror(msg);
+        }
+    }
+    void context_check_port ( char *name ) {
+        if (getsym_port (name, -1, -1) == 0) {
+            const char *error = " is an undeclared identifier";
             char msg[strlen(name) + strlen(error)];
             strcpy(msg, name);
             strcat(msg, error);
@@ -51,7 +69,8 @@
     int ival;
     char *sval;
 }
-%token ON UP DOWN SIDE IN OUT BOX WRAP STATELESS DECOUPLED SYNC
+%token ON BOX WRAP STATELESS DECOUPLED SYNC
+%token <ival> UP DOWN SIDE IN OUT
 %token <sval> IDENTIFIER
 %left '|'
 %left '.'
@@ -72,7 +91,7 @@ stmt:
 /* box declarartion */
 decl_box:
     opt_state BOX IDENTIFIER '(' decl_port opt_decl_port ')' ON IDENTIFIER {
-        install($3, 1);
+        install($3, BOX);
     }
 ;
 
@@ -87,8 +106,8 @@ opt_decl_port:
 ;
 
 decl_port:
-    IDENTIFIER ':' port_mode port_class
-|   IDENTIFIER ':' SYNC '(' syncport opt_syncport ')'
+    IDENTIFIER ':' port_mode port_class {install_port($1, port_mode, port_class);}
+|   SYNC '{' syncport opt_syncport '}'
 ;
 
 opt_syncport:
@@ -97,7 +116,7 @@ opt_syncport:
 ;
 
 syncport:
-    IDENTIFIER ':' port_class opt_decoupled
+    IDENTIFIER ':' port_class opt_decoupled {install_port($1, 0, port_class);}
 ;
 
 opt_decoupled:
@@ -106,19 +125,19 @@ opt_decoupled:
 ;
 
 port_mode:
-    IN
-|   OUT
+    IN   {port_mode = $1;}
+|   OUT  {port_mode = $1;}
 ;
 
 port_class:
-    UP
-|   DOWN
-|   SIDE
+    UP   {port_class = $1;}
+|   DOWN {port_class = $1;}
+|   SIDE {port_class = $1;}
 ;
 
 /* net declaration */
 net:
-    IDENTIFIER  { context_check($1, 1); }
+    IDENTIFIER  { context_check($1); }
 |   net '.' net
 |   net '|' net
 |   '(' net ')'
@@ -126,21 +145,9 @@ net:
 
 /* wrapper declaration */
 decl_wrapper:
-    WRAP IDENTIFIER '{' decl_upport ',' decl_downport ',' decl_sideport '}' ON net {
-        install($2, 1);
+    WRAP IDENTIFIER '{' wportlist '}' ON net {
+        install($2, WRAP);
     }
-;
-
-decl_upport:
-    UP '{' wportlist '}'
-;
-
-decl_downport:
-    DOWN '{' wportlist '}'
-;
-
-decl_sideport:
-    SIDE '{' wportlist '}'
 ;
 
 wportlist:
@@ -154,7 +161,10 @@ opt_decl_wport:
 ;
 
 decl_wport:
-    IDENTIFIER '(' IDENTIFIER ')' ':' port_mode
+    IDENTIFIER '(' IDENTIFIER ')' ':' port_mode port_class {
+        install_port($1, port_mode, port_class);
+        context_check_port($3);
+    }
 ;
 
 %%
