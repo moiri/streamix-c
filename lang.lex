@@ -9,6 +9,7 @@
 %{
     #include <stdio.h>
     #include "lang.tab.h"  // to get the token types that we return
+    #include "defines.h"
     #define YY_DECL extern int yylex()
     extern int yyerror(const char *);
 %}
@@ -19,13 +20,13 @@
 
     /* keywords */
 on              return ON;
-up              {yylval.ival = 0;return UP;}
-down            {yylval.ival = 1;return DOWN;}
-side            {yylval.ival = 2;return SIDE;}
-in              {yylval.ival = 0;return IN;}
-out             {yylval.ival = 1;return OUT;}
-box             {yylval.ival = 0;return BOX;}
-wrap            {yylval.ival = 1;return WRAP;}
+up              {yylval.ival = VAL_UP;return UP;}
+down            {yylval.ival = VAL_DOWN;return DOWN;}
+side            {yylval.ival = VAL_SIDE;return SIDE;}
+in              {yylval.ival = VAL_IN;return IN;}
+out             {yylval.ival = VAL_OUT;return OUT;}
+box             {yylval.ival = VAL_BOX;return BOX;}
+wrap            {yylval.ival = VAL_WRAP;return WRAP;}
 stateless       return STATELESS;
 decoupled       return DECOUPLED;
 sync            return SYNC;
