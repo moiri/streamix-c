@@ -10,15 +10,12 @@
     #include <stdio.h>
     #include "lang.tab.h"  // to get the token types that we return
     #define YY_DECL extern int yylex()
-    void yyerror (char const *);
-    int num_lines = 1;
-    int num_errors = 0;
-    extern char* src_file_name;
+    extern int yyerror(const char *);
 %}
 %%
     /* skip whitespaces and CR */
 [ \t]           ;
-\n              num_lines++;
+\n              ++yylloc.last_line;
 
     /* keywords */
 on              return ON;
@@ -27,8 +24,8 @@ down            {yylval.ival = 1;return DOWN;}
 side            {yylval.ival = 2;return SIDE;}
 in              {yylval.ival = 0;return IN;}
 out             {yylval.ival = 1;return OUT;}
-box             return BOX;
-wrap            return WRAP;
+box             {yylval.ival = 0;return BOX;}
+wrap            {yylval.ival = 1;return WRAP;}
 stateless       return STATELESS;
 decoupled       return DECOUPLED;
 sync            return SYNC;
@@ -46,7 +43,3 @@ sync            return SYNC;
 .               yyerror("invalid character");
 %%
 
-void yyerror(const char *s) {
-    num_errors++;
-    printf("%s:%d: error: %s\n", src_file_name, num_lines, s);
-}

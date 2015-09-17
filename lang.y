@@ -6,7 +6,6 @@
  *
  * */
 
-
 %{
 /* Prologue */
     #include <stdio.h>
@@ -14,52 +13,16 @@
     #include <string.h>
     extern int yylex();
     extern int yyparse();
-    extern int yyerror(const char *);
     extern FILE *yyin;
-    extern int num_errors;
+    void yyerror (char const *);
+    void install ( char*, int, int );
+    void install_port ( char*, int, int, int );
+    void context_check ( char*, int );
+    void context_check_port ( char*, int );
+    int num_errors = 0;
     char* src_file_name;
+    char error_msg[255];
     int port_mode, port_class;
-    void install ( char *name, int type ) {
-        if (getsym_net (name) == 0)
-            putsym_net (name, type);
-        else {
-            const char *error = " is already defined";
-            char msg[strlen(name) + strlen(error)];
-            strcpy(msg, name);
-            strcat(msg, error);
-            yyerror(msg);
-        }
-    }
-    void install_port ( char *name, int pclass, int mode ) {
-        printf("install port %s, %d, %d\n", name, pclass, mode);
-        if (getsym_port (name, pclass, mode) == 0)
-            putsym_port (name, pclass, mode);
-        else {
-            const char *error = " is already defined in this scope";
-            char msg[strlen(name) + strlen(error)];
-            strcpy(msg, name);
-            strcat(msg, error);
-            yyerror(msg);
-        }
-    }
-    void context_check ( char *name ) {
-        if (getsym_net (name) == 0) {
-            const char *error = " is an undeclared identifier";
-            char msg[strlen(name) + strlen(error)];
-            strcpy(msg, name);
-            strcat(msg, error);
-            yyerror(msg);
-        }
-    }
-    void context_check_port ( char *name ) {
-        if (getsym_port (name, -1, -1) == 0) {
-            const char *error = " is an undeclared identifier";
-            char msg[strlen(name) + strlen(error)];
-            strcpy(msg, name);
-            strcat(msg, error);
-            yyerror(msg);
-        }
-    }
 %}
 
 /* Bison declarations */
@@ -69,8 +32,8 @@
     int ival;
     char *sval;
 }
-%token ON BOX WRAP STATELESS DECOUPLED SYNC
-%token <ival> UP DOWN SIDE IN OUT
+%token ON STATELESS DECOUPLED SYNC
+%token <ival> UP DOWN SIDE IN OUT BOX WRAP
 %token <sval> IDENTIFIER
 %left '|'
 %left '.'
@@ -91,7 +54,7 @@ stmt:
 /* box declarartion */
 decl_box:
     opt_state BOX IDENTIFIER '(' decl_port opt_decl_port ')' ON IDENTIFIER {
-        install($3, BOX);
+        install($3, $2, @3.last_line);
     }
 ;
 
@@ -106,7 +69,9 @@ opt_decl_port:
 ;
 
 decl_port:
-    IDENTIFIER ':' port_mode port_class {install_port($1, port_mode, port_class);}
+    IDENTIFIER ':' port_mode port_class {
+        install_port($1, port_mode, port_class, @1.last_line);
+    }
 |   SYNC '{' syncport opt_syncport '}'
 ;
 
@@ -116,7 +81,9 @@ opt_syncport:
 ;
 
 syncport:
-    IDENTIFIER ':' port_class opt_decoupled {install_port($1, 0, port_class);}
+    IDENTIFIER ':' port_class opt_decoupled {
+        install_port($1, 0, port_class, @1.last_line);
+    }
 ;
 
 opt_decoupled:
@@ -137,8 +104,12 @@ port_class:
 
 /* net declaration */
 net:
-    IDENTIFIER  { context_check($1); }
-|   net '.' net
+    IDENTIFIER  { 
+        context_check($1, @1.last_line);
+    }
+|   net '.' net {
+    /* fprintf (stderr, "%d-%d: test\n", @1.last_line, @3.last_line); */
+    }
 |   net '|' net
 |   '(' net ')'
 ;
@@ -146,7 +117,7 @@ net:
 /* wrapper declaration */
 decl_wrapper:
     WRAP IDENTIFIER '{' wportlist '}' ON net {
-        install($2, WRAP);
+        install($2, $1, @2.last_line);
     }
 ;
 
@@ -162,8 +133,8 @@ opt_decl_wport:
 
 decl_wport:
     IDENTIFIER '(' IDENTIFIER ')' ':' port_mode port_class {
-        install_port($1, port_mode, port_class);
-        context_check_port($3);
+        install_port($1, port_mode, port_class, @1.last_line);
+        context_check_port($3, @3.last_line);
     }
 ;
 
@@ -191,4 +162,74 @@ int main(int argc, char **argv) {
     } while (!feof(yyin));
 
     if (num_errors > 0) printf(" Error count: %d\n", num_errors);
+}
+
+/*
+ * add net identifier to the symbol table
+ *
+ * @param: char* name:  name of the net
+ * @param: int type:    type of the net
+ * @param: int line:    line number of the symbol in the source file
+ * */
+void install ( char *name, int type, int line ) {
+    if (getsym_net (name) == 0)
+        putsym_net (name, type);
+    else {
+        sprintf(error_msg, "%d: error: %s is already defined", line, name);
+        yyerror(error_msg);
+    }
+}
+
+/*
+ * add port identifier to the symbol table
+ *
+ * @param: char* name:  name of the port
+ * @param: int type:    calss of the port (up, down, side)
+ * @param: int mode:    mode of the port (in, out)
+ * @param: int line:    line number of the symbol in the source file
+ * */
+void install_port ( char *name, int pclass, int mode, int line ) {
+    /* printf("install port %s, %d, %d\n", name, pclass, mode); */
+    if (getsym_port (name, pclass, mode) == 0)
+        putsym_port (name, pclass, mode);
+    else {
+        sprintf(error_msg, "%d: error: %s is already defined in this scope", line, name);
+        yyerror(error_msg);
+    }
+}
+
+/*
+ * check whether a net identifier is decleared
+ *
+ * @param: char* name:  name of the net
+ * @param: int line:    line number of the symbol in the source file
+ * */
+void context_check ( char *name, int line ) {
+    if (getsym_net (name) == 0) {
+        sprintf(error_msg, "%d: error: %s is an undeclared identifier", line, name);
+        yyerror(error_msg);
+    }
+}
+
+/*
+ * check whether a port identifier is decleared
+ *
+ * @param: char* name:  name of the port
+ * @param: int line:    line number of the symbol in the source file
+ * */
+void context_check_port ( char *name, int line ) {
+    if (getsym_port (name, -1, -1) == 0) {
+        sprintf(error_msg, "%d: error: %s is an undeclared identifier", line, name);
+        yyerror(error_msg);
+    }
+}
+
+/*
+ * error function of bison
+ *
+ * @param: char* s:  error string
+ * */
+void yyerror(const char *s) {
+    num_errors++;
+    printf("%s: %s\n", src_file_name, s);
 }
