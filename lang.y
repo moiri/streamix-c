@@ -9,8 +9,9 @@
 %{
 /* Prologue */
     #include <stdio.h>
-    #include "symtab.h"
     #include <string.h>
+    #include "symtab.h"
+    #include "defines.h"
     extern int yylex();
     extern int yyparse();
     extern FILE *yyin;
@@ -22,7 +23,6 @@
     int num_errors = 0;
     char* src_file_name;
     char error_msg[255];
-    int port_mode, port_class;
 %}
 
 /* Bison declarations */
@@ -35,6 +35,7 @@
 %token ON STATELESS DECOUPLED SYNC
 %token <ival> UP DOWN SIDE IN OUT BOX WRAP
 %token <sval> IDENTIFIER
+%type <ival> port_mode port_class
 %left '|'
 %left '.'
 
@@ -70,7 +71,7 @@ opt_decl_port:
 
 decl_port:
     IDENTIFIER ':' port_mode port_class {
-        install_port($1, port_mode, port_class, @1.last_line);
+        install_port($1, $3, $4, @1.last_line);
     }
 |   SYNC '{' syncport opt_syncport '}'
 ;
@@ -82,7 +83,7 @@ opt_syncport:
 
 syncport:
     IDENTIFIER ':' port_class opt_decoupled {
-        install_port($1, 0, port_class, @1.last_line);
+        install_port($1, VAL_IN, $3, @1.last_line);
     }
 ;
 
@@ -92,14 +93,14 @@ opt_decoupled:
 ;
 
 port_mode:
-    IN   {port_mode = $1;}
-|   OUT  {port_mode = $1;}
+    IN   {$$ = $1;}
+|   OUT  {$$ = $1;}
 ;
 
 port_class:
-    UP   {port_class = $1;}
-|   DOWN {port_class = $1;}
-|   SIDE {port_class = $1;}
+    UP   {$$ = $1;}
+|   DOWN {$$ = $1;}
+|   SIDE {$$ = $1;}
 ;
 
 /* net declaration */
@@ -133,7 +134,7 @@ opt_decl_wport:
 
 decl_wport:
     IDENTIFIER '(' IDENTIFIER ')' ':' port_mode port_class {
-        install_port($1, port_mode, port_class, @1.last_line);
+        install_port($1, $6, $7, @1.last_line);
         context_check_port($3, @3.last_line);
     }
 ;
@@ -165,13 +166,15 @@ int main(int argc, char **argv) {
 }
 
 /*
- * add net identifier to the symbol table
+ * Add a new net identifier to the symbol table. If it is already there,
+ * produce an error.
  *
  * @param: char* name:  name of the net
  * @param: int type:    type of the net
  * @param: int line:    line number of the symbol in the source file
  * */
 void install ( char *name, int type, int line ) {
+    /* printf("install %s, %d\n", name, type); */
     if (getsym_net (name) == 0)
         putsym_net (name, type);
     else {
@@ -181,15 +184,16 @@ void install ( char *name, int type, int line ) {
 }
 
 /*
- * add port identifier to the symbol table
+ * Add a new port identifier to the symbol table. If it is already there,
+ * produce an error.
  *
  * @param: char* name:  name of the port
- * @param: int type:    calss of the port (up, down, side)
+ * @param: int pclass:  calss of the port (up, down, side)
  * @param: int mode:    mode of the port (in, out)
  * @param: int line:    line number of the symbol in the source file
  * */
 void install_port ( char *name, int pclass, int mode, int line ) {
-    /* printf("install port %s, %d, %d\n", name, pclass, mode); */
+    /* printf("install_port %s, %d, %d\n", name, pclass, mode); */
     if (getsym_port (name, pclass, mode) == 0)
         putsym_port (name, pclass, mode);
     else {
@@ -199,12 +203,14 @@ void install_port ( char *name, int pclass, int mode, int line ) {
 }
 
 /*
- * check whether a net identifier is decleared
+ * Check whether a net identifier is properly declared. If not,
+ * produce an error.
  *
  * @param: char* name:  name of the net
  * @param: int line:    line number of the symbol in the source file
  * */
 void context_check ( char *name, int line ) {
+    /* printf("context_check %s\n", name); */
     if (getsym_net (name) == 0) {
         sprintf(error_msg, "%d: error: %s is an undeclared identifier", line, name);
         yyerror(error_msg);
@@ -212,13 +218,15 @@ void context_check ( char *name, int line ) {
 }
 
 /*
- * check whether a port identifier is decleared
+ * check whether a port identifier is properly declared. If not,
+ * produce an error.
  *
  * @param: char* name:  name of the port
  * @param: int line:    line number of the symbol in the source file
  * */
 void context_check_port ( char *name, int line ) {
-    if (getsym_port (name, -1, -1) == 0) {
+    /* printf("context_check_port %s\n", name); */
+    if (getsym_port_all (name) == 0) {
         sprintf(error_msg, "%d: error: %s is an undeclared identifier", line, name);
         yyerror(error_msg);
     }

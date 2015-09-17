@@ -35,5 +35,6 @@ symrec *putsym_net ( char*, int );
 symrec *getsym_net ( char* );
 symrec_port *putsym_port ( char*, int, int );
 symrec_port *getsym_port ( char*, int, int );
+symrec_port *getsym_port_all ( char* );
 
 #endif /* SYMTAB_H */
