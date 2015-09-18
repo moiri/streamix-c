@@ -26,4 +26,10 @@
 #define SHAPE_BOX       "box"
 #define SHAPE_ELLIPSE   "ellipse"
 
+#define STYLE_DEFAULT   0
+#define EDGE_UNDIRECTED 1
+
+#define AST_DOT_PATH    "dot/ast_graph.dot"
+#define CON_DOT_PATH    "dot/connection_graph.dot"
+
 #endif /* DEFINES_H */

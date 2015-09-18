@@ -10,7 +10,7 @@
 #ifndef CONGRAPH_H
 #define CONGRAPH_H
 
-void initGraph ( FILE* );
+void initGraph ( FILE*, int );
 void finishGraph ( FILE* );
 void addNode ( FILE*, char*, char*, const char* );
 void addEdge ( FILE*, char*, char* );

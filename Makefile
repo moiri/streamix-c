@@ -1,6 +1,6 @@
 PROJECT = lang
 PARSER = parser
-DOT_PATH = dot
+
 PLUGIN_C = symtab.c \
 		   graph.c \
 		   ast.c
@@ -12,8 +12,12 @@ PLUGIN_H = symtab.h \
 
 PLUGIN = $(PLUGIN_C) $(PLUGIN_H)
 
+DOT_PATH = dot
+DOT_AST_FILE = $(DOT_PATH)/ast_graph
+DOT_CON_FILE = $(DOT_PATH)/connection_graph
+
 TEST_PATH = test
-TEST_FILE = simple.test
+TEST_FILE = $(TEST_PATH)/simple.test
 
 $(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(PLUGIN)
 	g++ $(PROJECT).tab.c lex.yy.c $(PLUGIN_C) -lfl -o $(PARSER)
@@ -34,10 +38,10 @@ clean:
 	rm -f $(DOT_PATH)/*
 
 run:
-	./$(PARSER) $(TEST_PATH)/$(TEST_FILE)
+	./$(PARSER) $(TEST_FILE)
 
 .PHONY: dot
 
 dot:
-	dot $(DOT_PATH)/congraph.dot -Tpng > $(DOT_PATH)/congraph.png
-	dot $(DOT_PATH)/ast.dot -Tpng > $(DOT_PATH)/ast.png
+	dot $(DOT_AST_FILE).dot -Tpng > $(DOT_AST_FILE).png
+	dot $(DOT_CON_FILE).dot -Tpng > $(DOT_CON_FILE).png

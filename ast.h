@@ -23,7 +23,9 @@ typedef struct ast_node ast_node;
 
 ast_node* ast_add_id (char*);
 ast_node* ast_add_op (ast_node*, ast_node*, int);
-void draw_ast (ast_node*);
-int draw_ast_step (FILE*, ast_node*, int);
+void draw_ast_graph (ast_node*);
+int draw_ast_step (FILE*, ast_node*);
+void draw_connection_graph (ast_node*);
+int draw_connection_step (FILE*, ast_node*, int);
 
 #endif /* AST_H */

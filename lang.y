@@ -17,12 +17,10 @@
     extern int yylex();
     extern int yyparse();
     extern FILE *yyin;
-    FILE* congraph;
-    ast_node* ast_ptr;
     void yyerror (char const *);
     void install ( char*, int, int );
     void install_port ( char*, int, int, int );
-    symrec *context_check ( char*, int );
+    void context_check ( char*, int );
     void context_check_port ( char*, int );
     int num_errors = 0;
     char* src_file_name;
@@ -54,7 +52,8 @@ stmts:
 
 stmt:
     net {
-        ast_ptr = $1;
+        draw_ast_graph($1);
+        draw_connection_graph($1);
     }
 |   decl_box
 |   decl_wrapper
@@ -64,7 +63,6 @@ stmt:
 decl_box:
     opt_state BOX IDENTIFIER '(' decl_port opt_decl_port ')' ON IDENTIFIER {
         install($3, $2, @3.last_line);
-        addNode(congraph, $3, $3, SHAPE_BOX);
     }
 ;
 
@@ -172,16 +170,10 @@ int main(int argc, char **argv) {
     // set flex to read from it instead of defaulting to STDIN    yyin = myfile;
     yyin = myfile;
 
-    congraph = fopen("dot/congraph.dot", "w");
-    initGraph(congraph);
-
     // parse through the input until there is no more:
     do {
         yyparse();
     } while (!feof(yyin));
-
-    finishGraph(congraph);
-    draw_ast(ast_ptr);
 
     if (num_errors > 0) printf(" Error count: %d\n", num_errors);
 }
@@ -230,15 +222,12 @@ void install_port ( char *name, int pclass, int mode, int line ) {
  * @param: char* name:  name of the net
  * @param: int line:    line number of the symbol in the source file
  * */
-symrec *context_check ( char *name, int line ) {
+void context_check ( char *name, int line ) {
     /* printf("context_check %s\n", name); */
-    symrec *s;
-    s = getsym_net (name);
-    if (s == 0) {
+    if (getsym_net (name) == 0) {
         sprintf(error_msg, "%d: error: %s is an undeclared identifier", line, name);
         yyerror(error_msg);
     }
-    return s;
 }
 
 /*
