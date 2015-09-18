@@ -1,8 +1,18 @@
 PROJECT = lang
 PARSER = parser
+PLUGIN_C = symtab.c \
+		   graph.c \
+		   ast.c
 
-$(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h symtab.c symtab.h
-	g++ $(PROJECT).tab.c lex.yy.c symtab.c -lfl -o $(PARSER)
+PLUGIN_H = symtab.h \
+		   graph.h \
+		   defines.h \
+		   ast.h
+
+PLUGIN = $(PLUGIN_C) $(PLUGIN_H)
+
+$(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(PLUGIN)
+	g++ $(PROJECT).tab.c lex.yy.c $(PLUGIN_C) -lfl -o $(PARSER)
 
 lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
 	flex $(PROJECT).lex
@@ -15,3 +25,7 @@ clean:
 	rm -f $(PROJECT).tab.h
 	rm -f $(PARSER)
 	rm -f lex.yy.c
+
+dot:
+	dot congraph.dot -Tpng > congraph.png
+	dot ast.dot -Tpng > ast.png

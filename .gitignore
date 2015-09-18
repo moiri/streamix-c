@@ -3,4 +3,6 @@
 *.tab.h
 *.yy.c
 *.pyc
+*.dot
+*.png
 parser

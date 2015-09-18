@@ -11,14 +11,18 @@
     #include <stdio.h>
     #include <string.h>
     #include "symtab.h"
+    #include "graph.h"
     #include "defines.h"
+    #include "ast.h"
     extern int yylex();
     extern int yyparse();
     extern FILE *yyin;
+    FILE* congraph;
+    ast_node* ast_ptr;
     void yyerror (char const *);
     void install ( char*, int, int );
     void install_port ( char*, int, int, int );
-    void context_check ( char*, int );
+    symrec *context_check ( char*, int );
     void context_check_port ( char*, int );
     int num_errors = 0;
     char* src_file_name;
@@ -31,11 +35,13 @@
 %union {
     int ival;
     char *sval;
-}
+    struct ast_node* nval;
+};
 %token ON STATELESS DECOUPLED SYNC
 %token <ival> UP DOWN SIDE IN OUT BOX WRAP
 %token <sval> IDENTIFIER
 %type <ival> port_mode port_class
+%type <nval> net
 %left '|'
 %left '.'
 
@@ -47,7 +53,9 @@ stmts:
 ;
 
 stmt:
-    net
+    net {
+        ast_ptr = $1;
+    }
 |   decl_box
 |   decl_wrapper
 ;
@@ -56,6 +64,7 @@ stmt:
 decl_box:
     opt_state BOX IDENTIFIER '(' decl_port opt_decl_port ')' ON IDENTIFIER {
         install($3, $2, @3.last_line);
+        addNode(congraph, $3, $3, SHAPE_BOX);
     }
 ;
 
@@ -107,12 +116,18 @@ port_class:
 net:
     IDENTIFIER  { 
         context_check($1, @1.last_line);
+        $$ = ast_add_id($1);
+        /* printf("id: %s\n", $$->name); */
     }
 |   net '.' net {
-    /* fprintf (stderr, "%d-%d: test\n", @1.last_line, @3.last_line); */
+        $$ = ast_add_op($1, $3, OP_SERIAL);
     }
-|   net '|' net
-|   '(' net ')'
+|   net '|' net {
+        $$ = ast_add_op($1, $3, OP_PARALLEL);
+    }
+|   '(' net ')' {
+        $$ = $2;
+    }
 ;
 
 /* wrapper declaration */
@@ -154,13 +169,19 @@ int main(int argc, char **argv) {
         printf("Cannot open file '%s'!\n", src_file_name);
         return -1;
     }
-    // set flex to read from it instead of defaulting to STDIN:
+    // set flex to read from it instead of defaulting to STDIN    yyin = myfile;
     yyin = myfile;
+
+    congraph = fopen("congraph.dot", "w");
+    initGraph(congraph);
 
     // parse through the input until there is no more:
     do {
         yyparse();
     } while (!feof(yyin));
+
+    finishGraph(congraph);
+    draw_ast(ast_ptr);
 
     if (num_errors > 0) printf(" Error count: %d\n", num_errors);
 }
@@ -209,12 +230,15 @@ void install_port ( char *name, int pclass, int mode, int line ) {
  * @param: char* name:  name of the net
  * @param: int line:    line number of the symbol in the source file
  * */
-void context_check ( char *name, int line ) {
+symrec *context_check ( char *name, int line ) {
     /* printf("context_check %s\n", name); */
-    if (getsym_net (name) == 0) {
+    symrec *s;
+    s = getsym_net (name);
+    if (s == 0) {
         sprintf(error_msg, "%d: error: %s is an undeclared identifier", line, name);
         yyerror(error_msg);
     }
+    return s;
 }
 
 /*

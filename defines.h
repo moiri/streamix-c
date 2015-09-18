@@ -19,4 +19,11 @@
 #define VAL_BOX     0
 #define VAL_WRAP    1
 
+#define OP_SERIAL   0
+#define OP_PARALLEL 1
+#define OP_ID       2
+
+#define SHAPE_BOX       "box"
+#define SHAPE_ELLIPSE   "ellipse"
+
 #endif /* DEFINES_H */
