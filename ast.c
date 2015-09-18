@@ -46,7 +46,7 @@ ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type ) {
  * @param: ast_node* start:  pointer to the root node of the AST
  * */
 void draw_ast (ast_node* start) {
-    FILE* ast_graph = fopen("ast.dot", "w");
+    FILE* ast_graph = fopen("dot/ast.dot", "w");
     initGraph(ast_graph);
     draw_ast_step(ast_graph, start, 0);
     finishGraph(ast_graph);

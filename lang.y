@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
     // set flex to read from it instead of defaulting to STDIN    yyin = myfile;
     yyin = myfile;
 
-    congraph = fopen("congraph.dot", "w");
+    congraph = fopen("dot/congraph.dot", "w");
     initGraph(congraph);
 
     // parse through the input until there is no more:
