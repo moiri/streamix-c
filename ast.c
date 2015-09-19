@@ -5,7 +5,13 @@
 #include "graph.h"
 #include "defines.h"
 
-int global_node_id = 0;
+int __node_id_ast = 0;
+int __node_id_con = 0;
+int __l_stack_con[MAX_STACK_SIZE];
+int __l_stack_con_cnt = 0;
+int __r_stack_con[MAX_STACK_SIZE];
+int __r_stack_con_cnt = 0;
+
 /*
  * Add a net identifier to the AST.
  *
@@ -66,8 +72,8 @@ int draw_ast_step (FILE* graph, ast_node* ptr) {
     char child_node_id_str[11];
     char node_id_str[11];
     char node_name[11];
-    global_node_id++;
-    node_id = global_node_id;
+    __node_id_ast++;
+    node_id = __node_id_ast;
     sprintf(node_id_str, "id%d", node_id);
     if (ptr->node_type == OP_ID) {
         addNode(graph, node_id_str, ptr->name, SHAPE_BOX);
@@ -96,29 +102,190 @@ int draw_ast_step (FILE* graph, ast_node* ptr) {
 void draw_connection_graph (ast_node* start) {
     FILE* con_graph = fopen(CON_DOT_PATH, "w");
     initGraph(con_graph, EDGE_UNDIRECTED);
-    draw_connection_step(con_graph, start, 0);
+    draw_connection_step(con_graph, start);
     finishGraph(con_graph);
 }
 
 /*
- * Recursive function to draw AST nodes
+ * Recursive function to draw the connection graph
  *
  * @param: FILE* graph:     file pointer to the dot file
  * @param: ast_node* ptr:   pointer to the current ast node
- * @return: int node_id:    id of the current node
  * */
-int draw_connection_step (FILE* graph, ast_node* ptr, int node_id) {
+void draw_connection_step (FILE* graph, ast_node* ptr) {
+    int lo[MAX_STACK_SIZE];
+    int lo_cnt = 0;
+    int li[MAX_STACK_SIZE];
+    int li_cnt = 0;
+    int ri[MAX_STACK_SIZE];
+    int ri_cnt = 0;
+    int ro[MAX_STACK_SIZE];
+    int ro_cnt = 0;
+    int node_id;
     char node_id_str[11];
+    char tmp_node_id_str[11];
+
     if (ptr->node_type == OP_ID) {
-        node_id++;
-        sprintf(node_id_str, "id%d", node_id);
+        __node_id_con++;
+        sprintf(node_id_str, "id%d", __node_id_con);
         addNode(graph, node_id_str, ptr->name, SHAPE_BOX);
+        __l_stack_con[__l_stack_con_cnt] = __node_id_con;
+        __l_stack_con_cnt++;
+        if (__l_stack_con_cnt >= MAX_STACK_SIZE)
+            printf("%s\n", WARNING_STACK_OVERFLOW);
+        __r_stack_con[__r_stack_con_cnt] = __node_id_con;
+        __r_stack_con_cnt++;
+        if (__r_stack_con_cnt >= MAX_STACK_SIZE)
+            printf("%s\n", WARNING_STACK_OVERFLOW);
+        /* printf("box: %d / %d\n", __l_stack_con[__l_stack_con_cnt-1], __r_stack_con[__r_stack_con_cnt-1]); */
     }
     else if (ptr->node_type == OP_SERIAL || ptr->node_type == OP_PARALLEL) {
         // continue on the left branch
-        node_id = draw_connection_step(graph, ptr->op.left, node_id);
+        draw_connection_step(graph, ptr->op.left);
+        if (ptr->node_type == OP_SERIAL) {
+            /* printf("READ STACK SERIAL LEFT OP\n"); */
+            // read from stack
+            // l -> lo
+            while (__l_stack_con_cnt > 0) {
+                __l_stack_con_cnt--;
+                node_id = __l_stack_con[__l_stack_con_cnt];
+                lo[lo_cnt] = node_id;
+                lo_cnt++;
+                if (lo_cnt >= MAX_STACK_SIZE)
+                    printf("%s\n", WARNING_STACK_OVERFLOW);
+            }
+            // r -> li
+            while (__r_stack_con_cnt > 0) {
+                __r_stack_con_cnt--;
+                node_id = __r_stack_con[__r_stack_con_cnt];
+                li[li_cnt] = node_id;
+                li_cnt++;
+                if (li_cnt >= MAX_STACK_SIZE)
+                    printf("%s\n", WARNING_STACK_OVERFLOW);
+            }
+        }
+        else if (ptr->node_type == OP_PARALLEL) {
+            /* printf("READ STACK PARALLEL LEFT OP\n"); */
+            // read from stack
+            // l -> lo
+            // l -> ri
+            while (__l_stack_con_cnt > 0) {
+                __l_stack_con_cnt--;
+                node_id = __l_stack_con[__l_stack_con_cnt];
+                lo[lo_cnt] = node_id;
+                lo_cnt++;
+                if (lo_cnt >= MAX_STACK_SIZE)
+                    printf("%s\n", WARNING_STACK_OVERFLOW);
+                ri[ri_cnt] = node_id;
+                ri_cnt++;
+                if (ri_cnt >= MAX_STACK_SIZE)
+                    printf("%s\n", WARNING_STACK_OVERFLOW);
+            }
+            // r -> li
+            // r -> ro
+            while (__r_stack_con_cnt > 0) {
+                __r_stack_con_cnt--;
+                node_id = __r_stack_con[__r_stack_con_cnt];
+                li[li_cnt] = node_id;
+                li_cnt++;
+                if (li_cnt >= MAX_STACK_SIZE)
+                    printf("%s\n", WARNING_STACK_OVERFLOW);
+                ro[ro_cnt] = node_id;
+                ro_cnt++;
+                if (ro_cnt >= MAX_STACK_SIZE)
+                    printf("%s\n", WARNING_STACK_OVERFLOW);
+            }
+        }
         // continue on the right branch
-        node_id = draw_connection_step(graph, ptr->op.right, node_id);
+        draw_connection_step(graph, ptr->op.right);
+        if (ptr->node_type == OP_SERIAL) {
+            /* printf("READ STACK SERIAL RIGHT OP\n"); */
+            // read from stack
+            // l -> ri
+            while (__l_stack_con_cnt > 0) {
+                __l_stack_con_cnt--;
+                node_id = __l_stack_con[__l_stack_con_cnt];
+                ri[ri_cnt] = node_id;
+                ri_cnt++;
+                if (ri_cnt >= MAX_STACK_SIZE)
+                    printf("%s\n", WARNING_STACK_OVERFLOW);
+                /* printf(" read left stack to ri %d, %d\n", ri[ri_cnt-1], __l_stack_con[__l_stack_con_cnt]); */
+            }
+            // r -> ro
+            while (__r_stack_con_cnt > 0) {
+                __r_stack_con_cnt--;
+                node_id = __r_stack_con[__r_stack_con_cnt];
+                ro[ro_cnt] = node_id;
+                ro_cnt++;
+                if (ro_cnt >= MAX_STACK_SIZE)
+                    printf("%s\n", WARNING_STACK_OVERFLOW);
+                /* printf(" read right stack to ro %d, %d\n", ro[ro_cnt-1], __l_stack_con[__l_stack_con_cnt]); */
+            }
+            // draw inner connections
+            /* printf("DRAW EDGE\n"); */
+            for (int i = 0; i < li_cnt; i++) {
+                /* printf(" drawing li id%d (%d)\n", li[i], i); */
+                sprintf(node_id_str, "id%d", li[i]);
+                for (int j = 0; j < ri_cnt; j++) {
+                    /* printf(" drawing ri id%d (%d)\n", ri[j], j); */
+                    sprintf(tmp_node_id_str, "id%d", ri[j]);
+                    addEdge(graph, node_id_str, tmp_node_id_str);
+                }
+            }
+        }
+        else if (ptr->node_type == OP_PARALLEL) {
+            /* printf("READ STACK PARALLEL RIGHT OP\n"); */
+            // read from stack
+            // l -> lo
+            // l -> ri
+            while (__l_stack_con_cnt > 0) {
+                __l_stack_con_cnt--;
+                node_id = __l_stack_con[__l_stack_con_cnt];
+                lo[lo_cnt] = node_id;
+                lo_cnt++;
+                if (lo_cnt >= MAX_STACK_SIZE)
+                    printf("%s\n", WARNING_STACK_OVERFLOW);
+                ri[ri_cnt] = node_id;
+                ri_cnt++;
+                if (ri_cnt >= MAX_STACK_SIZE)
+                    printf("%s\n", WARNING_STACK_OVERFLOW);
+            }
+            // r -> li
+            // r -> ro
+            while (__r_stack_con_cnt > 0) {
+                __r_stack_con_cnt--;
+                node_id = __r_stack_con[__r_stack_con_cnt];
+                li[li_cnt] = node_id;
+                li_cnt++;
+                if (li_cnt >= MAX_STACK_SIZE)
+                    printf("%s\n", WARNING_STACK_OVERFLOW);
+                ro[ro_cnt] = node_id;
+                ro_cnt++;
+                if (ro_cnt >= MAX_STACK_SIZE)
+                    printf("%s\n", WARNING_STACK_OVERFLOW);
+            }
+        }
+
+        // write to stack
+        // lo -> l
+        while (lo_cnt > 0) {
+            lo_cnt--;
+            node_id = lo[lo_cnt];
+            __l_stack_con[__l_stack_con_cnt] = node_id;
+            __l_stack_con_cnt++;
+            if (__l_stack_con_cnt >= MAX_STACK_SIZE)
+                printf("%s\n", WARNING_STACK_OVERFLOW);
+            /* printf(" write lo to left stack %d, %d\n", lo[lo_cnt], __l_stack_con[__l_stack_con_cnt-1]); */
+        }
+        // ro -> r
+        while (ro_cnt > 0) {
+            ro_cnt--;
+            node_id = ro[ro_cnt];
+            __r_stack_con[__r_stack_con_cnt] = node_id;
+            __r_stack_con_cnt++;
+            if (__r_stack_con_cnt >= MAX_STACK_SIZE)
+                printf("%s\n", WARNING_STACK_OVERFLOW);
+            /* printf(" write ro to right stack %d, %d\n", ro[ro_cnt], __r_stack_con[__r_stack_con_cnt-1]); */
+        }
     }
-    return node_id;
 }

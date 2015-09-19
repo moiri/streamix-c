@@ -1,0 +1,13 @@
+box A (c: in side) on func_a
+box B (c: in side) on func_b
+box C (c: in side) on func_c
+box D (c: in side) on func_d
+box E (c: in side) on func_e
+box F (c: in side) on func_f
+box G (c: in side) on func_g
+box H (c: in side) on func_h
+box I (c: in side) on func_i
+box J (c: in side) on func_j
+box K (c: in side) on func_k
+
+(A . B . C . (D | (E | F) . G)) . (H | I | J . K)

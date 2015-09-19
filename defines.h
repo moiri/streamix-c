@@ -32,4 +32,8 @@
 #define AST_DOT_PATH    "dot/ast_graph.dot"
 #define CON_DOT_PATH    "dot/connection_graph.dot"
 
+#define MAX_STACK_SIZE  100
+
+#define WARNING_STACK_OVERFLOW "WARNING: Stack overflow, increase MAX_STACK_SIZE"
+
 #endif /* DEFINES_H */

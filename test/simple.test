@@ -3,5 +3,5 @@ box B (a: in down, b: out up) on func_b
 box C (b: in down, c: out up) on func_c
 box D (c: in down) on func_d
 
-A.((B|C).D)
+(A|B).(C|D)
 
