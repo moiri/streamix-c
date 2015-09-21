@@ -121,6 +121,7 @@ void draw_connection_step (FILE* graph, ast_node* ptr) {
     int ri_cnt = 0;
     int ro[MAX_STACK_SIZE];
     int ro_cnt = 0;
+    int i, j;
     char node_id_str[11];
     char tmp_node_id_str[11];
 
@@ -175,10 +176,10 @@ void draw_connection_step (FILE* graph, ast_node* ptr) {
 
             // draw inner connections
             /* printf("DRAW EDGE\n"); */
-            for (int i = 0; i < li_cnt; i++) {
+            for (i = 0; i < li_cnt; i++) {
                 /* printf(" drawing li id%d (%d)\n", li[i], i); */
                 sprintf(node_id_str, "id%d", li[i]);
-                for (int j = 0; j < ri_cnt; j++) {
+                for (j = 0; j < ri_cnt; j++) {
                     /* printf(" drawing ri id%d (%d)\n", ri[j], j); */
                     sprintf(tmp_node_id_str, "id%d", ri[j]);
                     addEdge(graph, node_id_str, tmp_node_id_str);

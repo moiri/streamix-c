@@ -20,7 +20,7 @@ TEST_PATH = test
 TEST_FILE = $(TEST_PATH)/simple.test
 
 $(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(PLUGIN)
-	g++ $(PROJECT).tab.c lex.yy.c $(PLUGIN_C) -lfl -o $(PARSER)
+	gcc $(PROJECT).tab.c lex.yy.c $(PLUGIN_C) -lfl -o $(PARSER)
 
 lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
 	flex $(PROJECT).lex
