@@ -2,13 +2,13 @@ PROJECT = lang
 PARSER = parser
 
 PLUGIN_C = symtab.c \
+		   ast.c \
 		   graph.c \
-		   ast.c
 
 PLUGIN_H = symtab.h \
+		   ast.h \
 		   graph.h \
 		   defines.h \
-		   ast.h
 
 PLUGIN = $(PLUGIN_C) $(PLUGIN_H)
 
@@ -17,7 +17,7 @@ DOT_AST_FILE = $(DOT_PATH)/ast_graph
 DOT_CON_FILE = $(DOT_PATH)/connection_graph
 
 TEST_PATH = test
-TEST_FILE = $(TEST_PATH)/simple.test
+TEST_FILE = $(TEST_PATH)/less_simple.test
 
 $(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(PLUGIN)
 	gcc $(PROJECT).tab.c lex.yy.c $(PLUGIN_C) -lfl -o $(PARSER)

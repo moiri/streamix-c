@@ -1,18 +1,81 @@
 /* 
- * A plugin to draw the connection graph of the network in dot
+ * A plugin to draw dot graphs from the AST:
+ *  - the AST itself
+ *  - teh connection graph of the network
  *
- * @file    congraph.h
+ * @file    graph.h
  * @author  Simon Maurer
  *
  * */
 
+#ifndef GRAPH_H
+#define GRAPH_H
 
-#ifndef CONGRAPH_H
-#define CONGRAPH_H
+#include <stdio.h>
+#include "ast.h"
 
-void initGraph ( FILE*, int );
-void finishGraph ( FILE* );
-void addNode ( FILE*, char*, char*, const char* );
-void addEdge ( FILE*, char*, char* );
+/**
+ * Draw a dot diagram of the AST
+ *
+ * @param ast_node*:  pointer to the root node of the AST
+ * */
+void draw_ast_graph (ast_node*);
 
-#endif /* CONGRAPH_H */
+/**
+ * Recursive function to draw AST nodes
+ *
+ * @param FILE*:        file pointer to the dot file
+ * @param ast_node*:    pointer to the current ast node
+ * */
+void draw_ast_graph_step (FILE*, ast_node*);
+
+/**
+ * Draw a dot diagram of the connection graph
+ *
+ * @param ast_node*:    pointer to the root node of the AST
+ * */
+void draw_connection_graph (ast_node*);
+
+/**
+ * Recursive function to draw the connection graph
+ *
+ * @param FILE*:        file pointer to the dot file
+ * @param ast_node*:    pointer to the current ast node
+ * */
+void draw_connection_graph_step (FILE*, ast_node*);
+
+/**
+ * Add an edge to the graph
+ *
+ * @param FILE*:    file pointer to the dot file
+ * @param char*:    id of the start node
+ * @param char*:    id of the end node
+ * */
+void graph_add_edge ( FILE*, char*, char* );
+
+/**
+ * Add a inode to the graph
+ *
+ * @param FILE*:        file pointer to the dot file
+ * @param char*:        id of the node
+ * @param char*:        name of the node
+ * #param const char*:  shape of the node (SHAPE_BOX, SHAPE_ELLIPSE)
+ * */
+void graph_add_node ( FILE*, char*, char*, const char* );
+
+/**
+ * Adds final bracket to the dot file
+ *
+ * @param FILE*:        file pointer to the dot file
+ * */
+void graph_finish ( FILE* );
+
+/**
+ * Initializes the file with the dot header to draw a graph
+ *
+ * @param FILE*:    file pointer to the dot file
+ * @param int:      style of the graph (STYLE_DEFAULT, STYLE_CON_GRAPH)
+ * */
+void graph_init ( FILE*, int );
+
+#endif /* GRAPH_H */

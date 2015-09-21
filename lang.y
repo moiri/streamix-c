@@ -12,8 +12,8 @@
     #include <string.h>
     #include "symtab.h"
     #include "graph.h"
-    #include "defines.h"
     #include "ast.h"
+    #include "defines.h"
     extern int yylex();
     extern int yyparse();
     extern FILE *yyin;
