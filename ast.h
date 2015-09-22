@@ -39,13 +39,13 @@ struct op {
 
 // AST_BOX
 struct box {
-    char*       name;
+    ast_node*   id;
     port_list*  port_list;
 };
 
 // AST_WRAP
 struct wrap {
-    char*       name;
+    ast_node*   id;
     ast_node*   net;
     port_list*  port_list;
 };
@@ -76,11 +76,11 @@ struct ast_node {
 /**
  * Add a box declaration to the AST.
  *
- * @param ast_node*:    ipointer to an ast node of type AST_ID
+ * @param ast_node*:    pointer to an ast node of type AST_ID
  * @return: ast_node*:
  *      a pointer to the location where the data was stored
  * */
-ast_node* ast_add_box ( char* );
+ast_node* ast_add_box ( ast_node* );
 
 /**
  * Add a net identifier to the AST.
@@ -125,10 +125,11 @@ ast_node* ast_add_stmt ( ast_node* );
  * Add a wrapper declaration to the AST.
  *
  * @param ast_node*:    pointer to an ast node of type AST_ID
+ * @param ast_node*:    pointer to the beginning of the wrapper net
  * @return: ast_node*:
  *      a pointer to the location where the data was stored
  * */
-ast_node* ast_add_wrap ( char* );
+ast_node* ast_add_wrap ( ast_node*, ast_node* );
 
 /**
  * Add an AST node to the connection list

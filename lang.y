@@ -72,7 +72,7 @@ stmt:
 decl_box:
     opt_state BOX IDENTIFIER '(' decl_port opt_decl_port ')' ON IDENTIFIER {
         install($3, $2, @3.last_line);
-        $$ = ast_add_box($3);
+        $$ = ast_add_box(ast_add_id($3));
     }
 ;
 
@@ -142,7 +142,7 @@ net:
 decl_wrapper:
     WRAP IDENTIFIER '{' wportlist '}' ON net {
         install($2, $1, @2.last_line);
-        $$ = ast_add_wrap($2);
+        $$ = ast_add_wrap(ast_add_id($2), ast_add_net($7));
     }
 ;
 

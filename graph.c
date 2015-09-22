@@ -38,8 +38,8 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             break;
         case AST_NET:
             draw_ast_graph_step(graph, ptr->net);
-            sprintf(child_node_id_str, "id%d", ptr->net->id);
             graph_add_node(graph, node_id_str, LABEL_NET, SHAPE_ELLIPSE);
+            sprintf(child_node_id_str, "id%d", ptr->net->id);
             graph_add_edge(graph, node_id_str, child_node_id_str);
             break;
         case AST_STMTS:
@@ -52,6 +52,21 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
                 stmt_ptr = stmt_ptr->next;
             }
             while (stmt_ptr != 0);
+            break;
+        case AST_BOX:
+            draw_ast_graph_step(graph, ptr->box.id);
+            graph_add_node(graph, node_id_str, LABEL_BOX, SHAPE_ELLIPSE);
+            sprintf(child_node_id_str, "id%d", ptr->box.id->id);
+            graph_add_edge(graph, node_id_str, child_node_id_str);
+            break;
+        case AST_WRAP:
+            draw_ast_graph_step(graph, ptr->wrap.id);
+            draw_ast_graph_step(graph, ptr->wrap.net);
+            graph_add_node(graph, node_id_str, LABEL_WRAP, SHAPE_ELLIPSE);
+            sprintf(child_node_id_str, "id%d", ptr->wrap.id->id);
+            graph_add_edge(graph, node_id_str, child_node_id_str);
+            sprintf(child_node_id_str, "id%d", ptr->wrap.net->id);
+            graph_add_edge(graph, node_id_str, child_node_id_str);
             break;
         default:
             ;
