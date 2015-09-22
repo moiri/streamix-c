@@ -9,23 +9,24 @@
 #ifndef AST_H
 #define AST_H
 
-typedef struct ast_node ast_node;
 typedef struct con_list con_list;
-typedef struct port port;
 typedef struct port_list port_list;
+typedef struct ast_node ast_node;
 typedef struct op op;
 typedef struct box box;
 typedef struct wrap wrap;
+typedef struct port port;
 
 // linked list structure containing AST node pointers
 struct con_list {
-    ast_node* ast_node;
-    con_list* next;
+    ast_node*   ast_node;
+    con_list*   next;
 };
 
+// linked list structure containing AST port pointers
 struct port_list {
-    port* port_node;
-    port_list* next;
+    port*       port_node;
+    port_list*  next;
 };
 
 // AST_SERIAL, AST_PARALLEL
@@ -38,29 +39,29 @@ struct op {
 
 // AST_BOX
 struct box {
-    ast_node* id;
-    port_list* port_list;
+    ast_node*   id;
+    port_list*  port_list;
 };
 
 // AST_WRAP
 struct wrap {
-    ast_node* id;
-    ast_node* net;
-    port_list* port_list;
+    ast_node*   id;
+    ast_node*   net;
+    port_list*  port_list;
 };
 
 // AST_PORT
 struct port {
-    char* name_ext;
-    char* name_int;
-    int mode;
-    int pclass;
+    char*   name_ext;
+    char*   name_int;
+    int     mode;
+    int     pclass;
 };
 
 // the AST structure
 struct ast_node {
-    int node_type;  // OP_ID, OP_SERIAL, OP_PARALLEL
-    int id;         // id of the node -> atm only used for dot graphs
+    int     node_type;  // OP_ID, OP_SERIAL, OP_PARALLEL
+    int     id;         // id of the node -> atm only used for dot graphs
     union {
         char*       name;   // AST_ID
         struct op   op;     // AST_SERIAL, AST_PARALLEL
@@ -79,6 +80,15 @@ struct ast_node {
  *      a pointer to the location where the data was stored
  * */
 ast_node* ast_add_id ( char* );
+
+/**
+ * Add a net to the AST.
+ *
+ * @param ast_node*:    pointer to the first AST element of the net
+ * @return: ast_node*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_node* ast_add_net ( ast_node* );
 
 /**
  * Add a an operation to the symbol table.

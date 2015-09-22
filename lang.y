@@ -52,7 +52,7 @@ stmts:
 
 stmt:
     net {
-        draw_ast_graph($1);
+        draw_ast_graph(ast_add_net($1));
         draw_connection_graph($1);
     }
 |   decl_box

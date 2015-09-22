@@ -33,6 +33,13 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
         sprintf(child_node_id_str, "id%d", ptr->op.right->id);
         graph_add_edge(graph, node_id_str, child_node_id_str);
     }
+    else if (ptr->node_type == AST_NET) {
+        // reached a leaf node of the AST -> add box to drawing
+        draw_ast_graph_step(graph, ptr->net);
+        sprintf(child_node_id_str, "id%d", ptr->net->id);
+        graph_add_node(graph, node_id_str, LABEL_NET, SHAPE_ELLIPSE);
+        graph_add_edge(graph, node_id_str, child_node_id_str);
+    }
 }
 
 /******************************************************************************/

@@ -8,6 +8,7 @@ int __node_id = 0;
 con_list* con_ptr = (con_list*)0;
 con_list* tmp_con_ptr = (con_list*)0;
 
+
 /******************************************************************************/
 ast_node* ast_add_id ( char* name ) {
     ast_node *ptr;
@@ -18,6 +19,17 @@ ast_node* ast_add_id ( char* name ) {
     ptr->node_type = AST_ID;
     __node_id++;
     ptr->id = __node_id;
+    return ptr;
+}
+
+/******************************************************************************/
+ast_node* ast_add_net ( ast_node* node) {
+    ast_node* ptr;
+    ptr = (ast_node*) malloc(sizeof(ast_node));
+    ptr->net = node;
+    __node_id++;
+    ptr->id = __node_id;
+    ptr->node_type = AST_NET;
     return ptr;
 }
 
