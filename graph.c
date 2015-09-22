@@ -16,13 +16,13 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
     char node_id_str[11];
     char node_name[11];
     sprintf(node_id_str, "id%d", ptr->id);
-    if (ptr->node_type == OP_ID) {
+    if (ptr->node_type == AST_ID) {
         // reached a leaf node of the AST -> add box to drawing
         graph_add_node(graph, node_id_str, ptr->name, SHAPE_BOX);
     }
-    else if (ptr->node_type == OP_SERIAL || ptr->node_type == OP_PARALLEL) {
-        if (ptr->node_type == OP_SERIAL)    sprintf(node_name, "serial");
-        if (ptr->node_type == OP_PARALLEL)  sprintf(node_name, "parallel");
+    else if (ptr->node_type == AST_SERIAL || ptr->node_type == AST_PARALLEL) {
+        if (ptr->node_type == AST_SERIAL)    sprintf(node_name, LABEL_SERIAL);
+        if (ptr->node_type == AST_PARALLEL)  sprintf(node_name, LABEL_PARALLEL);
         graph_add_node(graph, node_id_str, node_name, SHAPE_ELLIPSE);
         // continue on the left branch
         draw_ast_graph_step(graph, ptr->op.left);
@@ -51,7 +51,7 @@ void draw_connection_graph_step (FILE* graph, ast_node* ptr) {
     con_list* i_ptr;
     con_list* j_ptr;
 
-    if (ptr->node_type == OP_ID) {
+    if (ptr->node_type == AST_ID) {
         // reached a leaf node of the AST -> add box to drawing
         sprintf(node_id_str, "id%d", ptr->id);
         graph_add_node(graph, node_id_str, ptr->name, SHAPE_BOX);
@@ -61,19 +61,31 @@ void draw_connection_graph_step (FILE* graph, ast_node* ptr) {
         draw_connection_graph_step(graph, ptr->op.left);
         draw_connection_graph_step(graph, ptr->op.right);
 
-        if (ptr->node_type == OP_SERIAL) {
+        if (ptr->node_type == AST_SERIAL) {
             // serial operand -> draw all conenctions at this stage
-            i_ptr = ptr->op.left->connect.right;
+            i_ptr = ptr->op.left->op.con_right;
             do {
-                sprintf(node_id_str, "id%d", i_ptr->ast_node->id);
-                j_ptr = ptr->op.right->connect.left;
+                if (ptr->op.left->node_type == AST_ID) {
+                    sprintf(node_id_str, "id%d", ptr->op.left->id);
+                    i_ptr = (con_list*)0;
+                }
+                else {
+                    sprintf(node_id_str, "id%d", i_ptr->ast_node->id);
+                    i_ptr = i_ptr->next;
+                }
+                j_ptr = ptr->op.right->op.con_left;
                 do {
-                    sprintf(tmp_node_id_str, "id%d", j_ptr->ast_node->id);
+                    if (ptr->op.right->node_type == AST_ID) {
+                        sprintf(tmp_node_id_str, "id%d", ptr->op.right->id);
+                        j_ptr = (con_list*)0;
+                    }
+                    else {
+                        sprintf(tmp_node_id_str, "id%d", j_ptr->ast_node->id);
+                        j_ptr = j_ptr->next;
+                    }
                     graph_add_edge(graph, node_id_str, tmp_node_id_str);
-                    j_ptr = j_ptr->next;
                 }
                 while (j_ptr != 0);
-                i_ptr = i_ptr->next;
             }
             while (i_ptr != 0);
         }

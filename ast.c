@@ -1,5 +1,6 @@
 #include <stdlib.h> /* For malloc to add nodes to a linked list */
 #include <string.h> /* For strlen in ast_add_id */
+#include <stdio.h>
 #include "defines.h"
 #include "ast.h"
 
@@ -14,92 +15,105 @@ ast_node* ast_add_id ( char* name ) {
     /* printf("NEW NODE: %s(%p)\n", name, ptr); */
     ptr->name = (char*) malloc(strlen(name)+1);
     strcpy (ptr->name, name);
-    ptr->node_type = OP_ID;
+    ptr->node_type = AST_ID;
     __node_id++;
     ptr->id = __node_id;
-    // add left connection
-    ptr->connect.left = con_add(ptr);
-    /* printf(" %s(%p) con left(%p): add %s(%p)\n", ptr->name, ptr, ptr->connect.left, */
-    /*         ptr->connect.left->ast_node->name, */
-    /*         ptr->connect.left->ast_node); */
-    con_ptr = tmp_con_ptr;
-    tmp_con_ptr = (con_list*)0;
-    // add right connection
-    ptr->connect.right = con_add(ptr);
-    /* printf(" %s(%p) con right(%p): add %s(%p)\n", ptr->name, ptr, ptr->connect.right, */
-    /*         ptr->connect.right->ast_node->name, */
-    /*         ptr->connect.right->ast_node); */
-    con_ptr = tmp_con_ptr;
-    tmp_con_ptr = (con_list*)0;
     return ptr;
 }
 
 /******************************************************************************/
 ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type ) {
     ast_node* ptr;
-    con_list* con_list_ptr;
+    con_list* con_list_ptr = (con_list*)0;
     ptr = (ast_node*) malloc(sizeof(ast_node));
-    /* printf("NEW NODE: S/P(%p)\n", ptr); */
     ptr->op.left = left;
     ptr->op.right = right;
     ptr->node_type = node_type;
     __node_id++;
     ptr->id = __node_id;
-    // add left connection
-    // c_left = op.left.c_left (serial and parallel)
-    con_list_ptr = ptr->op.left->connect.left;
-    do {
-        ptr->connect.left = con_add(con_list_ptr->ast_node);
-        /* printf(" AST_S/P con left(%p): add %s(%p)\n", ptr->connect.left, */
-        /*         ptr->connect.left->ast_node->name, */
-        /*         ptr->connect.left->ast_node); */
-        con_list_ptr = con_list_ptr->next;
-        /* printf(" next list pointer: %p\n", con_list_ptr); */
+
+    // left connection
+    if (left->node_type == AST_ID) {
+        // c_left = left
+        ptr->op.con_left = con_add(left);
     }
-    while (con_list_ptr != 0);
-    if (ptr->node_type == OP_PARALLEL) {
-        // c_left = op.right.c_left (parallel)
-        con_list_ptr = ptr->op.right->connect.left;
+    else {
+        // c_left = left.c_left
+        con_list_ptr = left->op.con_left;
         do {
-            ptr->connect.left = con_add(con_list_ptr->ast_node);
-            /* printf(" AST_P con left(%p): add %s(%p)\n", ptr->connect.left, */
-            /*         ptr->connect.left->ast_node->name, */
-            /*         ptr->connect.left->ast_node); */
+            ptr->op.con_left = con_add(con_list_ptr->ast_node);
             con_list_ptr = con_list_ptr->next;
-            /* printf(" next list pointer: %p\n", con_list_ptr); */
         }
         while (con_list_ptr != 0);
+    }
+    if (ptr->node_type == AST_PARALLEL) {
+        if (right->node_type == AST_ID) {
+            // c_left = right
+            ptr->op.con_left = con_add(right);
+        }
+        else {
+            // c_left = right.c_left
+            con_list_ptr = right->op.con_left;
+            do {
+                ptr->op.con_left = con_add(con_list_ptr->ast_node);
+                con_list_ptr = con_list_ptr->next;
+            }
+            while (con_list_ptr != 0);
+        }
     }
     con_ptr = tmp_con_ptr;
     tmp_con_ptr = (con_list*)0;
 
-    // add right connection
-    // c_right = op.right.c_right (serial and parallel)
-    con_list_ptr = ptr->op.right->connect.right;
-    do {
-        ptr->connect.right = con_add(con_list_ptr->ast_node);
-        /* printf(" AST_S/P con right(%p): add %s(%p)\n", ptr->connect.right, */
-        /*         ptr->connect.right->ast_node->name, */
-        /*         ptr->connect.right->ast_node); */
-        con_list_ptr = con_list_ptr->next;
-        /* printf(" next list pointer: %p\n", con_list_ptr); */
+    // right connection
+    if (right->node_type == AST_ID) {
+        // c_right = right
+        ptr->op.con_right = con_add(right);
     }
-    while (con_list_ptr != 0);
-    if (ptr->node_type == OP_PARALLEL) {
-        // c_right = op.left.c_right (parallel)
-        con_list_ptr = ptr->op.left->connect.right;
+    else {
+        // c_right = right.c_right
+        con_list_ptr = right->op.con_right;
         do {
-            ptr->connect.right = con_add(con_list_ptr->ast_node);
-            /* printf(" ST_P con right(%p): add %s(%p)\n", ptr->connect.right, */
-            /*         ptr->connect.right->ast_node->name, */
-            /*         ptr->connect.right->ast_node); */
+            ptr->op.con_right = con_add(con_list_ptr->ast_node);
             con_list_ptr = con_list_ptr->next;
-            /* printf(" next list pointer: %p\n", con_list_ptr); */
         }
         while (con_list_ptr != 0);
     }
+    if (ptr->node_type == AST_PARALLEL) {
+        if (left->node_type == AST_ID) {
+            // c_right = left
+            ptr->op.con_right = con_add(left);
+        }
+        else {
+            // c_right = left.c_right
+            con_list_ptr = left->op.con_right;
+            do {
+                ptr->op.con_right = con_add(con_list_ptr->ast_node);
+                con_list_ptr = con_list_ptr->next;
+            }
+            while (con_list_ptr != 0);
+        }
+    }
     con_ptr = tmp_con_ptr;
     tmp_con_ptr = (con_list*)0;
+
+    // debug
+    /* printf("NEW NODE: OP(%p)\n", ptr); */
+    /* con_list_ptr = ptr->op.con_left; */
+    /* do { */
+    /*     printf(" AST_OP con left(%p): add %s(%p)\n", con_list_ptr, */
+    /*             con_list_ptr->ast_node->name, */
+    /*             con_list_ptr->ast_node); */
+    /*     con_list_ptr = con_list_ptr->next; */
+    /* } */
+    /* while (con_list_ptr != 0); */
+    /* con_list_ptr = ptr->op.con_right; */
+    /* do { */
+    /*     printf(" AST_OP con right(%p): add %s(%p)\n", con_list_ptr, */
+    /*             con_list_ptr->ast_node->name, */
+    /*             con_list_ptr->ast_node); */
+    /*     con_list_ptr = con_list_ptr->next; */
+    /* } */
+    /* while (con_list_ptr != 0); */
 
     return ptr;
 }

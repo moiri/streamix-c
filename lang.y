@@ -118,10 +118,10 @@ net:
         /* printf("id: %s\n", $$->name); */
     }
 |   net '.' net {
-        $$ = ast_add_op($1, $3, OP_SERIAL);
+        $$ = ast_add_op($1, $3, AST_SERIAL);
     }
 |   net '|' net {
-        $$ = ast_add_op($1, $3, OP_PARALLEL);
+        $$ = ast_add_op($1, $3, AST_PARALLEL);
     }
 |   '(' net ')' {
         $$ = $2;
@@ -191,7 +191,7 @@ void install ( char *name, int type, int line ) {
     if (getsym_net (name) == 0)
         putsym_net (name, type);
     else {
-        sprintf(error_msg, "%d: error: %s is already defined", line, name);
+        sprintf(error_msg, ERROR_DUPLICATE_ID, line, name);
         yyerror(error_msg);
     }
 }
@@ -210,7 +210,7 @@ void install_port ( char *name, int pclass, int mode, int line ) {
     if (getsym_port (name, pclass, mode) == 0)
         putsym_port (name, pclass, mode);
     else {
-        sprintf(error_msg, "%d: error: %s is already defined in this scope", line, name);
+        sprintf(error_msg, ERROR_DUPLICATE_PORT, line, name);
         yyerror(error_msg);
     }
 }
@@ -225,7 +225,7 @@ void install_port ( char *name, int pclass, int mode, int line ) {
 void context_check ( char *name, int line ) {
     /* printf("context_check %s\n", name); */
     if (getsym_net (name) == 0) {
-        sprintf(error_msg, "%d: error: %s is an undeclared identifier", line, name);
+        sprintf(error_msg, ERROR_UNDEFINED_ID, line, name);
         yyerror(error_msg);
     }
 }
@@ -240,7 +240,7 @@ void context_check ( char *name, int line ) {
 void context_check_port ( char *name, int line ) {
     /* printf("context_check_port %s\n", name); */
     if (getsym_port_all (name) == 0) {
-        sprintf(error_msg, "%d: error: %s is an undeclared identifier", line, name);
+        sprintf(error_msg, ERROR_UNDEFINED_ID, line, name);
         yyerror(error_msg);
     }
 }

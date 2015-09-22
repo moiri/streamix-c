@@ -11,6 +11,11 @@
 
 typedef struct ast_node ast_node;
 typedef struct con_list con_list;
+typedef struct port port;
+typedef struct port_list port_list;
+typedef struct op op;
+typedef struct box box;
+typedef struct wrap wrap;
 
 // linked list structure containing AST node pointers
 struct con_list {
@@ -18,20 +23,51 @@ struct con_list {
     con_list* next;
 };
 
+struct port_list {
+    port* port_node;
+    port_list* next;
+};
+
+// AST_SERIAL, AST_PARALLEL
+struct op {
+    ast_node* left;
+    con_list* con_left;
+    ast_node* right;
+    con_list* con_right;
+};
+
+// AST_BOX
+struct box {
+    ast_node* id;
+    port_list* port_list;
+};
+
+// AST_WRAP
+struct wrap {
+    ast_node* id;
+    ast_node* net;
+    port_list* port_list;
+};
+
+// AST_PORT
+struct port {
+    char* name_ext;
+    char* name_int;
+    int mode;
+    int pclass;
+};
+
 // the AST structure
 struct ast_node {
     int node_type;  // OP_ID, OP_SERIAL, OP_PARALLEL
     int id;         // id of the node -> atm only used for dot graphs
-    struct {
-        con_list* left;
-        con_list* right;
-    } connect;      // left and right connections at this AST node
     union {
-        char* name; // name of the node (only if OP_ID)
-        struct {
-            ast_node* left;
-            ast_node* right;
-        } op;       // left and right operand (only if OP_SERIAL and OP_PARALLEL)
+        char*       name;   // AST_ID
+        struct op   op;     // AST_SERIAL, AST_PARALLEL
+        ast_node*   net;    // AST_NET
+        struct box  box;    // AST_BOX
+        struct wrap wrap;   // AST_WRAP
+        struct port port;   // AST_PORT
     };
 };
 
