@@ -9,7 +9,7 @@
 #ifndef AST_H
 #define AST_H
 
-typedef struct con_list con_list;
+typedef struct ast_list ast_list;
 typedef struct port_list port_list;
 typedef struct ast_node ast_node;
 typedef struct op op;
@@ -18,9 +18,9 @@ typedef struct wrap wrap;
 typedef struct port port;
 
 // linked list structure containing AST node pointers
-struct con_list {
+struct ast_list {
     ast_node*   ast_node;
-    con_list*   next;
+    ast_list*   next;
 };
 
 // linked list structure containing AST port pointers
@@ -32,9 +32,9 @@ struct port_list {
 // AST_SERIAL, AST_PARALLEL
 struct op {
     ast_node* left;
-    con_list* con_left;
+    ast_list* con_left;
     ast_node* right;
-    con_list* con_right;
+    ast_list* con_right;
 };
 
 // AST_BOX
@@ -63,12 +63,13 @@ struct ast_node {
     int     node_type;  // OP_ID, OP_SERIAL, OP_PARALLEL
     int     id;         // id of the node -> atm only used for dot graphs
     union {
-        char*       name;   // AST_ID
-        struct op   op;     // AST_SERIAL, AST_PARALLEL
-        ast_node*   net;    // AST_NET
-        struct box  box;    // AST_BOX
-        struct wrap wrap;   // AST_WRAP
-        struct port port;   // AST_PORT
+        char*           name;   // AST_ID
+        struct op       op;     // AST_SERIAL, AST_PARALLEL
+        ast_node*       net;    // AST_NET
+        struct box      box;    // AST_BOX
+        struct wrap     wrap;   // AST_WRAP
+        struct port     port;   // AST_PORT
+        struct ast_list stmts;  // AST_STMTS
     };
 };
 
@@ -109,6 +110,6 @@ ast_node* ast_add_op ( ast_node*, ast_node*, int );
  * @return con_list*:
  *      a pointer to the location where the data was stored
  * */
-con_list* con_add ( ast_node* );
+ast_list* con_add ( ast_node* );
 
 #endif /* AST_H */

@@ -5,8 +5,8 @@
 #include "ast.h"
 
 int __node_id = 0;
-con_list* con_ptr = (con_list*)0;
-con_list* tmp_con_ptr = (con_list*)0;
+ast_list* con_ptr = (ast_list*)0;
+ast_list* tmp_con_ptr = (ast_list*)0;
 
 
 /******************************************************************************/
@@ -36,7 +36,7 @@ ast_node* ast_add_net ( ast_node* node) {
 /******************************************************************************/
 ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type ) {
     ast_node* ptr;
-    con_list* con_list_ptr = (con_list*)0;
+    ast_list* con_list_ptr = (ast_list*)0;
     ptr = (ast_node*) malloc(sizeof(ast_node));
     ptr->op.left = left;
     ptr->op.right = right;
@@ -74,7 +74,7 @@ ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type ) {
         }
     }
     con_ptr = tmp_con_ptr;
-    tmp_con_ptr = (con_list*)0;
+    tmp_con_ptr = (ast_list*)0;
 
     // right connection
     if (right->node_type == AST_ID) {
@@ -106,7 +106,7 @@ ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type ) {
         }
     }
     con_ptr = tmp_con_ptr;
-    tmp_con_ptr = (con_list*)0;
+    tmp_con_ptr = (ast_list*)0;
 
     // debug
     /* printf("NEW NODE: OP(%p)\n", ptr); */
@@ -131,9 +131,9 @@ ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type ) {
 }
 
 /******************************************************************************/
-con_list* con_add ( ast_node* node ) {
-    con_list* ptr;
-    ptr = (con_list*) malloc(sizeof(con_list));
+ast_list* con_add ( ast_node* node ) {
+    ast_list* ptr;
+    ptr = (ast_list*) malloc(sizeof(ast_list));
     ptr->ast_node = node;
     ptr->next = tmp_con_ptr;
     /* printf("NEW pointer: %p\n", ptr); */

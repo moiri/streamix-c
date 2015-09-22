@@ -55,8 +55,8 @@ void draw_connection_graph (ast_node* start) {
 void draw_connection_graph_step (FILE* graph, ast_node* ptr) {
     char node_id_str[11];
     char tmp_node_id_str[11];
-    con_list* i_ptr;
-    con_list* j_ptr;
+    ast_list* i_ptr;
+    ast_list* j_ptr;
 
     if (ptr->node_type == AST_ID) {
         // reached a leaf node of the AST -> add box to drawing
@@ -74,7 +74,7 @@ void draw_connection_graph_step (FILE* graph, ast_node* ptr) {
             do {
                 if (ptr->op.left->node_type == AST_ID) {
                     sprintf(node_id_str, "id%d", ptr->op.left->id);
-                    i_ptr = (con_list*)0;
+                    i_ptr = (ast_list*)0;
                 }
                 else {
                     sprintf(node_id_str, "id%d", i_ptr->ast_node->id);
@@ -84,7 +84,7 @@ void draw_connection_graph_step (FILE* graph, ast_node* ptr) {
                 do {
                     if (ptr->op.right->node_type == AST_ID) {
                         sprintf(tmp_node_id_str, "id%d", ptr->op.right->id);
-                        j_ptr = (con_list*)0;
+                        j_ptr = (ast_list*)0;
                     }
                     else {
                         sprintf(tmp_node_id_str, "id%d", j_ptr->ast_node->id);

@@ -29,6 +29,7 @@
 #define AST_WRAP        5
 #define AST_STMT        6
 #define AST_PORT        7
+#define AST_STMTS       8
 
 // drawing
 #define AST_DOT_PATH    "dot/ast_graph.dot"
