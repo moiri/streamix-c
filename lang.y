@@ -22,6 +22,7 @@
     void install_port ( char*, int, int, int );
     void context_check ( char*, int );
     void context_check_port ( char*, int );
+    ast_node* ast;
     int num_errors = 0;
     char* src_file_name;
     char error_msg[255];
@@ -39,30 +40,39 @@
 %token <ival> UP DOWN SIDE IN OUT BOX WRAP
 %token <sval> IDENTIFIER
 %type <ival> port_mode port_class
-%type <nval> net
+%type <nval> net stmt decl_box decl_wrapper
 %left '|'
 %left '.'
+%start stmts
 
 %%
 /* Grammar rules */
 stmts:
     %empty
-|   stmts stmt
+|   stmts stmt {
+        ast = ast_add_stmt($2);
+    }
 ;
 
 stmt:
     net {
-        draw_ast_graph(ast_add_net($1));
         draw_connection_graph($1);
+        $$ = ast_add_net($1);
+        /* draw_ast_graph($$); */
     }
-|   decl_box
-|   decl_wrapper
+|   decl_box {
+        $$ = $1;
+    }
+|   decl_wrapper {
+        $$ = $1;
+    }
 ;
 
 /* box declarartion */
 decl_box:
     opt_state BOX IDENTIFIER '(' decl_port opt_decl_port ')' ON IDENTIFIER {
         install($3, $2, @3.last_line);
+        $$ = ast_add_box($3);
     }
 ;
 
@@ -132,6 +142,7 @@ net:
 decl_wrapper:
     WRAP IDENTIFIER '{' wportlist '}' ON net {
         install($2, $1, @2.last_line);
+        $$ = ast_add_wrap($2);
     }
 ;
 
@@ -175,6 +186,7 @@ int main(int argc, char **argv) {
         yyparse();
     } while (!feof(yyin));
 
+    draw_ast_graph(ast);
     if (num_errors > 0) printf(" Error count: %d\n", num_errors);
 }
 

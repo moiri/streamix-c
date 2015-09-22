@@ -7,7 +7,19 @@
 int __node_id = 0;
 ast_list* con_ptr = (ast_list*)0;
 ast_list* tmp_con_ptr = (ast_list*)0;
+ast_list* stmts_ptr = (ast_list*)0;
 
+/******************************************************************************/
+ast_node* ast_add_box ( char* name ) {
+    ast_node* ptr;
+    ptr = (ast_node*) malloc(sizeof(ast_node));
+    ptr->box.name = (char*) malloc(strlen(name)+1);
+    strcpy (ptr->box.name, name);
+    __node_id++;
+    ptr->id = __node_id;
+    ptr->node_type = AST_BOX;
+    return ptr;
+}
 
 /******************************************************************************/
 ast_node* ast_add_id ( char* name ) {
@@ -23,7 +35,7 @@ ast_node* ast_add_id ( char* name ) {
 }
 
 /******************************************************************************/
-ast_node* ast_add_net ( ast_node* node) {
+ast_node* ast_add_net ( ast_node* node ) {
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
     ptr->net = node;
@@ -127,6 +139,33 @@ ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type ) {
     /* } */
     /* while (con_list_ptr != 0); */
 
+    return ptr;
+}
+
+/******************************************************************************/
+ast_node* ast_add_stmt ( ast_node* stmt ) {
+    ast_node* ptr;
+    ast_list* list_ptr;
+    ptr = (ast_node*) malloc(sizeof(ast_node));
+    __node_id++;
+    ptr->id = __node_id;
+    ptr->node_type = AST_STMTS;
+    list_ptr = (ast_list*) malloc(sizeof(ast_list));
+    list_ptr->ast_node = stmt;
+    list_ptr->next = ptr->stmts;
+    ptr->stmts = list_ptr;
+    return ptr;
+}
+
+/******************************************************************************/
+ast_node* ast_add_wrap ( char* name ) {
+    ast_node* ptr;
+    ptr = (ast_node*) malloc(sizeof(ast_node));
+    ptr->wrap.name = (char*) malloc(strlen(name)+1);
+    strcpy (ptr->wrap.name, name);
+    __node_id++;
+    ptr->id = __node_id;
+    ptr->node_type = AST_WRAP;
     return ptr;
 }
 

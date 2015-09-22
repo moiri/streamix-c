@@ -41,6 +41,7 @@
 #define LABEL_BOX       "box"
 #define LABEL_WRAP      "wrapper"
 #define LABEL_PORT      "port"
+#define LABEL_STMTS     "stmts"
 
 #define SHAPE_BOX       "box"
 #define SHAPE_ELLIPSE   "ellipse"

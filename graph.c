@@ -15,30 +15,46 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
     char child_node_id_str[11];
     char node_id_str[11];
     char node_name[11];
+    ast_list* stmt_ptr;
     sprintf(node_id_str, "id%d", ptr->id);
-    if (ptr->node_type == AST_ID) {
-        // reached a leaf node of the AST -> add box to drawing
-        graph_add_node(graph, node_id_str, ptr->name, SHAPE_BOX);
-    }
-    else if (ptr->node_type == AST_SERIAL || ptr->node_type == AST_PARALLEL) {
-        if (ptr->node_type == AST_SERIAL)    sprintf(node_name, LABEL_SERIAL);
-        if (ptr->node_type == AST_PARALLEL)  sprintf(node_name, LABEL_PARALLEL);
-        graph_add_node(graph, node_id_str, node_name, SHAPE_ELLIPSE);
-        // continue on the left branch
-        draw_ast_graph_step(graph, ptr->op.left);
-        sprintf(child_node_id_str, "id%d", ptr->op.left->id);
-        graph_add_edge(graph, node_id_str, child_node_id_str);
-        // continue on the right branch
-        draw_ast_graph_step(graph, ptr->op.right);
-        sprintf(child_node_id_str, "id%d", ptr->op.right->id);
-        graph_add_edge(graph, node_id_str, child_node_id_str);
-    }
-    else if (ptr->node_type == AST_NET) {
-        // reached a leaf node of the AST -> add box to drawing
-        draw_ast_graph_step(graph, ptr->net);
-        sprintf(child_node_id_str, "id%d", ptr->net->id);
-        graph_add_node(graph, node_id_str, LABEL_NET, SHAPE_ELLIPSE);
-        graph_add_edge(graph, node_id_str, child_node_id_str);
+    switch (ptr->node_type) {
+        case AST_ID:
+            // reached a leaf node of the AST -> add box to drawing
+            graph_add_node(graph, node_id_str, ptr->name, SHAPE_BOX);
+            break;
+        case AST_SERIAL:
+            sprintf(node_name, LABEL_SERIAL);
+        case AST_PARALLEL:
+            if (ptr->node_type == AST_PARALLEL) sprintf(node_name, LABEL_PARALLEL);
+            graph_add_node(graph, node_id_str, node_name, SHAPE_ELLIPSE);
+            // continue on the left branch
+            draw_ast_graph_step(graph, ptr->op.left);
+            sprintf(child_node_id_str, "id%d", ptr->op.left->id);
+            graph_add_edge(graph, node_id_str, child_node_id_str);
+            // continue on the right branch
+            draw_ast_graph_step(graph, ptr->op.right);
+            sprintf(child_node_id_str, "id%d", ptr->op.right->id);
+            graph_add_edge(graph, node_id_str, child_node_id_str);
+            break;
+        case AST_NET:
+            draw_ast_graph_step(graph, ptr->net);
+            sprintf(child_node_id_str, "id%d", ptr->net->id);
+            graph_add_node(graph, node_id_str, LABEL_NET, SHAPE_ELLIPSE);
+            graph_add_edge(graph, node_id_str, child_node_id_str);
+            break;
+        case AST_STMTS:
+            graph_add_node(graph, node_id_str, LABEL_STMTS, SHAPE_ELLIPSE);
+            stmt_ptr = ptr->stmts;
+            do {
+                draw_ast_graph_step(graph, stmt_ptr->ast_node);
+                sprintf(child_node_id_str, "id%d", stmt_ptr->ast_node->id);
+                graph_add_edge(graph, node_id_str, child_node_id_str);
+                stmt_ptr = stmt_ptr->next;
+            }
+            while (stmt_ptr != 0);
+            break;
+        default:
+            ;
     }
 }
 
