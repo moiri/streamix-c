@@ -43,6 +43,11 @@ run:
 .PHONY: dot
 
 dot:
-	dot $(DOT_AST_FILE).dot -Tps2 -o $(DOT_AST_FILE).ps
-	# dot $(DOT_CON_FILE).dot -Tpng > $(DOT_CON_FILE).png
-	dot $(DOT_CON_FILE).dot -Tps2 -o $(DOT_CON_FILE).ps
+	# generate ast pdf file
+	dot $(DOT_AST_FILE).dot -Tpdf > $(DOT_AST_FILE).pdf
+	# generate multiple temporary pdf files of the networks
+	dot -Tpdf $(DOT_CON_FILE).dot | csplit --quiet --elide-empty-files --prefix=dot/tmpfile - "/%%EOF/+1" "{*}"
+	# merge temporary pdf files to one pdf
+	gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$(DOT_CON_FILE).pdf dot/tmpfile*
+	# remove temporary pdf files
+	rm -f dot/tmpfile*
