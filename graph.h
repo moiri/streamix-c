@@ -34,7 +34,7 @@ void draw_ast_graph_step (FILE*, ast_node*);
  *
  * @param ast_node*:    pointer to the root node of the AST
  * */
-void draw_connection_graph (ast_node*);
+void draw_connection_graph (FILE*, ast_node*);
 
 /**
  * Recursive function to draw the connection graph

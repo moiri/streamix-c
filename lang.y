@@ -26,6 +26,7 @@
     int num_errors = 0;
     char* src_file_name;
     char error_msg[255];
+    FILE* con_graph;
 %}
 
 /* Bison declarations */
@@ -56,7 +57,7 @@ stmts:
 
 stmt:
     net {
-        draw_connection_graph($1);
+        draw_connection_graph(con_graph, $1);
         $$ = ast_add_net($1);
         /* draw_ast_graph($$); */
     }
@@ -142,6 +143,7 @@ net:
 decl_wrapper:
     WRAP IDENTIFIER '{' wportlist '}' ON net {
         install($2, $1, @2.last_line);
+        draw_connection_graph(con_graph, $7);
         $$ = ast_add_wrap(ast_add_id($2), ast_add_net($7));
     }
 ;
@@ -181,11 +183,13 @@ int main(int argc, char **argv) {
     // set flex to read from it instead of defaulting to STDIN    yyin = myfile;
     yyin = myfile;
 
+    con_graph = fopen(CON_DOT_PATH, "w");
     // parse through the input until there is no more:
     do {
         yyparse();
     } while (!feof(yyin));
 
+    fclose(con_graph);
     draw_ast_graph(ast);
     if (num_errors > 0) printf(" Error count: %d\n", num_errors);
 }

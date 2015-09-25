@@ -40,6 +40,6 @@ wrap Car {
     car_out (car_l_out) : out up,
     car_in (car_r_in) : in down,
     car_out (car_r_out) : out down
-} on ((RS|B).ABS.(DC|MB)|DS).CPA
+} on ((RS|B|MB).ABS.DC|DS).CPA
 
 Car.Car.Car

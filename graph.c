@@ -74,12 +74,10 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
 }
 
 /******************************************************************************/
-void draw_connection_graph (ast_node* start) {
-    FILE* con_graph = fopen(CON_DOT_PATH, "w");
+void draw_connection_graph (FILE* con_graph, ast_node* start) {
     graph_init(con_graph, STYLE_CON_GRAPH);
     draw_connection_graph_step(con_graph, start);
     graph_finish(con_graph);
-    fclose(con_graph);
 }
 
 /******************************************************************************/
@@ -142,12 +140,12 @@ void graph_add_node ( FILE* graph, char* id, char* name, const char* shape ) {
 
 /******************************************************************************/
 void graph_finish (FILE* graph) {
-    fprintf(graph, "}");
+    fprintf(graph, "}\n");
 }
 
 /******************************************************************************/
 void graph_init (FILE* graph, int style) {
-    fprintf(graph, "digraph Net {\n");
+    fprintf(graph, "digraph {\n");
     switch (style) {
         case STYLE_CON_GRAPH:
             fprintf(graph, "\tedge [dir=none]\n");
