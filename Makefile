@@ -17,7 +17,7 @@ DOT_AST_FILE = $(DOT_PATH)/ast_graph
 DOT_CON_FILE = $(DOT_PATH)/connection_graph
 
 TEST_PATH = test
-TEST_FILE = $(TEST_PATH)/less_simple.test
+TEST_FILE = $(TEST_PATH)/cpa.test
 
 $(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(PLUGIN)
 	gcc $(PROJECT).tab.c lex.yy.c $(PLUGIN_C) -lfl -o $(PARSER)
@@ -43,5 +43,6 @@ run:
 .PHONY: dot
 
 dot:
-	dot $(DOT_AST_FILE).dot -Tpng > $(DOT_AST_FILE).png
-	dot $(DOT_CON_FILE).dot -Tpng > $(DOT_CON_FILE).png
+	dot $(DOT_AST_FILE).dot -Tps2 -o $(DOT_AST_FILE).ps
+	# dot $(DOT_CON_FILE).dot -Tpng > $(DOT_CON_FILE).png
+	dot $(DOT_CON_FILE).dot -Tps2 -o $(DOT_CON_FILE).ps
