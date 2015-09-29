@@ -25,7 +25,10 @@ struct ast_list {
 
 // linked list structure containing AST port pointers
 struct port_list {
-    port*       port_node;
+    union {
+        port*       port_node;
+        port_list*  sync;
+    };
     port_list*  next;
 };
 
@@ -52,15 +55,43 @@ struct wrap {
 
 // AST_PORT
 struct port {
-    char*   name_ext;
-    char*   name_int;
-    int     mode;
-    int     pclass;
+    enum {
+        PORT_SYNC,
+        PORT_WRAP,
+        PORT_BOX
+    } port_type;
+    enum {
+        CLASS_UP,
+        CLASS_DOWN,
+        CLASS_SIDE
+    } pclass;
+    enum {
+        MODE_IN,
+        MODE_OUT
+    } mode;
+    union {
+        char* name;
+        struct {
+            char*   name_ext;
+            char*   name_int;
+        } wrap;
+    };
 };
 
 // the AST structure
 struct ast_node {
-    int     node_type;  // OP_ID, OP_SERIAL, OP_PARALLEL
+    enum {
+        AST_SERIAL,
+        AST_PARALLEL,
+        AST_ID,
+        AST_NET,
+        AST_BOX,
+        AST_WRAP,
+        AST_STMT,
+        AST_PORT,
+        AST_STMTS,
+        AST_ATTR
+    } node_type;
     int     id;         // id of the node -> atm only used for dot graphs
     union {
         char*           name;   // AST_ID

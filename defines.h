@@ -20,17 +20,6 @@
 #define VAL_BOX     0
 #define VAL_WRAP    1
 
-// AST node_types
-#define AST_SERIAL      0
-#define AST_PARALLEL    1
-#define AST_ID          2
-#define AST_NET         3
-#define AST_BOX         4
-#define AST_WRAP        5
-#define AST_STMT        6
-#define AST_PORT        7
-#define AST_STMTS       8
-
 // drawing
 #define AST_DOT_PATH    "dot/ast_graph.dot"
 #define CON_DOT_PATH    "dot/connection_graph.dot"
@@ -38,9 +27,11 @@
 #define LABEL_SERIAL    "serial"
 #define LABEL_PARALLEL  "parallel"
 #define LABEL_NET       "net"
-#define LABEL_BOX       "box"
-#define LABEL_WRAP      "wrapper"
-#define LABEL_PORT      "port"
+#define LABEL_BOX       "box decl"
+#define LABEL_WRAP      "wrap decl"
+#define LABEL_PORT      "port decl"
+#define LABEL_PORT_LIST "port list"
+#define LABEL_PORT_SYNC "sync"
 #define LABEL_STMTS     "stmts"
 
 #define SHAPE_BOX       "box"

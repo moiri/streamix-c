@@ -14,13 +14,18 @@ void draw_ast_graph (ast_node* start) {
 void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
     char child_node_id_str[11];
     char node_id_str[11];
-    char node_name[11];
+    char node_name[50];
     ast_list* stmt_ptr;
     sprintf(node_id_str, "id%d", ptr->id);
     switch (ptr->node_type) {
+        case AST_ATTR:
+            sprintf(node_name, "ATTR: %s", ptr->name);
+            graph_add_node(graph, node_id_str, node_name, SHAPE_BOX);
+            break;
         case AST_ID:
             // reached a leaf node of the AST -> add box to drawing
-            graph_add_node(graph, node_id_str, ptr->name, SHAPE_BOX);
+            sprintf(node_name, "ID: %s", ptr->name);
+            graph_add_node(graph, node_id_str, node_name, SHAPE_BOX);
             break;
         case AST_SERIAL:
             sprintf(node_name, LABEL_SERIAL);
