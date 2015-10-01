@@ -1,45 +1,38 @@
-stateless box RS (speed: out up) on func_rs
-stateless box B (break_abs: in up) on func_b
+stateless box RS (out speed) on func_rs
+stateless box B (in break_abs) on func_b
+box MB (in block, out break_cmd) on func_mb
+stateless box DS (up side out dist) on func_ds
 box ABS (
-    speed: in down,
-    break_abs: out down,
-    break_cmd: in up,
-    block: out up,
-    abs: out up,
-    dc: in up
+    in speed,
+    in break_cmd,
+    up in dc,
+    out break_abs,
+    out block,
+    out abs
 ) on func_abs
-box MB (
-    break_cmd: out down,
-    block: in down
-) on func_mb
 box DC (
-    abs: in down,
-    dc: out down,
-    dc: out up,
-    cpa: in up,
-    dist: in side
+    in abs,
+    in cpa,
+    side in dist,
+    up down out dc
 ) on func_dc
-stateless box DS (
-    dist: out up,
-    dist: out side
-) on func_ds
 box CPA (
     sync {
-        dist: down decoupled,
-        dc: down
+        decoupled in dist,
+        down in dc
     },
-    cpa: out down,
-    car_l_in: in side,
-    car_l_out: out side,
-    car_r_in: in side,
-    car_r_out: out side
+    out cpa,
+    side in car_l_in,
+    side out car_l_out,
+    side in car_r_in,
+    side out car_r_out
 ) on func_cpa
 
-wrap Car {
-    car_in (car_l_in) : in up,
-    car_out (car_l_out) : out up,
-    car_in (car_r_in) : in down,
-    car_out (car_r_out) : out down
+net Car {
+    up in car_l_in (car_l_in),
+    up out car_l_out (car_l_out),
+    down in car_r_in (car_r_in),
+    down out car_r_out (car_r_out)
 } on ((RS|B|MB).ABS.DC|DS).CPA
 
 Car.Car.Car

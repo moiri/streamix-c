@@ -26,7 +26,7 @@ side            {yylval.ival = VAL_SIDE;return SIDE;}
 in              {yylval.ival = VAL_IN;return IN;}
 out             {yylval.ival = VAL_OUT;return OUT;}
 box             {yylval.ival = VAL_BOX;return BOX;}
-wrap            {yylval.ival = VAL_WRAP;return WRAP;}
+net             {yylval.ival = VAL_NET;return NET;}
 stateless       return STATELESS;
 decoupled       return DECOUPLED;
 sync            return SYNC;

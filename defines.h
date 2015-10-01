@@ -18,7 +18,7 @@
 #define VAL_OUT     1
 
 #define VAL_BOX     0
-#define VAL_WRAP    1
+#define VAL_NET     1
 
 // drawing
 #define AST_DOT_PATH    "dot/ast_graph.dot"

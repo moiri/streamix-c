@@ -17,7 +17,7 @@
     extern int yylex();
     extern int yyparse();
     extern FILE *yyin;
-    void yyerror (char const *);
+    void yyerror ( const char* );
     void install ( char*, int, int );
     void install_port ( char*, int, int, int );
     void context_check ( char*, int );
@@ -38,10 +38,10 @@
     struct ast_node* nval;
 };
 %token ON STATELESS DECOUPLED SYNC
-%token <ival> UP DOWN SIDE IN OUT BOX WRAP
+%token <ival> UP DOWN SIDE IN OUT BOX NET
 %token <sval> IDENTIFIER
 %type <ival> port_mode port_class
-%type <nval> net stmt decl_box decl_wrapper
+%type <nval> net nets decl_box decl_net
 %left '|'
 %left '.'
 %start stmts
@@ -50,12 +50,12 @@
 /* Grammar rules */
 stmts:
     %empty
-|   stmts stmt {
+|   stmts nets {
         ast = ast_add_stmt($2);
     }
 ;
 
-stmt:
+nets:
     net {
         draw_connection_graph(con_graph, $1);
         $$ = ast_add_net($1);
@@ -64,14 +64,14 @@ stmt:
 |   decl_box {
         $$ = $1;
     }
-|   decl_wrapper {
+|   decl_net {
         $$ = $1;
     }
 ;
 
 /* box declarartion */
 decl_box:
-    opt_state BOX IDENTIFIER '(' decl_port opt_decl_port ')' ON IDENTIFIER {
+    opt_state BOX IDENTIFIER '(' decl_bport opt_decl_bport ')' ON IDENTIFIER {
         install($3, $2, @3.last_line);
         $$ = ast_add_box(ast_add_id($3));
     }
@@ -82,17 +82,27 @@ opt_state:
 |   STATELESS
 ;
 
-opt_decl_port:
+opt_decl_bport:
     %empty
-|   ',' decl_port opt_decl_port
+|   ',' decl_bport opt_decl_bport
 ;
 
-decl_port:
-    IDENTIFIER ':' port_mode port_class {
-        install_port($1, $3, $4, @1.last_line);
-    }
+decl_bport:
+    opt_port_class port_mode IDENTIFIER
 |   SYNC '{' syncport opt_syncport '}'
 ;
+
+opt_port_class:
+    %empty
+|   opt_port_class port_class
+;
+
+/* decl_bport: */
+/*     IDENTIFIER ':' port_mode port_class { */
+/*         install_port($1, $3, $4, @1.last_line); */
+/*     } */
+/* |   SYNC '{' syncport opt_syncport '}' */
+/* ; */
 
 opt_syncport:
     %empty
@@ -100,10 +110,16 @@ opt_syncport:
 ;
 
 syncport:
-    IDENTIFIER ':' port_class opt_decoupled {
-        install_port($1, VAL_IN, $3, @1.last_line);
+    opt_decoupled opt_port_class IN IDENTIFIER {
+        /* install_port($1, VAL_IN, $3, @1.last_line); */
     }
 ;
+
+/* syncport: */
+/*     IDENTIFIER ':' port_class opt_decoupled { */
+/*         install_port($1, VAL_IN, $3, @1.last_line); */
+/*     } */
+/* ; */
 
 opt_decoupled:
     %empty
@@ -140,30 +156,37 @@ net:
 ;
 
 /* wrapper declaration */
-decl_wrapper:
-    WRAP IDENTIFIER '{' wportlist '}' ON net {
+decl_net:
+    NET IDENTIFIER '{' nportlist '}' ON net {
         install($2, $1, @2.last_line);
         draw_connection_graph(con_graph, $7);
         $$ = ast_add_wrap(ast_add_id($2), ast_add_net($7));
     }
 ;
 
-wportlist:
+nportlist:
     %empty
-|   decl_wport opt_decl_wport
+|   decl_nport opt_decl_nport
 ;
 
-opt_decl_wport:
+opt_decl_nport:
     %empty
-|   ',' decl_wport opt_decl_wport
+|   ',' decl_nport opt_decl_nport
 ;
 
-decl_wport:
-    IDENTIFIER '(' IDENTIFIER ')' ':' port_mode port_class {
-        install_port($1, $6, $7, @1.last_line);
-        context_check_port($3, @3.last_line);
+decl_nport:
+    opt_port_class port_mode IDENTIFIER '(' IDENTIFIER ')' {
+        /* install_port($1, $6, $7, @1.last_line); */
+        /* context_check_port($3, @3.last_line); */
     }
 ;
+
+/* decl_nport: */
+/*     IDENTIFIER '(' IDENTIFIER ')' ':' port_mode port_class { */
+/*         install_port($1, $6, $7, @1.last_line); */
+/*         context_check_port($3, @3.last_line); */
+/*     } */
+/* ; */
 
 %%
 /* Epilogue */
@@ -190,8 +213,8 @@ int main(int argc, char **argv) {
     } while (!feof(yyin));
 
     fclose(con_graph);
-    draw_ast_graph(ast);
     if (num_errors > 0) printf(" Error count: %d\n", num_errors);
+    else draw_ast_graph(ast);
 }
 
 /*
@@ -266,7 +289,7 @@ void context_check_port ( char *name, int line ) {
  *
  * @param: char* s:  error string
  * */
-void yyerror(const char *s) {
+void yyerror(const char* s ) {
     num_errors++;
     printf("%s: %s\n", src_file_name, s);
 }
