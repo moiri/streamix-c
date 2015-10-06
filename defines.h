@@ -33,6 +33,7 @@
 #define LABEL_PORT_LIST "port list"
 #define LABEL_PORT_SYNC "sync"
 #define LABEL_STMTS     "stmts"
+#define LABEL_STMT      "stmt"
 
 #define SHAPE_BOX       "box"
 #define SHAPE_ELLIPSE   "ellipse"

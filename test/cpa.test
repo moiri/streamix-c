@@ -28,11 +28,15 @@ box CPA (
     side out car_r_out
 ) on func_cpa
 
-net Car {
-    up in car_l_in (car_l_in),
-    up out car_l_out (car_l_out),
-    down in car_r_in (car_r_in),
-    down out car_r_out (car_r_out)
-} on ((RS|B|MB).ABS.DC|DS).CPA
+net Car { up in car_in (car_l_in), up out car_out (car_l_out),
+        down in car_in (car_r_in), down out car_out (car_r_out) } {
+    signal car_l_in {this, CPA}
+    signal car_l_out {this, CPA}
+    signal car_r_in {this, CPA}
+    signal car_r_out {this, CPA}
+    signal dist {DC, CPA}
+
+    ((RS|B|MB).ABS.DC|DS).CPA
+}
 
 Car.Car.Car

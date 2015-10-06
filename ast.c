@@ -8,6 +8,7 @@ int __node_id = 0;
 ast_list* con_ptr = (ast_list*)0;
 ast_list* tmp_con_ptr = (ast_list*)0;
 ast_list* stmts_ptr = (ast_list*)0;
+ast_list* tmp_stmts_ptr = (ast_list*)0;
 
 /******************************************************************************/
 ast_node* ast_add_box ( ast_node* id ) {
@@ -142,27 +143,41 @@ ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type ) {
 }
 
 /******************************************************************************/
-ast_node* ast_add_stmt ( ast_node* stmt ) {
+ast_node* ast_add_signal () {
     ast_node* ptr;
-    ast_list* list_ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
     __node_id++;
     ptr->id = __node_id;
-    ptr->node_type = AST_STMTS;
-    list_ptr = (ast_list*) malloc(sizeof(ast_list));
-    list_ptr->ast_node = stmt;
-    list_ptr->next = stmts_ptr;
-    stmts_ptr = list_ptr;
-    ptr->stmts = list_ptr;
+    ptr->node_type = AST_SIGNAL;
     return ptr;
 }
 
 /******************************************************************************/
-ast_node* ast_add_wrap ( ast_node* id, ast_node* net ) {
+ast_list* ast_add_stmt ( ast_node* stmt, ast_list* previous_stmt ) {
+    ast_list* list_ptr;
+    list_ptr = (ast_list*) malloc(sizeof(ast_list));
+    list_ptr->ast_node = stmt;
+    list_ptr->next = previous_stmt;
+    return list_ptr;
+}
+
+/******************************************************************************/
+ast_node* ast_add_stmts ( ast_list* stmts ) {
+    ast_node* ptr;
+    ptr = (ast_node*) malloc(sizeof(ast_node));
+    __node_id++;
+    ptr->id = __node_id;
+    ptr->node_type = AST_STMTS;
+    ptr->stmts = stmts;
+    return ptr;
+}
+
+/******************************************************************************/
+ast_node* ast_add_wrap ( ast_node* id, ast_node* stmts ) {
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
     ptr->wrap.id = id;
-    ptr->wrap.net = net;
+    ptr->wrap.stmts = stmts;
     __node_id++;
     ptr->id = __node_id;
     ptr->node_type = AST_WRAP;

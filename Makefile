@@ -44,6 +44,7 @@ run:
 
 dot:
 	# generate ast pdf file
+	# sort -V $(DOT_AST_FILE).dot -o $(DOT_AST_FILE).dot
 	dot $(DOT_AST_FILE).dot -Tpdf > $(DOT_AST_FILE).pdf
 	# generate multiple temporary pdf files of the networks
 	dot -Tpdf $(DOT_CON_FILE).dot | csplit --quiet --elide-empty-files --prefix=dot/tmpfile - "/%%EOF/+1" "{*}"

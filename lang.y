@@ -32,27 +32,44 @@
 /* Bison declarations */
 %define parse.error verbose
 %define parse.lac full
+%locations
 %union {
     int ival;
     char *sval;
     struct ast_node* nval;
+    struct ast_list* lval;
 };
-%token ON STATELESS DECOUPLED SYNC
+%token ON STATELESS DECOUPLED SYNC SIGNAL
 %token <ival> UP DOWN SIDE IN OUT BOX NET
 %token <sval> IDENTIFIER
 %type <ival> port_mode port_class
-%type <nval> net nets decl_box decl_net
+%type <nval> net nets stmt decl_box decl_net decl_signal
+%type <lval> stmts
 %left '|'
 %left '.'
-%start stmts
+%start start
 
 %%
 /* Grammar rules */
+
+start:
+    stmts { ast = ast_add_stmts($1); }
+;
+
 stmts:
-    %empty
-|   stmts nets {
-        ast = ast_add_stmt($2);
+    %empty {$$ = (ast_list*)0;}
+|   stmt stmts {
+        $$ = ast_add_stmt($1, $2);
+        /* if ($1 == 0) printf("0"); */
+        /* else printf("stmt"); */
+        /* if ($2 == 0) printf(" 0\n"); */
+        /* else printf(" stmts\n"); */
     }
+;
+
+stmt:
+    nets {$$ = $1;}
+|   decl_signal {$$ = $1;}
 ;
 
 nets:
@@ -69,10 +86,26 @@ nets:
     }
 ;
 
+decl_signal:
+    SIGNAL IDENTIFIER '{' signal_con_list '}' {
+        $$ = ast_add_signal();
+    }
+;
+
+signal_con_list:
+    IDENTIFIER opt_con_id
+|   '*'
+;
+
+opt_con_id:
+    %empty
+|   ',' IDENTIFIER
+;
+
 /* box declarartion */
 decl_box:
     opt_state BOX IDENTIFIER '(' decl_bport opt_decl_bport ')' ON IDENTIFIER {
-        install($3, $2, @3.last_line);
+        /* install($3, $2, @3.last_line); */
         $$ = ast_add_box(ast_add_id($3));
     }
 ;
@@ -140,7 +173,7 @@ port_class:
 /* net declaration */
 net:
     IDENTIFIER  { 
-        context_check($1, @1.last_line);
+        /* context_check($1, @1.last_line); */
         $$ = ast_add_id($1);
         /* printf("id: %s\n", $$->name); */
     }
@@ -157,10 +190,11 @@ net:
 
 /* wrapper declaration */
 decl_net:
-    NET IDENTIFIER '{' nportlist '}' ON net {
-        install($2, $1, @2.last_line);
-        draw_connection_graph(con_graph, $7);
-        $$ = ast_add_wrap(ast_add_id($2), ast_add_net($7));
+    NET IDENTIFIER '{' nportlist '}' '{' stmts '}' {
+        /* install($2, $1, @2.last_line); */
+        /* draw_connection_graph(con_graph, $7); */
+        /* $$ = ast_add_wrap(ast_add_id($2), ast_add_net($7)); */
+        $$ = ast_add_wrap(ast_add_id($2), ast_add_stmts($7));
     }
 ;
 
