@@ -44,7 +44,7 @@
 %token <sval> IDENTIFIER
 %type <ival> port_mode port_class
 %type <nval> net nets stmt decl_box decl_net decl_connect
-%type <lval> stmts
+%type <lval> stmts connect_list opt_connect_id
 %left '|'
 %left '.'
 %start start
@@ -53,17 +53,17 @@
 /* Grammar rules */
 
 start:
-    stmts { ast = ast_add_stmts($1); }
+    stmts {
+        ast = ast_add_stmts($1);
+    }
 ;
 
 stmts:
-    %empty {$$ = (ast_list*)0;}
+    %empty {
+        $$ = (ast_list*)0;
+    }
 |   stmt stmts {
         $$ = ast_add_stmt($1, $2);
-        /* if ($1 == 0) printf("0"); */
-        /* else printf("stmt"); */
-        /* if ($2 == 0) printf(" 0\n"); */
-        /* else printf(" stmts\n"); */
     }
 ;
 
@@ -76,7 +76,6 @@ nets:
     net {
         draw_connection_graph(con_graph, $1);
         $$ = ast_add_net($1);
-        /* draw_ast_graph($$); */
     }
 |   decl_box {
         $$ = $1;
@@ -88,18 +87,26 @@ nets:
 
 decl_connect:
     CONNECT IDENTIFIER '{' connect_list '}' {
-        $$ = ast_add_connect(ast_add_id($2));
+        $$ = ast_add_connect(ast_add_id($2), ast_add_connect_list($4));
     }
 ;
 
 connect_list:
-    IDENTIFIER opt_connect_id
-|   '*'
+    IDENTIFIER opt_connect_id {
+        $$ = ast_add_connect_list_elem(ast_add_id($1), $2);
+    }
+|   '*' {
+        $$ = ast_add_connect_list_elem(ast_add_star(), (ast_list*)0);
+    }
 ;
 
 opt_connect_id:
-    %empty
-|   ',' IDENTIFIER
+    %empty {
+        $$ = (ast_list*)0;
+    }
+|   ',' IDENTIFIER opt_connect_id {
+        $$ = ast_add_connect_list_elem(ast_add_id($2), $3);
+    }
 ;
 
 /* box declarartion */

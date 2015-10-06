@@ -56,6 +56,7 @@ struct wrap {
 // AST_CONNECT
 struct connect {
     ast_node*   id;
+    ast_node*   connect_list;
 };
 
 // AST_PORT
@@ -86,17 +87,19 @@ struct port {
 // the AST structure
 struct ast_node {
     enum {
-        AST_SERIAL,
-        AST_PARALLEL,
+        AST_ATTR,
+        AST_BOX,
+        AST_CONNECT,
+        AST_CONNECT_LIST,
         AST_ID,
         AST_NET,
-        AST_BOX,
-        AST_WRAP,
-        AST_STMT,
+        AST_PARALLEL,
         AST_PORT,
-        AST_CONNECT,
+        AST_STAR,
+        AST_SERIAL,
+        AST_STMT,
         AST_STMTS,
-        AST_ATTR
+        AST_WRAP
     } node_type;
     int     id;         // id of the node -> atm only used for dot graphs
     union {
@@ -108,6 +111,7 @@ struct ast_node {
         struct port     port;   // AST_PORT
         ast_list*       stmts;  // AST_STMTS
         struct connect  connect;// AST_CONNECT
+        ast_list*       connect_list;//AST_CONNECT_LIST
     };
 };
 
@@ -119,6 +123,35 @@ struct ast_node {
  *      a pointer to the location where the data was stored
  * */
 ast_node* ast_add_box ( ast_node* );
+
+/**
+ * Add a connection declaration to the AST.
+ *
+ * @param ast_node*:    pointer to the signal id ast
+ * @param ast_node*:    pointer to the connecting net list node
+ * @return: ast_node*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_node* ast_add_connect ( ast_node*, ast_node* );
+
+/**
+ * Add a connection elements to the AST.
+ *
+ * @param ast_list*:    pointer to the list of connecting nets
+ * @return: ast_list*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_node* ast_add_connect_list ( ast_list* );
+
+/**
+ * Add a connection elements to the AST.
+ *
+ * @param ast_node*:    pointer to the new connecting net
+ * @param ast_list*:    pointer to the list of previous connecting nets
+ * @return: ast_list*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_list* ast_add_connect_list_elem ( ast_node*, ast_list* );
 
 /**
  * Add a net identifier to the AST.
@@ -151,13 +184,12 @@ ast_node* ast_add_net ( ast_node* );
 ast_node* ast_add_op ( ast_node*, ast_node*, int );
 
 /**
- * Add a connection declaration to the AST.
+ * Add a star operator to the connect AST.
  *
- * @param ast_node*:    pointer to the signal id
  * @return: ast_node*:
  *      a pointer to the location where the data was stored
  * */
-ast_node* ast_add_connect ( ast_node* );
+ast_node* ast_add_star ();
 
 /**
  * Add a statement to the AST.

@@ -39,7 +39,7 @@ sync            return SYNC;
 }
 
     /* operators */
-[.|(){}:,]     return *yytext;
+[.|(){}:,*]     return *yytext;
 
     /* anything else is an error */
 .               yyerror("invalid character");

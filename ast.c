@@ -143,13 +143,44 @@ ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type ) {
 }
 
 /******************************************************************************/
-ast_node* ast_add_connect ( ast_node* connect ) {
+ast_node* ast_add_connect ( ast_node* connect, ast_node* connect_list ) {
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
     ptr->connect.id = connect;
+    ptr->connect.connect_list = connect_list;
     __node_id++;
     ptr->id = __node_id;
     ptr->node_type = AST_CONNECT;
+    return ptr;
+}
+
+/******************************************************************************/
+ast_node* ast_add_connect_list ( ast_list* net_list ) {
+    ast_node* ptr;
+    ptr = (ast_node*) malloc(sizeof(ast_node));
+    ptr->connect_list = net_list;
+    __node_id++;
+    ptr->id = __node_id;
+    ptr->node_type = AST_CONNECT_LIST;
+    return ptr;
+}
+
+/******************************************************************************/
+ast_list* ast_add_connect_list_elem ( ast_node* net, ast_list* previous_net ) {
+    ast_list* list_ptr;
+    list_ptr = (ast_list*) malloc(sizeof(ast_list));
+    list_ptr->ast_node = net;
+    list_ptr->next = previous_net;
+    return list_ptr;
+}
+
+/******************************************************************************/
+ast_node* ast_add_star () {
+    ast_node* ptr;
+    ptr = (ast_node*) malloc(sizeof(ast_node));
+    __node_id++;
+    ptr->id = __node_id;
+    ptr->node_type = AST_STAR;
     return ptr;
 }
 
