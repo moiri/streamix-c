@@ -49,8 +49,13 @@ struct box {
 // AST_WRAP
 struct wrap {
     ast_node*   id;
-    ast_node*   net;
+    ast_node*   stmts;
     port_list*  port_list;
+};
+
+// AST_CONNECT
+struct connect {
+    ast_node*   id;
 };
 
 // AST_PORT
@@ -89,6 +94,7 @@ struct ast_node {
         AST_WRAP,
         AST_STMT,
         AST_PORT,
+        AST_CONNECT,
         AST_STMTS,
         AST_ATTR
     } node_type;
@@ -101,6 +107,7 @@ struct ast_node {
         struct wrap     wrap;   // AST_WRAP
         struct port     port;   // AST_PORT
         ast_list*       stmts;  // AST_STMTS
+        struct connect  connect;// AST_CONNECT
     };
 };
 
@@ -144,13 +151,32 @@ ast_node* ast_add_net ( ast_node* );
 ast_node* ast_add_op ( ast_node*, ast_node*, int );
 
 /**
- * Add a statement to the AST.
+ * Add a connection declaration to the AST.
  *
- * @param ast_node*:    pointer to the statement
+ * @param ast_node*:    pointer to the signal id
  * @return: ast_node*:
  *      a pointer to the location where the data was stored
  * */
-ast_node* ast_add_stmt ( ast_node* );
+ast_node* ast_add_connect ( ast_node* );
+
+/**
+ * Add a statement to the AST.
+ *
+ * @param ast_node*:    pointer to the statement
+ * @param ast_list*:    pointer to the previous statements
+ * @return: ast_list*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_list* ast_add_stmt ( ast_node*, ast_list* );
+
+/**
+ * Add a statement list to the AST.
+ *
+ * @param ast_list*:    pointer to the statements
+ * @return: ast_node*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_node* ast_add_stmts ( ast_list* );
 
 /**
  * Add a wrapper declaration to the AST.

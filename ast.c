@@ -143,12 +143,13 @@ ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type ) {
 }
 
 /******************************************************************************/
-ast_node* ast_add_signal () {
+ast_node* ast_add_connect ( ast_node* connect ) {
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
+    ptr->connect.id = connect;
     __node_id++;
     ptr->id = __node_id;
-    ptr->node_type = AST_SIGNAL;
+    ptr->node_type = AST_CONNECT;
     return ptr;
 }
 

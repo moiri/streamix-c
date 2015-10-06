@@ -30,11 +30,7 @@ box CPA (
 
 net Car { up in car_in (car_l_in), up out car_out (car_l_out),
         down in car_in (car_r_in), down out car_out (car_r_out) } {
-    signal car_l_in {this, CPA}
-    signal car_l_out {this, CPA}
-    signal car_r_in {this, CPA}
-    signal car_r_out {this, CPA}
-    signal dist {DC, CPA}
+    connect dist {DC, CPA}
 
     ((RS|B|MB).ABS.DC|DS).CPA
 }

@@ -39,11 +39,11 @@
     struct ast_node* nval;
     struct ast_list* lval;
 };
-%token ON STATELESS DECOUPLED SYNC SIGNAL
+%token ON STATELESS DECOUPLED SYNC CONNECT
 %token <ival> UP DOWN SIDE IN OUT BOX NET
 %token <sval> IDENTIFIER
 %type <ival> port_mode port_class
-%type <nval> net nets stmt decl_box decl_net decl_signal
+%type <nval> net nets stmt decl_box decl_net decl_connect
 %type <lval> stmts
 %left '|'
 %left '.'
@@ -69,7 +69,7 @@ stmts:
 
 stmt:
     nets {$$ = $1;}
-|   decl_signal {$$ = $1;}
+|   decl_connect {$$ = $1;}
 ;
 
 nets:
@@ -86,18 +86,18 @@ nets:
     }
 ;
 
-decl_signal:
-    SIGNAL IDENTIFIER '{' signal_con_list '}' {
-        $$ = ast_add_signal();
+decl_connect:
+    CONNECT IDENTIFIER '{' connect_list '}' {
+        $$ = ast_add_connect(ast_add_id($2));
     }
 ;
 
-signal_con_list:
-    IDENTIFIER opt_con_id
+connect_list:
+    IDENTIFIER opt_connect_id
 |   '*'
 ;
 
-opt_con_id:
+opt_connect_id:
     %empty
 |   ',' IDENTIFIER
 ;

@@ -27,6 +27,12 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             sprintf(node_name, "ID: %s", ptr->name);
             graph_add_node(graph, node_id_str, node_name, SHAPE_BOX);
             break;
+        case AST_CONNECT:
+            graph_add_node(graph, node_id_str, LABEL_CONNECT, SHAPE_ELLIPSE);
+            draw_ast_graph_step(graph, ptr->connect.id);
+            sprintf(child_node_id_str, "id%d", ptr->connect.id->id);
+            graph_add_edge(graph, node_id_str, child_node_id_str);
+            break;
         case AST_SERIAL:
             sprintf(node_name, LABEL_SERIAL);
         case AST_PARALLEL:
@@ -69,9 +75,9 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             draw_ast_graph_step(graph, ptr->wrap.id);
             sprintf(child_node_id_str, "id%d", ptr->wrap.id->id);
             graph_add_edge(graph, node_id_str, child_node_id_str);
-            /* draw_ast_graph_step(graph, ptr->wrap.stmts); */
-            /* sprintf(child_node_id_str, "id%d", ptr->wrap.stmts->id); */
-            /* graph_add_edge(graph, node_id_str, child_node_id_str); */
+            draw_ast_graph_step(graph, ptr->wrap.stmts);
+            sprintf(child_node_id_str, "id%d", ptr->wrap.stmts->id);
+            graph_add_edge(graph, node_id_str, child_node_id_str);
             break;
         default:
             ;
