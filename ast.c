@@ -38,7 +38,7 @@ ast_node* ast_add_id ( char* name ) {
 ast_node* ast_add_net ( ast_node* node ) {
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->net = node;
+    ptr->ast_node = node;
     __node_id++;
     ptr->id = __node_id;
     ptr->node_type = AST_NET;
@@ -158,7 +158,7 @@ ast_node* ast_add_connect ( ast_node* connect, ast_node* connect_list ) {
 ast_node* ast_add_connect_list ( ast_list* net_list ) {
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->connect_list = net_list;
+    ptr->ast_list = net_list;
     __node_id++;
     ptr->id = __node_id;
     ptr->node_type = AST_CONNECT_LIST;
@@ -200,7 +200,7 @@ ast_node* ast_add_stmts ( ast_list* stmts ) {
     __node_id++;
     ptr->id = __node_id;
     ptr->node_type = AST_STMTS;
-    ptr->stmts = stmts;
+    ptr->ast_list = stmts;
     return ptr;
 }
 

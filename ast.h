@@ -84,6 +84,49 @@ struct port {
     };
 };
 
+// AST_SYNC_PORT
+struct sync_port {
+    char* name;
+    enum {
+        CLASS_UP,
+        CLASS_DOWN,
+        CLASS_SIDE
+    } pclass;
+    enum {
+        DECOUPLED,
+        COUPLED
+    } coupling;
+};
+
+// AST_BOX_PORT
+struct box_port {
+    char* name;
+    enum {
+        CLASS_UP,
+        CLASS_DOWN,
+        CLASS_SIDE
+    } pclass;
+    enum {
+        MODE_IN,
+        MODE_OUT
+    } mode;
+};
+
+// AST_NET_PORT
+struct net_port {
+    char* name;
+    char* int_name;
+    enum {
+        CLASS_UP,
+        CLASS_DOWN,
+        CLASS_SIDE
+    } pclass;
+    enum {
+        MODE_IN,
+        MODE_OUT
+    } mode;
+};
+
 // the AST structure
 struct ast_node {
     enum {
@@ -103,15 +146,15 @@ struct ast_node {
     } node_type;
     int     id;         // id of the node -> atm only used for dot graphs
     union {
-        char*           name;   // AST_ID
-        struct op       op;     // AST_SERIAL, AST_PARALLEL
-        ast_node*       net;    // AST_NET
-        struct box      box;    // AST_BOX
-        struct wrap     wrap;   // AST_WRAP
-        struct port     port;   // AST_PORT
-        ast_list*       stmts;  // AST_STMTS
-        struct connect  connect;// AST_CONNECT
-        ast_list*       connect_list;//AST_CONNECT_LIST
+        char*           name;           // AST_ID
+        ast_node*       ast_node;       // AST_NET
+        ast_list*       ast_list;       // AST_STMTS, AST_CONNECT_LIST
+        port_list*      port_list;      // AST_PORT_LIST
+        struct op       op;             // AST_SERIAL, AST_PARALLEL
+        struct box      box;            // AST_BOX
+        struct wrap     wrap;           // AST_WRAP
+        struct port     port;           // AST_PORT
+        struct connect  connect;        // AST_CONNECT
     };
 };
 
