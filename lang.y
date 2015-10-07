@@ -43,8 +43,8 @@
 %token <ival> UP DOWN SIDE IN OUT BOX NET
 %token <sval> IDENTIFIER
 %type <ival> port_mode port_class
-%type <nval> net nets stmt decl_box decl_net decl_connect
-%type <lval> stmts connect_list opt_connect_id
+%type <nval> net nets stmt decl_box decl_net decl_connect decl_bport syncport decl_nport
+%type <lval> stmts connect_list opt_connect_id opt_decl_bport opt_syncport opt_decl_nport
 %left '|'
 %left '.'
 %start start
@@ -54,7 +54,7 @@
 
 start:
     stmts {
-        ast = ast_add_stmts($1);
+        ast = ast_add_list($1, AST_STMTS);
     }
 ;
 
@@ -63,7 +63,7 @@ stmts:
         $$ = (ast_list*)0;
     }
 |   stmt stmts {
-        $$ = ast_add_stmt($1, $2);
+        $$ = ast_add_list_elem($1, $2);
     }
 ;
 
@@ -75,7 +75,7 @@ stmt:
 nets:
     net {
         draw_connection_graph(con_graph, $1);
-        $$ = ast_add_net($1);
+        $$ = ast_add_node($1, AST_NET);
     }
 |   decl_box {
         $$ = $1;
@@ -87,16 +87,22 @@ nets:
 
 decl_connect:
     CONNECT IDENTIFIER '{' connect_list '}' {
-        $$ = ast_add_connect(ast_add_id($2), ast_add_connect_list($4));
+        $$ = ast_add_connect(
+            ast_add_id($2),
+            ast_add_list($4, AST_CONNECTS)
+        );
     }
 ;
 
 connect_list:
     IDENTIFIER opt_connect_id {
-        $$ = ast_add_connect_list_elem(ast_add_id($1), $2);
+        $$ = ast_add_list_elem(ast_add_id($1), $2);
     }
 |   '*' {
-        $$ = ast_add_connect_list_elem(ast_add_star(), (ast_list*)0);
+        $$ = ast_add_list_elem(
+            ast_add_star(),
+            (ast_list*)0
+        );
     }
 ;
 
@@ -105,7 +111,7 @@ opt_connect_id:
         $$ = (ast_list*)0;
     }
 |   ',' IDENTIFIER opt_connect_id {
-        $$ = ast_add_connect_list_elem(ast_add_id($2), $3);
+        $$ = ast_add_list_elem(ast_add_id($2), $3);
     }
 ;
 
@@ -113,7 +119,13 @@ opt_connect_id:
 decl_box:
     opt_state BOX IDENTIFIER '(' decl_bport opt_decl_bport ')' ON IDENTIFIER {
         /* install($3, $2, @3.last_line); */
-        $$ = ast_add_box(ast_add_id($3));
+        $$ = ast_add_box(
+            ast_add_id($3),
+            ast_add_list(
+                ast_add_list_elem($5, $6),
+                AST_PORTS
+            )
+        );
     }
 ;
 
@@ -123,18 +135,30 @@ opt_state:
 ;
 
 opt_decl_bport:
-    %empty
-|   ',' decl_bport opt_decl_bport
+    %empty { $$ = (ast_list*)0; }
+|   ',' decl_bport opt_decl_bport {
+        $$ = ast_add_list_elem($2, $3);
+    }
 ;
 
 decl_bport:
-    opt_port_class port_mode IDENTIFIER
-|   SYNC '{' syncport opt_syncport '}'
+    opt_port_class port_mode IDENTIFIER {
+        $$ = ast_add_port(
+            ast_add_id($3),
+            PORT_BOX
+        );
+    }
+|   SYNC '{' syncport opt_syncport '}' {
+        $$ = ast_add_list(
+            ast_add_list_elem($3, $4),
+            AST_SYNC
+        );
+    }
 ;
 
 opt_port_class:
     %empty
-|   opt_port_class port_class
+|   port_class opt_port_class
 ;
 
 /* decl_bport: */
@@ -145,13 +169,19 @@ opt_port_class:
 /* ; */
 
 opt_syncport:
-    %empty
-|   ',' syncport opt_syncport
+    %empty { $$ = (ast_list*)0; }
+|   ',' syncport opt_syncport {
+        $$ = ast_add_list_elem($2, $3);
+    }
 ;
 
 syncport:
     opt_decoupled opt_port_class IN IDENTIFIER {
         /* install_port($1, VAL_IN, $3, @1.last_line); */
+        $$ = ast_add_port(
+            ast_add_id($4),
+            PORT_SYNC
+        );
     }
 ;
 
@@ -197,28 +227,35 @@ net:
 
 /* wrapper declaration */
 decl_net:
-    NET IDENTIFIER '{' nportlist '}' '{' stmts '}' {
+    NET IDENTIFIER '{' decl_nport opt_decl_nport '}' '{' stmts '}' {
         /* install($2, $1, @2.last_line); */
         /* draw_connection_graph(con_graph, $7); */
         /* $$ = ast_add_wrap(ast_add_id($2), ast_add_net($7)); */
-        $$ = ast_add_wrap(ast_add_id($2), ast_add_stmts($7));
+        $$ = ast_add_wrap(
+            ast_add_id($2),
+            ast_add_list(
+                ast_add_list_elem($4, $5),
+                AST_PORTS
+            ),
+            ast_add_list($8, AST_STMTS)
+        );
     }
 ;
 
-nportlist:
-    %empty
-|   decl_nport opt_decl_nport
-;
-
 opt_decl_nport:
-    %empty
-|   ',' decl_nport opt_decl_nport
+    %empty { $$ = (ast_list*)0; }
+|   ',' decl_nport opt_decl_nport {
+        $$ = ast_add_list_elem($2, $3);
+    }
 ;
 
 decl_nport:
     opt_port_class port_mode IDENTIFIER '(' IDENTIFIER ')' {
         /* install_port($1, $6, $7, @1.last_line); */
         /* context_check_port($3, @3.last_line); */
+        $$ = ast_add_port(
+            ast_add_id($3), PORT_NET
+        );
     }
 ;
 

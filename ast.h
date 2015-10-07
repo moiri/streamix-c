@@ -17,19 +17,37 @@ typedef struct box box;
 typedef struct wrap wrap;
 typedef struct port port;
 
+typedef enum { CLASS_UP, CLASS_DOWN, CLASS_SIDE } pclass;
+typedef enum { MODE_IN, MODE_OUT } mode;
+typedef enum { C_DECOUPLED, C_COUPLED } coupling;
+typedef enum { STATE_STATELESS, STATE_STATEFUL } state;
+typedef enum {
+    PORT_SYNC,
+    PORT_NET,
+    PORT_BOX
+} port_type;
+typedef enum {
+    AST_ATTR,
+    AST_BOX,
+    AST_CONNECT,
+    AST_CONNECTS,
+    AST_ID,
+    AST_NET,
+    AST_PARALLEL,
+    AST_PORT,
+    AST_PORTS,
+    AST_STAR,
+    AST_SERIAL,
+    AST_STMT,
+    AST_STMTS,
+    AST_SYNC,
+    AST_WRAP
+} node_type;
+
 // linked list structure containing AST node pointers
 struct ast_list {
     ast_node*   ast_node;
     ast_list*   next;
-};
-
-// linked list structure containing AST port pointers
-struct port_list {
-    union {
-        port*       port_node;
-        port_list*  sync;
-    };
-    port_list*  next;
 };
 
 // AST_SERIAL, AST_PARALLEL
@@ -43,118 +61,64 @@ struct op {
 // AST_BOX
 struct box {
     ast_node*   id;
-    port_list*  port_list;
+    ast_node*   ports;
+    state state;
 };
 
 // AST_WRAP
 struct wrap {
     ast_node*   id;
     ast_node*   stmts;
-    port_list*  port_list;
+    ast_node*   ports;
 };
 
 // AST_CONNECT
 struct connect {
     ast_node*   id;
-    ast_node*   connect_list;
+    ast_node*   connects;
+};
+
+// AST_BOX_PORT
+struct port_box {
+    mode mode;
+};
+
+// AST_NET_PORT
+struct port_net {
+    ast_node* int_id;
+    mode mode;
+};
+
+// AST_SYNC_PORT
+struct port_sync {
+    coupling coupling;
 };
 
 // AST_PORT
 struct port {
-    enum {
-        PORT_SYNC,
-        PORT_WRAP,
-        PORT_BOX
-    } port_type;
-    enum {
-        CLASS_UP,
-        CLASS_DOWN,
-        CLASS_SIDE
-    } pclass;
-    enum {
-        MODE_IN,
-        MODE_OUT
-    } mode;
+    port_type port_type;
+    ast_node* id;
+    pclass pclass;
     union {
-        char* name;
-        struct {
-            char*   name_ext;
-            char*   name_int;
-        } wrap;
+        struct port_box box;
+        struct port_net net;
+        struct port_sync sync;
     };
-};
-
-// AST_SYNC_PORT
-struct sync_port {
-    char* name;
-    enum {
-        CLASS_UP,
-        CLASS_DOWN,
-        CLASS_SIDE
-    } pclass;
-    enum {
-        DECOUPLED,
-        COUPLED
-    } coupling;
-};
-
-// AST_BOX_PORT
-struct box_port {
-    char* name;
-    enum {
-        CLASS_UP,
-        CLASS_DOWN,
-        CLASS_SIDE
-    } pclass;
-    enum {
-        MODE_IN,
-        MODE_OUT
-    } mode;
-};
-
-// AST_NET_PORT
-struct net_port {
-    char* name;
-    char* int_name;
-    enum {
-        CLASS_UP,
-        CLASS_DOWN,
-        CLASS_SIDE
-    } pclass;
-    enum {
-        MODE_IN,
-        MODE_OUT
-    } mode;
 };
 
 // the AST structure
 struct ast_node {
-    enum {
-        AST_ATTR,
-        AST_BOX,
-        AST_CONNECT,
-        AST_CONNECT_LIST,
-        AST_ID,
-        AST_NET,
-        AST_PARALLEL,
-        AST_PORT,
-        AST_STAR,
-        AST_SERIAL,
-        AST_STMT,
-        AST_STMTS,
-        AST_WRAP
-    } node_type;
+    node_type node_type;
     int     id;         // id of the node -> atm only used for dot graphs
     union {
         char*           name;           // AST_ID
         ast_node*       ast_node;       // AST_NET
-        ast_list*       ast_list;       // AST_STMTS, AST_CONNECT_LIST
-        port_list*      port_list;      // AST_PORT_LIST
-        struct op       op;             // AST_SERIAL, AST_PARALLEL
+        ast_list*       ast_list;       // AST_STMTS, AST_CONNECTS, AST_PORTS, AST_SYNC
         struct box      box;            // AST_BOX
-        struct wrap     wrap;           // AST_WRAP
-        struct port     port;           // AST_PORT
         struct connect  connect;        // AST_CONNECT
+        struct op       op;             // AST_SERIAL, AST_PARALLEL
+        struct port     port;           // AST_PORT
+        struct wrap     wrap;           // AST_WRAP
     };
 };
 
@@ -162,10 +126,11 @@ struct ast_node {
  * Add a box declaration to the AST.
  *
  * @param ast_node*:    pointer to an ast node of type AST_ID
+ * @param ast_node*:    pointer to the ports list AST node
  * @return: ast_node*:
  *      a pointer to the location where the data was stored
  * */
-ast_node* ast_add_box ( ast_node* );
+ast_node* ast_add_box ( ast_node*, ast_node* );
 
 /**
  * Add a connection declaration to the AST.
@@ -178,25 +143,6 @@ ast_node* ast_add_box ( ast_node* );
 ast_node* ast_add_connect ( ast_node*, ast_node* );
 
 /**
- * Add a connection elements to the AST.
- *
- * @param ast_list*:    pointer to the list of connecting nets
- * @return: ast_list*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_connect_list ( ast_list* );
-
-/**
- * Add a connection elements to the AST.
- *
- * @param ast_node*:    pointer to the new connecting net
- * @param ast_list*:    pointer to the list of previous connecting nets
- * @return: ast_list*:
- *      a pointer to the location where the data was stored
- * */
-ast_list* ast_add_connect_list_elem ( ast_node*, ast_list* );
-
-/**
  * Add a net identifier to the AST.
  *
  * @param char*:    name of the net
@@ -206,25 +152,55 @@ ast_list* ast_add_connect_list_elem ( ast_node*, ast_list* );
 ast_node* ast_add_id ( char* );
 
 /**
- * Add a net to the AST.
+ * Add a list as node to the AST.
  *
- * @param ast_node*:    pointer to the first AST element of the net
+ * @param ast_list*:    pointer to the list
+ * @param int type:     type of AST node
+ * @return: ast_list*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_node* ast_add_list ( ast_list*, int );
+
+/**
+ * Add a node to the a list.
+ *
+ * @param ast_node*:    pointer to the new node
+ * @param ast_list*:    pointer to the list
+ * @return: ast_list*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_list* ast_add_list_elem (ast_node*, ast_list*);
+
+/**
+ * Add a node to the AST.
+ *
+ * @param ast_node*:    pointer to AST node
+ * @param int type:     type of AST node
  * @return: ast_node*:
  *      a pointer to the location where the data was stored
  * */
-ast_node* ast_add_net ( ast_node* );
+ast_node* ast_add_node ( ast_node*, int );
 
 /**
- * Add a an operation to the symbol table.
+ * Add a an operation to the AST.
  *
- * @param char*:        name of the net
  * @param ast_node*:    pointer to the left operand
  * @param ast_node*:    pointer to the right operand
- * @param int:          OP_ID, OP_SERIAL, OP_PARALLEL
+ * @param int:          OP_SERIAL, OP_PARALLEL
  * @return ast_node*:
  *      a pointer to the location where the data was stored
  * */
 ast_node* ast_add_op ( ast_node*, ast_node*, int );
+
+/**
+ * Add a port to the AST.
+ *
+ * @param ast_node*:    pointer to the port ID
+ * @param int:          PORT_BOX, PORT_NET, PORT_SYNC
+ * @return ast_node*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_node* ast_add_port (ast_node*, int);
 
 /**
  * Add a star operator to the connect AST.
@@ -235,33 +211,15 @@ ast_node* ast_add_op ( ast_node*, ast_node*, int );
 ast_node* ast_add_star ();
 
 /**
- * Add a statement to the AST.
- *
- * @param ast_node*:    pointer to the statement
- * @param ast_list*:    pointer to the previous statements
- * @return: ast_list*:
- *      a pointer to the location where the data was stored
- * */
-ast_list* ast_add_stmt ( ast_node*, ast_list* );
-
-/**
- * Add a statement list to the AST.
- *
- * @param ast_list*:    pointer to the statements
- * @return: ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_stmts ( ast_list* );
-
-/**
  * Add a wrapper declaration to the AST.
  *
  * @param ast_node*:    pointer to an ast node of type AST_ID
- * @param ast_node*:    pointer to the beginning of the wrapper net
+ * @param ast_node*:    pointer to the ports list AST node
+ * @param ast_node*:    pointer to the stmts list AST node
  * @return: ast_node*:
  *      a pointer to the location where the data was stored
  * */
-ast_node* ast_add_wrap ( ast_node*, ast_node* );
+ast_node* ast_add_wrap ( ast_node*, ast_node*, ast_node* );
 
 /**
  * Add an AST node to the connection list
