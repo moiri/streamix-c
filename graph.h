@@ -48,20 +48,20 @@ void draw_connection_graph_step ( FILE*, ast_node* );
  * Add an edge to the graph
  *
  * @param FILE*:    file pointer to the dot file
- * @param char*:    id of the start node
- * @param char*:    id of the end node
+ * @param int:      id of the start node
+ * @param int:      id of the end node
  * */
-void graph_add_edge ( FILE*, char*, char* );
+void graph_add_edge ( FILE*, int, int );
 
 /**
  * Add a inode to the graph
  *
  * @param FILE*:        file pointer to the dot file
- * @param char*:        id of the node
+ * @param int:          id of the node
  * @param char*:        name of the node
- * #param const char*:  shape of the node (SHAPE_BOX, SHAPE_ELLIPSE)
+ * @param const char*:  shape of the node (SHAPE_BOX, SHAPE_ELLIPSE)
  * */
-void graph_add_node ( FILE*, char*, char*, const char* );
+void graph_add_node ( FILE*, int, char*, const char* );
 
 /**
  * Adds final bracket to the dot file
