@@ -29,19 +29,23 @@ typedef enum {
 typedef enum {
     AST_ATTR,
     AST_BOX,
+    AST_CLASS,
     AST_CONNECT,
     AST_CONNECTS,
-    AST_ID,
+    AST_COUPLING,
+    AST_MODE,
     AST_NET,
     AST_PARALLEL,
     AST_PORT,
     AST_PORTS,
     AST_STAR,
+    AST_STATE,
     AST_SERIAL,
     AST_STMT,
     AST_STMTS,
     AST_SYNC,
-    AST_WRAP
+    AST_WRAP,
+    AST_ID
 } node_type;
 
 // linked list structure containing AST node pointers
@@ -112,8 +116,8 @@ struct ast_node {
     int     id;         // id of the node -> atm only used for dot graphs
     union {
         char*           name;           // AST_ID
-        ast_node*       ast_node;       // AST_NET
-        ast_list*       ast_list;       // AST_STMTS, AST_CONNECTS, AST_PORTS, AST_SYNC
+        ast_node*       ast_node;       // AST_NET, AST_MODE, AST_COUPLING, AST_STATE
+        ast_list*       ast_list;       // AST_STMTS, AST_CONNECTS, AST_PORTS, AST_SYNC, AST_CLASS
         struct box      box;            // AST_BOX
         struct connect  connect;        // AST_CONNECT
         struct op       op;             // AST_SERIAL, AST_PARALLEL
@@ -141,15 +145,6 @@ ast_node* ast_add_box ( ast_node*, ast_node* );
  *      a pointer to the location where the data was stored
  * */
 ast_node* ast_add_connect ( ast_node*, ast_node* );
-
-/**
- * Add a net identifier to the AST.
- *
- * @param char*:    name of the net
- * @return: ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_id ( char* );
 
 /**
  * Add a list as node to the AST.
@@ -209,6 +204,15 @@ ast_node* ast_add_port (ast_node*, int);
  *      a pointer to the location where the data was stored
  * */
 ast_node* ast_add_star ();
+
+/**
+ * Add a leaf (end node) string to the AST.
+ *
+ * @param char*:    name of the attribute
+ * @return: ast_node*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_node* ast_add_str ( char*, int );
 
 /**
  * Add a wrapper declaration to the AST.

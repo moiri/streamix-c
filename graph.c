@@ -1,6 +1,16 @@
 #include "defines.h"
 #include "graph.h"
 
+char* mode_label[] = {
+    "in",
+    "out"
+};
+char* class_label[] = {
+    "up",
+    "down",
+    "side"
+};
+
 /******************************************************************************/
 void draw_ast_graph (ast_node* start) {
     FILE* ast_graph = fopen(AST_DOT_PATH, "w");

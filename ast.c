@@ -35,19 +35,6 @@ ast_node* ast_add_connect ( ast_node* connect, ast_node* connects ) {
 }
 
 /******************************************************************************/
-ast_node* ast_add_id ( char* name ) {
-    ast_node *ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    /* printf("NEW NODE: %s(%p)\n", name, ptr); */
-    ptr->name = (char*) malloc(strlen(name)+1);
-    strcpy (ptr->name, name);
-    ptr->node_type = AST_ID;
-    __node_id++;
-    ptr->id = __node_id;
-    return ptr;
-}
-
-/******************************************************************************/
 ast_node* ast_add_list (ast_list* list, int type) {
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
@@ -204,6 +191,18 @@ ast_node* ast_add_star () {
     __node_id++;
     ptr->id = __node_id;
     ptr->node_type = AST_STAR;
+    return ptr;
+}
+
+/******************************************************************************/
+ast_node* ast_add_str ( char* name, int type ) {
+    ast_node *ptr;
+    ptr = (ast_node*) malloc(sizeof(ast_node));
+    ptr->name = (char*) malloc(strlen(name)+1);
+    strcpy (ptr->name, name);
+    ptr->node_type = type;
+    __node_id++;
+    ptr->id = __node_id;
     return ptr;
 }
 

@@ -36,11 +36,15 @@
 %union {
     int ival;
     char *sval;
+    /* val_class cval; */
+    /* val_mode mval; */
     struct ast_node* nval;
     struct ast_list* lval;
 };
 %token ON STATELESS DECOUPLED SYNC CONNECT
-%token <ival> UP DOWN SIDE IN OUT BOX NET
+%token <ival> BOX NET IN OUT UP DOWN SIDE
+/* %token <mval> IN OUT */
+/* %token <cval> UP DOWN SIDE */
 %token <sval> IDENTIFIER
 %type <ival> port_mode port_class
 %type <nval> net nets stmt decl_box decl_net decl_connect decl_bport syncport decl_nport
@@ -88,7 +92,7 @@ nets:
 decl_connect:
     CONNECT IDENTIFIER '{' connect_list '}' {
         $$ = ast_add_connect(
-            ast_add_id($2),
+            ast_add_str($2, AST_ID),
             ast_add_list($4, AST_CONNECTS)
         );
     }
@@ -96,7 +100,10 @@ decl_connect:
 
 connect_list:
     IDENTIFIER opt_connect_id {
-        $$ = ast_add_list_elem(ast_add_id($1), $2);
+        $$ = ast_add_list_elem(
+            ast_add_str($1, AST_ID),
+            $2
+        );
     }
 |   '*' {
         $$ = ast_add_list_elem(
@@ -111,7 +118,10 @@ opt_connect_id:
         $$ = (ast_list*)0;
     }
 |   ',' IDENTIFIER opt_connect_id {
-        $$ = ast_add_list_elem(ast_add_id($2), $3);
+        $$ = ast_add_list_elem(
+            ast_add_str($2, AST_ID),
+            $3
+        );
     }
 ;
 
@@ -120,7 +130,7 @@ decl_box:
     opt_state BOX IDENTIFIER '(' decl_bport opt_decl_bport ')' ON IDENTIFIER {
         /* install($3, $2, @3.last_line); */
         $$ = ast_add_box(
-            ast_add_id($3),
+            ast_add_str($3, AST_ID),
             ast_add_list(
                 ast_add_list_elem($5, $6),
                 AST_PORTS
@@ -144,7 +154,7 @@ opt_decl_bport:
 decl_bport:
     opt_port_class port_mode IDENTIFIER {
         $$ = ast_add_port(
-            ast_add_id($3),
+            ast_add_str($3, AST_ID),
             PORT_BOX
         );
     }
@@ -179,7 +189,7 @@ syncport:
     opt_decoupled opt_port_class IN IDENTIFIER {
         /* install_port($1, VAL_IN, $3, @1.last_line); */
         $$ = ast_add_port(
-            ast_add_id($4),
+            ast_add_str($4, AST_ID),
             PORT_SYNC
         );
     }
@@ -211,7 +221,7 @@ port_class:
 net:
     IDENTIFIER  { 
         /* context_check($1, @1.last_line); */
-        $$ = ast_add_id($1);
+        $$ = ast_add_str($1, AST_ID);
         /* printf("id: %s\n", $$->name); */
     }
 |   net '.' net {
@@ -232,7 +242,7 @@ decl_net:
         /* draw_connection_graph(con_graph, $7); */
         /* $$ = ast_add_wrap(ast_add_id($2), ast_add_net($7)); */
         $$ = ast_add_wrap(
-            ast_add_id($2),
+            ast_add_str($2, AST_ID),
             ast_add_list(
                 ast_add_list_elem($4, $5),
                 AST_PORTS
@@ -254,7 +264,8 @@ decl_nport:
         /* install_port($1, $6, $7, @1.last_line); */
         /* context_check_port($3, @3.last_line); */
         $$ = ast_add_port(
-            ast_add_id($3), PORT_NET
+            ast_add_str($3, AST_ID),
+            PORT_NET
         );
     }
 ;

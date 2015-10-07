@@ -10,10 +10,12 @@
 #define DEFINES_H
 
 // scanner values
+/* typedef enum {VAL_UP, VAL_DOWN, VAL_SIDE} val_class; */
 #define VAL_UP      0
 #define VAL_DOWN    1
 #define VAL_SIDE    2
 
+/* typedef enum {VAL_IN, VAL_OUT} val_mode; */
 #define VAL_IN      0
 #define VAL_OUT     1
 
@@ -23,20 +25,6 @@
 // drawing
 #define AST_DOT_PATH    "dot/ast_graph.dot"
 #define CON_DOT_PATH    "dot/connection_graph.dot"
-
-#define LABEL_SERIAL    "serial"
-#define LABEL_PARALLEL  "parallel"
-#define LABEL_NET       "net"
-#define LABEL_BOX       "box decl"
-#define LABEL_WRAP      "net decl"
-#define LABEL_PORT      "port decl"
-#define LABEL_PORTS     "ports"
-#define LABEL_SYNC      "sync"
-#define LABEL_STMTS     "stmts"
-#define LABEL_STMT      "stmt"
-#define LABEL_CONNECT   "connect"
-#define LABEL_CONNECTS  "connecting"
-#define LABEL_STAR      "*"
 
 #define SHAPE_BOX       "box"
 #define SHAPE_ELLIPSE   "ellipse"
