@@ -12,6 +12,8 @@ PLUGIN_H = symtab.h \
 
 PLUGIN = $(PLUGIN_C) $(PLUGIN_H)
 
+CFLAGS = -lfl
+
 DOT_PATH = dot
 DOT_AST_FILE = $(DOT_PATH)/ast_graph
 DOT_CON_FILE = $(DOT_PATH)/connection_graph
@@ -20,7 +22,7 @@ TEST_PATH = test
 TEST_FILE = $(TEST_PATH)/cpa.test
 
 $(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(PLUGIN)
-	gcc $(PROJECT).tab.c lex.yy.c $(PLUGIN_C) -lfl -o $(PARSER)
+	gcc $(PROJECT).tab.c lex.yy.c $(PLUGIN_C) -o $(PARSER) $(CFLAGS)
 
 lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
 	flex $(PROJECT).lex
@@ -28,6 +30,7 @@ lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
 $(PROJECT).tab.c $(PROJECT).tab.h: $(PROJECT).y
 	bison -d -Wall $(PROJECT).y
 
+debug: CFLAGS += -g -O0
 debug: clean $(PARSER) run dot
 
 clean:
@@ -44,7 +47,6 @@ run:
 
 dot:
 	# generate ast pdf file
-	# sort -V $(DOT_AST_FILE).dot -o $(DOT_AST_FILE).dot
 	dot $(DOT_AST_FILE).dot -Tpdf > $(DOT_AST_FILE).pdf
 	# generate multiple temporary pdf files of the networks
 	dot -Tpdf $(DOT_CON_FILE).dot | csplit --quiet --elide-empty-files --prefix=dot/tmpfile - "/%%EOF/+1" "{*}"
