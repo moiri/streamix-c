@@ -7,8 +7,18 @@
 int __node_id = 0;
 ast_list* con_ptr = (ast_list*)0;
 ast_list* tmp_con_ptr = (ast_list*)0;
-ast_list* stmts_ptr = (ast_list*)0;
-ast_list* tmp_stmts_ptr = (ast_list*)0;
+
+/******************************************************************************/
+ast_node* ast_add_attr ( int val, int type ) {
+    ast_node *ptr;
+    ptr = (ast_node*) malloc(sizeof(ast_node));
+    ptr->node_type = AST_ATTR;
+    __node_id++;
+    ptr->id = __node_id;
+    ptr->attr.attr_type = type;
+    ptr->attr.val = val;
+    return ptr;
+}
 
 /******************************************************************************/
 ast_node* ast_add_box ( ast_node* id, ast_node* ports ) {
@@ -35,7 +45,20 @@ ast_node* ast_add_connect ( ast_node* connect, ast_node* connects ) {
 }
 
 /******************************************************************************/
+ast_node* ast_add_id ( char* name, int type ) {
+    ast_node *ptr;
+    ptr = (ast_node*) malloc(sizeof(ast_node));
+    ptr->name = (char*) malloc(strlen(name)+1);
+    strcpy (ptr->name, name);
+    ptr->node_type = AST_ID;
+    __node_id++;
+    ptr->id = __node_id;
+    return ptr;
+}
+
+/******************************************************************************/
 ast_node* ast_add_list (ast_list* list, int type) {
+    if (list == 0) return (ast_node*)0;
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
     ptr->ast_list = list;
@@ -163,7 +186,8 @@ ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type ) {
 }
 
 /******************************************************************************/
-ast_node* ast_add_port (ast_node* id, int type) {
+ast_node* ast_add_port (ast_node* id, ast_node* int_id, ast_node* collection,
+        ast_node* mode, ast_node* coupling, int type) {
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
     __node_id++;
@@ -171,6 +195,8 @@ ast_node* ast_add_port (ast_node* id, int type) {
     ptr->node_type = AST_PORT;
     ptr->port.id = id;
     ptr->port.port_type = type;
+    ptr->port.mode = mode;
+    ptr->port.collection = collection;
     switch (type) {
         case PORT_BOX:
             break;
@@ -191,18 +217,6 @@ ast_node* ast_add_star () {
     __node_id++;
     ptr->id = __node_id;
     ptr->node_type = AST_STAR;
-    return ptr;
-}
-
-/******************************************************************************/
-ast_node* ast_add_str ( char* name, int type ) {
-    ast_node *ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->name = (char*) malloc(strlen(name)+1);
-    strcpy (ptr->name, name);
-    ptr->node_type = type;
-    __node_id++;
-    ptr->id = __node_id;
     return ptr;
 }
 

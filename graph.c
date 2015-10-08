@@ -10,6 +10,10 @@ char* class_label[] = {
     "down",
     "side"
 };
+char** attr_label[] = {
+    mode_label,
+    class_label
+};
 
 /******************************************************************************/
 void draw_ast_graph (ast_node* start) {
@@ -28,20 +32,33 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
     switch (ptr->node_type) {
         // reached a leaf node of the AST -> add box or octagon to drawing
         case AST_ATTR:
-            sprintf(node_name, "%s", ptr->name);
-            graph_add_node(graph, ptr->id, node_name, SHAPE_OCTAGON);
+            graph_add_node(
+                    graph,
+                    ptr->id,
+                    attr_label[ptr->attr.attr_type][ptr->attr.val],
+                    SHAPE_OCTAGON
+            );
             break;
         case AST_ID:
-            sprintf(node_name, "%s", ptr->name);
-            graph_add_node(graph, ptr->id, node_name, SHAPE_BOX);
+            graph_add_node(graph, ptr->id, ptr->name, SHAPE_BOX);
             break;
         case AST_STAR:
-            sprintf(node_name, "%s", LABEL_STAR);
-            graph_add_node(graph, ptr->id, node_name, SHAPE_BOX);
+            graph_add_node(graph, ptr->id, LABEL_STAR, SHAPE_BOX);
             break;
         // draw a list-node with its children
+        case AST_COLLECT:
+            graph_add_node(graph, ptr->id, LABEL_COLLECT, SHAPE_ELLIPSE);
+            ast_list_ptr = ptr->ast_list;
+            do {
+                draw_ast_graph_step(graph, ast_list_ptr->ast_node);
+                graph_add_edge(graph, ptr->id, ast_list_ptr->ast_node->id);
+                ast_list_ptr = ast_list_ptr->next;
+            }
+            while (ast_list_ptr != 0);
+            break;
         case AST_CONNECTS:
-            graph_add_node(graph, ptr->id, LABEL_CONNECTS, SHAPE_ELLIPSE);
+            if (ptr->node_type == AST_CONNECTS)
+                graph_add_node(graph, ptr->id, LABEL_CONNECTS, SHAPE_ELLIPSE);
         case AST_STMTS:
             if (ptr->node_type == AST_STMTS)
                 graph_add_node(graph, ptr->id, LABEL_STMTS, SHAPE_ELLIPSE);
@@ -76,7 +93,11 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             break;
         // draw simple nodes
         case AST_NET:
-            graph_add_node(graph, ptr->id, LABEL_NET, SHAPE_ELLIPSE);
+            sprintf(node_name, LABEL_NET);
+        case AST_MODE:
+            if (ptr->node_type == AST_MODE)
+                sprintf(node_name, LABEL_MODE);
+            graph_add_node(graph, ptr->id, node_name, SHAPE_ELLIPSE);
             draw_ast_graph_step(graph, ptr->ast_node);
             graph_add_edge(graph, ptr->id, ptr->ast_node->id);
             break;
@@ -87,8 +108,10 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             draw_ast_graph_step(graph, ptr->connect.id);
             graph_add_edge(graph, ptr->id, ptr->connect.id->id);
             // connecting nets
-            draw_ast_graph_step(graph, ptr->connect.connects);
-            graph_add_edge(graph, ptr->id, ptr->connect.connects->id);
+            if (ptr->connect.connects != 0) {
+                draw_ast_graph_step(graph, ptr->connect.connects);
+                graph_add_edge(graph, ptr->id, ptr->connect.connects->id);
+            }
             break;
         case AST_BOX:
             graph_add_node(graph, ptr->id, LABEL_BOX, SHAPE_ELLIPSE);
@@ -96,8 +119,10 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             draw_ast_graph_step(graph, ptr->box.id);
             graph_add_edge(graph, ptr->id, ptr->box.id->id);
             // port list
-            draw_ast_graph_step(graph, ptr->box.ports);
-            graph_add_edge(graph, ptr->id, ptr->box.ports->id);
+            if (ptr->box.ports != 0) {
+                draw_ast_graph_step(graph, ptr->box.ports);
+                graph_add_edge(graph, ptr->id, ptr->box.ports->id);
+            }
             break;
         case AST_WRAP:
             graph_add_node(graph, ptr->id, LABEL_WRAP, SHAPE_ELLIPSE);
@@ -105,17 +130,29 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             draw_ast_graph_step(graph, ptr->wrap.id);
             graph_add_edge(graph, ptr->id, ptr->wrap.id->id);
             // port list
-            draw_ast_graph_step(graph, ptr->wrap.ports);
-            graph_add_edge(graph, ptr->id, ptr->wrap.ports->id);
+            if (ptr->wrap.ports != 0) {
+                draw_ast_graph_step(graph, ptr->wrap.ports);
+                graph_add_edge(graph, ptr->id, ptr->wrap.ports->id);
+            }
             // stmt list
-            draw_ast_graph_step(graph, ptr->wrap.stmts);
-            graph_add_edge(graph, ptr->id, ptr->wrap.stmts->id);
+            if (ptr->wrap.stmts != 0) {
+                draw_ast_graph_step(graph, ptr->wrap.stmts);
+                graph_add_edge(graph, ptr->id, ptr->wrap.stmts->id);
+            }
             break;
         case AST_PORT:
             graph_add_node(graph, ptr->id, LABEL_PORT, SHAPE_ELLIPSE);
             // id
             draw_ast_graph_step(graph, ptr->port.id);
             graph_add_edge(graph, ptr->id, ptr->port.id->id);
+            // mode
+            draw_ast_graph_step(graph, ptr->port.mode);
+            graph_add_edge(graph, ptr->id, ptr->port.mode->id);
+            // collection
+            if (ptr->port.collection != 0) {
+                draw_ast_graph_step(graph, ptr->port.collection);
+                graph_add_edge(graph, ptr->id, ptr->port.collection->id);
+            }
             break;
         default:
             ;

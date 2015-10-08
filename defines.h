@@ -10,12 +10,10 @@
 #define DEFINES_H
 
 // scanner values
-/* typedef enum {VAL_UP, VAL_DOWN, VAL_SIDE} val_class; */
 #define VAL_UP      0
 #define VAL_DOWN    1
 #define VAL_SIDE    2
 
-/* typedef enum {VAL_IN, VAL_OUT} val_mode; */
 #define VAL_IN      0
 #define VAL_OUT     1
 

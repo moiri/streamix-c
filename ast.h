@@ -10,17 +10,24 @@
 #define AST_H
 
 typedef struct ast_list ast_list;
-typedef struct port_list port_list;
 typedef struct ast_node ast_node;
+typedef struct attr attr;
 typedef struct op op;
 typedef struct box box;
 typedef struct wrap wrap;
 typedef struct port port;
 
-typedef enum { CLASS_UP, CLASS_DOWN, CLASS_SIDE } pclass;
-typedef enum { MODE_IN, MODE_OUT } mode;
-typedef enum { C_DECOUPLED, C_COUPLED } coupling;
-typedef enum { STATE_STATELESS, STATE_STATEFUL } state;
+typedef enum {
+    ID_NET,
+    ID_BOX,
+    ID_PORT
+} id_type;
+typedef enum {
+    ATTR_MODE,
+    ATTR_COLLECT,
+    ATTR_STATE,
+    ATTR_COUPLING
+} attr_type;
 typedef enum {
     PORT_SYNC,
     PORT_NET,
@@ -29,7 +36,7 @@ typedef enum {
 typedef enum {
     AST_ATTR,
     AST_BOX,
-    AST_CLASS,
+    AST_COLLECT,
     AST_CONNECT,
     AST_CONNECTS,
     AST_COUPLING,
@@ -54,6 +61,12 @@ struct ast_list {
     ast_list*   next;
 };
 
+// AST_ATTR
+struct attr {
+    attr_type attr_type;
+    int val;
+};
+
 // AST_SERIAL, AST_PARALLEL
 struct op {
     ast_node* left;
@@ -66,7 +79,7 @@ struct op {
 struct box {
     ast_node*   id;
     ast_node*   ports;
-    state state;
+    ast_node*   state;
 };
 
 // AST_WRAP
@@ -82,32 +95,14 @@ struct connect {
     ast_node*   connects;
 };
 
-// AST_BOX_PORT
-struct port_box {
-    mode mode;
-};
-
-// AST_NET_PORT
-struct port_net {
-    ast_node* int_id;
-    mode mode;
-};
-
-// AST_SYNC_PORT
-struct port_sync {
-    coupling coupling;
-};
-
 // AST_PORT
 struct port {
     port_type port_type;
     ast_node* id;
-    pclass pclass;
-    union {
-        struct port_box box;
-        struct port_net net;
-        struct port_sync sync;
-    };
+    ast_node* int_id;
+    ast_node* collection;
+    ast_node* mode;
+    ast_node* coupling;
 };
 
 // the AST structure
@@ -115,16 +110,27 @@ struct ast_node {
     node_type node_type;
     int     id;         // id of the node -> atm only used for dot graphs
     union {
-        char*           name;           // AST_ID
-        ast_node*       ast_node;       // AST_NET, AST_MODE, AST_COUPLING, AST_STATE
-        ast_list*       ast_list;       // AST_STMTS, AST_CONNECTS, AST_PORTS, AST_SYNC, AST_CLASS
-        struct box      box;            // AST_BOX
-        struct connect  connect;        // AST_CONNECT
-        struct op       op;             // AST_SERIAL, AST_PARALLEL
-        struct port     port;           // AST_PORT
-        struct wrap     wrap;           // AST_WRAP
+        char*           name;       // AST_ID
+        ast_node*       ast_node;   // AST_NET, AST_MODE, AST_COUPLING, AST_STATE
+        ast_list*       ast_list;   // AST_STMTS, AST_CONNECTS, AST_PORTS, AST_SYNC, AST_COLLECT
+        struct attr     attr;       // AST_ATTR
+        struct box      box;        // AST_BOX
+        struct connect  connect;    // AST_CONNECT
+        struct op       op;         // AST_SERIAL, AST_PARALLEL
+        struct port     port;       // AST_PORT
+        struct wrap     wrap;       // AST_WRAP
     };
 };
+
+/**
+ * Add a leaf (end node) attribute to the AST.
+ *
+ * @param int:    value of the attribute
+ * @param int:    type of the attribute
+ * @return: ast_node*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_node* ast_add_attr ( int, int );
 
 /**
  * Add a box declaration to the AST.
@@ -145,6 +151,16 @@ ast_node* ast_add_box ( ast_node*, ast_node* );
  *      a pointer to the location where the data was stored
  * */
 ast_node* ast_add_connect ( ast_node*, ast_node* );
+
+/**
+ * Add a leaf (end node) id to the AST.
+ *
+ * @param char*:    name of the id
+ * @param int:      type of the id
+ * @return: ast_node*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_node* ast_add_id ( char*, int );
 
 /**
  * Add a list as node to the AST.
@@ -191,11 +207,16 @@ ast_node* ast_add_op ( ast_node*, ast_node*, int );
  * Add a port to the AST.
  *
  * @param ast_node*:    pointer to the port ID
+ * @param ast_node*:    pointer to the internal port ID
+ * @param ast_node*:    pointer to the collection node
+ * @param ast_node*:    pointer to the mode node
+ * @param ast_node*:    pointer to the coupling node
  * @param int:          PORT_BOX, PORT_NET, PORT_SYNC
  * @return ast_node*:
  *      a pointer to the location where the data was stored
  * */
-ast_node* ast_add_port (ast_node*, int);
+ast_node* ast_add_port (ast_node*, ast_node*, ast_node*,
+        ast_node*, ast_node*, int);
 
 /**
  * Add a star operator to the connect AST.
@@ -204,15 +225,6 @@ ast_node* ast_add_port (ast_node*, int);
  *      a pointer to the location where the data was stored
  * */
 ast_node* ast_add_star ();
-
-/**
- * Add a leaf (end node) string to the AST.
- *
- * @param char*:    name of the attribute
- * @return: ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_str ( char*, int );
 
 /**
  * Add a wrapper declaration to the AST.

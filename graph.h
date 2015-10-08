@@ -12,7 +12,7 @@
 #define GRAPH_H
 
 #define LABEL_BOX       "box decl"
-#define LABEL_CLASS     "class"
+#define LABEL_COLLECT   "collection"
 #define LABEL_CONNECT   "connect"
 #define LABEL_CONNECTS  "connecting"
 #define LABEL_COUPLING  "coupling"
@@ -29,8 +29,12 @@
 #define LABEL_SYNC      "sync"
 #define LABEL_WRAP      "net decl"
 
+#ifndef STDIO_H
 #include <stdio.h>
+#endif
+#ifndef AST_H
 #include "ast.h"
+#endif
 
 /**
  * Draw a dot diagram of the AST
