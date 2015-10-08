@@ -34,26 +34,26 @@ typedef enum {
     PORT_BOX
 } port_type;
 typedef enum {
-    AST_ATTR,
     AST_BOX,
     AST_COLLECT,
     AST_CONNECT,
     AST_CONNECTS,
     AST_COUPLING,
+    AST_INT_ID,
     AST_MODE,
     AST_NET,
     AST_PARALLEL,
     AST_PORT,
     AST_PORTS,
+    AST_SERIAL,
     AST_STAR,
     AST_STATE,
-    AST_SERIAL,
     AST_STMT,
     AST_STMTS,
     AST_SYNC,
     AST_WRAP,
-    AST_ID,
-    AST_INT_ID
+    AST_ATTR,
+    AST_ID
 } node_type;
 
 // linked list structure containing AST node pointers

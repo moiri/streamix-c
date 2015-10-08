@@ -11,31 +11,8 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 
-#define LABEL_BOX       "box decl"
-#define LABEL_COLLECT   "collection"
-#define LABEL_CONNECT   "connect"
-#define LABEL_CONNECTS  "connecting"
-#define LABEL_COUPLING  "coupling"
-#define LABEL_INT_ID    "internal ID"
-#define LABEL_MODE      "mode"
-#define LABEL_NET       "net"
-#define LABEL_PARALLEL  "parallel"
-#define LABEL_PORT      "port decl"
-#define LABEL_PORTS     "ports"
-#define LABEL_SERIAL    "serial"
-#define LABEL_STAR      "*"
-#define LABEL_STATE     "state"
-#define LABEL_STMT      "stmt"
-#define LABEL_STMTS     "stmts"
-#define LABEL_SYNC      "sync"
-#define LABEL_WRAP      "net decl"
-
-#ifndef STDIO_H
 #include <stdio.h>
-#endif
-#ifndef AST_H
 #include "ast.h"
-#endif
 
 /**
  * Draw a dot diagram of the AST

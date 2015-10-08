@@ -1,6 +1,26 @@
 #include "defines.h"
 #include "graph.h"
 
+char* node_label[] = {
+    "box decl",
+    "collection",
+    "connect",
+    "connecting",
+    "coupling",
+    "internal ID",
+    "mode",
+    "net",
+    "parallel",
+    "port decl",
+    "ports",
+    "serial",
+    "*",
+    "state",
+    "stmt",
+    "stmts",
+    "sync",
+    "net decl"
+};
 char* mode_label[] = {
     "in",
     "out"
@@ -34,7 +54,6 @@ void draw_ast_graph (ast_node* start) {
 
 /******************************************************************************/
 void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
-    char node_name[50];
     ast_list* ast_list_ptr;
 
     switch (ptr->node_type) {
@@ -51,23 +70,15 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             graph_add_node(graph, ptr->id, ptr->name, SHAPE_BOX);
             break;
         case AST_STAR:
-            graph_add_node(graph, ptr->id, LABEL_STAR, SHAPE_BOX);
+            graph_add_node(graph, ptr->id, node_label[ptr->node_type], SHAPE_BOX);
             break;
         // draw a list-node with its children
         case AST_COLLECT:
-            graph_add_node(graph, ptr->id, LABEL_COLLECT, SHAPE_ELLIPSE);
         case AST_CONNECTS:
-            if (ptr->node_type == AST_CONNECTS)
-                graph_add_node(graph, ptr->id, LABEL_CONNECTS, SHAPE_ELLIPSE);
         case AST_STMTS:
-            if (ptr->node_type == AST_STMTS)
-                graph_add_node(graph, ptr->id, LABEL_STMTS, SHAPE_ELLIPSE);
         case AST_PORTS:
-            if (ptr->node_type == AST_PORTS)
-                graph_add_node(graph, ptr->id, LABEL_PORTS, SHAPE_ELLIPSE);
         case AST_SYNC:
-            if (ptr->node_type == AST_SYNC)
-                graph_add_node(graph, ptr->id, LABEL_SYNC, SHAPE_ELLIPSE);
+            graph_add_node(graph, ptr->id, node_label[ptr->node_type], SHAPE_ELLIPSE);
             // iterate through all elements of the list
             ast_list_ptr = ptr->ast_list;
             do {
@@ -79,11 +90,8 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             break;
         // draw operators
         case AST_SERIAL:
-            sprintf(node_name, LABEL_SERIAL);
         case AST_PARALLEL:
-            if (ptr->node_type == AST_PARALLEL)
-                sprintf(node_name, LABEL_PARALLEL);
-            graph_add_node(graph, ptr->id, node_name, SHAPE_ELLIPSE);
+            graph_add_node(graph, ptr->id, node_label[ptr->node_type], SHAPE_ELLIPSE);
             // continue on the left branch
             draw_ast_graph_step(graph, ptr->op.left);
             graph_add_edge(graph, ptr->id, ptr->op.left->id);
@@ -93,26 +101,17 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             break;
         // draw simple nodes
         case AST_COUPLING:
-            sprintf(node_name, LABEL_COUPLING);
         case AST_STATE:
-            if (ptr->node_type == AST_STATE)
-                sprintf(node_name, LABEL_STATE);
         case AST_NET:
-            if (ptr->node_type == AST_NET)
-                sprintf(node_name, LABEL_NET);
         case AST_INT_ID:
-            if (ptr->node_type == AST_INT_ID)
-                sprintf(node_name, LABEL_INT_ID);
         case AST_MODE:
-            if (ptr->node_type == AST_MODE)
-                sprintf(node_name, LABEL_MODE);
-            graph_add_node(graph, ptr->id, node_name, SHAPE_ELLIPSE);
+            graph_add_node(graph, ptr->id, node_label[ptr->node_type], SHAPE_ELLIPSE);
             draw_ast_graph_step(graph, ptr->ast_node);
             graph_add_edge(graph, ptr->id, ptr->ast_node->id);
             break;
         // draw special nodes
         case AST_CONNECT:
-            graph_add_node(graph, ptr->id, LABEL_CONNECT, SHAPE_ELLIPSE);
+            graph_add_node(graph, ptr->id, node_label[ptr->node_type], SHAPE_ELLIPSE);
             // id
             draw_ast_graph_step(graph, ptr->connect.id);
             graph_add_edge(graph, ptr->id, ptr->connect.id->id);
@@ -123,7 +122,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             }
             break;
         case AST_BOX:
-            graph_add_node(graph, ptr->id, LABEL_BOX, SHAPE_ELLIPSE);
+            graph_add_node(graph, ptr->id, node_label[ptr->node_type], SHAPE_ELLIPSE);
             // id
             draw_ast_graph_step(graph, ptr->box.id);
             graph_add_edge(graph, ptr->id, ptr->box.id->id);
@@ -139,7 +138,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             }
             break;
         case AST_WRAP:
-            graph_add_node(graph, ptr->id, LABEL_WRAP, SHAPE_ELLIPSE);
+            graph_add_node(graph, ptr->id, node_label[ptr->node_type], SHAPE_ELLIPSE);
             // id
             draw_ast_graph_step(graph, ptr->wrap.id);
             graph_add_edge(graph, ptr->id, ptr->wrap.id->id);
@@ -155,7 +154,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             }
             break;
         case AST_PORT:
-            graph_add_node(graph, ptr->id, LABEL_PORT, SHAPE_ELLIPSE);
+            graph_add_node(graph, ptr->id, node_label[ptr->node_type], SHAPE_ELLIPSE);
             // id
             draw_ast_graph_step(graph, ptr->port.id);
             graph_add_edge(graph, ptr->id, ptr->port.id->id);
