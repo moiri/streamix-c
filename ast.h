@@ -52,7 +52,8 @@ typedef enum {
     AST_STMTS,
     AST_SYNC,
     AST_WRAP,
-    AST_ID
+    AST_ID,
+    AST_INT_ID
 } node_type;
 
 // linked list structure containing AST node pointers

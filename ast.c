@@ -196,20 +196,11 @@ ast_node* ast_add_port (ast_node* id, ast_node* int_id, ast_node* collection,
     ptr->id = __node_id;
     ptr->node_type = AST_PORT;
     ptr->port.id = id;
+    ptr->port.int_id = int_id;
     ptr->port.port_type = type;
     ptr->port.mode = mode;
     ptr->port.collection = collection;
     ptr->port.coupling = coupling;
-    switch (type) {
-        case PORT_BOX:
-            break;
-        case PORT_NET:
-            break;
-        case PORT_SYNC:
-            break;
-        default:
-            ;
-    }
     return ptr;
 }
 

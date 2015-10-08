@@ -100,6 +100,9 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
         case AST_NET:
             if (ptr->node_type == AST_NET)
                 sprintf(node_name, LABEL_NET);
+        case AST_INT_ID:
+            if (ptr->node_type == AST_INT_ID)
+                sprintf(node_name, LABEL_INT_ID);
         case AST_MODE:
             if (ptr->node_type == AST_MODE)
                 sprintf(node_name, LABEL_MODE);
@@ -156,6 +159,11 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             // id
             draw_ast_graph_step(graph, ptr->port.id);
             graph_add_edge(graph, ptr->id, ptr->port.id->id);
+            // internal id
+            if (ptr->port.int_id != 0) {
+                draw_ast_graph_step(graph, ptr->port.int_id);
+                graph_add_edge(graph, ptr->id, ptr->port.int_id->id);
+            }
             // mode
             draw_ast_graph_step(graph, ptr->port.mode);
             graph_add_edge(graph, ptr->id, ptr->port.mode->id);

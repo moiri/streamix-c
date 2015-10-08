@@ -274,7 +274,7 @@ decl_nport:
         /* context_check_port($3, @3.last_line); */
         $$ = ast_add_port(
             ast_add_id($3, AST_ID),
-            ast_add_id($5, AST_ID),
+            ast_add_node(ast_add_id($5, AST_ID), AST_INT_ID),
             ast_add_list($1, AST_COLLECT),
             ast_add_node($2, AST_MODE),
             (ast_node*)0, // no coupling

@@ -16,6 +16,7 @@
 #define LABEL_CONNECT   "connect"
 #define LABEL_CONNECTS  "connecting"
 #define LABEL_COUPLING  "coupling"
+#define LABEL_INT_ID    "internal ID"
 #define LABEL_MODE      "mode"
 #define LABEL_NET       "net"
 #define LABEL_PARALLEL  "parallel"
