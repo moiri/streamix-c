@@ -39,12 +39,14 @@
     struct ast_node* nval;
     struct ast_list* lval;
 };
-%token ON STATELESS DECOUPLED SYNC CONNECT
-%token <ival> BOX NET IN OUT UP DOWN SIDE
+%token ON SYNC CONNECT
+%token <ival> BOX NET IN OUT UP DOWN SIDE DECOUPLED STATELESS
 %token <sval> IDENTIFIER
-%type <ival> port_mode port_class
-%type <nval> net nets stmt decl_box decl_net decl_connect decl_bport syncport decl_nport
-%type <lval> stmts connect_list opt_connect_id opt_decl_bport opt_syncport opt_decl_nport opt_port_class
+%type <nval> net nets stmt decl_box decl_net decl_connect
+%type <nval> decl_bport syncport decl_nport port_mode port_class
+%type <nval> opt_state opt_decoupled
+%type <lval> stmts connect_list opt_connect_id
+%type <lval> opt_decl_bport opt_syncport opt_decl_nport opt_port_class
 %left '|'
 %left '.'
 %start start
@@ -130,14 +132,15 @@ decl_box:
             ast_add_list(
                 ast_add_list_elem($5, $6),
                 AST_PORTS
-            )
+            ),
+            ast_add_node($1, AST_STATE)
         );
     }
 ;
 
 opt_state:
-    %empty
-|   STATELESS
+    %empty { $$ = (ast_node*)0; }
+|   STATELESS { $$ = ast_add_attr($1, ATTR_STATE); }
 ;
 
 opt_decl_bport:
@@ -153,7 +156,7 @@ decl_bport:
             ast_add_id($3, AST_ID),
             (ast_node*)0, // no internal id
             ast_add_list($1, AST_COLLECT),
-            ast_add_node(ast_add_attr($2, ATTR_MODE), AST_MODE),
+            ast_add_node($2, AST_MODE),
             (ast_node*)0, // no coupling
             PORT_BOX
         );
@@ -169,10 +172,7 @@ decl_bport:
 opt_port_class:
     %empty { $$ = (ast_list*)0; }
 |   port_class opt_port_class {
-        $$ = ast_add_list_elem(
-            ast_add_attr($1, ATTR_COLLECT),
-            $2
-        );
+        $$ = ast_add_list_elem($1, $2);
     }
 ;
 
@@ -198,7 +198,7 @@ syncport:
             (ast_node*)0, // no internal id
             ast_add_list($2, AST_COLLECT),
             ast_add_node(ast_add_attr($3, ATTR_MODE), AST_MODE),
-            (ast_node*)0, // coupling not yet implemented
+            ast_add_node($1, AST_COUPLING),
             PORT_SYNC
         );
     }
@@ -211,19 +211,19 @@ syncport:
 /* ; */
 
 opt_decoupled:
-    %empty
-|   DECOUPLED
+    %empty { $$ = (ast_node*)0; }
+|   DECOUPLED { $$ = ast_add_attr($1, ATTR_COUPLING); }
 ;
 
 port_mode:
-    IN   {$$ = $1;}
-|   OUT  {$$ = $1;}
+    IN   { $$ = ast_add_attr($1, ATTR_MODE); }
+|   OUT  { $$ = ast_add_attr($1, ATTR_MODE); }
 ;
 
 port_class:
-    UP   {$$ = $1;}
-|   DOWN {$$ = $1;}
-|   SIDE {$$ = $1;}
+    UP   { $$ = ast_add_attr($1, ATTR_COLLECT); }
+|   DOWN { $$ = ast_add_attr($1, ATTR_COLLECT); }
+|   SIDE { $$ = ast_add_attr($1, ATTR_COLLECT); }
 ;
 
 /* net declaration */
@@ -276,7 +276,7 @@ decl_nport:
             ast_add_id($3, AST_ID),
             ast_add_id($5, AST_ID),
             ast_add_list($1, AST_COLLECT),
-            ast_add_node(ast_add_attr($2, ATTR_MODE), AST_MODE),
+            ast_add_node($2, AST_MODE),
             (ast_node*)0, // no coupling
             PORT_NET
         );

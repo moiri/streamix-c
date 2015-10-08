@@ -10,9 +10,17 @@ char* class_label[] = {
     "down",
     "side"
 };
+char* coupling_label[] = {
+    "decoupled"
+};
+char* state_label[] = {
+    "stateless"
+};
 char** attr_label[] = {
     mode_label,
-    class_label
+    class_label,
+    coupling_label,
+    state_label
 };
 
 /******************************************************************************/
@@ -48,14 +56,6 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
         // draw a list-node with its children
         case AST_COLLECT:
             graph_add_node(graph, ptr->id, LABEL_COLLECT, SHAPE_ELLIPSE);
-            ast_list_ptr = ptr->ast_list;
-            do {
-                draw_ast_graph_step(graph, ast_list_ptr->ast_node);
-                graph_add_edge(graph, ptr->id, ast_list_ptr->ast_node->id);
-                ast_list_ptr = ast_list_ptr->next;
-            }
-            while (ast_list_ptr != 0);
-            break;
         case AST_CONNECTS:
             if (ptr->node_type == AST_CONNECTS)
                 graph_add_node(graph, ptr->id, LABEL_CONNECTS, SHAPE_ELLIPSE);
@@ -92,8 +92,14 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             graph_add_edge(graph, ptr->id, ptr->op.right->id);
             break;
         // draw simple nodes
+        case AST_COUPLING:
+            sprintf(node_name, LABEL_COUPLING);
+        case AST_STATE:
+            if (ptr->node_type == AST_STATE)
+                sprintf(node_name, LABEL_STATE);
         case AST_NET:
-            sprintf(node_name, LABEL_NET);
+            if (ptr->node_type == AST_NET)
+                sprintf(node_name, LABEL_NET);
         case AST_MODE:
             if (ptr->node_type == AST_MODE)
                 sprintf(node_name, LABEL_MODE);
@@ -122,6 +128,11 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             if (ptr->box.ports != 0) {
                 draw_ast_graph_step(graph, ptr->box.ports);
                 graph_add_edge(graph, ptr->id, ptr->box.ports->id);
+            }
+            // state
+            if (ptr->box.state != 0) {
+                draw_ast_graph_step(graph, ptr->box.state);
+                graph_add_edge(graph, ptr->id, ptr->box.state->id);
             }
             break;
         case AST_WRAP:
@@ -152,6 +163,11 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             if (ptr->port.collection != 0) {
                 draw_ast_graph_step(graph, ptr->port.collection);
                 graph_add_edge(graph, ptr->id, ptr->port.collection->id);
+            }
+            // coupling
+            if (ptr->port.coupling != 0) {
+                draw_ast_graph_step(graph, ptr->port.coupling);
+                graph_add_edge(graph, ptr->id, ptr->port.coupling->id);
             }
             break;
         default:

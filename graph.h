@@ -22,10 +22,10 @@
 #define LABEL_PORT      "port decl"
 #define LABEL_PORTS     "ports"
 #define LABEL_SERIAL    "serial"
-#define LABEL_STMTS     "stmts"
 #define LABEL_STAR      "*"
 #define LABEL_STATE     "state"
 #define LABEL_STMT      "stmt"
+#define LABEL_STMTS     "stmts"
 #define LABEL_SYNC      "sync"
 #define LABEL_WRAP      "net decl"
 

@@ -25,8 +25,8 @@ typedef enum {
 typedef enum {
     ATTR_MODE,
     ATTR_COLLECT,
-    ATTR_STATE,
-    ATTR_COUPLING
+    ATTR_COUPLING,
+    ATTR_STATE
 } attr_type;
 typedef enum {
     PORT_SYNC,
@@ -137,10 +137,11 @@ ast_node* ast_add_attr ( int, int );
  *
  * @param ast_node*:    pointer to an ast node of type AST_ID
  * @param ast_node*:    pointer to the ports list AST node
+ * @param ast_node*:    pointer to the state AST node
  * @return: ast_node*:
  *      a pointer to the location where the data was stored
  * */
-ast_node* ast_add_box ( ast_node*, ast_node* );
+ast_node* ast_add_box ( ast_node*, ast_node*, ast_node* );
 
 /**
  * Add a connection declaration to the AST.

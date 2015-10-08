@@ -20,6 +20,10 @@
 #define VAL_BOX     0
 #define VAL_NET     1
 
+#define VAL_DECOUPLED 0
+
+#define VAL_STATELESS 0
+
 // drawing
 #define AST_DOT_PATH    "dot/ast_graph.dot"
 #define CON_DOT_PATH    "dot/connection_graph.dot"
