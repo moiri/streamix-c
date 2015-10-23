@@ -1,3 +1,6 @@
 [submodule "hashtab"]
 	path = hashtab
 	url = git@github.com:moiri/hashtab.git
+[submodule "stack"]
+	path = stack
+	url = git@github.com:moiri/stack.git
