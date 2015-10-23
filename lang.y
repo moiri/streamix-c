@@ -14,6 +14,7 @@
     #include "ast.h"
     #include "defines.h"
     #include "graph.h"
+    #include "hash.h"
     extern int yylex();
     extern int yyparse();
     extern FILE *yyin;

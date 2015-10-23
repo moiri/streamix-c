@@ -1,16 +1,16 @@
 PROJECT = lang
 PARSER = parser
 
-PLUGIN_C = symtab.c \
+SOURCES = symtab.c \
 		   ast.c \
-		   graph.c \
+		   graph.c
 
-PLUGIN_H = symtab.h \
+INCLUDES = symtab.h \
 		   ast.h \
 		   graph.h \
-		   defines.h \
+		   defines.h
 
-PLUGIN = $(PLUGIN_C) $(PLUGIN_H)
+INCLUDES_DIR = ./hashtab
 
 CFLAGS = -lfl
 
@@ -21,8 +21,8 @@ DOT_CON_FILE = $(DOT_PATH)/connection_graph
 TEST_PATH = test
 TEST_FILE = $(TEST_PATH)/cpa.test
 
-$(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(PLUGIN)
-	gcc $(PROJECT).tab.c lex.yy.c $(PLUGIN_C) -o $(PARSER) $(CFLAGS)
+$(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(SOURCES) $(INCLUDES)
+	gcc $(PROJECT).tab.c lex.yy.c $(SOURCES) -I $(INCLUDES_DIR) -o $(PARSER) $(CFLAGS)
 
 lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
 	flex $(PROJECT).lex
