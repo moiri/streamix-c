@@ -1,5 +1,3 @@
-stateless box RS (out speed) on func_rs
-stateless box B (in break_abs) on func_b
 box MB (in block, out break_cmd) on func_mb
 stateless box DS (up side out dist) on func_ds
 box ABS (
@@ -31,6 +29,9 @@ box CPA (
 net Car { up in car_in (car_l_in), up out car_out (car_l_out),
         down in car_in (car_r_in), down out car_out (car_r_out) } {
     connect dist {DC, CPA}
+
+    stateless box RS (out speed) on func_rs
+    stateless box B (in break_abs) on func_b
 
     ((RS|B|MB).ABS.DC|DS).CPA
 }

@@ -14,20 +14,21 @@
     #include "ast.h"
     #include "defines.h"
     #include "graph.h"
-    #include "hash.h"
+    #include "utarray.h"
     extern int yylex();
     extern int yyparse();
     extern FILE *yyin;
     void yyerror ( const char* );
-    void install ( char*, int, int );
-    void install_port ( char*, int, int, int );
-    void context_check ( char*, int );
-    void context_check_port ( char*, int );
+    void install ( char*, int, int, int );
+    void context_check ( char*, int, int );
     ast_node* ast;
     int num_errors = 0;
     char* src_file_name;
     char error_msg[255];
     FILE* con_graph;
+    symrec* symtab = NULL;
+    UT_array* scope_stack;
+    int scope;
 %}
 
 /* Bison declarations */
@@ -43,6 +44,7 @@
 %token ON SYNC CONNECT
 %token <ival> BOX NET IN OUT UP DOWN SIDE DECOUPLED STATELESS
 %token <sval> IDENTIFIER
+%type <sval> scope_id
 %type <nval> net nets stmt decl_box decl_net decl_connect
 %type <nval> decl_bport syncport decl_nport port_mode port_class
 %type <nval> opt_state opt_decoupled
@@ -126,8 +128,9 @@ opt_connect_id:
 
 /* box declarartion */
 decl_box:
-    opt_state BOX IDENTIFIER '(' decl_bport opt_decl_bport ')' ON IDENTIFIER {
-        /* install($3, $2, @3.last_line); */
+    opt_state BOX scope_id '(' decl_bport opt_decl_bport ')' ON IDENTIFIER {
+        utarray_pop_back( scope_stack );
+        install($3, *( int* )utarray_back( scope_stack ), $2, @3.last_line);
         $$ = ast_add_box(
             ast_add_id($3, AST_ID),
             ast_add_list(
@@ -136,6 +139,14 @@ decl_box:
             ),
             ast_add_node($1, AST_STATE)
         );
+    }
+;
+
+scope_id:
+    IDENTIFIER {
+        scope++;
+        utarray_push_back( scope_stack, &scope );
+        $$ = $1;
     }
 ;
 
@@ -218,7 +229,7 @@ port_class:
 /* net declaration */
 net:
     IDENTIFIER  { 
-        /* context_check($1, @1.last_line); */
+        context_check($1, *( int* )utarray_back( scope_stack ), @1.last_line);
         $$ = ast_add_id($1, AST_ID);
         /* printf("id: %s\n", $$->name); */
     }
@@ -235,8 +246,9 @@ net:
 
 /* wrapper declaration */
 decl_net:
-    NET IDENTIFIER '{' decl_nport opt_decl_nport '}' '{' stmts '}' {
-        /* install($2, $1, @2.last_line); */
+    NET scope_id '{' decl_nport opt_decl_nport '}' '{' stmts '}' {
+        utarray_pop_back( scope_stack );
+        install($2, *( int* )utarray_back( scope_stack ), $1, @2.last_line);
         $$ = ast_add_wrap(
             ast_add_id($2, AST_ID),
             ast_add_list(
@@ -289,6 +301,9 @@ int main(int argc, char **argv) {
     yyin = myfile;
 
     con_graph = fopen(CON_DOT_PATH, "w");
+    utarray_new( scope_stack, &ut_int_icd );
+    scope = 0;
+    utarray_push_back( scope_stack, &scope );
     // parse through the input until there is no more:
     do {
         yyparse();
@@ -297,6 +312,8 @@ int main(int argc, char **argv) {
     fclose(con_graph);
     if (num_errors > 0) printf(" Error count: %d\n", num_errors);
     else draw_ast_graph(ast);
+
+    return 0;
 }
 
 /*
@@ -307,31 +324,19 @@ int main(int argc, char **argv) {
  * @param: int type:    type of the net
  * @param: int line:    line number of the symbol in the source file
  * */
-void install ( char *name, int type, int line ) {
-    /* printf("install %s, %d\n", name, type); */
-    if (getsym_net (name) == 0)
-        putsym_net (name, type);
+void install ( char *name, int scope, int type, int line ) {
+    symrec* item = symrec_get( &symtab, name );
+    /* no such symbol has been defined yet */
+    if ( item == 0 ) {
+        symrec_put( &symtab, name, scope, type );
+    }
+    /* else if ( item->scope > ) */
+    /* /1* printf("install %s, %d\n", name, scope); *1/ */
+    /* if (symrec_get( &symtab, name ) == 0) { */
+    /*     symrec_put( &symtab, name, scope, type ); */
+    /* } */
     else {
         sprintf(error_msg, ERROR_DUPLICATE_ID, line, name);
-        yyerror(error_msg);
-    }
-}
-
-/*
- * Add a new port identifier to the symbol table. If it is already there,
- * produce an error.
- *
- * @param: char* name:  name of the port
- * @param: int pclass:  calss of the port (up, down, side)
- * @param: int mode:    mode of the port (in, out)
- * @param: int line:    line number of the symbol in the source file
- * */
-void install_port ( char *name, int pclass, int mode, int line ) {
-    /* printf("install_port %s, %d, %d\n", name, pclass, mode); */
-    if (getsym_port (name, pclass, mode) == 0)
-        putsym_port (name, pclass, mode);
-    else {
-        sprintf(error_msg, ERROR_DUPLICATE_PORT, line, name);
         yyerror(error_msg);
     }
 }
@@ -343,27 +348,16 @@ void install_port ( char *name, int pclass, int mode, int line ) {
  * @param: char* name:  name of the net
  * @param: int line:    line number of the symbol in the source file
  * */
-void context_check ( char *name, int line ) {
-    /* printf("context_check %s\n", name); */
-    if (getsym_net (name) == 0) {
-        sprintf(error_msg, ERROR_UNDEFINED_ID, line, name);
-        yyerror(error_msg);
+void context_check ( char *name, int scope, int line ) {
+    symrec* res;
+    /* printf("context_check %s, %d\n", name, scope); */
+    if ( ( res = symrec_get( &symtab, name ) ) == 0) {
+        sprintf( error_msg, ERROR_UNDEFINED_ID, line, name );
+        yyerror( error_msg );
     }
-}
-
-/*
- * check whether a port identifier is properly declared. If not,
- * produce an error.
- *
- * @param: char* name:  name of the port
- * @param: int line:    line number of the symbol in the source file
- * */
-void context_check_port ( char *name, int line ) {
-    /* printf("context_check_port %s\n", name); */
-    if (getsym_port_all (name) == 0) {
-        sprintf(error_msg, ERROR_UNDEFINED_ID, line, name);
-        yyerror(error_msg);
-    }
+    /* else { */
+    /*     printf("%s, %d, %d\n", res->name, res->type, res->scope); */
+    /* } */
 }
 
 /*

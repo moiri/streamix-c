@@ -13,6 +13,9 @@
     #define YY_DECL extern int yylex()
     extern int yyerror(const char *);
 %}
+%option noinput
+%option nounput
+
 %%
     /* skip whitespaces and CR */
 [ \t]           ;

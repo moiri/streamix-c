@@ -3,16 +3,17 @@ PARSER = parser
 
 SOURCES = symtab.c \
 		   ast.c \
-		   graph.c
+		   graph.c \
+		   hashtab/hash.c \
+		   stack/stack.c
 
 INCLUDES = symtab.h \
 		   ast.h \
 		   graph.h \
 		   defines.h
 
-INCLUDES_DIR = ./hashtab
-
-CFLAGS = -lfl
+INCLUDES_DIR = -Iuthash/include
+CFLAGS = -Wall -lfl
 
 DOT_PATH = dot
 DOT_AST_FILE = $(DOT_PATH)/ast_graph
@@ -22,7 +23,7 @@ TEST_PATH = test
 TEST_FILE = $(TEST_PATH)/cpa.test
 
 $(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(SOURCES) $(INCLUDES)
-	gcc $(PROJECT).tab.c lex.yy.c $(SOURCES) -I $(INCLUDES_DIR) -o $(PARSER) $(CFLAGS)
+	gcc $(SOURCES) $(INCLUDES_DIR) $(PROJECT).tab.c lex.yy.c -o $(PARSER) $(CFLAGS)
 
 lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
 	flex $(PROJECT).lex
