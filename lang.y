@@ -20,7 +20,7 @@
     extern FILE *yyin;
     void yyerror ( const char* );
     void install ( char*, int, int, int );
-    void context_check ( char*, int, int );
+    void context_check ( char*, int );
     ast_node* ast;
     int num_errors = 0;
     char* src_file_name;
@@ -44,7 +44,7 @@
 %token ON SYNC CONNECT
 %token <ival> BOX NET IN OUT UP DOWN SIDE DECOUPLED STATELESS
 %token <sval> IDENTIFIER
-%type <sval> scope_id
+%type <sval> scope_id opt_renaming
 %type <nval> net nets stmt decl_box decl_net decl_connect
 %type <nval> decl_bport syncport decl_nport port_mode port_class
 %type <nval> opt_state opt_decoupled
@@ -229,7 +229,7 @@ port_class:
 /* net declaration */
 net:
     IDENTIFIER  { 
-        context_check($1, *( int* )utarray_back( scope_stack ), @1.last_line);
+        context_check($1, @1.last_line);
         $$ = ast_add_id($1, AST_ID);
         /* printf("id: %s\n", $$->name); */
     }
@@ -268,18 +268,23 @@ opt_decl_nport:
 ;
 
 decl_nport:
-    opt_port_class port_mode IDENTIFIER '(' IDENTIFIER ')' {
+    opt_port_class port_mode IDENTIFIER opt_renaming {
         /* install_port($1, $6, $7, @1.last_line); */
         /* context_check_port($3, @3.last_line); */
         $$ = ast_add_port(
             ast_add_id($3, AST_ID),
-            ast_add_node(ast_add_id($5, AST_ID), AST_INT_ID),
+            ast_add_node(ast_add_id($4, AST_ID), AST_INT_ID),
             ast_add_list($1, AST_COLLECT),
             ast_add_node($2, AST_MODE),
             (ast_node*)0, // no coupling
             PORT_NET
         );
     }
+;
+
+opt_renaming:
+    %empty { $$ = NULL; }
+|   '(' IDENTIFIER ')' { $$ = $2; }
 ;
 
 %%
@@ -325,17 +330,7 @@ int main(int argc, char **argv) {
  * @param: int line:    line number of the symbol in the source file
  * */
 void install ( char *name, int scope, int type, int line ) {
-    symrec* item = symrec_get( &symtab, name );
-    /* no such symbol has been defined yet */
-    if ( item == 0 ) {
-        symrec_put( &symtab, name, scope, type );
-    }
-    /* else if ( item->scope > ) */
-    /* /1* printf("install %s, %d\n", name, scope); *1/ */
-    /* if (symrec_get( &symtab, name ) == 0) { */
-    /*     symrec_put( &symtab, name, scope, type ); */
-    /* } */
-    else {
+    if( !symrec_put( &symtab, name, scope, type ) ) {
         sprintf(error_msg, ERROR_DUPLICATE_ID, line, name);
         yyerror(error_msg);
     }
@@ -348,10 +343,26 @@ void install ( char *name, int scope, int type, int line ) {
  * @param: char* name:  name of the net
  * @param: int line:    line number of the symbol in the source file
  * */
-void context_check ( char *name, int scope, int line ) {
-    symrec* res;
+void context_check ( char *name, int line ) {
+    int* p = NULL;
+    bool in_scope = false;
+    symrec* res = symrec_get( &symtab, name );
     /* printf("context_check %s, %d\n", name, scope); */
-    if ( ( res = symrec_get( &symtab, name ) ) == 0) {
+    if( res != NULL ) {
+        /* iterate through all entries with the same name */
+        do {
+            /* check wheter their scope matches with a scope on the stack */
+            while( ( p = ( int* )utarray_prev( scope_stack, p ) ) != NULL ) {
+                if( *p == res->scope ) {
+                    in_scope = true;
+                    break;
+                }
+            }
+            res = res->next;
+        } while( !in_scope && res != NULL );
+    }
+    /* no hash was found or the scope does not match */
+    if( !in_scope ) {
         sprintf( error_msg, ERROR_UNDEFINED_ID, line, name );
         yyerror( error_msg );
     }

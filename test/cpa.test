@@ -1,13 +1,5 @@
-box MB (in block, out break_cmd) on func_mb
 stateless box DS (up side out dist) on func_ds
-box ABS (
-    in speed,
-    in break_cmd,
-    up in dc,
-    out break_abs,
-    out block,
-    out abs
-) on func_abs
+stateless box B (in break_abs) on func_b
 box DC (
     in abs,
     in cpa,
@@ -30,10 +22,28 @@ net Car { up in car_in (car_l_in), up out car_out (car_l_out),
         down in car_in (car_r_in), down out car_out (car_r_out) } {
     connect dist {DC, CPA}
 
-    stateless box RS (out speed) on func_rs
-    stateless box B (in break_abs) on func_b
+    box MB (in block, out break_cmd) on func_mb
 
-    ((RS|B|MB).ABS.DC|DS).CPA
+    net Sensors { out speed, in block, out break_cmd, in break_abs } {
+        stateless box RS (out speed) on func_rs
+
+        RS|B|MB
+    }
+
+    net ABS { up in dc, out abs } {
+        box ABS (
+            in speed,
+            in break_cmd,
+            up in dc,
+            out break_abs,
+            out block,
+            out abs
+        ) on func_abs
+
+        Sensors.ABS
+    }
+
+    (ABS.DC|DS).CPA
 }
 
 Car.Car.Car

@@ -39,7 +39,7 @@
 
 // errors
 #define WARNING_STACK_OVERFLOW  "warning: Stack overflow, increase MAX_STACK_SIZE"
-#define ERROR_UNDEFINED_ID      "%d: error: %s is an undeclared identifier"
+#define ERROR_UNDEFINED_ID      "%d: error: %s is an undeclared identifier in this scope"
 #define ERROR_DUPLICATE_ID      "%d: error: box %s is already defined"
 #define ERROR_DUPLICATE_PORT    "%d: error: port %s is already defined in this scope"
 

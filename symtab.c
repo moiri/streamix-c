@@ -12,7 +12,7 @@ symrec* symrec_get( symrec** symtab, char *name ) {
 }
 
 /******************************************************************************/
-void symrec_put( symrec** symtab, char *name, int scope, int type ) {
+bool symrec_put( symrec** symtab, char *name, int scope, int type ) {
     symrec* item;
     symrec* new_item;
     HASH_FIND_STR( *symtab, name, item );
@@ -24,6 +24,7 @@ void symrec_put( symrec** symtab, char *name, int scope, int type ) {
         item->name = ( char* )malloc( strlen( name ) + 1 );
         strcpy (item->name, name);
         HASH_ADD_KEYPTR( hh, *symtab, item->name, strlen(item->name), item );
+        return true;
     }
     /* hash exists but eiter key or scope is different */
     else if( (item->scope != scope)
@@ -35,5 +36,8 @@ void symrec_put( symrec** symtab, char *name, int scope, int type ) {
         new_item->name = ( char* )malloc( strlen( name ) + 1 );
         strcpy (new_item->name, name);
         item->next = new_item;
+        return true;
     }
+    /* entry already exists */
+    else return false;
 }

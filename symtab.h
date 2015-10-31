@@ -56,8 +56,10 @@ symrec* symrec_get( symrec**, char* );
  * @param char*:        name of the net
  * @param int:          scope of the net
  * @param int:          type of the net
+ * @return bool:        true if operation was successful,
+ *                      false if duplicate entry
  * */
-void symrec_put( symrec**, char*, int, int );
+bool symrec_put( symrec**, char*, int, int );
 
 
 #endif /* SYMTAB_H */

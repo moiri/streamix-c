@@ -3,9 +3,7 @@ PARSER = parser
 
 SOURCES = symtab.c \
 		   ast.c \
-		   graph.c \
-		   hashtab/hash.c \
-		   stack/stack.c
+		   graph.c
 
 INCLUDES = symtab.h \
 		   ast.h \

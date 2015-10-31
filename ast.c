@@ -47,6 +47,7 @@ ast_node* ast_add_connect ( ast_node* connect, ast_node* connects ) {
 
 /******************************************************************************/
 ast_node* ast_add_id ( char* name, int type ) {
+    if (name == 0) return (ast_node*)0;
     ast_node *ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
     ptr->name = (char*) malloc(strlen(name)+1);
