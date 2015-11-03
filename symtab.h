@@ -15,25 +15,33 @@
 #include <stdbool.h>
 #include "uthash.h"
 
-// structure for symbol table record
+// structures for symbol table record
+typedef struct box_attr box_attr;
+struct box_attr {
+    bool state;
+};
+typedef struct sport_attr sport_attr;
+struct sport_attr {
+    bool side;
+    bool up;
+    bool down;
+    bool decoupled;
+    int sync_id;
+    int mode;
+};
+typedef struct port_attr port_attr;
+struct port_attr {
+    bool side;
+    bool up;
+    bool down;
+    int mode;
+};
 typedef struct symrec symrec;
 struct symrec {
     char* name;                 // name of the symbol; key for the hashtable
     int type;                   // VAL_NET, VAL_BOX, VAL_PORT
     int scope;                  // scope of the record
-    union {
-        struct {
-            bool state;
-        } box;
-        struct {
-            bool side;
-            bool up;
-            bool down;
-            bool sync;
-            bool decouplde;
-            int mode;
-        } port;
-    };
+    void* attr;
     symrec* next;
     UT_hash_handle hh;          // makes this structure hasable
 };
@@ -59,7 +67,7 @@ symrec* symrec_get( symrec**, char* );
  * @return bool:        true if operation was successful,
  *                      false if duplicate entry
  * */
-bool symrec_put( symrec**, char*, int, int );
+bool symrec_put( symrec**, char*, int, int, void* );
 
 
 #endif /* SYMTAB_H */

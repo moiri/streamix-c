@@ -19,6 +19,8 @@
 
 #define VAL_BOX     0
 #define VAL_NET     1
+#define VAL_PORT    2
+#define VAL_SPORT   3
 
 #define VAL_DECOUPLED 0
 
@@ -38,9 +40,7 @@
 #define MAX_STACK_SIZE  100
 
 // errors
-#define WARNING_STACK_OVERFLOW  "warning: Stack overflow, increase MAX_STACK_SIZE"
-#define ERROR_UNDEFINED_ID      "%d: error: %s is an undeclared identifier in this scope"
-#define ERROR_DUPLICATE_ID      "%d: error: box %s is already defined"
-#define ERROR_DUPLICATE_PORT    "%d: error: port %s is already defined in this scope"
+#define ERROR_UNDEFINED_ID      "%d: error: '%s' is an undeclared identifier in this scope"
+#define ERROR_DUPLICATE_ID      "%d: error: redefinition of '%s'"
 
 #endif /* DEFINES_H */

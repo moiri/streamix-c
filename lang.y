@@ -19,7 +19,7 @@
     extern int yyparse();
     extern FILE *yyin;
     void yyerror ( const char* );
-    void install ( char*, int, int, int );
+    void install ( char*, int, int, void*, int );
     void context_check ( char*, int );
     ast_node* ast;
     int num_errors = 0;
@@ -29,6 +29,7 @@
     symrec* symtab = NULL;
     UT_array* scope_stack;
     int scope;
+    int sync_id = 0;
 %}
 
 /* Bison declarations */
@@ -101,6 +102,7 @@ decl_connect:
 
 connect_list:
     IDENTIFIER opt_connect_id {
+        context_check($1, @1.last_line);
         $$ = ast_add_list_elem(
             ast_add_id($1, AST_ID),
             $2
@@ -119,6 +121,7 @@ opt_connect_id:
         $$ = (ast_list*)0;
     }
 |   ',' IDENTIFIER opt_connect_id {
+        context_check($2, @2.last_line);
         $$ = ast_add_list_elem(
             ast_add_id($2, AST_ID),
             $3
@@ -129,8 +132,11 @@ opt_connect_id:
 /* box declarartion */
 decl_box:
     opt_state BOX scope_id '(' decl_bport opt_decl_bport ')' ON IDENTIFIER {
+        box_attr *attr = ( box_attr* )malloc( sizeof( box_attr ) );
+        attr->state = ( $1 == NULL ) ? false : true;
         utarray_pop_back( scope_stack );
-        install($3, *( int* )utarray_back( scope_stack ), $2, @3.last_line);
+        install($3, *( int* )utarray_back( scope_stack ), $2, ( void* )attr,
+                @3.last_line);
         $$ = ast_add_box(
             ast_add_id($3, AST_ID),
             ast_add_list(
@@ -164,7 +170,20 @@ opt_decl_bport:
 
 decl_bport:
     opt_port_class port_mode IDENTIFIER {
-        /* install_port($1, $3, $4, @1.last_line); */
+        ast_list* list = $1;
+        port_attr *attr = ( port_attr* )malloc( sizeof( port_attr ) );
+        attr->mode = $2->attr.val;
+        attr->up = false;
+        attr->down = false;
+        attr->side = false;
+        while( list != NULL ) {
+            if( list->ast_node->attr.val == VAL_UP ) attr->up = true;
+            else if( list->ast_node->attr.val == VAL_DOWN ) attr->down = true;
+            else if( list->ast_node->attr.val == VAL_SIDE ) attr->side = true;
+            list = list->next;
+        }
+        install($3, *( int* )utarray_back( scope_stack ), VAL_PORT,
+                ( void* )attr, @3.last_line);
         $$ = ast_add_port(
             ast_add_id($3, AST_ID),
             (ast_node*)0, // no internal id
@@ -175,6 +194,7 @@ decl_bport:
         );
     }
 |   SYNC '{' syncport opt_syncport '}' {
+        sync_id++;
         $$ = ast_add_list(
             ast_add_list_elem($3, $4),
             AST_SYNC
@@ -198,7 +218,22 @@ opt_syncport:
 
 syncport:
     opt_decoupled opt_port_class IN IDENTIFIER {
-        /* install_port($1, VAL_IN, $3, @1.last_line); */
+        ast_list* list = $2;
+        sport_attr *attr = ( sport_attr* )malloc( sizeof( sport_attr ) );
+        attr->mode = $3;
+        attr->sync_id = sync_id;
+        attr->decoupled = ( $1 == NULL ) ? false : true;
+        attr->up = false;
+        attr->down = false;
+        attr->side = false;
+        while( list != NULL ) {
+            if( list->ast_node->attr.val == VAL_UP ) attr->up = true;
+            else if( list->ast_node->attr.val == VAL_DOWN ) attr->down = true;
+            else if( list->ast_node->attr.val == VAL_SIDE ) attr->side = true;
+            list = list->next;
+        }
+        install($4, *( int* )utarray_back( scope_stack ), VAL_SPORT,
+                ( void* )attr, @4.last_line);
         $$ = ast_add_port(
             ast_add_id($4, AST_ID),
             (ast_node*)0, // no internal id
@@ -248,7 +283,8 @@ net:
 decl_net:
     NET scope_id '{' decl_nport opt_decl_nport '}' '{' stmts '}' {
         utarray_pop_back( scope_stack );
-        install($2, *( int* )utarray_back( scope_stack ), $1, @2.last_line);
+        install($2, *( int* )utarray_back( scope_stack ), $1, NULL,
+                @2.last_line);
         $$ = ast_add_wrap(
             ast_add_id($2, AST_ID),
             ast_add_list(
@@ -269,8 +305,20 @@ opt_decl_nport:
 
 decl_nport:
     opt_port_class port_mode IDENTIFIER opt_renaming {
-        /* install_port($1, $6, $7, @1.last_line); */
-        /* context_check_port($3, @3.last_line); */
+        ast_list* list = $1;
+        port_attr *attr = ( port_attr* )malloc( sizeof( port_attr ) );
+        attr->mode = $2->attr.val;
+        attr->up = false;
+        attr->down = false;
+        attr->side = false;
+        while( list != NULL ) {
+            if( list->ast_node->attr.val == VAL_UP ) attr->up = true;
+            else if( list->ast_node->attr.val == VAL_DOWN ) attr->down = true;
+            else if( list->ast_node->attr.val == VAL_SIDE ) attr->side = true;
+            list = list->next;
+        }
+        install($3, *( int* )utarray_back( scope_stack ), VAL_PORT,
+                ( void* )attr, @3.last_line);
         $$ = ast_add_port(
             ast_add_id($3, AST_ID),
             ast_add_node(ast_add_id($4, AST_ID), AST_INT_ID),
@@ -329,10 +377,37 @@ int main(int argc, char **argv) {
  * @param: int type:    type of the net
  * @param: int line:    line number of the symbol in the source file
  * */
-void install ( char *name, int scope, int type, int line ) {
-    if( !symrec_put( &symtab, name, scope, type ) ) {
-        sprintf(error_msg, ERROR_DUPLICATE_ID, line, name);
-        yyerror(error_msg);
+void install ( char* name, int scope, int type, void* attr, int line ) {
+    /* printf( "install" ); */
+    /* if( type == VAL_BOX ) { */
+    /*     if( ( ( struct box_attr* )attr )->state ) */
+    /*         printf( " stateless" ); */
+    /*     printf( " box" ); */
+    /* } */
+    /* else if( type == VAL_PORT || type == VAL_SPORT ) { */
+    /*     if( ( ( struct port_attr* )attr )->up ) */
+    /*         printf( " up" ); */
+    /*     if( ( ( struct port_attr* )attr )->down ) */
+    /*         printf( " down" ); */
+    /*     if( ( ( struct port_attr* )attr )->side ) */
+    /*         printf( " side" ); */
+    /*     if( ( ( struct port_attr* )attr )->mode == VAL_IN ) */
+    /*         printf( " in" ); */
+    /*     else if( ( ( struct port_attr* )attr )->mode == VAL_OUT ) */
+    /*         printf( " out" ); */
+    /*     if( type == VAL_PORT ) printf( " port" ); */
+    /*     else if( type == VAL_SPORT ) { */
+    /*         if( ( ( struct sport_attr* )attr )->decoupled ) */
+    /*             printf( " decoupled" ); */
+    /*         printf( " sync(%d) port", ( ( struct sport_attr* )attr )->sync_id ); */
+    /*     } */
+    /* } */
+    /* else if( type == VAL_NET ) */
+    /*     printf( " net" ); */
+    /* printf( " %s in scope %d\n", name, scope ); */
+    if( !symrec_put( &symtab, name, scope, type, attr ) ) {
+        sprintf( error_msg, ERROR_DUPLICATE_ID, line, name );
+        yyerror( error_msg );
     }
 }
 
@@ -347,7 +422,6 @@ void context_check ( char *name, int line ) {
     int* p = NULL;
     bool in_scope = false;
     symrec* res = symrec_get( &symtab, name );
-    /* printf("context_check %s, %d\n", name, scope); */
     if( res != NULL ) {
         /* iterate through all entries with the same name */
         do {
@@ -355,6 +429,15 @@ void context_check ( char *name, int line ) {
             while( ( p = ( int* )utarray_prev( scope_stack, p ) ) != NULL ) {
                 if( *p == res->scope ) {
                     in_scope = true;
+                    /* printf( "found" ); */
+                    /* if( res->attr != NULL ) { */
+                    /*     if( ( ( struct box_attr* )res->attr )->state ) */
+                    /*         printf( " stateless" ); */
+                    /*     printf( " box" ); */
+                    /* } */
+                    /* else if( res->type == VAL_NET ) */
+                    /*     printf( " net" ); */
+                    /* printf( " %s in scope %d\n", res->name, res->scope ); */
                     break;
                 }
             }
@@ -366,9 +449,6 @@ void context_check ( char *name, int line ) {
         sprintf( error_msg, ERROR_UNDEFINED_ID, line, name );
         yyerror( error_msg );
     }
-    /* else { */
-    /*     printf("%s, %d, %d\n", res->name, res->type, res->scope); */
-    /* } */
 }
 
 /*
