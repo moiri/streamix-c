@@ -11,7 +11,8 @@
 
 typedef struct ast_list ast_list;
 typedef struct ast_node ast_node;
-typedef struct attr attr;
+typedef struct ast_attr ast_attr;
+typedef struct ast_id ast_id;
 typedef struct op op;
 typedef struct box box;
 typedef struct wrap wrap;
@@ -63,9 +64,16 @@ struct ast_list {
 };
 
 // AST_ATTR
-struct attr {
+struct ast_attr {
     attr_type attr_type;
     int val;
+};
+
+// AST_ID
+struct ast_id {
+    char*   name;
+    int     line;
+    int     type;
 };
 
 // AST_SERIAL, AST_PARALLEL
@@ -111,10 +119,10 @@ struct ast_node {
     node_type node_type;
     int     id;         // id of the node -> atm only used for dot graphs
     union {
-        char*           name;       // AST_ID
         ast_node*       ast_node;   // AST_NET, AST_MODE, AST_COUPLING, AST_STATE
         ast_list*       ast_list;   // AST_STMTS, AST_CONNECTS, AST_PORTS, AST_SYNC, AST_COLLECT
-        struct attr     attr;       // AST_ATTR
+        struct ast_attr ast_attr;   // AST_ATTR
+        struct ast_id   ast_id;     // AST_ID
         struct box      box;        // AST_BOX
         struct connect  connect;    // AST_CONNECT
         struct op       op;         // AST_SERIAL, AST_PARALLEL
@@ -158,11 +166,12 @@ ast_node* ast_add_connect ( ast_node*, ast_node* );
  * Add a leaf (end node) id to the AST.
  *
  * @param char*:    name of the id
+ * @param int:      line number of occurrence of th id
  * @param int:      type of the id
  * @return: ast_node*:
  *      a pointer to the location where the data was stored
  * */
-ast_node* ast_add_id ( char*, int );
+ast_node* ast_add_id ( char*, int, int );
 
 /**
  * Add a list as node to the AST.

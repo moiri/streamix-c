@@ -40,7 +40,7 @@
 #define MAX_STACK_SIZE  100
 
 // errors
-#define ERROR_UNDEFINED_ID      "%d: error: '%s' is an undeclared identifier in this scope"
+#define ERROR_UNDEFINED_ID      "%d: error: use of undeclared identifier '%s'"
 #define ERROR_DUPLICATE_ID      "%d: error: redefinition of '%s'"
 
 #endif /* DEFINES_H */

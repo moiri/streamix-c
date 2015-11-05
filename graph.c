@@ -62,12 +62,12 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             graph_add_node(
                     graph,
                     ptr->id,
-                    attr_label[ptr->attr.attr_type][ptr->attr.val],
+                    attr_label[ptr->ast_attr.attr_type][ptr->ast_attr.val],
                     SHAPE_OCTAGON
             );
             break;
         case AST_ID:
-            graph_add_node(graph, ptr->id, ptr->name, SHAPE_BOX);
+            graph_add_node(graph, ptr->id, ptr->ast_id.name, SHAPE_BOX);
             break;
         case AST_STAR:
             graph_add_node(graph, ptr->id, node_label[ptr->node_type], SHAPE_BOX);
@@ -197,7 +197,7 @@ void draw_connection_graph_step (FILE* graph, ast_node* ptr) {
 
     if (ptr->node_type == AST_ID) {
         // reached a leaf node of the AST -> add box to drawing
-        graph_add_node(graph, ptr->id, ptr->name, SHAPE_BOX);
+        graph_add_node(graph, ptr->id, ptr->ast_id.name, SHAPE_BOX);
     }
     else {
         // reached an operand -> follow lefat and right branch

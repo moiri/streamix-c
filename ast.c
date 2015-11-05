@@ -15,8 +15,8 @@ ast_node* ast_add_attr ( int val, int type ) {
     ptr->node_type = AST_ATTR;
     __node_id++;
     ptr->id = __node_id;
-    ptr->attr.attr_type = type;
-    ptr->attr.val = val;
+    ptr->ast_attr.attr_type = type;
+    ptr->ast_attr.val = val;
     return ptr;
 }
 
@@ -46,12 +46,14 @@ ast_node* ast_add_connect ( ast_node* connect, ast_node* connects ) {
 }
 
 /******************************************************************************/
-ast_node* ast_add_id ( char* name, int type ) {
+ast_node* ast_add_id ( char* name, int line, int type ) {
     if (name == 0) return (ast_node*)0;
     ast_node *ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->name = (char*) malloc(strlen(name)+1);
-    strcpy (ptr->name, name);
+    ptr->ast_id.name = (char*) malloc(strlen(name)+1);
+    strcpy (ptr->ast_id.name, name);
+    ptr->ast_id.type = type;
+    ptr->ast_id.line = line;
     ptr->node_type = AST_ID;
     __node_id++;
     ptr->id = __node_id;
