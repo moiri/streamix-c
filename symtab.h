@@ -41,25 +41,12 @@ struct symrec {
     UT_hash_handle hh;          // makes this structure hasable
 };
 
-void context_check( ast_node* ast );
-
-/*
- * check the context of the variables in the program
+/**
+ * Check the context of all identifiers in th eprogram
  *
- * @param ast_node*:    pointer to the root node of the ast
- * */
-void symtab_get( symrec**, ast_node* );
-
-/*
- * symtab_put symbol names into the symbol table
- *
- * @param symrec**:     pointer to the symbol table
  * @param ast_node*:    pointer to the ast node
- * @param int:          scope of the program
- * @param bool:         flag indicating wheter the ports are synchronized
- * @param int:          sync id to group synchronized port together
  * */
-void symtab_put( symrec**, ast_node*, bool );
+void context_check( ast_node* ast );
 
 /*
  * Get an identifier from the symbol table.
@@ -74,6 +61,15 @@ void symtab_put( symrec**, ast_node*, bool );
 symrec* symrec_get( symrec**, char*, int );
 
 /*
+ * check whether the given identificator is in the symbol table.
+ * This is a recursive function.
+ *
+ * @param symrec**:     pointer to the symbol table
+ * @param ast_node*:    pointer to the ast node
+ * */
+void symtab_get( symrec**, ast_node* );
+
+/*
  * Add an identifier to the symbol table.
  *
  * @param hashtable_t*  pointer to the hashtable
@@ -85,5 +81,14 @@ symrec* symrec_get( symrec**, char*, int );
  * */
 void symrec_put( symrec**, char*, int, int, void*, int );
 
+/*
+ * put symbol names into the symbol table. this includes collision and scope
+ * handling. This is a recursive funtion.
+ *
+ * @param symrec**:     pointer to the symbol table
+ * @param ast_node*:    pointer to the ast node
+ * @param bool:         flag indicating wheter the ports are synchronized
+ * */
+void symtab_put( symrec**, ast_node*, bool );
 
 #endif /* SYMTAB_H */
