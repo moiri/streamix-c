@@ -9,6 +9,8 @@
 #ifndef AST_H
 #define AST_H
 
+#include <stdbool.h>
+
 typedef struct ast_list ast_list;
 typedef struct ast_node ast_node;
 typedef struct ast_attr ast_attr;
@@ -78,10 +80,10 @@ struct ast_id {
 
 // AST_SERIAL, AST_PARALLEL
 struct op {
-    ast_node* left;
-    ast_list* con_left;
-    ast_node* right;
-    ast_list* con_right;
+    ast_node*   left;
+    ast_list*   con_left;
+    ast_node*   right;
+    ast_list*   con_right;
 };
 
 // AST_BOX
@@ -106,18 +108,19 @@ struct connect {
 
 // AST_PORT
 struct port {
-    port_type port_type;
-    ast_node* id;
-    ast_node* int_id;
-    ast_node* collection;
-    ast_node* mode;
-    ast_node* coupling;
+    port_type   port_type;
+    ast_node*   id;
+    ast_node*   int_id;
+    ast_node*   collection;
+    ast_node*   mode;
+    ast_node*   coupling;
+    bool        is_connected;
 };
 
 // the AST structure
 struct ast_node {
-    node_type node_type;
-    int     id;         // id of the node -> atm only used for dot graphs
+    node_type   node_type;
+    int         id;         // id of the node -> atm only used for dot graphs
     union {
         ast_node*       ast_node;   // AST_NET, AST_MODE, AST_COUPLING, AST_STATE
         ast_list*       ast_list;   // AST_STMTS, AST_CONNECTS, AST_PORTS, AST_SYNC, AST_COLLECT

@@ -38,10 +38,10 @@
 %token ON SYNC CONNECT
 %token <ival> BOX NET IN OUT UP DOWN SIDE DECOUPLED STATELESS
 %token <sval> IDENTIFIER
-%type <sval> scope_id opt_renaming
+%type <sval> scope_id
 %type <nval> net nets stmt decl_box decl_net decl_connect
 %type <nval> decl_bport syncport decl_nport port_mode port_class
-%type <nval> opt_state opt_decoupled
+%type <nval> opt_state opt_decoupled opt_renaming
 %type <lval> stmts connect_list opt_connect_id
 %type <lval> opt_decl_bport opt_syncport opt_decl_nport opt_port_class
 %left '|'
@@ -255,7 +255,7 @@ decl_nport:
     opt_port_class port_mode IDENTIFIER opt_renaming {
         $$ = ast_add_port(
             ast_add_id($3, @3.last_line, AST_ID),
-            ast_add_node(ast_add_id($4, @4.last_line, AST_ID), AST_INT_ID),
+            $4,
             ast_add_list($1, AST_COLLECT),
             ast_add_node($2, AST_MODE),
             (ast_node*)0, // no coupling
@@ -266,7 +266,9 @@ decl_nport:
 
 opt_renaming:
     %empty { $$ = NULL; }
-|   '(' IDENTIFIER ')' { $$ = $2; }
+|   '(' IDENTIFIER ')' {
+        $$ = ast_add_node(ast_add_id($2, @2.last_line, AST_ID), AST_INT_ID);
+    }
 ;
 
 %%
