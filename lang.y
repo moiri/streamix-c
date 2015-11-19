@@ -209,7 +209,7 @@ port_class:
 
 /* net declaration */
 net:
-    IDENTIFIER  { 
+    IDENTIFIER  {
         $$ = ast_add_id( $1, @1.last_line, ID_NET );
     }
 |   net '.' net {

@@ -70,10 +70,8 @@ void connection_check( symrec**, ast_node* );
 /*
  * check the port connections
  *
- * @param symrec*:    pointer to the left operator
- * @param symrec*:    pointer to the right operator
  * */
-void connection_check_port( symrec*, symrec* );
+void connection_check_port( symrec**, ast_node*, ast_node* );
 
 /*
  * check whether the given identificator is in the symbol table.

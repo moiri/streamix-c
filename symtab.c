@@ -3,103 +3,82 @@
 #include "symtab.h"
 #include "utarray.h"
 #include "defines.h"
+#ifdef DOT
 #include "graph.h"
+#endif //DOT
 
 /* handle errors with the bison error function */
 extern void yyerror ( const char* );
-char error_msg[255];
+char __error_msg[255];
 
 /* global variables */
-int scope = 0;          // global scope counter
-int sync_id = 0;        // global counter to associate ports to sync groups
-UT_array* scope_stack;  // stack to handle the scope
-symrec* symtab = NULL;  // hash table to store the symbols
-symrec_list* port_list = NULL;
-symrec_list* port_list_tmp = NULL;
-FILE* con_graph;
+int __scope = 0;          // global scope counter
+int __sync_id = 0;        // global counter to associate ports to sync groups
+UT_array* __scope_stack;  // stack to handle the scope
+symrec* __symtab = NULL;  // hash table to store the symbols
+symrec_list* __port_list = NULL;
+symrec_list* __port_list_tmp = NULL;
+FILE* __con_graph;
 
 
 /******************************************************************************/
 void context_check( ast_node* ast ) {
     /* int* p = NULL; */
 #ifdef DOT
-    con_graph = fopen(CON_DOT_PATH, "w");
+    __con_graph = fopen( CON_DOT_PATH, "w" );
 #endif //DOT
-    scope = 0;
-    utarray_new( scope_stack, &ut_int_icd );
-    utarray_push_back( scope_stack, &scope );
-    id_install( &symtab, ast, false );
+    __scope = 0;
+    utarray_new( __scope_stack, &ut_int_icd );
+    utarray_push_back( __scope_stack, &__scope );
+    id_install( &__symtab, ast, false );
     /* printf("stack:"); */
-    /* while( ( p = ( int* )utarray_prev( scope_stack, p ) ) != NULL ) { */
+    /* while( ( p = ( int* )utarray_prev( __scope_stack, p ) ) != NULL ) { */
     /*     printf(" %d,", *p); */
     /* } */
     /* printf("\n"); */
-    scope = 0;
-    id_check( &symtab, ast );
+    __scope = 0;
+    id_check( &__symtab, ast );
 #ifdef DOT
-    fclose(con_graph);
+    fclose( __con_graph );
 #endif //DOT
 }
 
 /******************************************************************************/
 void connection_check( symrec** symtab, ast_node* ast ) {
-#ifdef DOT
-    int op1_id, op2_id;
-#endif //DOT
     ast_list* i_ptr;
     ast_list* j_ptr;
-    symrec* op1;
-    symrec* op2;
+    ast_node* op1;
+    ast_node* op2;
     // match ports of left.con_right with right.con_left
     i_ptr = ast->op.left->op.con_right;
     do {
         if (ast->op.left->node_type == AST_ID) {
             // left operator is an ID
-#ifdef DOT
-            op1_id = ast->op.left->id;
-#endif //DOT
-            op1 = symrec_get( symtab, ast->op.left->ast_id.name,
-                    ast->op.left->ast_id.line );
-            i_ptr = (ast_list*)0;   // stop condition of outer loop
+            op1 = ast->op.left;
+            i_ptr = ( ast_list* )0;   // stop condition of outer loop
         }
         else {
             // left operator is a net (opeartion)
-#ifdef DOT
-            op1_id = i_ptr->ast_node->id;
-#endif //DOT
-            op1 = symrec_get( symtab, i_ptr->ast_node->ast_id.name,
-                    i_ptr->ast_node->ast_id.line );
+            op1 = i_ptr->ast_node;
             i_ptr = i_ptr->next;
         }
-        // op1 must be set here else there is a problem
-        if (op1 == NULL) return;
         j_ptr = ast->op.right->op.con_left;
         do {
             if (ast->op.right->node_type == AST_ID) {
                 // right operator is an ID
-#ifdef DOT
-                op2_id = ast->op.right->id;
-#endif //DOT
-                op2 = symrec_get( symtab, ast->op.right->ast_id.name,
-                        ast->op.right->ast_id.line );
-                j_ptr = (ast_list*)0;
+                op2 = ast->op.right;
+                j_ptr = ( ast_list* )0;
             }
             else {
                 // right operator is a net (opeartion)
-#ifdef DOT
-                op2_id = j_ptr->ast_node->id;
-#endif //DOT
-                op2 = symrec_get( symtab, j_ptr->ast_node->ast_id.name,
-                        j_ptr->ast_node->ast_id.line );
+                op2 = j_ptr->ast_node;
                 j_ptr = j_ptr->next;
             }
-            // op2 must be set here else there is a problem
-            if (op2 == NULL) return;
-            printf( "'%s' conncets with '%s'\n", op1->name, op2->name );
+            /* printf( "'%s' conncets with '%s'\n", op1->name, op2->name ); */
 #ifdef DOT
-            graph_add_edge(con_graph, op1_id, op2_id);
+            graph_add_edge( __con_graph, op1->id, op2->id );
 #endif //DOT
-            connection_check_port( op1, op2 );
+            connection_check_port( symtab, op1, op2 );
         }
         while (j_ptr != 0);
     }
@@ -107,10 +86,15 @@ void connection_check( symrec** symtab, ast_node* ast ) {
 }
 
 /******************************************************************************/
-void connection_check_port( symrec* op1, symrec* op2 ) {
+void connection_check_port( symrec** symtab, ast_node* ast_op1,
+        ast_node* ast_op2 ) {
+    symrec* op1 = symrec_get( symtab, ast_op1->ast_id.name,
+            ast_op1->ast_id.line );
+    symrec* op2 = symrec_get( symtab, ast_op2->ast_id.name,
+            ast_op1->ast_id.line );
     symrec_list* ports1;
     symrec_list* ports2;
-    // check wherther ports can connect
+    // check whether ports can connect
     ports1 = ( ( struct box_attr* )( op1->attr ) )->ports;
     while ( ports1 != NULL ) {
         /* printf( " %s.%s\n", op1->name, ports1->rec->name ); */
@@ -123,9 +107,9 @@ void connection_check_port( symrec* op1, symrec* op2 ) {
             if( ( strcmp( ports1->rec->name, ports2->rec->name ) == 0 )
                 && ( ( ( struct port_attr* )ports1->rec->attr )->mode !=
                     ( ( struct port_attr* )ports2->rec->attr )->mode ) ) {
-                printf( " %s.%s connects with %s.%s\n",
-                        op1->name, ports1->rec->name,
-                        op2->name, ports2->rec->name );
+                /* printf( " %s.%s connects with %s.%s\n", */
+                /*         op1->name, ports1->rec->name, */
+                /*         op2->name, ports2->rec->name ); */
             }
 
             ports2 = ports2->next;
@@ -149,21 +133,21 @@ void id_check( symrec** symtab, ast_node* ast ) {
             }
             break;
         case AST_BOX:
-            scope++;
+            __scope++;
             break;
         case AST_WRAP:
-            scope++;
-            utarray_push_back( scope_stack, &scope );
+            __scope++;
+            utarray_push_back( __scope_stack, &__scope );
             id_check( symtab, ast->wrap.stmts );
-            utarray_pop_back( scope_stack );
+            utarray_pop_back( __scope_stack );
             break;
         case AST_NET:
 #ifdef DOT
-            graph_init(con_graph, STYLE_CON_GRAPH);
+            graph_init( __con_graph, STYLE_CON_GRAPH );
 #endif //DOT
             id_check( symtab, ast->ast_node );
 #ifdef DOT
-            graph_finish(con_graph);
+            graph_finish( __con_graph );
 #endif //DOT
             break;
         case AST_CONNECT:
@@ -182,7 +166,8 @@ void id_check( symrec** symtab, ast_node* ast ) {
             symrec_get( symtab, ast->ast_id.name, ast->ast_id.line );
 #ifdef DOT
             if( ast->ast_id.type == ID_NET )
-                graph_add_node(con_graph, ast->id, ast->ast_id.name, SHAPE_BOX);
+                graph_add_node( __con_graph, ast->id, ast->ast_id.name,
+                        SHAPE_BOX );
 #endif //DOT
             break;
         default:
@@ -201,7 +186,7 @@ symrec* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
 
     switch( ast->node_type ) {
         case AST_SYNC:
-            sync_id++;
+            __sync_id++;
             is_sync_temp = true;
         case AST_PORTS:
             list = ast->ast_list;
@@ -210,11 +195,11 @@ symrec* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
                 list = list->next;
                 ptr = (symrec_list*) malloc(sizeof(symrec_list));
                 ptr->rec = res;
-                ptr->next = port_list_tmp;
-                port_list_tmp = ptr;
+                ptr->next = __port_list_tmp;
+                __port_list_tmp = ptr;
             }
-            port_list = port_list_tmp;
-            port_list_tmp = NULL;
+            __port_list = __port_list_tmp;
+            __port_list_tmp = NULL;
             break;
         case AST_STMTS:
             list = ast->ast_list;
@@ -224,30 +209,30 @@ symrec* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
             }
             break;
         case AST_BOX:
-            scope++;
-            utarray_push_back( scope_stack, &scope );
+            __scope++;
+            utarray_push_back( __scope_stack, &__scope );
             id_install( symtab, ast->box.ports, false );
-            utarray_pop_back( scope_stack );
+            utarray_pop_back( __scope_stack );
             // install symbol
             b_attr = ( box_attr* )malloc( sizeof( box_attr ) );
             b_attr->state = ( ast->box.state == NULL ) ? true : false;
-            b_attr->ports = port_list;
+            b_attr->ports = __port_list;
             symrec_put( symtab, ast->box.id->ast_id.name,
-                    *utarray_back( scope_stack ), VAL_BOX, ( void* )b_attr,
+                    *utarray_back( __scope_stack ), VAL_BOX, ( void* )b_attr,
                     ast->box.id->ast_id.line );
             break;
         case AST_WRAP:
-            scope++;
-            utarray_push_back( scope_stack, &scope );
+            __scope++;
+            utarray_push_back( __scope_stack, &__scope );
             id_install( symtab, ast->wrap.stmts, false );
             id_install( symtab, ast->wrap.ports, false );
-            utarray_pop_back( scope_stack );
+            utarray_pop_back( __scope_stack );
             // install symbol
             b_attr = ( box_attr* )malloc( sizeof( box_attr ) );
             b_attr->state = false;
-            b_attr->ports = port_list;
+            b_attr->ports = __port_list;
             symrec_put( symtab, ast->wrap.id->ast_id.name,
-                    *utarray_back( scope_stack ), VAL_NET, ( void* )b_attr,
+                    *utarray_back( __scope_stack ), VAL_NET, ( void* )b_attr,
                     ast->wrap.id->ast_id.line );
             break;
         case AST_PORT:
@@ -269,10 +254,10 @@ symrec* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
             }
             if( is_sync ) {
                 p_attr->decoupled = (ast->port.coupling == NULL) ? false : true;
-                p_attr->sync_id = sync_id;
+                p_attr->sync_id = __sync_id;
             }
             res = symrec_put( symtab, ast->port.id->ast_id.name,
-                    *utarray_back( scope_stack ), VAL_PORT, p_attr,
+                    *utarray_back( __scope_stack ), VAL_PORT, p_attr,
                     ast->port.id->ast_id.line );
 
             break;
@@ -291,7 +276,7 @@ symrec* symrec_get( symrec** symtab, char *name, int line ) {
     /* iterate through all entries with the same name */
     while( !in_scope && item != NULL ) {
         /* check whether their scope matches with a scope on the stack */
-        while( ( p = ( int* )utarray_prev( scope_stack, p ) ) != NULL ) {
+        while( ( p = ( int* )utarray_prev( __scope_stack, p ) ) != NULL ) {
             if( *p == item->scope ) {
                 in_scope = true;
                 /* printf( "found" ); */
@@ -309,8 +294,8 @@ symrec* symrec_get( symrec** symtab, char *name, int line ) {
         item = item->next;
     }
     if( item == NULL ) {
-        sprintf( error_msg, ERROR_UNDEFINED_ID, line, name );
-        yyerror( error_msg );
+        sprintf( __error_msg, ERROR_UNDEFINED_ID, line, name );
+        yyerror( __error_msg );
     }
     return item;
 }
@@ -401,8 +386,8 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type, void* attr
         }
     }
     if( is_identical ) {
-        sprintf( error_msg, ERROR_DUPLICATE_ID, line, name );
-        yyerror( error_msg );
+        sprintf( __error_msg, ERROR_DUPLICATE_ID, line, name );
+        yyerror( __error_msg );
     }
     return res;
 }
