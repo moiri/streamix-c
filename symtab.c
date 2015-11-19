@@ -3,6 +3,7 @@
 #include "symtab.h"
 #include "utarray.h"
 #include "defines.h"
+#include "graph.h"
 
 /* handle errors with the bison error function */
 extern void yyerror ( const char* );
@@ -15,11 +16,15 @@ UT_array* scope_stack;  // stack to handle the scope
 symrec* symtab = NULL;  // hash table to store the symbols
 symrec_list* port_list = NULL;
 symrec_list* port_list_tmp = NULL;
+FILE* con_graph;
 
 
 /******************************************************************************/
 void context_check( ast_node* ast ) {
     /* int* p = NULL; */
+#ifdef DOT
+    con_graph = fopen(CON_DOT_PATH, "w");
+#endif //DOT
     scope = 0;
     utarray_new( scope_stack, &ut_int_icd );
     utarray_push_back( scope_stack, &scope );
@@ -31,10 +36,16 @@ void context_check( ast_node* ast ) {
     /* printf("\n"); */
     scope = 0;
     id_check( &symtab, ast );
+#ifdef DOT
+    fclose(con_graph);
+#endif //DOT
 }
 
 /******************************************************************************/
 void connection_check( symrec** symtab, ast_node* ast ) {
+#ifdef DOT
+    int op1_id, op2_id;
+#endif //DOT
     ast_list* i_ptr;
     ast_list* j_ptr;
     symrec* op1;
@@ -44,12 +55,18 @@ void connection_check( symrec** symtab, ast_node* ast ) {
     do {
         if (ast->op.left->node_type == AST_ID) {
             // left operator is an ID
+#ifdef DOT
+            op1_id = ast->op.left->id;
+#endif //DOT
             op1 = symrec_get( symtab, ast->op.left->ast_id.name,
                     ast->op.left->ast_id.line );
             i_ptr = (ast_list*)0;   // stop condition of outer loop
         }
         else {
             // left operator is a net (opeartion)
+#ifdef DOT
+            op1_id = i_ptr->ast_node->id;
+#endif //DOT
             op1 = symrec_get( symtab, i_ptr->ast_node->ast_id.name,
                     i_ptr->ast_node->ast_id.line );
             i_ptr = i_ptr->next;
@@ -60,12 +77,18 @@ void connection_check( symrec** symtab, ast_node* ast ) {
         do {
             if (ast->op.right->node_type == AST_ID) {
                 // right operator is an ID
+#ifdef DOT
+                op2_id = ast->op.right->id;
+#endif //DOT
                 op2 = symrec_get( symtab, ast->op.right->ast_id.name,
                         ast->op.right->ast_id.line );
                 j_ptr = (ast_list*)0;
             }
             else {
                 // right operator is a net (opeartion)
+#ifdef DOT
+                op2_id = j_ptr->ast_node->id;
+#endif //DOT
                 op2 = symrec_get( symtab, j_ptr->ast_node->ast_id.name,
                         j_ptr->ast_node->ast_id.line );
                 j_ptr = j_ptr->next;
@@ -73,7 +96,9 @@ void connection_check( symrec** symtab, ast_node* ast ) {
             // op2 must be set here else there is a problem
             if (op2 == NULL) return;
             printf( "'%s' conncets with '%s'\n", op1->name, op2->name );
-            /* graph_add_edge(graph, node_id, tmp_node_id); */
+#ifdef DOT
+            graph_add_edge(con_graph, op1_id, op2_id);
+#endif //DOT
             connection_check_port( op1, op2 );
         }
         while (j_ptr != 0);
@@ -133,7 +158,13 @@ void id_check( symrec** symtab, ast_node* ast ) {
             utarray_pop_back( scope_stack );
             break;
         case AST_NET:
+#ifdef DOT
+            graph_init(con_graph, STYLE_CON_GRAPH);
+#endif //DOT
             id_check( symtab, ast->ast_node );
+#ifdef DOT
+            graph_finish(con_graph);
+#endif //DOT
             break;
         case AST_CONNECT:
             id_check( symtab, ast->connect.connects );
@@ -149,6 +180,10 @@ void id_check( symrec** symtab, ast_node* ast ) {
             break;
         case AST_ID:
             symrec_get( symtab, ast->ast_id.name, ast->ast_id.line );
+#ifdef DOT
+            if( ast->ast_id.type == ID_NET )
+                graph_add_node(con_graph, ast->id, ast->ast_id.name, SHAPE_BOX);
+#endif //DOT
             break;
         default:
             ;

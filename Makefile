@@ -29,7 +29,7 @@ lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
 $(PROJECT).tab.c $(PROJECT).tab.h: $(PROJECT).y
 	bison -d -Wall $(PROJECT).y
 
-debug: CFLAGS += -g -O0
+debug: CFLAGS += -g -O0 -DDOT
 debug: clean $(PARSER) run dot
 
 clean:

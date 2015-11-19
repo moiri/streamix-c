@@ -30,21 +30,6 @@ void draw_ast_graph ( ast_node* );
 void draw_ast_graph_step ( FILE*, ast_node* );
 
 /**
- * Draw a dot diagram of the connection graph
- *
- * @param ast_node*:    pointer to the root node of the AST
- * */
-void draw_connection_graph ( FILE*, ast_node* );
-
-/**
- * Recursive function to draw the connection graph
- *
- * @param FILE*:        file pointer to the dot file
- * @param ast_node*:    pointer to the current ast node
- * */
-void draw_connection_graph_step ( FILE*, ast_node* );
-
-/**
  * Add an edge to the graph
  *
  * @param FILE*:    file pointer to the dot file

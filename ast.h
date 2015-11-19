@@ -22,8 +22,12 @@ typedef struct port port;
 
 typedef enum {
     ID_NET,
+    ID_WRAP,
     ID_BOX,
-    ID_PORT
+    ID_PORT,
+    ID_IPORT,
+    ID_CNET,
+    ID_CPORT
 } id_type;
 typedef enum {
     ATTR_MODE,

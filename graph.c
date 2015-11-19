@@ -183,59 +183,6 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
 }
 
 /******************************************************************************/
-void draw_connection_graph (FILE* con_graph, ast_node* start) {
-    graph_init(con_graph, STYLE_CON_GRAPH);
-    draw_connection_graph_step(con_graph, start);
-    graph_finish(con_graph);
-}
-
-/******************************************************************************/
-void draw_connection_graph_step (FILE* graph, ast_node* ptr) {
-    int node_id, tmp_node_id;
-    ast_list* i_ptr;
-    ast_list* j_ptr;
-
-    if (ptr->node_type == AST_ID) {
-        // reached a leaf node of the AST -> add box to drawing
-        graph_add_node(graph, ptr->id, ptr->ast_id.name, SHAPE_BOX);
-    }
-    else {
-        // reached an operand -> follow lefat and right branch
-        draw_connection_graph_step(graph, ptr->op.left);
-        draw_connection_graph_step(graph, ptr->op.right);
-
-        if (ptr->node_type == AST_SERIAL) {
-            // serial operand -> draw all conenctions at this stage
-            i_ptr = ptr->op.left->op.con_right;
-            do {
-                if (ptr->op.left->node_type == AST_ID) {
-                    node_id = ptr->op.left->id;
-                    i_ptr = (ast_list*)0;
-                }
-                else {
-                    node_id = i_ptr->ast_node->id;
-                    i_ptr = i_ptr->next;
-                }
-                j_ptr = ptr->op.right->op.con_left;
-                do {
-                    if (ptr->op.right->node_type == AST_ID) {
-                        tmp_node_id = ptr->op.right->id;
-                        j_ptr = (ast_list*)0;
-                    }
-                    else {
-                        tmp_node_id = j_ptr->ast_node->id;
-                        j_ptr = j_ptr->next;
-                    }
-                    graph_add_edge(graph, node_id, tmp_node_id);
-                }
-                while (j_ptr != 0);
-            }
-            while (i_ptr != 0);
-        }
-    }
-}
-
-/******************************************************************************/
 void graph_add_edge ( FILE* graph, int start, int end) {
     fprintf(graph, "\tid%d->id%d;\n", start, end);
 }
