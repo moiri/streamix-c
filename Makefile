@@ -23,7 +23,8 @@ TEST_FILE = $(TEST_PATH)/cpa.test
 
 all: $(PARSER)
 
-# compile with dot stuff (executable generates dot files when run)
+# compile with dot stuff (executable generates '.dot' files when run)
+# use 'make graph' to generate '.pdf' files from the '.dot' files
 dot: CFLAGS += $(DOT_FLAGS)
 dot: $(PARSER)
 
@@ -32,12 +33,15 @@ dot: $(PARSER)
 debug: CFLAGS += -g -O0 $(DOT_FLAGS)
 debug: clean $(PARSER) run graph
 
+# compile project
 $(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(SOURCES) $(INCLUDES)
 	gcc $(SOURCES) $(INCLUDES_DIR) $(PROJECT).tab.c lex.yy.c -o $(PARSER) $(CFLAGS)
 
+# compile lexer (flex)
 lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
 	flex $(PROJECT).lex
 
+# compile parser (bison)
 $(PROJECT).tab.c $(PROJECT).tab.h: $(PROJECT).y
 	bison -d -Wall $(PROJECT).y
 
@@ -63,7 +67,9 @@ clean:
 	rm -f lex.yy.c
 	rm -f $(DOT_PATH)/*
 
+# generate '.pdf' files from the '.dot' files
 graph: $(DOT_AST_FILE).pdf $(DOT_CON_FILE).pdf
 
+# used for debugging to save time
 run:
 	./$(PARSER) $(TEST_FILE)
