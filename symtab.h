@@ -14,21 +14,17 @@
 
 #include <stdbool.h>
 #include "uthash.h"
-#include "utarray.h"
-#include "utlist.h"
 #include "ast.h"
 
 typedef struct symrec symrec;
+typedef struct symrec_list symrec_list;
+typedef struct instance_list instance_list;
 typedef struct box_attr box_attr;
 typedef struct port_attr port_attr;
 // structures for symbol table record
-typedef struct el {
-    symrec*     ptr;
-    struct el   *next;
-} el;
 struct box_attr {
-    bool    state;
-    el*     ports;
+    bool            state;
+    symrec_list*    ports;
 };
 struct port_attr {
     bool    side;
@@ -46,13 +42,25 @@ struct symrec {
     symrec* next;
     UT_hash_handle hh;          // makes this structure hasable
 };
+struct symrec_list {
+    symrec*         rec;
+    symrec_list*    next;
+};
+struct instance_list {
+    symrec*         port;
+    bool            connected;
+    instance_list*  next;
+};
 
 /**
  * Check the context of all identifiers in th eprogram
  *
  * @param ast_node*:    pointer to the ast node
  * */
-void context_check( ast_node* ast );
+void context_check( ast_node* );
+
+void connection_check_net( symrec**, ast_node* );
+void connection_check_port( symrec*, symrec* );
 
 /*
  * check whether the given identificator is in the symbol table.
@@ -71,7 +79,7 @@ void id_check( symrec**, ast_node* );
  * @param ast_node*:    pointer to the ast node
  * @param bool:         flag indicating wheter the ports are synchronized
  * */
-void id_install( symrec**, ast_node*, bool );
+symrec* id_install( symrec**, ast_node*, bool );
 
 /*
  * Get an identifier from the symbol table.
