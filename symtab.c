@@ -34,7 +34,7 @@ void context_check( ast_node* ast ) {
 }
 
 /******************************************************************************/
-void connection_check_net( symrec** symtab, ast_node* ast ) {
+void connection_check( symrec** symtab, ast_node* ast ) {
     ast_list* i_ptr;
     ast_list* j_ptr;
     symrec* op1;
@@ -145,7 +145,7 @@ void id_check( symrec** symtab, ast_node* ast ) {
         case AST_SERIAL:
             id_check( symtab, ast->op.left );
             id_check( symtab, ast->op.right );
-            connection_check_net( symtab, ast );
+            connection_check( symtab, ast );
             break;
         case AST_ID:
             symrec_get( symtab, ast->ast_id.name, ast->ast_id.line );

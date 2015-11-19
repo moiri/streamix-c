@@ -59,7 +59,20 @@ struct instance_list {
  * */
 void context_check( ast_node* );
 
-void connection_check_net( symrec**, ast_node* );
+/*
+ * check the connections of the network equations
+ *
+ * @param symrec**:     pointer to the symbol table
+ * @param ast_node*:    pointer to the ast node
+ * */
+void connection_check( symrec**, ast_node* );
+
+/*
+ * check the port connections
+ *
+ * @param symrec*:    pointer to the left operator
+ * @param symrec*:    pointer to the right operator
+ * */
 void connection_check_port( symrec*, symrec* );
 
 /*
@@ -78,6 +91,9 @@ void id_check( symrec**, ast_node* );
  * @param symrec**:     pointer to the symbol table
  * @param ast_node*:    pointer to the ast node
  * @param bool:         flag indicating wheter the ports are synchronized
+ * @return symrec*:
+ *      the return walue is used to propagate back the information of which
+ *      ports belong to which net
  * */
 symrec* id_install( symrec**, ast_node*, bool );
 
@@ -88,7 +104,7 @@ symrec* id_install( symrec**, ast_node*, bool );
  * @param char*:        name of the identifier
  * @param int:          position (line number) of the identifier
  * @return symrec*:
- *      a pointer to the location where the data was stored
+ *      a pointer to the location where the data is stored
  *      a null pointer if the element was not found
  * */
 symrec* symrec_get( symrec**, char*, int );
@@ -102,6 +118,9 @@ symrec* symrec_get( symrec**, char*, int );
  * @param int:          type of the net
  * @param void*:        pointer to the attributes of the identifier
  * @param int:          position (line number) of the identifier
+ * @return symrec*:
+ *      a pointer to the location where the data was stored
+ *      a null pointer if the element was not stored
  * */
 symrec* symrec_put( symrec**, char*, int, int, void*, int );
 
