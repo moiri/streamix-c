@@ -13,8 +13,9 @@
     #include "symtab.h"
     #include "ast.h"
     #include "defines.h"
+#ifdef DOT_AST
     #include "graph.h"
-    #include "utarray.h"
+#endif // DOT_AST
     extern int yylex();
     extern int yyparse();
     extern FILE *yyin;
@@ -297,7 +298,9 @@ int main( int argc, char **argv ) {
 
     /* fclose(con_graph); */
     if( num_errors > 0 ) printf( " Error count: %d\n", num_errors );
+#ifdef DOT_AST
     else draw_ast_graph( ast );
+#endif // DOT_AST
 
     return 0;
 }

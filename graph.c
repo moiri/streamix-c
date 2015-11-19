@@ -1,6 +1,7 @@
 #include "defines.h"
 #include "graph.h"
 
+#ifdef DOT_AST
 char* node_label[] = {
     "box decl",
     "collection",
@@ -181,6 +182,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             ;
     }
 }
+#endif // DOT_AST
 
 /******************************************************************************/
 void graph_add_edge ( FILE* graph, int start, int end) {

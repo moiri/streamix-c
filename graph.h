@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include "ast.h"
 
+#ifdef DOT_AST
 /**
  * Draw a dot diagram of the AST
  *
@@ -28,6 +29,7 @@ void draw_ast_graph ( ast_node* );
  * @param ast_node*:    pointer to the current ast node
  * */
 void draw_ast_graph_step ( FILE*, ast_node* );
+#endif // DOT_AST
 
 /**
  * Add an edge to the graph
