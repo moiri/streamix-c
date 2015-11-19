@@ -38,7 +38,6 @@
 %token ON SYNC CONNECT
 %token <ival> BOX NET IN OUT UP DOWN SIDE DECOUPLED STATELESS
 %token <sval> IDENTIFIER
-%type <sval> scope_id
 %type <nval> net nets stmt decl_box decl_net decl_connect
 %type <nval> decl_bport syncport decl_nport port_mode port_class
 %type <nval> opt_state opt_decoupled opt_renaming
@@ -122,7 +121,7 @@ opt_connect_id:
 
 /* box declarartion */
 decl_box:
-    opt_state BOX scope_id '(' decl_bport opt_decl_bport ')' ON IDENTIFIER {
+    opt_state BOX IDENTIFIER '(' decl_bport opt_decl_bport ')' ON IDENTIFIER {
         $$ = ast_add_box(
             ast_add_id( $3, @3.last_line, ID_BOX ),
             ast_add_list(
@@ -132,10 +131,6 @@ decl_box:
             ast_add_node( $1, AST_STATE )
         );
     }
-;
-
-scope_id:
-    IDENTIFIER { $$ = $1; }
 ;
 
 opt_state:
@@ -230,7 +225,7 @@ net:
 
 /* wrapper declaration */
 decl_net:
-    NET scope_id '{' decl_nport opt_decl_nport '}' '{' stmts '}' {
+    NET IDENTIFIER '{' decl_nport opt_decl_nport '}' '{' stmts '}' {
         /* install($2, *( int* )utarray_back( scope_stack ), $1, NULL, */
         /*         @2.last_line); */
         $$ = ast_add_wrap(
