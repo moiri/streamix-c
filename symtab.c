@@ -15,6 +15,7 @@ char __error_msg[255];
 int             __scope = 0;            // global scope counter
 int             __sync_id = 0;          // used to assemble ports to sync groups
 UT_array*       __scope_stack;          // stack to handle the scope
+instrec*        __insttab = NULL;       // hash table to store the instances
 symrec*         __symtab = NULL;        // hash table to store the symbols
 #ifdef DOT_CON
 FILE*           __con_graph;            // file handler for the connection graph
@@ -273,6 +274,25 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
             ;
     }
     return res;
+}
+
+/******************************************************************************/
+instrec* instrec_get( instrec** insttab, int id ) {
+    // no collision handling is needed, IDs are unique
+    instrec* item;
+    HASH_FIND_INT( *insttab, &id, item );
+    return item;
+}
+
+/******************************************************************************/
+instrec* instrec_put( instrec** insttab, int id, symrec* rec ) {
+    // no collision handling is needed, IDs are unique
+    instrec* item;
+    item = ( instrec* )malloc( sizeof( instrec ) );
+    item->id = id;
+    item->rec = rec;
+    HASH_ADD_INT( *insttab, id, item );
+    return item;
 }
 
 /******************************************************************************/

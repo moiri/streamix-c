@@ -18,7 +18,7 @@
 
 typedef struct symrec symrec;
 typedef struct symrec_list symrec_list;
-typedef struct instance_list instance_list;
+typedef struct instrec instrec;
 typedef struct box_attr box_attr;
 typedef struct port_attr port_attr;
 // structures for symbol table record
@@ -35,21 +35,22 @@ struct port_attr {
     int     mode;
 };
 struct symrec {
-    char*   name;               // name of the symbol; key for the hashtable
-    int     type;               // VAL_NET, VAL_BOX, VAL_PORT
-    int     scope;              // scope of the record
-    void*   attr;
-    symrec* next;
-    UT_hash_handle hh;          // makes this structure hasable
+    char*   name;       // name of the symbol; key for the hashtable
+    int     type;       // VAL_NET, VAL_BOX, VAL_PORT
+    int     scope;      // scope of the record
+    void*   attr;       // a struct of attributes
+    symrec* next;       // pointer to the next element (handle collisions)
+    UT_hash_handle hh;  // makes this structure hasable
 };
 struct symrec_list {
     symrec*         rec;
     symrec_list*    next;
 };
-struct instance_list {
-    symrec*         port;
-    bool            connected;
-    instance_list*  next;
+struct instrec {
+    int     id;         // id of the instance; key
+    symrec* rec;        // pointer to its definition
+    bool    connected;
+    UT_hash_handle hh;  // makes this structure hasable
 };
 
 /**
@@ -96,9 +97,31 @@ void id_check( symrec**, ast_node* );
 void* id_install( symrec**, ast_node*, bool );
 
 /*
+ * Get an instance from the instance table.
+ *
+ * @param instrec**:    pointer to the hashtable
+ * @param int:          id of the instance
+ * @return instrec*:
+ *      a pointer to the location where the data is stored
+ *      a null pointer if the element was not found
+ * */
+instrec* instrec_get( instrec**, int );
+
+/*
+ * Add an instance to the instance table.
+ *
+ * @param instrec**:    pointer to the hashtable
+ * @param int:          id of the instance
+ * @param symrec*:      pointer to the symbol record
+ * @return instrec*:
+ *      a pointer to the location where the data was stored
+ * */
+instrec* instrec_put( instrec**, int, symrec* );
+
+/*
  * Get an identifier from the symbol table.
  *
- * @param hashtable_t*: pointer to the hashtable
+ * @param symrec**:     pointer to the hashtable
  * @param char*:        name of the identifier
  * @param int:          position (line number) of the identifier
  * @return symrec*:
