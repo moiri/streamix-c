@@ -109,9 +109,9 @@ void connection_check_port( symrec** symtab, ast_node* ast_op1,
             if( ( strcmp( ports1->rec->name, ports2->rec->name ) == 0 )
                 && ( ( ( struct port_attr* )ports1->rec->attr )->mode !=
                     ( ( struct port_attr* )ports2->rec->attr )->mode ) ) {
-                /* printf( " %s.%s connects with %s.%s\n", */
-                /*         op1->name, ports1->rec->name, */
-                /*         op2->name, ports2->rec->name ); */
+                printf( " %s.%s connects with %s.%s\n",
+                        op1->name, ports1->rec->name,
+                        op2->name, ports2->rec->name );
 #ifdef DOT_CON
                 graph_add_edge( __p_con_graph, ast_op1->id, ast_op2->id );
 #endif // DOT_CON
@@ -193,33 +193,49 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
     ast_list* list = NULL;
     box_attr* b_attr = NULL;
     port_attr* p_attr = NULL;
-    bool is_sync_temp = false;
     void* res = NULL;
-    symrec* port = NULL;
     symrec_list* ptr = NULL;
     symrec_list* port_list = NULL;
 
     switch( ast->node_type ) {
         case AST_SYNC:
             __sync_id++;
-            is_sync_temp = true;
+            list = ast->ast_list;
+            while (list != NULL) {
+                res = id_install( symtab, list->ast_node, true );
+                list = list->next;
+                ptr = (symrec_list*) malloc(sizeof(symrec_list));
+                ptr->rec = ( struct symrec* )res;
+                ptr->next = port_list;
+                port_list = ptr;
+            }
+            res = ( void* )port_list;   // return pointer to the port list
+            break;
         case AST_PORTS:
             list = ast->ast_list;
             while (list != NULL) {
-                port = ( struct symrec* )id_install( symtab, list->ast_node,
-                        is_sync_temp );
+                res = id_install( symtab, list->ast_node, false );
+                if( list->ast_node->node_type == AST_SYNC ) {
+                    ptr = ( struct symrec_list* )res;
+                    while( ( ( struct symrec_list* ) res)->next != NULL )
+                        res = ( ( struct symrec_list* )res )->next;
+                    ( ( struct symrec_list* )res )->next = port_list;
+                    port_list = ptr;
+                }
+                else {
+                    ptr = (symrec_list*) malloc(sizeof(symrec_list));
+                    ptr->rec = ( struct symrec* )res;
+                    ptr->next = port_list;
+                    port_list = ptr;
+                }
                 list = list->next;
-                ptr = (symrec_list*) malloc(sizeof(symrec_list));
-                ptr->rec = port;
-                ptr->next = port_list;
-                port_list = ptr;
             }
             res = ( void* )port_list;   // return pointer to the port list
             break;
         case AST_STMTS:
             list = ast->ast_list;
             while (list != NULL) {
-                id_install( symtab, list->ast_node, is_sync_temp );
+                id_install( symtab, list->ast_node, false );
                 list = list->next;
             }
             break;
