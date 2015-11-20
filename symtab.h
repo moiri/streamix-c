@@ -79,9 +79,10 @@ void connection_check_port( symrec**, ast_node*, ast_node* );
  * This is a recursive function.
  *
  * @param symrec**:     pointer to the symbol table
+ * @param instrec**:    pointer to the instance table
  * @param ast_node*:    pointer to the ast node
  * */
-void id_check( symrec**, ast_node* );
+void id_check( symrec**, instrec**, ast_node* );
 
 /*
  * put symbol names into the symbol table. this includes collision and scope

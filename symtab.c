@@ -12,35 +12,35 @@ extern void yyerror ( const char* );
 char __error_msg[255];
 
 /* global variables */
-int             __scope = 0;            // global scope counter
-int             __sync_id = 0;          // used to assemble ports to sync groups
-UT_array*       __scope_stack;          // stack to handle the scope
-instrec*        __insttab = NULL;       // hash table to store the instances
-symrec*         __symtab = NULL;        // hash table to store the symbols
+int         __scope = 0;    // global scope counter
+int         __sync_id = 0;  // used to assemble ports to sync groups
+UT_array*   __scope_stack;  // stack to handle the scope
 #ifdef DOT_CON
-FILE*           __con_graph;            // file handler for the connection graph
+FILE*       __n_con_graph;  // file handler for the net connection graph
+FILE*       __p_con_graph;  // file handler for the port connection graph
+extern int  __node_id;
 #endif // DOT_CON
 
 
 /******************************************************************************/
 void context_check( ast_node* ast ) {
-    /* int* p = NULL; */
+    instrec*    insttab = NULL;       // hash table to store the instances
+    symrec*     symtab = NULL;        // hash table to store the symbols
+
 #ifdef DOT_CON
-    __con_graph = fopen( CON_DOT_PATH, "w" );
+    __n_con_graph = fopen( N_CON_DOT_PATH, "w" );
+    __p_con_graph = fopen( P_CON_DOT_PATH, "w" );
 #endif // DOT_CON
+
     __scope = 0;
     utarray_new( __scope_stack, &ut_int_icd );
     utarray_push_back( __scope_stack, &__scope );
-    id_install( &__symtab, ast, false );
-    /* printf("stack:"); */
-    /* while( ( p = ( int* )utarray_prev( __scope_stack, p ) ) != NULL ) { */
-    /*     printf(" %d,", *p); */
-    /* } */
-    /* printf("\n"); */
+    id_install( &symtab, ast, false );
     __scope = 0;
-    id_check( &__symtab, ast );
+    id_check( &symtab, &insttab, ast );
 #ifdef DOT_CON
-    fclose( __con_graph );
+    fclose( __n_con_graph );
+    fclose( __p_con_graph );
 #endif // DOT_CON
 }
 
@@ -75,10 +75,10 @@ void connection_check( symrec** symtab, ast_node* ast ) {
                 op2 = j_ptr->ast_node;
                 j_ptr = j_ptr->next;
             }
-            printf( "'%s' conncets with '%s'\n", op1->ast_id.name,
-                    op2->ast_id.name );
+            /* printf( "'%s' conncets with '%s'\n", op1->ast_id.name, */
+            /*         op2->ast_id.name ); */
 #ifdef DOT_CON
-            graph_add_edge( __con_graph, op1->id, op2->id );
+            graph_add_edge( __n_con_graph, op1->id, op2->id );
 #endif // DOT_CON
             connection_check_port( symtab, op1, op2 );
         }
@@ -109,28 +109,31 @@ void connection_check_port( symrec** symtab, ast_node* ast_op1,
             if( ( strcmp( ports1->rec->name, ports2->rec->name ) == 0 )
                 && ( ( ( struct port_attr* )ports1->rec->attr )->mode !=
                     ( ( struct port_attr* )ports2->rec->attr )->mode ) ) {
-                printf( " %s.%s connects with %s.%s\n",
-                        op1->name, ports1->rec->name,
-                        op2->name, ports2->rec->name );
+                /* printf( " %s.%s connects with %s.%s\n", */
+                /*         op1->name, ports1->rec->name, */
+                /*         op2->name, ports2->rec->name ); */
+#ifdef DOT_CON
+                graph_add_edge( __p_con_graph, ast_op1->id, ast_op2->id );
+#endif // DOT_CON
             }
 
             ports2 = ports2->next;
         }
         ports1 = ports1->next;
     }
-
 }
 
 /******************************************************************************/
-void id_check( symrec** symtab, ast_node* ast ) {
+void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
     ast_list* list = NULL;
+    symrec* rec = NULL;
 
     switch( ast->node_type ) {
         case AST_CONNECTS:
         case AST_STMTS:
             list = ast->ast_list;
             while( list != NULL ) {
-                id_check( symtab, list->ast_node );
+                id_check( symtab, insttab, list->ast_node );
                 list = list->next;
             }
             break;
@@ -140,37 +143,45 @@ void id_check( symrec** symtab, ast_node* ast ) {
         case AST_WRAP:
             __scope++;
             utarray_push_back( __scope_stack, &__scope );
-            id_check( symtab, ast->wrap.stmts );
+            id_check( symtab, insttab, ast->wrap.stmts );
             utarray_pop_back( __scope_stack );
             break;
         case AST_NET:
 #ifdef DOT_CON
-            graph_init( __con_graph, STYLE_CON_GRAPH );
+            graph_init( __n_con_graph, STYLE_CON_GRAPH );
+            graph_init( __p_con_graph, STYLE_CON_GRAPH );
 #endif // DOT_CON
-            id_check( symtab, ast->ast_node );
+            id_check( symtab, insttab, ast->ast_node );
 #ifdef DOT_CON
-            graph_finish( __con_graph );
+            graph_finish( __n_con_graph );
+            graph_finish( __p_con_graph );
 #endif // DOT_CON
             break;
         case AST_CONNECT:
-            id_check( symtab, ast->connect.connects );
+            id_check( symtab, insttab, ast->connect.connects );
             break;
         case AST_PARALLEL:
-            id_check( symtab, ast->op.left );
-            id_check( symtab, ast->op.right );
+            id_check( symtab, insttab, ast->op.left );
+            id_check( symtab, insttab, ast->op.right );
             break;
         case AST_SERIAL:
-            id_check( symtab, ast->op.left );
-            id_check( symtab, ast->op.right );
+            id_check( symtab, insttab, ast->op.left );
+            id_check( symtab, insttab, ast->op.right );
             connection_check( symtab, ast );
             break;
         case AST_ID:
-            symrec_get( symtab, ast->ast_id.name, ast->ast_id.line );
+            // check the context of the symbol
+            rec = symrec_get( symtab, ast->ast_id.name, ast->ast_id.line );
+            // add the symbol to the instance table
+            if( ast->ast_id.type == ID_NET ) {
+                instrec_put( insttab, ast->id, rec );
 #ifdef DOT_CON
-            if( ast->ast_id.type == ID_NET )
-                graph_add_node( __con_graph, ast->id, ast->ast_id.name,
+                graph_add_node( __n_con_graph, ast->id, ast->ast_id.name,
+                        SHAPE_BOX );
+                graph_add_node( __p_con_graph, ast->id, ast->ast_id.name,
                         SHAPE_BOX );
 #endif // DOT_CON
+            }
             break;
         default:
             ;

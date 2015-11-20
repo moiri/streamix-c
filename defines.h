@@ -28,7 +28,8 @@
 
 // drawing
 #define AST_DOT_PATH    "dot/ast_graph.dot"
-#define CON_DOT_PATH    "dot/connection_graph.dot"
+#define N_CON_DOT_PATH    "dot/net_connection_graph.dot"
+#define P_CON_DOT_PATH    "dot/port_connection_graph.dot"
 
 #define SHAPE_BOX       "box"
 #define SHAPE_ELLIPSE   "ellipse"

@@ -15,7 +15,8 @@ CFLAGS = -Wall -lfl
 
 DOT_PATH = dot
 DOT_AST_FILE = $(DOT_PATH)/ast_graph
-DOT_CON_FILE = $(DOT_PATH)/connection_graph
+DOT_N_CON_FILE = $(DOT_PATH)/net_connection_graph
+DOT_P_CON_FILE = $(DOT_PATH)/port_connection_graph
 DOT_FLAGS = -DDOT_AST -DDOT_CON
 
 TEST_PATH = test
@@ -53,9 +54,14 @@ $(DOT_AST_FILE).pdf: $(DOT_AST_FILE).dot
 # 1. generate multiple temporary pdf files of the networks
 # 2. merge temporary pdf files to one pdf
 # 3. remove temporary pdf files
-$(DOT_CON_FILE).pdf: $(DOT_CON_FILE).dot
-	dot -Tpdf $(DOT_CON_FILE).dot | csplit --quiet --elide-empty-files --prefix=dot/tmpfile - "/%%EOF/+1" "{*}"
-	gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$(DOT_CON_FILE).pdf dot/tmpfile*
+$(DOT_N_CON_FILE).pdf: $(DOT_N_CON_FILE).dot
+	dot -Tpdf $(DOT_N_CON_FILE).dot | csplit --quiet --elide-empty-files --prefix=dot/tmpfile - "/%%EOF/+1" "{*}"
+	gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$(DOT_N_CON_FILE).pdf dot/tmpfile*
+	rm -f dot/tmpfile*
+
+$(DOT_P_CON_FILE).pdf: $(DOT_P_CON_FILE).dot
+	dot -Tpdf $(DOT_P_CON_FILE).dot | csplit --quiet --elide-empty-files --prefix=dot/tmpfile - "/%%EOF/+1" "{*}"
+	gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$(DOT_P_CON_FILE).pdf dot/tmpfile*
 	rm -f dot/tmpfile*
 
 .PHONY: clean graph run
@@ -68,7 +74,7 @@ clean:
 	rm -f $(DOT_PATH)/*
 
 # generate '.pdf' files from the '.dot' files
-graph: $(DOT_AST_FILE).pdf $(DOT_CON_FILE).pdf
+graph: $(DOT_AST_FILE).pdf $(DOT_N_CON_FILE).pdf $(DOT_P_CON_FILE).pdf
 
 # used for debugging to save time
 run:
