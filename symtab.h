@@ -89,11 +89,11 @@ void id_check( symrec**, ast_node* );
  * @param symrec**:     pointer to the symbol table
  * @param ast_node*:    pointer to the ast node
  * @param bool:         flag indicating wheter the ports are synchronized
- * @return symrec*:
- *      the return walue is used to propagate back the information of which
+ * @return void*:
+ *      the return value is used to propagate back the information of which
  *      ports belong to which net
  * */
-symrec* id_install( symrec**, ast_node*, bool );
+void* id_install( symrec**, ast_node*, bool );
 
 /*
  * Get an identifier from the symbol table.

@@ -16,8 +16,6 @@ int             __scope = 0;            // global scope counter
 int             __sync_id = 0;          // used to assemble ports to sync groups
 UT_array*       __scope_stack;          // stack to handle the scope
 symrec*         __symtab = NULL;        // hash table to store the symbols
-symrec_list*    __port_list = NULL;     // linked lists to associate ports with
-symrec_list*    __port_list_tmp = NULL; //  boxes and nets
 #ifdef DOT_CON
 FILE*           __con_graph;            // file handler for the connection graph
 #endif // DOT_CON
@@ -76,7 +74,8 @@ void connection_check( symrec** symtab, ast_node* ast ) {
                 op2 = j_ptr->ast_node;
                 j_ptr = j_ptr->next;
             }
-            /* printf( "'%s' conncets with '%s'\n", op1->name, op2->name ); */
+            printf( "'%s' conncets with '%s'\n", op1->ast_id.name,
+                    op2->ast_id.name );
 #ifdef DOT_CON
             graph_add_edge( __con_graph, op1->id, op2->id );
 #endif // DOT_CON
@@ -109,9 +108,9 @@ void connection_check_port( symrec** symtab, ast_node* ast_op1,
             if( ( strcmp( ports1->rec->name, ports2->rec->name ) == 0 )
                 && ( ( ( struct port_attr* )ports1->rec->attr )->mode !=
                     ( ( struct port_attr* )ports2->rec->attr )->mode ) ) {
-                /* printf( " %s.%s connects with %s.%s\n", */
-                /*         op1->name, ports1->rec->name, */
-                /*         op2->name, ports2->rec->name ); */
+                printf( " %s.%s connects with %s.%s\n",
+                        op1->name, ports1->rec->name,
+                        op2->name, ports2->rec->name );
             }
 
             ports2 = ports2->next;
@@ -178,13 +177,15 @@ void id_check( symrec** symtab, ast_node* ast ) {
 }
 
 /******************************************************************************/
-symrec* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
+void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
     ast_list* list = NULL;
     box_attr* b_attr = NULL;
     port_attr* p_attr = NULL;
     bool is_sync_temp = false;
-    symrec* res = NULL;
+    void* res = NULL;
+    symrec* port = NULL;
     symrec_list* ptr = NULL;
+    symrec_list* port_list = NULL;
 
     switch( ast->node_type ) {
         case AST_SYNC:
@@ -193,15 +194,15 @@ symrec* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
         case AST_PORTS:
             list = ast->ast_list;
             while (list != NULL) {
-                res = id_install( symtab, list->ast_node, is_sync_temp );
+                port = ( struct symrec* )id_install( symtab, list->ast_node,
+                        is_sync_temp );
                 list = list->next;
                 ptr = (symrec_list*) malloc(sizeof(symrec_list));
-                ptr->rec = res;
-                ptr->next = __port_list_tmp;
-                __port_list_tmp = ptr;
+                ptr->rec = port;
+                ptr->next = port_list;
+                port_list = ptr;
             }
-            __port_list = __port_list_tmp;
-            __port_list_tmp = NULL;
+            res = ( void* )port_list;   // return pointer to the port list
             break;
         case AST_STMTS:
             list = ast->ast_list;
@@ -213,12 +214,13 @@ symrec* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
         case AST_BOX:
             __scope++;
             utarray_push_back( __scope_stack, &__scope );
-            id_install( symtab, ast->box.ports, false );
+            port_list = ( struct symrec_list* )id_install( symtab,
+                    ast->box.ports, false );
             utarray_pop_back( __scope_stack );
-            // install symbol
+            // prepare symbol attributes and install symbol
             b_attr = ( box_attr* )malloc( sizeof( box_attr ) );
             b_attr->state = ( ast->box.state == NULL ) ? true : false;
-            b_attr->ports = __port_list;
+            b_attr->ports = port_list;
             symrec_put( symtab, ast->box.id->ast_id.name,
                     *utarray_back( __scope_stack ), VAL_BOX, ( void* )b_attr,
                     ast->box.id->ast_id.line );
@@ -227,17 +229,19 @@ symrec* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
             __scope++;
             utarray_push_back( __scope_stack, &__scope );
             id_install( symtab, ast->wrap.stmts, false );
-            id_install( symtab, ast->wrap.ports, false );
+            port_list = ( struct symrec_list* )id_install( symtab,
+                    ast->wrap.ports, false );
             utarray_pop_back( __scope_stack );
-            // install symbol
+            // prepare symbol attributes and install symbol
             b_attr = ( box_attr* )malloc( sizeof( box_attr ) );
             b_attr->state = false;
-            b_attr->ports = __port_list;
+            b_attr->ports = port_list;
             symrec_put( symtab, ast->wrap.id->ast_id.name,
                     *utarray_back( __scope_stack ), VAL_NET, ( void* )b_attr,
                     ast->wrap.id->ast_id.line );
             break;
         case AST_PORT:
+            // prepare symbol attributes
             if( ast->port.collection != NULL )
                 list = ast->port.collection->ast_list;
             p_attr = ( port_attr* )malloc( sizeof( port_attr ) );
@@ -245,7 +249,7 @@ symrec* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
             p_attr->up = false;
             p_attr->down = false;
             p_attr->side = false;
-            while( list != NULL ) {
+            while( list != NULL ) { // set port collections
                 if( list->ast_node->ast_attr.val == VAL_UP )
                     p_attr->up = true;
                 else if( list->ast_node->ast_attr.val == VAL_DOWN )
@@ -254,11 +258,13 @@ symrec* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
                     p_attr->side = true;
                 list = list->next;
             }
-            if( is_sync ) {
+            if( is_sync ) { // add sync attributes if port is a sync port
                 p_attr->decoupled = (ast->port.coupling == NULL) ? false : true;
                 p_attr->sync_id = __sync_id;
             }
-            res = symrec_put( symtab, ast->port.id->ast_id.name,
+            // install symbol and return pointer to the symbol record
+            res = ( void* )symrec_put( symtab,
+                    ast->port.id->ast_id.name,
                     *utarray_back( __scope_stack ), VAL_PORT, p_attr,
                     ast->port.id->ast_id.line );
 
