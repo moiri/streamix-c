@@ -111,8 +111,8 @@ void connection_check_port( instrec** insttab, ast_node* ast_op1,
             /* printf( " %s.%s\n", op2->net->name, ports2->rec->name ); */
             p_attr2 = ( struct port_attr* )ports2->rec->attr;
             if( // ports are not yet connected
-                    ( ports1->connect_cnt < p_attr1->max_connect )
-                    && ( ports2->connect_cnt < p_attr2->max_connect )
+                    ( ports1->connect_cnt < p_attr1->num_connect )
+                    && ( ports2->connect_cnt < p_attr2->num_connect )
                 // ports have the same name
                     && ( strcmp( ports1->rec->name, ports2->rec->name ) == 0 )
                 // ports are of opposite mode
@@ -297,12 +297,12 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
                 list = ast->port.collection->ast_list;
             p_attr = ( port_attr* )malloc( sizeof( port_attr ) );
             p_attr->mode = ast->port.mode->ast_node->ast_attr.val;
-            p_attr->max_connect = 0;
+            p_attr->num_connect = 0;
             p_attr->up = false;
             p_attr->down = false;
             p_attr->side = false;
             while( list != NULL ) { // set port collections
-                p_attr->max_connect++;
+                p_attr->num_connect++;
                 if( list->ast_node->ast_attr.val == VAL_UP )
                     p_attr->up = true;
                 else if( list->ast_node->ast_attr.val == VAL_DOWN )
@@ -311,7 +311,7 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
                     p_attr->side = true;
                 list = list->next;
             }
-            if( p_attr->max_connect == 0 ) p_attr->max_connect++;
+            if( p_attr->num_connect == 0 ) p_attr->num_connect++;
             if( is_sync ) { // add sync attributes if port is a sync port
                 p_attr->decoupled = (ast->port.coupling == NULL) ? false : true;
                 p_attr->sync_id = __sync_id;

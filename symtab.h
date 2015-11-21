@@ -23,12 +23,13 @@ typedef struct box_attr box_attr;
 typedef struct port_attr port_attr;
 // structures for symbol table record
 struct box_attr {
-    bool            state;  // a box can be stateless or stateful
-    symrec_list*    ports;  // pointer to the port list of the box
+    bool            state;      // a box can be stateless or stateful
+    symrec_list*    ports;      // pointer to the port list of the box
+    int             num_ports;  // #ports also counting multiple collections
 };
 struct port_attr {
     int     mode;           // input or output
-    int     max_connect;    // port can be in multiple collections and
+    int     num_connect;    // port can be in multiple collections and
                             // will hence connect to multiple targets
     // collections
     bool    side;
@@ -47,15 +48,16 @@ struct symrec {
     UT_hash_handle hh;  // makes this structure hasable
 };
 struct symrec_list {
-    symrec*         rec;
-    int             connect_cnt;    // temp variable to control teh connections
-    symrec_list*    next;
+    symrec*         rec;            // pointer to port in symbol table
+    int             connect_cnt;    // counter to control the port connections
+    symrec_list*    next;           // next element in the list
 };
 struct instrec {
-    int             id;     // id of the instance; key
-    symrec*         net;    // pointer to its definition
-    symrec_list*    ports;  // pointer to the port list of the instance
-    UT_hash_handle  hh;     // makes this structure hasable
+    int             id;         // id of the instance; key
+    symrec*         net;        // pointer to its definition
+    int             port_cnt;   // counter to control all port connections
+    symrec_list*    ports;      // pointer to the port list of the instance
+    UT_hash_handle  hh;         // makes this structure hasable
 };
 
 /**
