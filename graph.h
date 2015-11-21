@@ -37,8 +37,9 @@ void draw_ast_graph_step ( FILE*, ast_node* );
  * @param FILE*:    file pointer to the dot file
  * @param int:      id of the start node
  * @param int:      id of the end node
+ * @param char*:    name of the edge
  * */
-void graph_add_edge ( FILE*, int, int );
+void graph_add_edge ( FILE*, int, int, char* );
 
 /**
  * Add a inode to the graph

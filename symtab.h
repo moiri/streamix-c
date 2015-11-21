@@ -23,16 +23,20 @@ typedef struct box_attr box_attr;
 typedef struct port_attr port_attr;
 // structures for symbol table record
 struct box_attr {
-    bool            state;
-    symrec_list*    ports;
+    bool            state;  // a box can be stateless or stateful
+    symrec_list*    ports;  // pointer to the port list of the box
 };
 struct port_attr {
+    int     mode;           // input or output
+    int     max_connect;    // port can be in multiple collections and
+                            // will hence connect to multiple targets
+    // collections
     bool    side;
     bool    up;
     bool    down;
+    // sync attributes
     bool    decoupled;
     int     sync_id;
-    int     mode;
 };
 struct symrec {
     char*   name;       // name of the symbol; key for the hashtable
@@ -44,13 +48,14 @@ struct symrec {
 };
 struct symrec_list {
     symrec*         rec;
+    int             connect_cnt;    // temp variable to control teh connections
     symrec_list*    next;
 };
 struct instrec {
-    int     id;         // id of the instance; key
-    symrec* rec;        // pointer to its definition
-    bool    connected;
-    UT_hash_handle hh;  // makes this structure hasable
+    int             id;     // id of the instance; key
+    symrec*         net;    // pointer to its definition
+    symrec_list*    ports;  // pointer to the port list of the instance
+    UT_hash_handle  hh;     // makes this structure hasable
 };
 
 /**
@@ -66,13 +71,13 @@ void context_check( ast_node* );
  * @param symrec**:     pointer to the symbol table
  * @param ast_node*:    pointer to the ast node
  * */
-void connection_check( symrec**, ast_node* );
+void connection_check( instrec**, ast_node* );
 
 /*
  * check the port connections
  *
  * */
-void connection_check_port( symrec**, ast_node*, ast_node* );
+void connection_check_port( instrec**, ast_node*, ast_node* );
 
 /*
  * check whether the given identificator is in the symbol table.

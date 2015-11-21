@@ -22,26 +22,27 @@
 #define VAL_PORT    2
 #define VAL_SPORT   3
 
-#define VAL_DECOUPLED 0
+#define VAL_DECOUPLED   0
 
-#define VAL_STATELESS 0
+#define VAL_STATELESS   0
 
 // drawing
 #define AST_DOT_PATH    "dot/ast_graph.dot"
-#define N_CON_DOT_PATH    "dot/net_connection_graph.dot"
-#define P_CON_DOT_PATH    "dot/port_connection_graph.dot"
+#define N_CON_DOT_PATH  "dot/net_connection_graph.dot"
+#define P_CON_DOT_PATH  "dot/port_connection_graph.dot"
 
 #define SHAPE_BOX       "box"
 #define SHAPE_ELLIPSE   "ellipse"
 #define SHAPE_OCTAGON   "octagon"
 
-#define STYLE_DEFAULT   0
-#define STYLE_CON_GRAPH 1
+#define STYLE_DEFAULT       0
+#define STYLE_N_CON_GRAPH   1
+#define STYLE_P_CON_GRAPH   2
 
 #define MAX_STACK_SIZE  100
 
 // errors
-#define ERROR_UNDEFINED_ID      "%d: error: use of undeclared identifier '%s'"
-#define ERROR_DUPLICATE_ID      "%d: error: redefinition of '%s'"
+#define ERROR_UNDEFINED_ID  "%d: error: use of undeclared identifier '%s'"
+#define ERROR_DUPLICATE_ID  "%d: error: redefinition of '%s'"
 
 #endif /* DEFINES_H */

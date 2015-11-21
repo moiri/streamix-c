@@ -73,7 +73,6 @@ stmt:
 
 nets:
     net {
-        /* draw_connection_graph( con_graph, $1 ); */
         $$ = ast_add_node( $1, AST_NET );
     }
 |   decl_box {

@@ -45,7 +45,7 @@ void context_check( ast_node* ast ) {
 }
 
 /******************************************************************************/
-void connection_check( symrec** symtab, ast_node* ast ) {
+void connection_check( instrec** insttab, ast_node* ast ) {
     ast_list* i_ptr;
     ast_list* j_ptr;
     ast_node* op1;
@@ -78,9 +78,9 @@ void connection_check( symrec** symtab, ast_node* ast ) {
             /* printf( "'%s' conncets with '%s'\n", op1->ast_id.name, */
             /*         op2->ast_id.name ); */
 #ifdef DOT_CON
-            graph_add_edge( __n_con_graph, op1->id, op2->id );
+            graph_add_edge( __n_con_graph, op1->id, op2->id, NULL );
 #endif // DOT_CON
-            connection_check_port( symtab, op1, op2 );
+            connection_check_port( insttab, op1, op2 );
         }
         while (j_ptr != 0);
     }
@@ -88,35 +88,57 @@ void connection_check( symrec** symtab, ast_node* ast ) {
 }
 
 /******************************************************************************/
-void connection_check_port( symrec** symtab, ast_node* ast_op1,
+void connection_check_port( instrec** insttab, ast_node* ast_op1,
         ast_node* ast_op2 ) {
-    symrec* op1 = symrec_get( symtab, ast_op1->ast_id.name,
-            ast_op1->ast_id.line );
-    symrec* op2 = symrec_get( symtab, ast_op2->ast_id.name,
-            ast_op1->ast_id.line );
+#ifdef DOT_CON
+    int id_node_start, id_node_end;
+#endif // DOT_CON
+    instrec* op1 = instrec_get( insttab, ast_op1->id );
+    /* printf("get instance %s(%d)\n", op1->net->name, op1->id); */
+    instrec* op2 = instrec_get( insttab, ast_op2->id );
+    /* printf("get instance %s(%d)\n", op2->net->name, op2->id); */
     symrec_list* ports1;
     symrec_list* ports2;
+    port_attr* p_attr1;
+    port_attr* p_attr2;
     // check whether ports can connect
-    ports1 = ( ( struct box_attr* )( op1->attr ) )->ports;
+    ports1 = op1->ports;
     while ( ports1 != NULL ) {
-        /* printf( " %s.%s\n", op1->name, ports1->rec->name ); */
-        ports2 = ( ( struct box_attr* )( op2->attr ) )->ports;
+        /* printf( " %s.%s\n", op1->net->name, ports1->rec->name ); */
+        p_attr1 = ( struct port_attr* )ports1->rec->attr;
+        ports2 = op2->ports;
         while (ports2 != NULL ) {
-            /* printf( " %s.%s\n", op2->name, ports2->rec->name ); */
-            // ports connect if
-            // 1. they have the same name
-            // 2. they are of opposite mode
-            if( ( strcmp( ports1->rec->name, ports2->rec->name ) == 0 )
-                && ( ( ( struct port_attr* )ports1->rec->attr )->mode !=
-                    ( ( struct port_attr* )ports2->rec->attr )->mode ) ) {
-                printf( " %s.%s connects with %s.%s\n",
-                        op1->name, ports1->rec->name,
-                        op2->name, ports2->rec->name );
+            /* printf( " %s.%s\n", op2->net->name, ports2->rec->name ); */
+            p_attr2 = ( struct port_attr* )ports2->rec->attr;
+            if( // ports are not yet connected
+                    ( ports1->connect_cnt < p_attr1->max_connect )
+                    && ( ports2->connect_cnt < p_attr2->max_connect )
+                // ports have the same name
+                    && ( strcmp( ports1->rec->name, ports2->rec->name ) == 0 )
+                // ports are of opposite mode
+                    && ( p_attr1->mode != p_attr2->mode )
+                // one port is in US while the other is in DS or they are in no
+                // collection at all
+                    && ( ( !p_attr1->up && !p_attr1->down && !p_attr1->side
+                        && !p_attr2->up && !p_attr2->down && !p_attr2->side )
+                        || ( p_attr1->up && p_attr2->down ) )
+            ) {
+                /* printf( " %s.%s connects with %s.%s\n", */
+                /*         op1->net->name, ports1->rec->name, */
+                /*         op2->net->name, ports2->rec->name ); */
+                ports1->connect_cnt++;
+                ports2->connect_cnt++;
 #ifdef DOT_CON
-                graph_add_edge( __p_con_graph, ast_op1->id, ast_op2->id );
+                id_node_start = ast_op1->id;
+                id_node_end = ast_op2->id;
+                if( p_attr1->mode == VAL_IN ) {
+                    id_node_start = ast_op2->id;
+                    id_node_end = ast_op1->id;
+                }
+                graph_add_edge( __p_con_graph, id_node_start, id_node_end,
+                        ports1->rec->name );
 #endif // DOT_CON
             }
-
             ports2 = ports2->next;
         }
         ports1 = ports1->next;
@@ -148,8 +170,8 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
             break;
         case AST_NET:
 #ifdef DOT_CON
-            graph_init( __n_con_graph, STYLE_CON_GRAPH );
-            graph_init( __p_con_graph, STYLE_CON_GRAPH );
+            graph_init( __n_con_graph, STYLE_N_CON_GRAPH );
+            graph_init( __p_con_graph, STYLE_P_CON_GRAPH );
 #endif // DOT_CON
             id_check( symtab, insttab, ast->ast_node );
 #ifdef DOT_CON
@@ -167,13 +189,14 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
         case AST_SERIAL:
             id_check( symtab, insttab, ast->op.left );
             id_check( symtab, insttab, ast->op.right );
-            connection_check( symtab, ast );
+            connection_check( insttab, ast );
             break;
         case AST_ID:
             // check the context of the symbol
             rec = symrec_get( symtab, ast->ast_id.name, ast->ast_id.line );
-            // add the symbol to the instance table
+            // add a net symbol to the instance table
             if( ast->ast_id.type == ID_NET ) {
+                /* printf( "put instance %s(%d)\n", ast->ast_id.name, ast->id ); */
                 instrec_put( insttab, ast->id, rec );
 #ifdef DOT_CON
                 graph_add_node( __n_con_graph, ast->id, ast->ast_id.name,
@@ -204,7 +227,7 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
             while (list != NULL) {
                 res = id_install( symtab, list->ast_node, true );
                 list = list->next;
-                ptr = (symrec_list*) malloc(sizeof(symrec_list));
+                ptr = ( symrec_list* )malloc( sizeof( symrec_list ) );
                 ptr->rec = ( struct symrec* )res;
                 ptr->next = port_list;
                 port_list = ptr;
@@ -274,10 +297,12 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
                 list = ast->port.collection->ast_list;
             p_attr = ( port_attr* )malloc( sizeof( port_attr ) );
             p_attr->mode = ast->port.mode->ast_node->ast_attr.val;
+            p_attr->max_connect = 0;
             p_attr->up = false;
             p_attr->down = false;
             p_attr->side = false;
             while( list != NULL ) { // set port collections
+                p_attr->max_connect++;
                 if( list->ast_node->ast_attr.val == VAL_UP )
                     p_attr->up = true;
                 else if( list->ast_node->ast_attr.val == VAL_DOWN )
@@ -286,6 +311,7 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
                     p_attr->side = true;
                 list = list->next;
             }
+            if( p_attr->max_connect == 0 ) p_attr->max_connect++;
             if( is_sync ) { // add sync attributes if port is a sync port
                 p_attr->decoupled = (ast->port.coupling == NULL) ? false : true;
                 p_attr->sync_id = __sync_id;
@@ -315,9 +341,22 @@ instrec* instrec_get( instrec** insttab, int id ) {
 instrec* instrec_put( instrec** insttab, int id, symrec* rec ) {
     // no collision handling is needed, IDs are unique
     instrec* item;
+    symrec_list* inst_ports;
+    symrec_list* sym_ports;
+    symrec_list* port_list = NULL;
     item = ( instrec* )malloc( sizeof( instrec ) );
     item->id = id;
-    item->rec = rec;
+    item->net = rec;
+    // copy portlist from symtab to insttab
+    sym_ports = ( ( struct box_attr* )rec->attr )->ports;
+    while( sym_ports != NULL  ) {
+        inst_ports = ( struct symrec_list* )malloc( sizeof( symrec_list ) );
+        inst_ports->rec = sym_ports->rec;
+        inst_ports->next = port_list;
+        port_list = inst_ports;
+        sym_ports = sym_ports->next;
+    }
+    item->ports = port_list;
     HASH_ADD_INT( *insttab, id, item );
     return item;
 }
