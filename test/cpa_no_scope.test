@@ -10,7 +10,7 @@ box DC (
 ) on func_dc
 box CPA (
     sync {
-        decoupled in dist,
+        decoupled down in dist,
         down in dc
     },
     out cpa,
@@ -30,7 +30,7 @@ box ABS (
 
 net Car { up in car (car_l_in), up out car (car_l_out),
         down in car (car_r_in), down out car (car_r_out) } {
-    connect dist {DC, CPA}
+    connect dist {DS, DC}
 
     ( ( ( RS | B | MB ).ABS.DC ) | DS ).CPA
 }
