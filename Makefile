@@ -20,7 +20,8 @@ DOT_P_CON_FILE = $(DOT_PATH)/port_connection_graph
 DOT_FLAGS = -DDOT_AST -DDOT_CON
 
 TEST_PATH = test
-TEST_FILE = $(TEST_PATH)/cpa.test
+TEST_FILE = cpa.test
+TEST = $(TEST_PATH)/$(TEST_FILE)
 
 all: $(PARSER)
 
@@ -78,4 +79,4 @@ graph: $(DOT_AST_FILE).pdf $(DOT_N_CON_FILE).pdf $(DOT_P_CON_FILE).pdf
 
 # used for debugging to save time
 run:
-	./$(PARSER) $(TEST_FILE)
+	./$(PARSER) $(TEST)

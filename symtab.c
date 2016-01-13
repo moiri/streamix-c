@@ -38,6 +38,7 @@ void context_check( ast_node* ast ) {
     id_install( &symtab, ast, false );
     __scope = 0;
     id_check( &symtab, &insttab, ast );
+
 #ifdef DOT_CON
     fclose( __n_con_graph );
     fclose( __p_con_graph );
@@ -94,8 +95,10 @@ void connection_check_port( instrec** insttab, ast_node* ast_op1,
     int id_node_start, id_node_end;
 #endif // DOT_CON
     instrec* op1 = instrec_get( insttab, ast_op1->id );
+    if ( op1 == NULL ) return;
     /* printf("get instance %s(%d)\n", op1->net->name, op1->id); */
     instrec* op2 = instrec_get( insttab, ast_op2->id );
+    if ( op2 == NULL ) return;
     /* printf("get instance %s(%d)\n", op2->net->name, op2->id); */
     symrec_list* ports1;
     symrec_list* ports2;
@@ -195,7 +198,7 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
             // check the context of the symbol
             rec = symrec_get( symtab, ast->ast_id.name, ast->ast_id.line );
             // add a net symbol to the instance table
-            if( ast->ast_id.type == ID_NET ) {
+            if( ast->ast_id.type == ID_NET && rec != NULL ) {
                 /* printf( "put instance %s(%d)\n", ast->ast_id.name, ast->id ); */
                 instrec_put( insttab, ast->id, rec );
 #ifdef DOT_CON

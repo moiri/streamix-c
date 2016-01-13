@@ -78,7 +78,7 @@ struct instrec {
  * */
 void context_check( ast_node* );
 
-/*
+/**
  * check the connections of the network equations
  *
  * @param symrec**:     pointer to the symbol table
@@ -86,13 +86,13 @@ void context_check( ast_node* );
  * */
 void connection_check( instrec**, ast_node* );
 
-/*
+/**
  * check the port connections
  *
  * */
 void connection_check_port( instrec**, ast_node*, ast_node* );
 
-/*
+/**
  * check whether the given identificator is in the symbol table.
  * This is a recursive function.
  *
@@ -102,7 +102,7 @@ void connection_check_port( instrec**, ast_node*, ast_node* );
  * */
 void id_check( symrec**, instrec**, ast_node* );
 
-/*
+/**
  * put symbol names into the symbol table. this includes collision and scope
  * handling. This is a recursive funtion.
  *
@@ -115,7 +115,7 @@ void id_check( symrec**, instrec**, ast_node* );
  * */
 void* id_install( symrec**, ast_node*, bool );
 
-/*
+/**
  * Get an instance from the instance table.
  *
  * @param instrec**:    pointer to the hashtable
@@ -126,7 +126,7 @@ void* id_install( symrec**, ast_node*, bool );
  * */
 instrec* instrec_get( instrec**, int );
 
-/*
+/**
  * Add an instance to the instance table.
  *
  * @param instrec**:    pointer to the hashtable
@@ -137,7 +137,7 @@ instrec* instrec_get( instrec**, int );
  * */
 instrec* instrec_put( instrec**, int, symrec* );
 
-/*
+/**
  * Get an identifier from the symbol table.
  *
  * @param symrec**:     pointer to the hashtable
@@ -149,7 +149,7 @@ instrec* instrec_put( instrec**, int, symrec* );
  * */
 symrec* symrec_get( symrec**, char*, int );
 
-/*
+/**
  * Add an identifier to the symbol table.
  *
  * @param hashtable_t*  pointer to the hashtable
