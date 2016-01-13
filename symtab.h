@@ -19,14 +19,32 @@
 typedef struct symrec symrec;
 typedef struct symrec_list symrec_list;
 typedef struct instrec instrec;
-typedef struct box_attr box_attr;
+typedef struct net_attr net_attr;
 typedef struct port_attr port_attr;
-// structures for symbol table record
-struct box_attr {
+// symbol table record
+// this is the definition of a record in a hashtable (uthash)
+struct symrec {
+    char*   name;       // name of the symbol; key for the hashtable
+    int     type;       // VAL_NET, VAL_BOX, VAL_PORT
+    int     scope;      // scope of the record
+    void*   attr;       // a struct of attributes
+    symrec* next;       // pointer to the next element (handle collisions)
+    UT_hash_handle hh;  // makes this structure hashable
+};
+// linked list to associate ports to nets
+struct symrec_list {
+    symrec*         rec;            // pointer to port in symbol table
+    int             connect_cnt;    // counter to control the port connections
+    symrec_list*    next;           // next element in the list
+};
+// attributes of a net (can also be a box)
+struct net_attr {
     bool            state;      // a box can be stateless or stateful
-    symrec_list*    ports;      // pointer to the port list of the box
+                                // if no box declaration then false
+    symrec_list*    ports;      // pointer to the port list of the net
     int             num_ports;  // #ports also counting multiple collections
 };
+// attributes of ports (all kind of ports: box (sync) or net)
 struct port_attr {
     int     mode;           // input or output
     int     num_connect;    // port can be in multiple collections and
@@ -39,29 +57,22 @@ struct port_attr {
     bool    decoupled;
     int     sync_id;
 };
-struct symrec {
-    char*   name;       // name of the symbol; key for the hashtable
-    int     type;       // VAL_NET, VAL_BOX, VAL_PORT
-    int     scope;      // scope of the record
-    void*   attr;       // a struct of attributes
-    symrec* next;       // pointer to the next element (handle collisions)
-    UT_hash_handle hh;  // makes this structure hasable
-};
-struct symrec_list {
-    symrec*         rec;            // pointer to port in symbol table
-    int             connect_cnt;    // counter to control the port connections
-    symrec_list*    next;           // next element in the list
-};
+// instance table record
+// this is the definition of a record in a hashtable (uthash)
 struct instrec {
     int             id;         // id of the instance; key
     symrec*         net;        // pointer to its definition
     int             port_cnt;   // counter to control all port connections
     symrec_list*    ports;      // pointer to the port list of the instance
-    UT_hash_handle  hh;         // makes this structure hasable
+                                // this list is also available through the
+                                // definition of the net but it is copied in
+                                // order to set the corresponding connection
+                                // flag
+    UT_hash_handle  hh;         // makes this structure hashable
 };
 
 /**
- * Check the context of all identifiers in th eprogram
+ * Check the context of all identifiers in the program
  *
  * @param ast_node*:    pointer to the ast node
  * */

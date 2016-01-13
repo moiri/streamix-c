@@ -214,7 +214,7 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
 /******************************************************************************/
 void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
     ast_list* list = NULL;
-    box_attr* b_attr = NULL;
+    net_attr* b_attr = NULL;
     port_attr* p_attr = NULL;
     void* res = NULL;
     symrec_list* ptr = NULL;
@@ -269,7 +269,7 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
                     ast->box.ports, false );
             utarray_pop_back( __scope_stack );
             // prepare symbol attributes and install symbol
-            b_attr = ( box_attr* )malloc( sizeof( box_attr ) );
+            b_attr = ( net_attr* )malloc( sizeof( net_attr ) );
             b_attr->state = ( ast->box.state == NULL ) ? true : false;
             b_attr->ports = port_list;
             symrec_put( symtab, ast->box.id->ast_id.name,
@@ -284,7 +284,7 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
                     ast->wrap.ports, false );
             utarray_pop_back( __scope_stack );
             // prepare symbol attributes and install symbol
-            b_attr = ( box_attr* )malloc( sizeof( box_attr ) );
+            b_attr = ( net_attr* )malloc( sizeof( net_attr ) );
             b_attr->state = false;
             b_attr->ports = port_list;
             symrec_put( symtab, ast->wrap.id->ast_id.name,
@@ -348,7 +348,7 @@ instrec* instrec_put( instrec** insttab, int id, symrec* rec ) {
     item->id = id;
     item->net = rec;
     // copy portlist from symtab to insttab
-    sym_ports = ( ( struct box_attr* )rec->attr )->ports;
+    sym_ports = ( ( struct net_attr* )rec->attr )->ports;
     while( sym_ports != NULL  ) {
         inst_ports = ( struct symrec_list* )malloc( sizeof( symrec_list ) );
         inst_ports->rec = sym_ports->rec;
@@ -375,7 +375,7 @@ symrec* symrec_get( symrec** symtab, char *name, int line ) {
                 in_scope = true;
                 /* printf( "found" ); */
                 /* if( item->attr != NULL ) { */
-                /*     if( ( ( struct box_attr* )item->attr )->state ) */
+                /*     if( ( ( struct net_attr* )item->attr )->state ) */
                 /*         printf( " stateless" ); */
                 /*     printf( " box" ); */
                 /* } */
@@ -404,7 +404,7 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type, void* attr
     bool is_identical = false;
     /* printf( "id_install" ); */
     /* if( type == VAL_BOX ) { */
-    /*     if( ( ( struct box_attr* )attr )->state ) */
+    /*     if( ( ( struct net_attr* )attr )->state ) */
     /*         printf( " stateless" ); */
     /*     printf( " box" ); */
     /* } */
