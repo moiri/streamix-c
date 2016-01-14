@@ -32,6 +32,15 @@ void draw_ast_graph_step ( FILE*, ast_node* );
 #endif // DOT_AST
 
 /**
+ * Add a devider to the file. This is used to later construct the
+ * correct dot file.
+ *
+ * @param FILE*: file pointer to the dot file
+ * @param int:   actual scope
+ * */
+void graph_add_divider ( FILE*, int, const char );
+
+/**
  * Add an edge to the graph
  *
  * @param FILE*:    file pointer to the dot file

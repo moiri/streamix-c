@@ -185,6 +185,11 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
 #endif // DOT_AST
 
 /******************************************************************************/
+void graph_add_divider ( FILE* graph, int scope, const char flag ) {
+    fprintf(graph, "// ===>%c%d\n", flag, scope );
+}
+
+/******************************************************************************/
 void graph_add_edge ( FILE* graph, int start, int end, char* label ) {
     fprintf(graph, "\tid%d->id%d", start, end);
     if( label != NULL )
@@ -208,7 +213,7 @@ void graph_finish_subgraph (FILE* graph) {
 }
 
 /******************************************************************************/
-void graph_init (FILE* graph, int style) {
+void graph_init( FILE* graph, int style ) {
     fprintf(graph, "digraph {\n");
     switch (style) {
         case STYLE_N_CON_GRAPH:
@@ -222,7 +227,31 @@ void graph_init (FILE* graph, int style) {
 }
 
 /******************************************************************************/
-void graph_init_subgraph ( FILE* graph, char* name, int scope ) {
-    fprintf( graph, "\tsubgraph cluster0 {\n" );
-    fprintf( graph, "\tlabel=\"%s (%d)\"\n", name, scope );
+void graph_init_subgraph( FILE* graph, char* name, int style ) {
+    switch (style) {
+        case STYLE_PARALLEL:
+            fprintf( graph, "\tsubgraph clusterP {\n" );
+            fprintf( graph, "\tlabel=\"%s\"\n", name );
+#ifdef DOT_COLOR
+            fprintf( graph, "\tcolor=blue\n" );
+#else
+            fprintf( graph, "\tcolor=invis\n" );
+#endif // DOT_CON
+            break;
+        case STYLE_SERIAL:
+            fprintf( graph, "\tsubgraph clusterS {\n" );
+            fprintf( graph, "\tlabel=\"%s\"\n", name );
+#ifdef DOT_COLOR
+            fprintf( graph, "\tcolor=green\n" );
+#else
+            fprintf( graph, "\tcolor=invis\n" );
+#endif // DOT_CON
+            break;
+        case STYLE_WRAPPER:
+            fprintf( graph, "\tsubgraph clusterW {\n" );
+            fprintf( graph, "\tlabel=\"%s\"\n", name );
+            break;
+        default:
+            ;
+    }
 }

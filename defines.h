@@ -39,6 +39,9 @@
 #define STYLE_DEFAULT       0
 #define STYLE_N_CON_GRAPH   1
 #define STYLE_P_CON_GRAPH   2
+#define STYLE_WRAPPER       3
+#define STYLE_PARALLEL      4
+#define STYLE_SERIAL        5
 
 #define MAX_STACK_SIZE  100
 

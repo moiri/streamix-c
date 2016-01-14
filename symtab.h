@@ -95,9 +95,8 @@ void connection_check_port( instrec**, ast_node*, ast_node* );
  * @param symrec**:     pointer to the symbol table
  * @param instrec**:    pointer to the instance table
  * @param ast_node*:    pointer to the ast node
- * @param char:         name of te parent net or NULL
  * */
-void id_check( symrec**, instrec**, ast_node*, char* );
+void id_check( symrec**, instrec**, ast_node* );
 
 /**
  * put symbol names into the symbol table. this includes collision and scope
