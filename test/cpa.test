@@ -1,4 +1,4 @@
-stateless box DS (up side out dist) on func_ds
+stateless box DS (down side out dist) on func_ds
 stateless box B (in break_abs) on func_b
 box DC (
     in abs,
@@ -8,8 +8,8 @@ box DC (
 ) on func_dc
 box CPA (
     sync {
-        decoupled down in dist,
-        down in dc
+        decoupled up in dist,
+        up in dc
     },
     out cpa,
     side in car_l_in,
@@ -34,7 +34,7 @@ net Car { up in car (car_l_in), up out car (car_l_out),
         box ABS (
             in speed,
             in break_cmd,
-            up in dc,
+            down in dc,
             out break_abs,
             out block,
             out abs

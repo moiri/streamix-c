@@ -120,19 +120,17 @@ void connection_check_port( instrec** insttab, ast_node* ast_op_left,
                             ports_right->rec->name ) == 0 )
                 // ports are of opposite mode
                     && ( p_attr_left->mode != p_attr_right->mode )
-                // one port is in US while the other is in DS or they are in no
-                // collection at all
-                    && ( ( ( p_attr_left->collection == VAL_UP )
-                            && ( p_attr_right->collection == VAL_DOWN ) )
-                        || ( ( p_attr_left->collection == VAL_DOWN )
+                // the left port is in DS while the right is in US or they both
+                // are in no collection at all
+                    && ( ( ( p_attr_left->collection == VAL_DOWN )
                             && ( p_attr_right->collection == VAL_UP ) )
                         || ( ( p_attr_left->collection == VAL_NONE )
                             && ( p_attr_right->collection == VAL_NONE ) )
                        )
             ) {
-                /* printf( " %s.%s connects with %s.%s\n", */
-                /*         op_left->net->name, ports_left->rec->name, */
-                /*         op_right->net->name, ports_right->rec->name ); */
+                printf( " %s.%s connects with %s.%s\n",
+                        op_left->net->name, ports_left->rec->name,
+                        op_right->net->name, ports_right->rec->name );
                 ports_left->is_connected = true;
                 ports_right->is_connected = true;
 #ifdef DOT_CON
