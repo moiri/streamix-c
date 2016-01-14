@@ -180,8 +180,10 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast,
             graph_init( __n_con_graph, STYLE_N_CON_GRAPH );
             graph_init( __p_con_graph, STYLE_P_CON_GRAPH );
             if ( wrap_name != NULL ) {
-                graph_init_subgraph( __n_con_graph, wrap_name );
-                graph_init_subgraph( __p_con_graph, wrap_name );
+                graph_init_subgraph( __n_con_graph, wrap_name,
+                        *utarray_back( __scope_stack ) );
+                graph_init_subgraph( __p_con_graph, wrap_name,
+                        *utarray_back( __scope_stack ) );
             }
 #endif // DOT_CON
             id_check( symtab, insttab, ast->ast_node, wrap_name );

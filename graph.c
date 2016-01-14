@@ -222,7 +222,7 @@ void graph_init (FILE* graph, int style) {
 }
 
 /******************************************************************************/
-void graph_init_subgraph ( FILE* graph, char* name ) {
+void graph_init_subgraph ( FILE* graph, char* name, int scope ) {
     fprintf( graph, "\tsubgraph cluster0 {\n" );
-    fprintf( graph, "\tlabel=\"%s\"\n", name );
+    fprintf( graph, "\tlabel=\"%s (%d)\"\n", name, scope );
 }
