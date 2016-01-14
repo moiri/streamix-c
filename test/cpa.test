@@ -30,7 +30,7 @@ net Car { up in car (car_l_in), up out car (car_l_out),
         RS|B|MB
     }
 
-    net ABS { up in dc, out abs } {
+    net ABS { down in dc, out abs } {
         box ABS (
             in speed,
             in break_cmd,

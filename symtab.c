@@ -128,9 +128,9 @@ void connection_check_port( instrec** insttab, ast_node* ast_op_left,
                             && ( p_attr_right->collection == VAL_NONE ) )
                        )
             ) {
-                printf( " %s.%s connects with %s.%s\n",
-                        op_left->net->name, ports_left->rec->name,
-                        op_right->net->name, ports_right->rec->name );
+                /* printf( " %s.%s connects with %s.%s\n", */
+                /*         op_left->net->name, ports_left->rec->name, */
+                /*         op_right->net->name, ports_right->rec->name ); */
                 ports_left->is_connected = true;
                 ports_right->is_connected = true;
 #ifdef DOT_CON
