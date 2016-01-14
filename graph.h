@@ -57,6 +57,7 @@ void graph_add_node ( FILE*, int, char*, const char* );
  * @param FILE*:        file pointer to the dot file
  * */
 void graph_finish ( FILE* );
+void graph_finish_subgraph ( FILE* );
 
 /**
  * Initializes the file with the dot header to draw a graph
@@ -65,5 +66,6 @@ void graph_finish ( FILE* );
  * @param int:      style of the graph (STYLE_DEFAULT, STYLE_CON_GRAPH)
  * */
 void graph_init ( FILE*, int );
+void graph_init_subgraph ( FILE*, char* );
 
 #endif /* GRAPH_H */

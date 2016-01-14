@@ -203,6 +203,11 @@ void graph_finish (FILE* graph) {
 }
 
 /******************************************************************************/
+void graph_finish_subgraph (FILE* graph) {
+    fprintf(graph, "\t}\n");
+}
+
+/******************************************************************************/
 void graph_init (FILE* graph, int style) {
     fprintf(graph, "digraph {\n");
     switch (style) {
@@ -214,4 +219,10 @@ void graph_init (FILE* graph, int style) {
         default:
             ;
     }
+}
+
+/******************************************************************************/
+void graph_init_subgraph ( FILE* graph, char* name ) {
+    fprintf( graph, "\tsubgraph cluster0 {\n" );
+    fprintf( graph, "\tlabel=\"%s\"\n", name );
 }

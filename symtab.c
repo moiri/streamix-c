@@ -37,7 +37,7 @@ void context_check( ast_node* ast ) {
     utarray_push_back( __scope_stack, &__scope );
     id_install( &symtab, ast, false );
     __scope = 0;
-    id_check( &symtab, &insttab, ast );
+    id_check( &symtab, &insttab, ast, NULL );
 
 #ifdef DOT_CON
     fclose( __n_con_graph );
@@ -153,7 +153,8 @@ void connection_check_port( instrec** insttab, ast_node* ast_op_left,
 }
 
 /******************************************************************************/
-void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
+void id_check( symrec** symtab, instrec** insttab, ast_node* ast,
+        char* wrap_name ) {
     ast_list* list = NULL;
     symrec* rec = NULL;
 
@@ -162,7 +163,7 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
         case AST_STMTS:
             list = ast->ast_list;
             while( list != NULL ) {
-                id_check( symtab, insttab, list->ast_node );
+                id_check( symtab, insttab, list->ast_node, wrap_name );
                 list = list->next;
             }
             break;
@@ -172,30 +173,39 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
         case AST_WRAP:
             __scope++;
             utarray_push_back( __scope_stack, &__scope );
-            id_check( symtab, insttab, ast->wrap.stmts );
+            id_check( symtab, insttab, ast->wrap.stmts,
+                    ast->wrap.id->ast_id.name );
             utarray_pop_back( __scope_stack );
             break;
         case AST_NET:
 #ifdef DOT_CON
             graph_init( __n_con_graph, STYLE_N_CON_GRAPH );
             graph_init( __p_con_graph, STYLE_P_CON_GRAPH );
+            if ( wrap_name != NULL ) {
+                graph_init_subgraph( __n_con_graph, wrap_name );
+                graph_init_subgraph( __p_con_graph, wrap_name );
+            }
 #endif // DOT_CON
-            id_check( symtab, insttab, ast->ast_node );
+            id_check( symtab, insttab, ast->ast_node, wrap_name );
 #ifdef DOT_CON
+            if ( wrap_name != NULL ) {
+                graph_finish( __n_con_graph );
+                graph_finish( __p_con_graph );
+            }
             graph_finish( __n_con_graph );
             graph_finish( __p_con_graph );
 #endif // DOT_CON
             break;
         case AST_CONNECT:
-            id_check( symtab, insttab, ast->connect.connects );
+            id_check( symtab, insttab, ast->connect.connects, wrap_name );
             break;
         case AST_PARALLEL:
-            id_check( symtab, insttab, ast->op.left );
-            id_check( symtab, insttab, ast->op.right );
+            id_check( symtab, insttab, ast->op.left, wrap_name );
+            id_check( symtab, insttab, ast->op.right, wrap_name );
             break;
         case AST_SERIAL:
-            id_check( symtab, insttab, ast->op.left );
-            id_check( symtab, insttab, ast->op.right );
+            id_check( symtab, insttab, ast->op.left, wrap_name );
+            id_check( symtab, insttab, ast->op.right, wrap_name );
             connection_check( insttab, ast );
             break;
         case AST_ID:
