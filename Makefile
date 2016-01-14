@@ -33,7 +33,9 @@ dot: $(PARSER)
 # compile with dot stuff and debug flags, run the executable after
 # compilation and generate graph pdfs
 debug: CFLAGS += -g -O0 $(DOT_FLAGS)
-debug: clean $(PARSER) run graph
+debug: clean $(PARSER)
+rdebug: CFLAGS += -g -O0 $(DOT_FLAGS)
+rdebug: clean $(PARSER) run graph
 
 # compile project
 $(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(SOURCES) $(INCLUDES)
