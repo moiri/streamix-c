@@ -10,9 +10,10 @@
 #define DEFINES_H
 
 // scanner values
-#define VAL_UP      0
-#define VAL_DOWN    1
-#define VAL_SIDE    2
+#define VAL_NONE    0
+#define VAL_UP      1
+#define VAL_DOWN    2
+#define VAL_SIDE    3
 
 #define VAL_IN      0
 #define VAL_OUT     1

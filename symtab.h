@@ -34,7 +34,7 @@ struct symrec {
 // linked list to associate ports to nets
 struct symrec_list {
     symrec*         rec;            // pointer to port in symbol table
-    int             connect_cnt;    // counter to control the port connections
+    bool            is_connected;   // flag to control the port connections
     symrec_list*    next;           // next element in the list
 };
 // attributes of a net (can also be a box)
@@ -47,12 +47,8 @@ struct net_attr {
 // attributes of ports (all kind of ports: box (sync) or net)
 struct port_attr {
     int     mode;           // input or output
-    int     num_connect;    // port can be in multiple collections and
-                            // will hence connect to multiple targets
     // collections
-    bool    side;
-    bool    up;
-    bool    down;
+    int     collection;
     // sync attributes
     bool    decoupled;
     int     sync_id;
