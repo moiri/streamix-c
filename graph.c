@@ -1,5 +1,8 @@
 #include "defines.h"
 #include "graph.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifdef DOT_AST
 char* node_label[] = {
@@ -186,7 +189,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
 
 /******************************************************************************/
 void graph_add_divider ( FILE* graph, int scope, const char flag ) {
-    fprintf(graph, "// ===>%c%d\n", flag, scope );
+    fprintf(graph, "%s%c%d\n", DOT_PATTERN, flag, scope );
 }
 
 /******************************************************************************/
@@ -210,6 +213,99 @@ void graph_finish (FILE* graph) {
 /******************************************************************************/
 void graph_finish_subgraph (FILE* graph) {
     fprintf(graph, "\t}\n");
+}
+
+void graph_fix_dot( char* t_path, char* r_path ) {
+    FILE* r_graph;
+    FILE* t_graph;
+    char str[512];
+    char* ptr = NULL;
+    char flag;
+    char next_flag = FLAG_STMTS; // first flag will always be STMTS
+    int scope = 0;
+    int last_scope = -1;
+    int iteration_cnt = 0;
+    bool copy = false;
+    bool done = false;
+    char pattern[ sizeof( DOT_PATTERN ) + 10 ] = DOT_PATTERN;
+    t_graph = fopen( t_path, "w" );
+    while( !done ) {
+        r_graph = fopen( r_path, "r" );
+        while( fgets( str, 512, r_graph ) ) {
+            ptr = strstr( str, pattern );
+            if( ptr != NULL ) {
+                // found an occurrence of the pattern
+                copy = false;
+                ptr += sizeof( DOT_PATTERN ) - 1;
+                flag = *ptr;
+                ptr++;
+                scope = atoi(ptr);
+                switch( flag ) {
+                    case FLAG_STMTS:
+                        if( scope <= last_scope ) continue;
+                        if( flag != next_flag ) continue;
+                        last_scope = scope;
+                        next_flag = FLAG_WRAP;
+                        copy = true;
+                        break;
+                    case FLAG_WRAP:
+                        if( scope != last_scope ) continue;
+                        if( flag != next_flag ) continue;
+                        next_flag = FLAG_NET;
+                        copy = true;
+                        break;
+                    case FLAG_WRAP_END:
+                    case FLAG_STMTS_END:
+                    case FLAG_NET:
+                        if( scope != last_scope ) continue;
+                        if( flag != next_flag ) continue;
+                        copy = true;
+                        break;
+                    default:
+                        ;
+                }
+                /* printf( "flag: %c, scope: %d\n", flag, scope ); */
+            }
+            else if( copy ) {
+                fprintf( t_graph, "%s", str );
+            }
+        }
+        switch( next_flag ) {
+            case FLAG_STMTS:
+                // no new stmts -> we are done
+                done = true;
+                break;
+            case FLAG_WRAP:
+                // no wrapper in this scope -> copy nets
+                // because the wrap appears BEFORE the stmts we need to iterate
+                // twice to make sure to get the wrap statements
+                if( iteration_cnt > 0 ) next_flag = FLAG_NET;
+                iteration_cnt++;
+                break;
+            case FLAG_NET:
+                // need to close wrapper
+                iteration_cnt = 0;
+                next_flag = FLAG_WRAP_END;
+                break;
+            case FLAG_WRAP_END:
+                // need to close stmts
+                next_flag = FLAG_STMTS_END;
+                break;
+            case FLAG_STMTS_END:
+                // this scope is done -> go to the next one
+                next_flag = FLAG_STMTS;
+            default:
+                ;
+        }
+        fclose( r_graph );
+    }
+    fclose( t_graph );
+    // copy the fixed dot file back to the original file
+    t_graph = fopen( t_path, "r" );
+    r_graph = fopen( r_path, "w" );
+    while( fgets( str, 512, t_graph ) ) {
+        fprintf( r_graph, "%s", str );
+    }
 }
 
 /******************************************************************************/

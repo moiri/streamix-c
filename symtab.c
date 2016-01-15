@@ -42,6 +42,8 @@ void context_check( ast_node* ast ) {
 #ifdef DOT_CON
     fclose( __n_con_graph );
     fclose( __p_con_graph );
+    graph_fix_dot( TEMP_DOT_PATH, N_CON_DOT_PATH );
+    graph_fix_dot( TEMP_DOT_PATH, P_CON_DOT_PATH );
 #endif // DOT_CON
 }
 
@@ -166,9 +168,9 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
         case AST_STMTS:
 #ifdef DOT_CON
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    't' );
+                    FLAG_STMTS );
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    't' );
+                    FLAG_STMTS );
             graph_init( __n_con_graph, STYLE_N_CON_GRAPH );
             graph_init( __p_con_graph, STYLE_P_CON_GRAPH );
 #endif // DOT_CON
@@ -179,9 +181,9 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
             }
 #ifdef DOT_CON
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    't' );
+                    FLAG_STMTS_END );
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    't' );
+                    FLAG_STMTS_END );
             graph_finish( __n_con_graph );
             graph_finish( __p_con_graph );
 #endif // DOT_CON
@@ -194,9 +196,9 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
             utarray_push_back( __scope_stack, &__scope );
 #ifdef DOT_CON
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    'w' );
+                    FLAG_WRAP );
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    'w' );
+                    FLAG_WRAP );
             graph_init_subgraph( __n_con_graph, ast->wrap.id->ast_id.name,
                     STYLE_WRAPPER );
             graph_init_subgraph( __p_con_graph, ast->wrap.id->ast_id.name,
@@ -205,9 +207,9 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
             id_check( symtab, insttab, ast->wrap.stmts );
 #ifdef DOT_CON
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    'w' );
+                    FLAG_WRAP_END );
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    'w' );
+                    FLAG_WRAP_END );
             graph_finish_subgraph( __n_con_graph );
             graph_finish_subgraph( __p_con_graph );
 #endif // DOT_CON
@@ -221,20 +223,20 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
             break;
         case AST_PARALLEL:
 #if defined(DOT_CON) && defined(DOT_STRUCT)
+            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_NET );
+            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_NET );
             graph_init_subgraph( __n_con_graph, "", STYLE_PARALLEL );
             graph_init_subgraph( __p_con_graph, "", STYLE_PARALLEL );
-            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    'p' );
-            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    'p' );
 #endif // DOT_CON && DOT_STRUCT
             id_check( symtab, insttab, ast->op.left );
             id_check( symtab, insttab, ast->op.right );
 #if defined(DOT_CON) && defined(DOT_STRUCT)
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    'p' );
+                    FLAG_NET );
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    'p' );
+                    FLAG_NET );
             graph_finish_subgraph( __n_con_graph );
             graph_finish_subgraph( __p_con_graph );
 #endif // DOT_CON && DOT_STRUCT
@@ -242,9 +244,9 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
         case AST_SERIAL:
 #if defined(DOT_CON) && defined(DOT_STRUCT)
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    's' );
+                    FLAG_NET );
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    's' );
+                    FLAG_NET );
             graph_init_subgraph( __n_con_graph, "", STYLE_SERIAL );
             graph_init_subgraph( __p_con_graph, "", STYLE_SERIAL );
 #endif // DOT_CON && DOT_STRUCT
@@ -252,9 +254,9 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
             id_check( symtab, insttab, ast->op.right );
 #if defined(DOT_CON) && defined(DOT_STRUCT)
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    's' );
+                    FLAG_NET );
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    's' );
+                    FLAG_NET );
             graph_finish_subgraph( __n_con_graph );
             graph_finish_subgraph( __p_con_graph );
 #endif // DOT_CON && DOT_STRUCT
@@ -269,9 +271,9 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
                 instrec_put( insttab, ast->id, rec );
 #ifdef DOT_CON
                 graph_add_divider ( __n_con_graph,
-                        *utarray_back( __scope_stack ), 'n' );
+                        *utarray_back( __scope_stack ), FLAG_NET );
                 graph_add_divider ( __p_con_graph,
-                        *utarray_back( __scope_stack ), 'n' );
+                        *utarray_back( __scope_stack ), FLAG_NET );
                 graph_add_node( __n_con_graph, ast->id, ast->ast_id.name,
                         SHAPE_BOX );
                 graph_add_node( __p_con_graph, ast->id, ast->ast_id.name,

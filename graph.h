@@ -75,6 +75,18 @@ void graph_finish ( FILE* );
 void graph_finish_subgraph ( FILE* );
 
 /**
+ * The dot instructions are put into a file following the ast structure.
+ * Because of the nesting of wrappers the order of the instructions is not
+ * correct. However, the insructions are prepended with labels that allow
+ * to reorder the file in order to correctly compile. This functions performs
+ * this reordering.
+ *
+ * @param char*:    path to a temporary file
+ * @param char*:    path to the dot file to be reordered
+ * */
+void graph_fix_dot( char*, char* );
+
+/**
  * Initializes the file with the dot header to draw a graph
  *
  * @param FILE*:    file pointer to the dot file

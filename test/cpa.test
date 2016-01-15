@@ -24,12 +24,6 @@ net Car { up in car (car_l_in), up out car (car_l_out),
 
     box MB (in block, out break_cmd) on func_mb
 
-    net Sensors { out speed, in block, out break_cmd, in break_abs } {
-        stateless box RS (out speed) on func_rs
-
-        RS|B|MB
-    }
-
     net ABS { down in dc, out abs } {
         box ABS (
             in speed,
@@ -41,6 +35,12 @@ net Car { up in car (car_l_in), up out car (car_l_out),
         ) on func_abs
 
         Sensors.ABS
+    }
+
+    net Sensors { out speed, in block, out break_cmd, in break_abs } {
+        stateless box RS (out speed) on func_rs
+
+        RS|B|MB
     }
 
     (ABS.DC|DS).CPA

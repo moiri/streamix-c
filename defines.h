@@ -31,6 +31,8 @@
 #define AST_DOT_PATH    "dot/ast_graph.dot"
 #define N_CON_DOT_PATH  "dot/net_connection_graph.dot"
 #define P_CON_DOT_PATH  "dot/port_connection_graph.dot"
+#define TEMP_DOT_PATH   "dot/graph.dot.tmp"
+#define DOT_PATTERN     "// ===>"
 
 #define SHAPE_BOX       "box"
 #define SHAPE_ELLIPSE   "ellipse"
@@ -42,6 +44,12 @@
 #define STYLE_WRAPPER       3
 #define STYLE_PARALLEL      4
 #define STYLE_SERIAL        5
+
+#define FLAG_STMTS      's'
+#define FLAG_STMTS_END  'S'
+#define FLAG_WRAP       'w'
+#define FLAG_WRAP_END   'W'
+#define FLAG_NET        'n'
 
 #define MAX_STACK_SIZE  100
 
