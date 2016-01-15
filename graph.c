@@ -195,8 +195,10 @@ void graph_add_divider ( FILE* graph, int scope, const char flag ) {
 /******************************************************************************/
 void graph_add_edge ( FILE* graph, int start, int end, char* label ) {
     fprintf(graph, "\tid%d->id%d", start, end);
+#ifdef DOT_EDGE_LABEL
     if( label != NULL )
-        fprintf( graph, "[label=\"%s\"]", label );
+        fprintf( graph, "[xlabel=\"%s\" fontsize=10]", label );
+#endif // DOT_EDGE_LABEL
     fprintf( graph, ";\n" );
 }
 
@@ -313,9 +315,15 @@ void graph_init( FILE* graph, int style ) {
     fprintf(graph, "digraph {\n");
     switch (style) {
         case STYLE_N_CON_GRAPH:
-            fprintf(graph, "\tedge [dir=none]\n");
+            fprintf(graph, "\tedge [dir=none];\n");
+            fprintf(graph, "\trankdir=LR;\n");
+            break;
         case STYLE_P_CON_GRAPH:
-            fprintf(graph, "\trankdir=LR\n");
+            fprintf(graph, "\trankdir=LR;\n");
+#ifdef DOT_EDGE_LABEL
+            fprintf(graph, "\tranksep=0.75;\n");
+#endif // DOT_EDGE_LABEL
+            fprintf(graph, "\tsplines=false;\n");
             break;
         default:
             ;
@@ -327,25 +335,27 @@ void graph_init_subgraph( FILE* graph, char* name, int style ) {
     switch (style) {
         case STYLE_PARALLEL:
             fprintf( graph, "\tsubgraph clusterP {\n" );
-            fprintf( graph, "\tlabel=\"%s\"\n", name );
+            fprintf( graph, "\tlabel=\"%s\";\n", name );
+            fprintf( graph, "\tstyle=dotted;\n" );
 #ifdef DOT_COLOR
-            fprintf( graph, "\tcolor=blue\n" );
+            fprintf( graph, "\tcolor=chartreuse3;\n" );
 #else
-            fprintf( graph, "\tcolor=invis\n" );
+            fprintf( graph, "\tcolor=invis;\n" );
 #endif // DOT_CON
             break;
         case STYLE_SERIAL:
             fprintf( graph, "\tsubgraph clusterS {\n" );
-            fprintf( graph, "\tlabel=\"%s\"\n", name );
+            fprintf( graph, "\tlabel=\"%s\";\n", name );
+            fprintf( graph, "\tstyle=dashed;\n" );
 #ifdef DOT_COLOR
-            fprintf( graph, "\tcolor=green\n" );
+            fprintf( graph, "\tcolor=cadetblue3;\n" );
 #else
-            fprintf( graph, "\tcolor=invis\n" );
+            fprintf( graph, "\tcolor=invis;\n" );
 #endif // DOT_CON
             break;
         case STYLE_WRAPPER:
             fprintf( graph, "\tsubgraph clusterW {\n" );
-            fprintf( graph, "\tlabel=\"%s\"\n", name );
+            fprintf( graph, "\tlabel=\"%s\";\n", name );
             break;
         default:
             ;

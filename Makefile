@@ -17,11 +17,12 @@ DOT_PATH = dot
 DOT_AST_FILE = $(DOT_PATH)/ast_graph
 DOT_N_CON_FILE = $(DOT_PATH)/net_connection_graph
 DOT_P_CON_FILE = $(DOT_PATH)/port_connection_graph
-DOT_FLAGS = -DDOT_AST        # generate a dot file representing the ast
-DOT_FLAGS += -DDOT_CON       # generate a dot file showing NW connections
-DOT_FLAGS += -DDOT_STRUCT    # force a structure in NW connections
-DOT_FLAGS += -DDOT_COLOR     # colorize the structure (no effect if DOT_STRUCT
-                             # is undefined)
+DOT_FLAGS = -DDOT_AST         # generate a dot file representing the ast
+DOT_FLAGS += -DDOT_CON        # generate a dot file showing NW connections
+DOT_FLAGS += -DDOT_STRUCT     # force a structure in NW connections
+DOT_FLAGS += -DDOT_COLOR      # colorize the structure (no effect if DOT_STRUCT
+                              # is undefined)
+DOT_FLAGS += -DDOT_EDGE_LABEL # show labels on edges
 
 TEST_PATH = test
 TEST_FILE = cpa.test
