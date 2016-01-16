@@ -89,8 +89,13 @@ void context_check( ast_node* );
 void connection_check( symrec**, ast_node* );
 
 /**
- * check the port connections
+ * check the port connections. This function establishes the port connections
+ * and adds the corresponding edges to the port connection graph
  *
+ * @param symrec**:     pointer to the symbol table
+ * @param ast_node*:    pointer to the first net operand
+ * @param ast_node*:    pointer to the second ast node
+ * @param bool:         flag indicating if side ports are checked
  * */
 void connection_check_port( symrec**, ast_node*, ast_node*, bool );
 
@@ -122,6 +127,11 @@ void id_check( symrec**, symrec**, ast_node* );
  *      ports belong to which net
  * */
 void* id_install( symrec**, ast_node*, bool );
+
+/**
+ *
+ * */
+void* inst_check( symrec**, symrec**, ast_node* );
 
 /**
  * Get an instance from the instance table.
