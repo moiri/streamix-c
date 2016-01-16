@@ -529,7 +529,6 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
     symrec* item = NULL;
     symrec* new_item = NULL;
     symrec* previous_item = NULL;
-    symrec* res = NULL;
     bool is_identical = false;
     char key[ strlen( name ) + 5 ];
 
@@ -550,7 +549,7 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
     // the key is new
     if( item == NULL ) {
         HASH_ADD_KEYPTR( hh, *symtab, new_item->key, strlen( key ), new_item );
-        res = new_item;
+        item = new_item;
     }
     /* hash exists */
     else {
@@ -558,7 +557,8 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
         // and catch ports with the same name and scope but a with different
         // collections
         do {
-            /* name, scope, mode, or collections are the same -> error */
+            // check whether there is an identical entry (name, scope, mode,
+            // and collections are the same)
             if( strlen( item->name ) == strlen( name )
                 && memcmp( item->name, name, strlen( name ) ) == 0
                 && item->scope == scope
@@ -570,26 +570,30 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
                             == ( ( struct port_attr* )item->attr )->collection )
                        )
                     ) ) {
+                // found an identical entry -> error
                 is_identical = true;
                 break;
             }
-            previous_item = item;
+            previous_item = item;   // remember the last item of the list
             item = item->next;
         }
         while( item != NULL );
 
         if( !is_identical ) {
+            // the item was differen -> add it to the end of the linked list
             previous_item->next = new_item;
-            res = new_item;
+            item = new_item;
         }
     }
     if( is_identical ) {
+        // the item already existed in the table -> free the allocated space
+        // and throw a yyerror
         free( new_item->name );
         free( new_item->key );
         free( new_item );
         sprintf( __error_msg, ERROR_DUPLICATE_ID, line, name );
         yyerror( __error_msg );
-        res = NULL;
+        item = NULL;
     }
-    return res;
+    return item;
 }
