@@ -119,8 +119,8 @@ void connection_check_port( instrec** insttab, int id_left, int id_right,
             if( // ports are not yet connected
                     !ports_left->is_connected && !ports_right->is_connected
                 // ports have the same name
-                    && ( strcmp( ports_left->rec->name,
-                            ports_right->rec->name ) == 0 )
+                    && ( strcmp( ports_left->rec->key.name,
+                            ports_right->rec->key.name ) == 0 )
                 // ports are of opposite mode
                     && ( p_attr_left->mode != p_attr_right->mode )
                 // the left port is in DS and the right is in US
@@ -149,7 +149,7 @@ void connection_check_port( instrec** insttab, int id_left, int id_right,
                     id_node_end = id_left;
                 }
                 graph_add_edge( __p_con_graph, id_node_start, id_node_end,
-                        ports_left->rec->name, side );
+                        ports_left->rec->key.name, side );
 #endif // DOT_CON
             }
             ports_right = ports_right->next;
@@ -487,31 +487,23 @@ instrec* instrec_put( instrec** insttab, int id, symrec* rec ) {
 /******************************************************************************/
 symrec* symrec_get( symrec** symtab, char *name, int line ) {
     symrec* item = NULL;
-    symrec_key* key = NULL;
-    size_t keylen;
-    size_t namelen;
     int* p = NULL;
-
-    namelen = strlen( name );
-    /* calculate the key length including padding, using formula */
-    keylen = offsetof( symrec, name )   /* offset of last key field */
-            + namelen                   /* size of last key field */
-            - offsetof(symrec, scope ); /* offset of first key field */
-
-    key = ( symrec_key* )malloc( sizeof( symrec_key ) + namelen );
-    memset( key, 0, sizeof( symrec_key ) + namelen );
-    memcpy( key->name, name, namelen );
+    symrec* new_item = NULL;
+    new_item = ( symrec* )malloc( sizeof( symrec ) );
+    memset( new_item, 0, sizeof( symrec ) );
+    new_item->key.name = ( char* )malloc( strlen( name ) + 1 );
+    strcpy( new_item->key.name, name );
     /* check whether their scope matches with a scope on the stack */
     while( ( p = ( int* )utarray_prev( __scope_stack, p ) ) != NULL ) {
-        key->scope = *p;
-        HASH_FIND( hh, *symtab, &key, keylen, item );
-        printf( "check item <%s, %d>\n", key->name, key->scope );
+        new_item->key.scope = *p;
+        HASH_FIND( hh, *symtab, &new_item->key, sizeof( symrec_key ), item );
+        printf( "check item <%s, %d>\n", new_item->key.name, new_item->key.scope );
         // iterate through all entries with the same key to handle collisions
         while( item != NULL ) {
             printf( "test\n" );
-            if( strlen( item->name ) == strlen( name )
-                && memcmp( item->name, name, strlen( name ) ) == 0
-                && item->scope == *p ) {
+            if( strlen( item->key.name ) == strlen( name )
+                && memcmp( item->key.name, name, strlen( name ) ) == 0
+                && item->key.scope == *p ) {
                 /* printf( "found" ); */
                 /* if( item->attr != NULL ) { */
                 /*     if( ( ( struct net_attr* )item->attr )->state ) */
@@ -527,8 +519,8 @@ symrec* symrec_get( symrec** symtab, char *name, int line ) {
         }
         if( item != NULL ) break; // found a match
     }
-    free( key->name );
-    free( key );
+    free( new_item->key.name );
+    free( new_item );
     if( item == NULL ) {
         sprintf( __error_msg, ERROR_UNDEFINED_ID, line, name );
         yyerror( __error_msg );
@@ -539,38 +531,52 @@ symrec* symrec_get( symrec** symtab, char *name, int line ) {
 /******************************************************************************/
 symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
         void* attr, int line ) {
-    size_t keylen;
-    size_t namelen;
-    symrec *item, *new_item, *previous_item, *res = NULL;
-    symrec_key* key = NULL;
+    symrec* item = NULL;
+    symrec* new_item = NULL;
+    symrec* previous_item = NULL;
+    symrec* res = NULL;
     bool is_identical = false;
-
-    namelen = strlen( name );
-
-    new_item = ( symrec* )malloc( sizeof( symrec ) + namelen );
-    memset( new_item, 0, sizeof( symrec ) + namelen );
-    memcpy( new_item->name, name, namelen );
-    new_item->scope = scope;
+    /* printf( "id_install" ); */
+    /* if( type == VAL_BOX ) { */
+    /*     if( ( ( struct net_attr* )attr )->state ) */
+    /*         printf( " stateless" ); */
+    /*     printf( " box" ); */
+    /* } */
+    /* else if( type == VAL_PORT || type == VAL_SPORT ) { */
+    /*     if( ( ( struct port_attr* )attr )->collection == VAL_UP ) */
+    /*         printf( " up" ); */
+    /*     if( ( ( struct port_attr* )attr )->collection == VAL_DOWN ) */
+    /*         printf( " down" ); */
+    /*     if( ( ( struct port_attr* )attr )->collection == VAL_SIDE ) */
+    /*         printf( " side" ); */
+    /*     if( ( ( struct port_attr* )attr )->mode == VAL_IN ) */
+    /*         printf( " in" ); */
+    /*     else if( ( ( struct port_attr* )attr )->mode == VAL_OUT ) */
+    /*         printf( " out" ); */
+    /*     if( type == VAL_PORT ) printf( " port" ); */
+    /*     /1* else if( type == VAL_SPORT ) { *1/ */
+    /*     /1*     if( ( ( struct sport_attr* )attr )->decoupled ) *1/ */
+    /*     /1*         printf( " decoupled" ); *1/ */
+    /*     /1*     printf( " sync(%d) port", ( ( struct sport_attr* )attr )->sync_id ); *1/ */
+    /*     /1* } *1/ */
+    /* } */
+    /* else if( type == VAL_NET ) */
+    /*     printf( " net" ); */
+    /* printf( " %s in scope %d\n", name, scope ); */
+    new_item = ( symrec* )malloc( sizeof( symrec ) );
+    memset( new_item, 0, sizeof( symrec ) );
+    new_item->key.name = ( char* )malloc( strlen( name ) + 1 );
+    strcpy( new_item->key.name, name );
+    new_item->key.scope = scope;
     new_item->type = type;
     new_item->attr = attr;
-
-    /* calculate the key length including padding, using formula */
-    keylen = offsetof( symrec, name )   /* offset of last key field */
-            + namelen                   /* size of last key field */
-            - offsetof(symrec, scope ); /* offset of first key field */
-
-    key = ( symrec_key* )malloc( sizeof( symrec_key ) + namelen );
-    memset( key, 0, sizeof( symrec_key ) + namelen );
-    memcpy( key->name, name, namelen );
-    key->scope = scope;
-
-    HASH_FIND( hh, *symtab, &key->name, keylen, item );
+    HASH_FIND( hh, *symtab, &new_item->key, sizeof( symrec_key ), item );
     /* new key */
     if( item == NULL ) {
-        HASH_ADD( hh, *symtab, name, keylen, new_item );
-        HASH_FIND( hh, *symtab, &key->name, keylen, item );
+        HASH_ADD( hh, *symtab, key, sizeof( symrec_key ), new_item );
+        HASH_FIND( hh, *symtab, &new_item->key, sizeof( symrec_key ), item );
         if( item != NULL ) printf( "Alright, the item <%s, %d> was added\n",
-                item->name, item->scope );
+                item->key.name, item->key.scope );
         res = new_item;
     }
     /* hash exists */
@@ -580,9 +586,9 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
         // collections
         do {
             /* name, scope, mode, or collections are the same -> error */
-            if( strlen( item->name ) == strlen( name )
-                && memcmp( item->name, name, strlen( name ) ) == 0
-                && item->scope == scope
+            if( strlen( item->key.name ) == strlen( name )
+                && memcmp( item->key.name, name, strlen( name ) ) == 0
+                && item->key.scope == scope
                 && ( ( item->type == VAL_BOX || item->type == VAL_NET )
                     || ( ( type == VAL_PORT || type == VAL_SPORT )
                         && ( ( ( struct port_attr* )attr )->mode
@@ -604,10 +610,8 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
             res = new_item;
         }
     }
-    free( key->name );
-    free( key );
     if( is_identical ) {
-        free( new_item->name );
+        free( new_item->key.name );
         free( new_item );
         sprintf( __error_msg, ERROR_DUPLICATE_ID, line, name );
         yyerror( __error_msg );

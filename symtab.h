@@ -25,17 +25,16 @@ typedef struct cp_attr cp_attr;
 typedef struct port_attr port_attr;
 // structure of the symbol table key
 struct symrec_key {
-    int     scope;  // scope of the record
     char*   name;   // name of the symbol
+    int     scope;  // scope of the record
 };
 // this is the definition of a record in a hashtable (uthash)
 struct symrec {
+    symrec_key  key;
+    int         type;   // VAL_NET, VAL_BOX, VAL_PORT
+    void*       attr;   // a struct of attributes
+    symrec*     next;   // pointer to the next element (handle collisions)
     UT_hash_handle hh;  // makes this structure hashable
-    int     type;   // VAL_NET, VAL_BOX, VAL_PORT
-    void*   attr;   // a struct of attributes
-    symrec* next;   // pointer to the next element (handle collisions)
-    int     scope;  // scope of the record [key part2]
-    char*   name;   // name of the symbol [key part1]
 };
 // linked list to associate ports to nets
 struct symrec_list {
