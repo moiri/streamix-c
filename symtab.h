@@ -23,6 +23,8 @@ typedef struct instrec instrec;
 typedef struct net_attr net_attr;
 typedef struct cp_attr cp_attr;
 typedef struct port_attr port_attr;
+typedef struct inst_attr inst_attr;
+
 // this is the definition of a record in a hashtable (uthash)
 struct symrec {
     char*       key;
@@ -59,10 +61,8 @@ struct port_attr {
     bool    decoupled;
     int     sync_id;
 };
-// instance table record
-// this is the definition of a record in a hashtable (uthash)
-struct instrec {
-    /* char*           key; */
+// attributes of instances
+struct inst_attr {
     int             id;         // id if the instance
     symrec*         net;        // pointer to its definition
     int             port_cnt;   // counter to control all port connections
@@ -71,7 +71,6 @@ struct instrec {
                                 // definition of the net but it is copied in
                                 // order to set the corresponding connection
                                 // flag
-    UT_hash_handle  hh;         // makes this structure hashable
 };
 
 /**
@@ -84,22 +83,22 @@ void context_check( ast_node* );
 /**
  * check the connections of the network equations
  *
- * @param symrec**:     pointer to the symbol table
+ * @param symrec**:     pointer to the instance table
  * @param ast_node*:    pointer to the ast node
  * */
-void connection_check( instrec**, ast_node* );
+void connection_check( symrec**, ast_node* );
 
 /**
  * check the port connections
  *
  * */
-void connection_check_port( instrec**, int, int, bool );
+void connection_check_port( symrec**, ast_node*, ast_node*, bool );
 
 /**
  * check the side port connections
  *
  * */
-void connection_check_sport( instrec**, ast_node*, int );
+void connection_check_sport( symrec**, ast_node*, int );
 
 /**
  * check whether the given identificator is in the symbol table.
@@ -109,7 +108,7 @@ void connection_check_sport( instrec**, ast_node*, int );
  * @param instrec**:    pointer to the instance table
  * @param ast_node*:    pointer to the ast node
  * */
-void* id_check( symrec**, instrec**, ast_node* );
+void* id_check( symrec**, symrec**, ast_node* );
 
 /**
  * put symbol names into the symbol table. this includes collision and scope
@@ -127,24 +126,28 @@ void* id_install( symrec**, ast_node*, bool );
 /**
  * Get an instance from the instance table.
  *
- * @param instrec**:    pointer to the hashtable
+ * @param symrec**:     pointer to the hashtable
+ * @param char*:        name of the record
+ * @param int:          scope of the record
  * @param int:          id of the instance
- * @return instrec*:
+ * @return symrec*:
  *      a pointer to the location where the data is stored
- *      a null pointer if the element was not found
  * */
-instrec* instrec_get( instrec**, int );
+symrec* instrec_get( symrec**, char*, int, int );
 
 /**
  * Add an instance to the instance table.
  *
- * @param instrec**:    pointer to the hashtable
+ * @param symrec**:     pointer to the hashtable
+ * @param char*:        name of the record
+ * @param int:          scope of the record
+ * @param int:          type of the record
  * @param int:          id of the instance
  * @param symrec*:      pointer to the symbol record
- * @return instrec*:
+ * @return symrec*:
  *      a pointer to the location where the data was stored
  * */
-instrec* instrec_put( instrec**, int, symrec* );
+symrec* instrec_put( symrec**, char*, int, int, int, symrec* );
 
 /**
  * Get an identifier from the symbol table.
@@ -161,7 +164,7 @@ symrec* symrec_get( symrec**, char*, int );
 /**
  * Add an identifier to the symbol table.
  *
- * @param hashtable_t*  pointer to the hashtable
+ * @param symrec**      pointer to the hashtable
  * @param char*:        name of the record
  * @param int:          scope of the record
  * @param int:          type of the record
