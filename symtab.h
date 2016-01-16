@@ -23,14 +23,11 @@ typedef struct instrec instrec;
 typedef struct net_attr net_attr;
 typedef struct cp_attr cp_attr;
 typedef struct port_attr port_attr;
-// structure of the symbol table key
-struct symrec_key {
-    char*   name;   // name of the symbol
-    int     scope;  // scope of the record
-};
 // this is the definition of a record in a hashtable (uthash)
 struct symrec {
-    symrec_key  key;
+    char*       key;
+    char*       name;   // name of the symbol
+    int         scope;  // scope of the record
     int         type;   // VAL_NET, VAL_BOX, VAL_PORT
     void*       attr;   // a struct of attributes
     symrec*     next;   // pointer to the next element (handle collisions)
