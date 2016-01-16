@@ -9,6 +9,10 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+// constants
+#define CONST_ERROR_LEN 256
+#define CONST_SCOPE_LEN 4
+
 // scanner values
 #define VAL_NONE    0
 #define VAL_UP      1

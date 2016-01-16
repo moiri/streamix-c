@@ -62,7 +62,8 @@ struct port_attr {
 // instance table record
 // this is the definition of a record in a hashtable (uthash)
 struct instrec {
-    int             id;         // id of the instance; key
+    /* char*           key; */
+    int             id;         // id if the instance
     symrec*         net;        // pointer to its definition
     int             port_cnt;   // counter to control all port connections
     symrec_list*    ports;      // pointer to the port list of the instance

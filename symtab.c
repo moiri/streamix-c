@@ -9,7 +9,7 @@
 
 /* handle errors with the bison error function */
 extern void yyerror ( const char* );
-char __error_msg[255];
+char __error_msg[ CONST_ERROR_LEN ];
 
 /* global variables */
 int         __scope = 0;    // global scope counter
@@ -489,7 +489,7 @@ instrec* instrec_put( instrec** insttab, int id, symrec* rec ) {
 symrec* symrec_get( symrec** symtab, char *name, int line ) {
     int* p = NULL;
     symrec* item = NULL;
-    char key[ strlen( name ) + 5 ];
+    char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
 
     /* check whether their scope matches with a scope on the stack */
     while( ( p = ( int* )utarray_prev( __scope_stack, p ) ) != NULL ) {
@@ -501,15 +501,6 @@ symrec* symrec_get( symrec** symtab, char *name, int line ) {
             if( strlen( item->name ) == strlen( name )
                 && memcmp( item->name, name, strlen( name ) ) == 0
                 && item->scope == *p ) {
-                /* printf( "found" ); */
-                /* if( item->attr != NULL ) { */
-                /*     if( ( ( struct net_attr* )item->attr )->state ) */
-                /*         printf( " stateless" ); */
-                /*     printf( " box" ); */
-                /* } */
-                /* else if( item->type == VAL_NET ) */
-                /*     printf( " net" ); */
-                /* printf( " %s in scope %d\n", item->name, item->scope ); */
                 break; // found a match
             }
             item = item->next;
@@ -530,7 +521,7 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
     symrec* new_item = NULL;
     symrec* previous_item = NULL;
     bool is_identical = false;
-    char key[ strlen( name ) + 5 ];
+    char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
 
     // generate key
     sprintf( key, "%s%d", name, scope );
