@@ -20,6 +20,7 @@ typedef struct symrec symrec;
 typedef struct symrec_list symrec_list;
 typedef struct instrec instrec;
 typedef struct net_attr net_attr;
+typedef struct cp_attr cp_attr;
 typedef struct port_attr port_attr;
 // symbol table record
 // this is the definition of a record in a hashtable (uthash)
@@ -42,6 +43,10 @@ struct net_attr {
     bool            state;      // a box can be stateless or stateful
                                 // if no box declaration then false
     symrec_list*    ports;      // pointer to the port list of the net
+    int             num_ports;  // #ports also counting multiple collections
+};
+// attributes of a copy synchronizer
+struct cp_attr {
     int             num_ports;  // #ports also counting multiple collections
 };
 // attributes of ports (all kind of ports: box (sync) or net)
@@ -86,7 +91,13 @@ void connection_check( instrec**, ast_node* );
  * check the port connections
  *
  * */
-void connection_check_port( instrec**, ast_node*, ast_node* );
+void connection_check_port( instrec**, int, int, bool );
+
+/**
+ * check the side port connections
+ *
+ * */
+void connection_check_sport( instrec**, ast_node*, int );
 
 /**
  * check whether the given identificator is in the symbol table.
@@ -96,7 +107,7 @@ void connection_check_port( instrec**, ast_node*, ast_node* );
  * @param instrec**:    pointer to the instance table
  * @param ast_node*:    pointer to the ast node
  * */
-void id_check( symrec**, instrec**, ast_node* );
+void* id_check( symrec**, instrec**, ast_node* );
 
 /**
  * put symbol names into the symbol table. this includes collision and scope

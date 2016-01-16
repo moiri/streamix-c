@@ -22,6 +22,7 @@
 #define VAL_NET     1
 #define VAL_PORT    2
 #define VAL_SPORT   3
+#define VAL_COPY    4
 
 #define VAL_DECOUPLED   0
 
@@ -56,5 +57,6 @@
 // errors
 #define ERROR_UNDEFINED_ID  "%d: error: use of undeclared identifier '%s'"
 #define ERROR_DUPLICATE_ID  "%d: error: redefinition of '%s'"
+#define ERROR_TOO_FEW_CONNECTS  "%d: error: too few connecting nets spezified in '%s'"
 
 #endif /* DEFINES_H */

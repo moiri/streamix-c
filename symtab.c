@@ -81,9 +81,10 @@ void connection_check( instrec** insttab, ast_node* ast ) {
             /* printf( "'%s' conncets with '%s'\n", op_left->ast_id.name, */
             /*         op_right->ast_id.name ); */
 #ifdef DOT_CON
-            graph_add_edge( __n_con_graph, op_left->id, op_right->id, NULL );
+            graph_add_edge( __n_con_graph, op_left->id, op_right->id, NULL,
+                    false );
 #endif // DOT_CON
-            connection_check_port( insttab, op_left, op_right );
+            connection_check_port( insttab, op_left->id, op_right->id, false );
         }
         while (j_ptr != 0);
     }
@@ -91,15 +92,15 @@ void connection_check( instrec** insttab, ast_node* ast ) {
 }
 
 /******************************************************************************/
-void connection_check_port( instrec** insttab, ast_node* ast_op_left,
-        ast_node* ast_op_right ) {
+void connection_check_port( instrec** insttab, int id_left, int id_right,
+        bool side ) {
 #ifdef DOT_CON
     int id_node_start, id_node_end;
 #endif // DOT_CON
-    instrec* op_left = instrec_get( insttab, ast_op_left->id );
+    instrec* op_left = instrec_get( insttab, id_left );
     if ( op_left == NULL ) return;
     /* printf("get instance %s(%d)\n", op_left->net->name, op_left->id); */
-    instrec* op_right = instrec_get( insttab, ast_op_right->id );
+    instrec* op_right = instrec_get( insttab, id_right );
     if ( op_right == NULL ) return;
     /* printf("get instance %s(%d)\n", op_right->net->name, op_right->id); */
     symrec_list* ports_left;
@@ -122,28 +123,33 @@ void connection_check_port( instrec** insttab, ast_node* ast_op_left,
                             ports_right->rec->name ) == 0 )
                 // ports are of opposite mode
                     && ( p_attr_left->mode != p_attr_right->mode )
-                // the left port is in DS while the right is in US or they both
-                // are in no collection at all
-                    && ( ( ( p_attr_left->collection == VAL_DOWN )
-                            && ( p_attr_right->collection == VAL_UP ) )
-                        || ( ( p_attr_left->collection == VAL_NONE )
-                            && ( p_attr_right->collection == VAL_NONE ) )
-                       )
+                // the left port is in DS and the right is in US
+                    && ( ( ( ( ( p_attr_left->collection == VAL_DOWN )
+                                && ( p_attr_right->collection == VAL_UP ) )
+                    // or they are both in no collection
+                            || ( ( p_attr_left->collection == VAL_NONE )
+                                && ( p_attr_right->collection == VAL_NONE ) ) )
+                    // and we are not considering side ports
+                        && !side )
+                    // or we are considering side ports and both potrs are SP
+                        || ( side && ( p_attr_left->collection == VAL_SIDE
+                                && p_attr_right->collection == VAL_SIDE ) ) )
             ) {
                 /* printf( " %s.%s connects with %s.%s\n", */
                 /*         op_left->net->name, ports_left->rec->name, */
                 /*         op_right->net->name, ports_right->rec->name ); */
+                if( side ) printf( "side\n" );
                 ports_left->is_connected = true;
                 ports_right->is_connected = true;
 #ifdef DOT_CON
-                id_node_start = ast_op_left->id;
-                id_node_end = ast_op_right->id;
+                id_node_start = id_left;
+                id_node_end = id_right;
                 if( p_attr_left->mode == VAL_IN ) {
-                    id_node_start = ast_op_right->id;
-                    id_node_end = ast_op_left->id;
+                    id_node_start = id_right;
+                    id_node_end = id_left;
                 }
                 graph_add_edge( __p_con_graph, id_node_start, id_node_end,
-                        ports_left->rec->name );
+                        ports_left->rec->name, side );
 #endif // DOT_CON
             }
             ports_right = ports_right->next;
@@ -153,17 +159,73 @@ void connection_check_port( instrec** insttab, ast_node* ast_op_left,
 }
 
 /******************************************************************************/
-void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
+void connection_check_sport( instrec** insttab, ast_node* ast,
+        int connect_cnt ) {
+    ast_list* list = ast->connect.connects->ast_list;
+    int id1, id2;
+    if( connect_cnt <= 1 ) {
+        // ERROR: too few connecting nets
+        sprintf( __error_msg, ERROR_UNDEFINED_ID, ast->connect.id->ast_id.line,
+                ast->connect.id->ast_id.name );
+        yyerror( __error_msg );
+        return;
+    }
+    else if( connect_cnt == 2 ) {
+        // two nets to connect by a sideport
+        // this is the wrong id! I need to get the id of the instances in
+        // this scope! This could be more than the count indicates...
+        id1 = list->ast_node->id;
+        list = list->next;
+        id2 = list->ast_node->id;
+        // net1 and net2 are to be connected by side ports
+        connection_check_port( insttab, id1, id2, true );
+    }
+    else {
+        // multiple nets to connect by a sideport with the use of a
+        // copy synchronizer
+        while( list != NULL ) {
+            instrec* net = instrec_get( insttab, list->ast_node->id );
+            if ( net == NULL ) continue;
+            while( net->ports != NULL ) {
+
+            }
+
+            list = list->next;
+        }
+    }
+}
+
+/******************************************************************************/
+void* id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
     ast_list* list = NULL;
     symrec* rec = NULL;
+    int connect_cnt = 0;
+    void* res = NULL;
 
     switch( ast->node_type ) {
+        case AST_CONNECT:
+            connect_cnt = *( int* )id_check( symtab, insttab,
+                    ast->connect.connects );
+            printf( "connection_cnt:%d\n", connect_cnt );
+            /* if( connect_cnt > 2 ) { */
+            /*     // create a copy synchronizer */
+            /*     rec = ( symrec* )malloc( sizeof( symrec ) ); */
+            /*     rec->scope = *utarray_back( __scope_stack ); */
+            /*     rec->type = VAL_COPY; */
+            /*     rec->name = NULL; */
+            /*     rec->attr = NULL; */
+            /*     instrec_put( insttab, ast->id, rec ); */
+            /* } */
+            connection_check_sport( insttab, ast, connect_cnt );
+            break;
         case AST_CONNECTS:
             list = ast->ast_list;
             while( list != NULL ) {
                 id_check( symtab, insttab, list->ast_node );
+                connect_cnt++;
                 list = list->next;
             }
+            res = (void*)&connect_cnt;
             break;
         case AST_STMTS:
 #ifdef DOT_CON
@@ -217,9 +279,6 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
             break;
         case AST_NET:
             id_check( symtab, insttab, ast->ast_node );
-            break;
-        case AST_CONNECT:
-            id_check( symtab, insttab, ast->connect.connects );
             break;
         case AST_PARALLEL:
 #if defined(DOT_CON) && defined(DOT_STRUCT)
@@ -284,6 +343,7 @@ void id_check( symrec** symtab, instrec** insttab, ast_node* ast ) {
         default:
             ;
     }
+    return res;
 }
 
 /******************************************************************************/

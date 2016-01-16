@@ -47,8 +47,9 @@ void graph_add_divider ( FILE*, int, const char );
  * @param int:      id of the start node
  * @param int:      id of the end node
  * @param char*:    name of the edge
+ * @param bool:     flag to indicate wheter it is a side port
  * */
-void graph_add_edge ( FILE*, int, int, char* );
+void graph_add_edge ( FILE*, int, int, char*, bool );
 
 /**
  * Add a inode to the graph
