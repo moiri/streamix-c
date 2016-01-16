@@ -486,16 +486,32 @@ instrec* instrec_put( instrec** insttab, int id, symrec* rec ) {
 
 /******************************************************************************/
 symrec* symrec_get( symrec** symtab, char *name, int line ) {
-    symrec* item;
+    symrec* item = NULL;
+    symrec_key* key = NULL;
+    size_t keylen;
+    size_t namelen;
     int* p = NULL;
-    bool in_scope = false;
-    HASH_FIND_STR( *symtab, name, item );
-    /* iterate through all entries with the same name */
-    while( !in_scope && item != NULL ) {
-        /* check whether their scope matches with a scope on the stack */
-        while( ( p = ( int* )utarray_prev( __scope_stack, p ) ) != NULL ) {
-            if( *p == item->scope ) {
-                in_scope = true;
+
+    namelen = strlen( name );
+    /* calculate the key length including padding, using formula */
+    keylen = offsetof( symrec, name )   /* offset of last key field */
+            + namelen                   /* size of last key field */
+            - offsetof(symrec, scope ); /* offset of first key field */
+
+    key = ( symrec_key* )malloc( sizeof( symrec_key ) + namelen );
+    memset( key, 0, sizeof( symrec_key ) + namelen );
+    memcpy( key->name, name, namelen );
+    /* check whether their scope matches with a scope on the stack */
+    while( ( p = ( int* )utarray_prev( __scope_stack, p ) ) != NULL ) {
+        key->scope = *p;
+        HASH_FIND( hh, *symtab, &key, keylen, item );
+        printf( "check item <%s, %d>\n", key->name, key->scope );
+        // iterate through all entries with the same key to handle collisions
+        while( item != NULL ) {
+            printf( "test\n" );
+            if( strlen( item->name ) == strlen( name )
+                && memcmp( item->name, name, strlen( name ) ) == 0
+                && item->scope == *p ) {
                 /* printf( "found" ); */
                 /* if( item->attr != NULL ) { */
                 /*     if( ( ( struct net_attr* )item->attr )->state ) */
@@ -505,11 +521,14 @@ symrec* symrec_get( symrec** symtab, char *name, int line ) {
                 /* else if( item->type == VAL_NET ) */
                 /*     printf( " net" ); */
                 /* printf( " %s in scope %d\n", item->name, item->scope ); */
-                return item;
+                break; // found a match
             }
+            item = item->next;
         }
-        item = item->next;
+        if( item != NULL ) break; // found a match
     }
+    free( key->name );
+    free( key );
     if( item == NULL ) {
         sprintf( __error_msg, ERROR_UNDEFINED_ID, line, name );
         yyerror( __error_msg );
@@ -518,56 +537,47 @@ symrec* symrec_get( symrec** symtab, char *name, int line ) {
 }
 
 /******************************************************************************/
-symrec* symrec_put( symrec** symtab, char *name, int scope, int type, void* attr,
-        int line ) {
-    symrec* item;
-    symrec* previous_item;
-    symrec* new_item;
-    symrec* res = NULL;
+symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
+        void* attr, int line ) {
+    size_t keylen;
+    size_t namelen;
+    symrec *item, *new_item, *previous_item, *res = NULL;
+    symrec_key* key = NULL;
     bool is_identical = false;
-    /* printf( "id_install" ); */
-    /* if( type == VAL_BOX ) { */
-    /*     if( ( ( struct net_attr* )attr )->state ) */
-    /*         printf( " stateless" ); */
-    /*     printf( " box" ); */
-    /* } */
-    /* else if( type == VAL_PORT || type == VAL_SPORT ) { */
-    /*     if( ( ( struct port_attr* )attr )->up ) */
-    /*         printf( " up" ); */
-    /*     if( ( ( struct port_attr* )attr )->down ) */
-    /*         printf( " down" ); */
-    /*     if( ( ( struct port_attr* )attr )->side ) */
-    /*         printf( " side" ); */
-    /*     if( ( ( struct port_attr* )attr )->mode == VAL_IN ) */
-    /*         printf( " in" ); */
-    /*     else if( ( ( struct port_attr* )attr )->mode == VAL_OUT ) */
-    /*         printf( " out" ); */
-    /*     if( type == VAL_PORT ) printf( " port" ); */
-    /*     /1* else if( type == VAL_SPORT ) { *1/ */
-    /*     /1*     if( ( ( struct sport_attr* )attr )->decoupled ) *1/ */
-    /*     /1*         printf( " decoupled" ); *1/ */
-    /*     /1*     printf( " sync(%d) port", ( ( struct sport_attr* )attr )->sync_id ); *1/ */
-    /*     /1* } *1/ */
-    /* } */
-    /* else if( type == VAL_NET ) */
-    /*     printf( " net" ); */
-    /* printf( " %s in scope %d\n", name, scope ); */
-    HASH_FIND_STR( *symtab, name, item );
-    previous_item = item;
+
+    namelen = strlen( name );
+
+    new_item = ( symrec* )malloc( sizeof( symrec ) + namelen );
+    memset( new_item, 0, sizeof( symrec ) + namelen );
+    memcpy( new_item->name, name, namelen );
+    new_item->scope = scope;
+    new_item->type = type;
+    new_item->attr = attr;
+
+    /* calculate the key length including padding, using formula */
+    keylen = offsetof( symrec, name )   /* offset of last key field */
+            + namelen                   /* size of last key field */
+            - offsetof(symrec, scope ); /* offset of first key field */
+
+    key = ( symrec_key* )malloc( sizeof( symrec_key ) + namelen );
+    memset( key, 0, sizeof( symrec_key ) + namelen );
+    memcpy( key->name, name, namelen );
+    key->scope = scope;
+
+    HASH_FIND( hh, *symtab, &key->name, keylen, item );
     /* new key */
     if( item == NULL ) {
-        item = ( symrec* )malloc( sizeof( symrec ) );
-        item->scope = scope;
-        item->type = type;
-        item->name = ( char* )malloc( strlen( name ) + 1 );
-        strcpy (item->name, name);
-        item->attr = attr;
-        HASH_ADD_KEYPTR( hh, *symtab, item->name, strlen(item->name), item );
-        res = item;
+        HASH_ADD( hh, *symtab, name, keylen, new_item );
+        HASH_FIND( hh, *symtab, &key->name, keylen, item );
+        if( item != NULL ) printf( "Alright, the item <%s, %d> was added\n",
+                item->name, item->scope );
+        res = new_item;
     }
     /* hash exists */
     else {
-        /* iterate through all entries with the same hash */
+        // iterate through all entries with the same hash to handle collisions
+        // and catch ports with the same name and scope but a with different
+        // collections
         do {
             /* name, scope, mode, or collections are the same -> error */
             if( strlen( item->name ) == strlen( name )
@@ -586,22 +596,22 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type, void* attr
             }
             previous_item = item;
             item = item->next;
-        } while( item != NULL );
+        }
+        while( item != NULL );
 
         if( !is_identical ) {
-            new_item = ( symrec* )malloc( sizeof( symrec ) );
-            new_item->scope = scope;
-            new_item->type = type;
-            new_item->name = ( char* )malloc( strlen( name ) + 1 );
-            strcpy( new_item->name, name );
-            new_item->attr = attr;
             previous_item->next = new_item;
             res = new_item;
         }
     }
+    free( key->name );
+    free( key );
     if( is_identical ) {
+        free( new_item->name );
+        free( new_item );
         sprintf( __error_msg, ERROR_DUPLICATE_ID, line, name );
         yyerror( __error_msg );
+        res = NULL;
     }
     return res;
 }

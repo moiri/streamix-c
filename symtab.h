@@ -17,20 +17,25 @@
 #include "ast.h"
 
 typedef struct symrec symrec;
+typedef struct symrec_key symrec_key;
 typedef struct symrec_list symrec_list;
 typedef struct instrec instrec;
 typedef struct net_attr net_attr;
 typedef struct cp_attr cp_attr;
 typedef struct port_attr port_attr;
-// symbol table record
+// structure of the symbol table key
+struct symrec_key {
+    int     scope;  // scope of the record
+    char*   name;   // name of the symbol
+};
 // this is the definition of a record in a hashtable (uthash)
 struct symrec {
-    char*   name;       // name of the symbol; key for the hashtable
-    int     type;       // VAL_NET, VAL_BOX, VAL_PORT
-    int     scope;      // scope of the record
-    void*   attr;       // a struct of attributes
-    symrec* next;       // pointer to the next element (handle collisions)
     UT_hash_handle hh;  // makes this structure hashable
+    int     type;   // VAL_NET, VAL_BOX, VAL_PORT
+    void*   attr;   // a struct of attributes
+    symrec* next;   // pointer to the next element (handle collisions)
+    int     scope;  // scope of the record [key part2]
+    char*   name;   // name of the symbol [key part1]
 };
 // linked list to associate ports to nets
 struct symrec_list {
@@ -53,7 +58,7 @@ struct cp_attr {
 struct port_attr {
     int     mode;           // input or output
     // collections
-    int     collection;
+    int     collection;     // VAL_UP, VAL_DOWN, VAL_SIDE
     // sync attributes
     bool    decoupled;
     int     sync_id;
