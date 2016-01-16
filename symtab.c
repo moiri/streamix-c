@@ -139,9 +139,9 @@ void connection_check_port( symrec** insttab, ast_node* net1, ast_node* net2,
                         || ( side && ( p_attr_left->collection == VAL_SIDE
                                 && p_attr_right->collection == VAL_SIDE ) ) )
             ) {
-                printf( " %s.%s connects with %s.%s\n",
-                        op_left->name, ports_left->rec->name,
-                        op_right->name, ports_right->rec->name );
+                /* printf( " %s.%s connects with %s.%s\n", */
+                /*         op_left->name, ports_left->rec->name, */
+                /*         op_right->name, ports_right->rec->name ); */
                 if( side ) printf( "side\n" );
                 ports_left->is_connected = true;
                 ports_right->is_connected = true;
@@ -203,36 +203,20 @@ void connection_check_sport( symrec** insttab, ast_node* ast,
 }
 
 /******************************************************************************/
-void* id_check( symrec** symtab, symrec** insttab, ast_node* ast ) {
+void id_check( symrec** symtab, symrec** insttab, ast_node* ast ) {
     ast_list* list = NULL;
     symrec* rec = NULL;
-    int connect_cnt = 0;
-    void* res = NULL;
 
     switch( ast->node_type ) {
         case AST_CONNECT:
-            connect_cnt = *( int* )id_check( symtab, insttab,
-                    ast->connect.connects );
-            /* printf( "connection_cnt:%d\n", connect_cnt ); */
-            /* if( connect_cnt > 2 ) { */
-            /*     // create a copy synchronizer */
-            /*     rec = ( symrec* )malloc( sizeof( symrec ) ); */
-            /*     rec->scope = *utarray_back( __scope_stack ); */
-            /*     rec->type = VAL_COPY; */
-            /*     rec->name = NULL; */
-            /*     rec->attr = NULL; */
-            /*     instrec_put( insttab, ast->id, rec ); */
-            /* } */
-            /* connection_check_sport( insttab, ast, connect_cnt ); */
+            id_check( symtab, insttab, ast->connect.connects );
             break;
         case AST_CONNECTS:
             list = ast->ast_list;
             while( list != NULL ) {
                 id_check( symtab, insttab, list->ast_node );
-                connect_cnt++;
                 list = list->next;
             }
-            res = (void*)&connect_cnt;
             break;
         case AST_STMTS:
 #ifdef DOT_CON
@@ -352,7 +336,6 @@ void* id_check( symrec** symtab, symrec** insttab, ast_node* ast ) {
         default:
             ;
     }
-    return res;
 }
 
 /******************************************************************************/
@@ -459,6 +442,59 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
     }
     port_list = NULL;
     ptr = NULL;
+    return res;
+}
+
+/******************************************************************************/
+void* inst_check( symrec** symtab, symrec** insttab, ast_node* ast ) {
+    ast_list* list = NULL;
+    int connect_cnt = 0;
+    void* res = NULL;
+
+    switch( ast->node_type ) {
+        case AST_CONNECT:
+            connect_cnt = *( int* )inst_check( symtab, insttab,
+                    ast->connect.connects );
+            /* printf( "connection_cnt:%d\n", connect_cnt ); */
+            /* if( connect_cnt > 2 ) { */
+            /*     // create a copy synchronizer */
+            /*     rec = ( symrec* )malloc( sizeof( symrec ) ); */
+            /*     rec->scope = *utarray_back( __scope_stack ); */
+            /*     rec->type = VAL_COPY; */
+            /*     rec->name = NULL; */
+            /*     rec->attr = NULL; */
+            /*     instrec_put( insttab, ast->id, rec ); */
+            /* } */
+            /* connection_check_sport( insttab, ast, connect_cnt ); */
+            break;
+        case AST_CONNECTS:
+            list = ast->ast_list;
+            while( list != NULL ) {
+                inst_check( symtab, insttab, list->ast_node );
+                connect_cnt++;
+                list = list->next;
+            }
+            res = (void*)&connect_cnt;
+            break;
+        case AST_STMTS:
+            list = ast->ast_list;
+            while( list != NULL ) {
+                inst_check( symtab, insttab, list->ast_node );
+                list = list->next;
+            }
+            break;
+        case AST_BOX:
+            __scope++;
+            break;
+        case AST_WRAP:
+            __scope++;
+            utarray_push_back( __scope_stack, &__scope );
+            inst_check( symtab, insttab, ast->wrap.stmts );
+            utarray_pop_back( __scope_stack );
+            break;
+        default:
+            ;
+    }
     return res;
 }
 

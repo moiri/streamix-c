@@ -108,7 +108,7 @@ void connection_check_sport( symrec**, ast_node*, int );
  * @param instrec**:    pointer to the instance table
  * @param ast_node*:    pointer to the ast node
  * */
-void* id_check( symrec**, symrec**, ast_node* );
+void id_check( symrec**, symrec**, ast_node* );
 
 /**
  * put symbol names into the symbol table. this includes collision and scope
