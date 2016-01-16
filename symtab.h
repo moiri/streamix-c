@@ -161,9 +161,9 @@ symrec* symrec_get( symrec**, char*, int );
  * Add an identifier to the symbol table.
  *
  * @param hashtable_t*  pointer to the hashtable
- * @param char*:        name of the net
- * @param int:          scope of the net
- * @param int:          type of the net
+ * @param char*:        name of the record
+ * @param int:          scope of the record
+ * @param int:          type of the record
  * @param void*:        pointer to the attributes of the identifier
  * @param int:          position (line number) of the identifier
  * @return symrec*:

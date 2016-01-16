@@ -391,8 +391,8 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
             b_attr->state = ( ast->box.state == NULL ) ? true : false;
             b_attr->ports = port_list;
             symrec_put( symtab, ast->box.id->ast_id.name,
-                    *utarray_back( __scope_stack ), VAL_BOX, ( void* )b_attr,
-                    ast->box.id->ast_id.line );
+                    *utarray_back( __scope_stack ), ast->box.id->ast_id.type,
+                    ( void* )b_attr, ast->box.id->ast_id.line );
             break;
         case AST_WRAP:
             __scope++;
@@ -406,8 +406,8 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
             b_attr->state = false;
             b_attr->ports = port_list;
             symrec_put( symtab, ast->wrap.id->ast_id.name,
-                    *utarray_back( __scope_stack ), VAL_NET, ( void* )b_attr,
-                    ast->wrap.id->ast_id.line );
+                    *utarray_back( __scope_stack ), ast->wrap.id->ast_id.type,
+                    ( void* )b_attr, ast->wrap.id->ast_id.line );
             break;
         case AST_PORT:
             // prepare symbol attributes
@@ -434,7 +434,8 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
                 // install symbol and return pointer to the symbol record
                 res = ( void* )symrec_put( symtab,
                         ast->port.id->ast_id.name,
-                        *utarray_back( __scope_stack ), VAL_PORT, p_attr,
+                        *utarray_back( __scope_stack ),
+                        ast->port.id->ast_id.type, p_attr,
                         ast->port.id->ast_id.line );
                 ptr = ( symrec_list* )malloc( sizeof( symrec_list ) );
                 ptr->rec = ( struct symrec* )res;
