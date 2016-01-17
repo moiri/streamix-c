@@ -21,7 +21,6 @@ typedef struct symrec_key symrec_key;
 typedef struct symrec_list symrec_list;
 typedef struct instrec instrec;
 typedef struct net_attr net_attr;
-typedef struct cp_attr cp_attr;
 typedef struct port_attr port_attr;
 typedef struct inst_attr inst_attr;
 
@@ -46,16 +45,10 @@ struct net_attr {
     bool            state;      // a box can be stateless or stateful
                                 // if no box declaration then false
     symrec_list*    ports;      // pointer to the port list of the net
-    int             num_ports;  // #ports also counting multiple collections
-};
-// attributes of a copy synchronizer
-struct cp_attr {
-    int             num_ports;  // #ports also counting multiple collections
 };
 // attributes of ports (all kind of ports: box (sync) or net)
 struct port_attr {
     int     mode;           // input or output
-    // collections
     int     collection;     // VAL_UP, VAL_DOWN, VAL_SIDE
     // sync attributes
     bool    decoupled;
@@ -65,7 +58,6 @@ struct port_attr {
 struct inst_attr {
     int             id;         // id if the instance
     symrec*         net;        // pointer to its definition
-    int             port_cnt;   // counter to control all port connections
     symrec_list*    ports;      // pointer to the port list of the instance
                                 // this list is also available through the
                                 // definition of the net but it is copied in
@@ -81,15 +73,15 @@ struct inst_attr {
 void context_check( ast_node* );
 
 /**
- * check the connections of the network equations
+ * establish the connections of the network equations
  *
  * @param symrec**:     pointer to the instance table
  * @param ast_node*:    pointer to the ast node
  * */
-void connection_check( symrec**, ast_node* );
+void connect( symrec**, ast_node* );
 
 /**
- * check the port connections. This function establishes the port connections
+ * establish the port connections. This function establishes the port connections
  * and adds the corresponding edges to the port connection graph
  *
  * @param symrec**:     pointer to the symbol table
@@ -97,13 +89,13 @@ void connection_check( symrec**, ast_node* );
  * @param ast_node*:    pointer to the second ast node
  * @param bool:         flag indicating if side ports are checked
  * */
-void connection_check_port( symrec**, ast_node*, ast_node*, bool );
+void connect_port( symrec**, ast_node*, ast_node*, bool );
 
 /**
- * check the side port connections
+ * connect the side ports
  *
  * */
-void connection_check_sport( symrec**, ast_node*, int );
+void connect_sport( symrec*, ast_node* );
 
 /**
  * check whether the given identificator is in the symbol table.
@@ -129,9 +121,16 @@ void id_check( symrec**, symrec**, ast_node* );
 void* id_install( symrec**, ast_node*, bool );
 
 /**
+ * checks the connect construct and establishes the corresponding side port
+ * connections and copy synchronizers
  *
+ * @param symrec**:     pointer to the instance table
+ * @param ast_node*:    pointer to the ast node
+ * @param ast_node*:    prapagate the connect id ast node internally
+ * @return void*:
+ *      the return value is used to propagate information backward
  * */
-void* inst_check( symrec**, symrec**, ast_node* );
+void* inst_check( symrec**, ast_node*, ast_node* );
 
 /**
  * Get an instance from the instance table.

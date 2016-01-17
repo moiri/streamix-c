@@ -38,6 +38,8 @@ void context_check( ast_node* ast ) {
     id_install( &symtab, ast, false );
     __scope = 0;
     id_check( &symtab, &insttab, ast );
+    __scope = 0;
+    inst_check( &insttab, ast, NULL );
 
 #ifdef DOT_CON
     fclose( __n_con_graph );
@@ -48,7 +50,7 @@ void context_check( ast_node* ast ) {
 }
 
 /******************************************************************************/
-void connection_check( symrec** insttab, ast_node* ast ) {
+void connect( symrec** insttab, ast_node* ast ) {
     ast_list* i_ptr;
     ast_list* j_ptr;
     ast_node* op_left;
@@ -84,7 +86,7 @@ void connection_check( symrec** insttab, ast_node* ast ) {
             graph_add_edge( __n_con_graph, op_left->id, op_right->id, NULL,
                     false );
 #endif // DOT_CON
-            connection_check_port( insttab, op_left, op_right, false );
+            connect_port( insttab, op_left, op_right, false );
         }
         while (j_ptr != 0);
     }
@@ -92,7 +94,7 @@ void connection_check( symrec** insttab, ast_node* ast ) {
 }
 
 /******************************************************************************/
-void connection_check_port( symrec** insttab, ast_node* net1, ast_node* net2,
+void connect_port( symrec** insttab, ast_node* net1, ast_node* net2,
         bool side ) {
 #ifdef DOT_CON
     int id_node_start, id_node_end;
@@ -142,7 +144,6 @@ void connection_check_port( symrec** insttab, ast_node* net1, ast_node* net2,
                 /* printf( " %s.%s connects with %s.%s\n", */
                 /*         op_left->name, ports_left->rec->name, */
                 /*         op_right->name, ports_right->rec->name ); */
-                if( side ) printf( "side\n" );
                 ports_left->is_connected = true;
                 ports_right->is_connected = true;
 #ifdef DOT_CON
@@ -163,42 +164,34 @@ void connection_check_port( symrec** insttab, ast_node* net1, ast_node* net2,
 }
 
 /******************************************************************************/
-void connection_check_sport( symrec** insttab, ast_node* ast,
-        int connect_cnt ) {
-    symrec* net = NULL;
-    ast_list* list = ast->connect.connects->ast_list;
-    ast_node* net1 = NULL;
-    ast_node* net2 = NULL;
-    if( connect_cnt <= 1 ) {
-        // ERROR: too few connecting nets
-        sprintf( __error_msg, ERROR_UNDEFINED_ID, ast->connect.id->ast_id.line,
-                ast->connect.id->ast_id.name );
-        yyerror( __error_msg );
-        return;
-    }
-    else if( connect_cnt == 2 ) {
-        // two nets to connect by a sideport
-        // this is the wrong id! I need to get the id of the instances in
-        // this scope! This could be more than the count indicates...
-        net1 = list->ast_node;
-        list = list->next;
-        net2 = list->ast_node;
-        // net1 and net2 are to be connected by side ports
-        connection_check_port( insttab, net1, net2, true );
-    }
-    else {
-        // multiple nets to connect by a sideport with the use of a
-        // copy synchronizer
-        while( list != NULL ) {
-            net = instrec_get( insttab, list->ast_node->ast_id.name,
-                    *utarray_back( __scope_stack ), list->ast_node->id );
-            if ( net == NULL ) continue;
-            while( ( ( struct inst_attr* ) net->attr )->ports != NULL ) {
-
+void connect_sport( symrec* net, ast_node* ast_con_id ) {
+#ifdef DOT_CON
+    int id_node_start, id_node_end;
+#endif // DOT_CON
+    symrec_list* ports;
+    port_attr* p_attr;
+    ports = ( ( struct inst_attr* ) net->attr )->ports;
+    while ( ports != NULL ) {
+        p_attr = ( struct port_attr* )ports->rec->attr;
+        if( // port is not yet connected
+            !ports->is_connected
+            // port has the same name as the connect declaration
+            && ( strcmp( ports->rec->name, ast_con_id->ast_id.name ) == 0 )
+            // port is a side port
+            && ( p_attr->collection == VAL_SIDE )
+        ) {
+            ports->is_connected = true;
+            // draw a side port connection
+            id_node_start = ( ( struct inst_attr* )net->attr )->id;
+            id_node_end = ast_con_id->id;
+            if( p_attr->mode == VAL_IN ) {
+                id_node_end = ( ( struct inst_attr* )net->attr )->id;
+                id_node_start = ast_con_id->id;
             }
-
-            list = list->next;
+            graph_add_edge( __p_con_graph, id_node_start, id_node_end,
+                    ports->rec->name, true );
         }
+        ports = ports->next;
     }
 }
 
@@ -310,7 +303,7 @@ void id_check( symrec** symtab, symrec** insttab, ast_node* ast ) {
             graph_finish_subgraph( __n_con_graph );
             graph_finish_subgraph( __p_con_graph );
 #endif // DOT_CON && DOT_STRUCT
-            connection_check( insttab, ast );
+            connect( insttab, ast );
             break;
         case AST_ID:
             // check the context of the symbol
@@ -446,40 +439,37 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
 }
 
 /******************************************************************************/
-void* inst_check( symrec** symtab, symrec** insttab, ast_node* ast ) {
+void* inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
     ast_list* list = NULL;
-    int connect_cnt = 0;
+    symrec* net = NULL;
+    int inst_cnt = 0;
+    int symb_cnt = 0;
     void* res = NULL;
 
     switch( ast->node_type ) {
         case AST_CONNECT:
-            connect_cnt = *( int* )inst_check( symtab, insttab,
-                    ast->connect.connects );
-            /* printf( "connection_cnt:%d\n", connect_cnt ); */
-            /* if( connect_cnt > 2 ) { */
-            /*     // create a copy synchronizer */
-            /*     rec = ( symrec* )malloc( sizeof( symrec ) ); */
-            /*     rec->scope = *utarray_back( __scope_stack ); */
-            /*     rec->type = VAL_COPY; */
-            /*     rec->name = NULL; */
-            /*     rec->attr = NULL; */
-            /*     instrec_put( insttab, ast->id, rec ); */
-            /* } */
-            /* connection_check_sport( insttab, ast, connect_cnt ); */
+#ifdef DOT_CON
+            // create a copy synchroniyer for each connect instruction
+            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_CONNECT );
+            graph_add_node( __p_con_graph, ast->connect.id->id, "+",
+                    SHAPE_CIRCLE );
+#endif // DOT_CON
+            inst_check( insttab, ast->connect.connects, ast->connect.id );
             break;
         case AST_CONNECTS:
             list = ast->ast_list;
             while( list != NULL ) {
-                inst_check( symtab, insttab, list->ast_node );
-                connect_cnt++;
+                symb_cnt++;
+                inst_cnt += *( int *)inst_check( insttab, list->ast_node,
+                        ast_con_id );
                 list = list->next;
             }
-            res = (void*)&connect_cnt;
             break;
         case AST_STMTS:
             list = ast->ast_list;
             while( list != NULL ) {
-                inst_check( symtab, insttab, list->ast_node );
+                inst_check( insttab, list->ast_node, ast_con_id );
                 list = list->next;
             }
             break;
@@ -489,8 +479,20 @@ void* inst_check( symrec** symtab, symrec** insttab, ast_node* ast ) {
         case AST_WRAP:
             __scope++;
             utarray_push_back( __scope_stack, &__scope );
-            inst_check( symtab, insttab, ast->wrap.stmts );
+            inst_check( insttab, ast->wrap.stmts, ast_con_id );
             utarray_pop_back( __scope_stack );
+            break;
+        case AST_ID:
+            // the IDs of all the instances connect referres to is unknown
+            net = instrec_get( insttab, ast->ast_id.name,
+                    *utarray_back( __scope_stack ), -1 );
+            while( net != NULL ) {
+                // create a side port connection to the copy synchronizer
+                connect_sport( net, ast_con_id );
+                inst_cnt++;
+                net = net->next;
+            }
+            res = (void*)&inst_cnt;
             break;
         default:
             ;

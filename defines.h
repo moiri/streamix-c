@@ -42,6 +42,7 @@
 #define SHAPE_BOX       "box"
 #define SHAPE_ELLIPSE   "ellipse"
 #define SHAPE_OCTAGON   "octagon"
+#define SHAPE_CIRCLE    "circle"
 
 #define STYLE_DEFAULT       0
 #define STYLE_N_CON_GRAPH   1
@@ -55,6 +56,7 @@
 #define FLAG_WRAP       'w'
 #define FLAG_WRAP_END   'W'
 #define FLAG_NET        'n'
+#define FLAG_CONNECT    'c'
 
 #define MAX_STACK_SIZE  100
 

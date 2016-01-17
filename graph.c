@@ -216,7 +216,7 @@ void graph_add_edge ( FILE* graph, int start, int end, char* label, bool side ) 
         fprintf( graph, "[xlabel=\"%s\", fontsize=10]", label );
 #else
     if( side )
-        fprintf( graph, "[color=navy]", label );
+        fprintf( graph, "[color=navy]" );
 #endif // DOT_EDGE_LABEL
     fprintf( graph, ";\n" );
 }
@@ -278,6 +278,7 @@ void graph_fix_dot( char* t_path, char* r_path ) {
                     case FLAG_WRAP_END:
                     case FLAG_STMTS_END:
                     case FLAG_NET:
+                    case FLAG_CONNECT:
                         if( scope != last_scope ) continue;
                         if( flag != next_flag ) continue;
                         copy = true;
@@ -304,8 +305,12 @@ void graph_fix_dot( char* t_path, char* r_path ) {
                 iteration_cnt++;
                 break;
             case FLAG_NET:
-                // need to close wrapper
+                // add side port connections
                 iteration_cnt = 0;
+                next_flag = FLAG_CONNECT;
+                break;
+            case FLAG_CONNECT:
+                // need to close wrapper
                 next_flag = FLAG_WRAP_END;
                 break;
             case FLAG_WRAP_END:
