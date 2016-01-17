@@ -347,7 +347,8 @@ void graph_init( FILE* graph, int style ) {
 #ifdef DOT_EDGE_LABEL
             fprintf(graph, "\tranksep=0.75;\n");
 #endif // DOT_EDGE_LABEL
-            fprintf(graph, "\tsplines=false;\n");
+            // caused sideprts and copy synchrniyers to behave strange
+            /* fprintf(graph, "\tsplines=false;\n"); */
             break;
         default:
             ;
