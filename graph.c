@@ -272,7 +272,11 @@ void graph_fix_dot( char* t_path, char* r_path ) {
                     case FLAG_WRAP:
                         if( scope != last_scope ) continue;
                         if( flag != next_flag ) continue;
+#ifdef DOT_SYNC_FIRST
+                        next_flag = FLAG_CONNECT;
+#else // DOT_SYNC_FIRST
                         next_flag = FLAG_NET;
+#endif // DOT_SYNC_FIRST
                         copy = true;
                         break;
                     case FLAG_WRAP_END:
@@ -301,17 +305,29 @@ void graph_fix_dot( char* t_path, char* r_path ) {
                 // no wrapper in this scope -> copy nets
                 // because the wrap appears BEFORE the stmts we need to iterate
                 // twice to make sure to get the wrap statements
+#ifdef DOT_SYNC_FIRST
+                if( iteration_cnt > 0 ) next_flag = FLAG_CONNECT;
+#else // DOT_SYNC_FIRST
                 if( iteration_cnt > 0 ) next_flag = FLAG_NET;
+#endif // DOT_SYNC_FIRST
                 iteration_cnt++;
                 break;
             case FLAG_NET:
                 // add side port connections
                 iteration_cnt = 0;
+#ifdef DOT_SYNC_FIRST
+                next_flag = FLAG_WRAP_END;
+#else // DOT_SYNC_FIRST
                 next_flag = FLAG_CONNECT;
+#endif // DOT_SYNC_FIRST
                 break;
             case FLAG_CONNECT:
                 // need to close wrapper
+#ifdef DOT_SYNC_FIRST
+                next_flag = FLAG_NET;
+#else // DOT_SYNC_FIRST
                 next_flag = FLAG_WRAP_END;
+#endif // DOT_SYNC_FIRST
                 break;
             case FLAG_WRAP_END:
                 // need to close stmts

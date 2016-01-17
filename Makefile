@@ -23,6 +23,7 @@ DOT_FLAGS += -DDOT_STRUCT     # force a structure in NW connections
 DOT_FLAGS += -DDOT_COLOR      # colorize the structure (no effect if DOT_STRUCT
                               # is undefined)
 DOT_FLAGS += -DDOT_EDGE_LABEL # show labels on edges
+DOT_FLAGS += -DDOT_SYNC_FIRST # position the syncroniyers before the nets
 
 TEST_PATH = test
 TEST_FILE = cpa.test
