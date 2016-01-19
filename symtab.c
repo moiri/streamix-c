@@ -49,7 +49,7 @@ void context_check( ast_node* ast ) {
 }
 
 /******************************************************************************/
-void connect( symrec** insttab, ast_node* ast ) {
+void check_connection( symrec** insttab, ast_node* ast, bool connect ) {
     ast_list* i_ptr;
     ast_list* j_ptr;
     ast_node* op_left;
@@ -82,10 +82,10 @@ void connect( symrec** insttab, ast_node* ast ) {
             /* printf( "'%s' conncets with '%s'\n", op_left->ast_id.name, */
             /*         op_right->ast_id.name ); */
 #ifdef DOT_CON
-            graph_add_edge( __n_con_graph, op_left->id, op_right->id, NULL,
-                    false );
+            if( connect ) graph_add_edge( __n_con_graph, op_left->id,
+                    op_right->id, NULL, false );
 #endif // DOT_CON
-            connect_port( insttab, op_left, op_right );
+            check_port_connection( insttab, op_left, op_right, connect );
         }
         while (j_ptr != 0);
     }
@@ -93,10 +93,73 @@ void connect( symrec** insttab, ast_node* ast ) {
 }
 
 /******************************************************************************/
-void connect_port( symrec** insttab, ast_node* net1, ast_node* net2 ) {
+void connect_port( symrec** insttab, symrec_list* ports_left,
+        symrec_list* ports_right, ast_node* net_left, ast_node* net_right ) {
 #ifdef DOT_CON
-    int id_node_start, id_node_end;
+    int id_node_start, id_node_end, id_temp;
 #endif // DOT_CON
+    /* printf( " %s.%s connects with %s.%s\n", net_left->ast_id.name, */
+    /*         ports_left->rec->name, net_right->ast_id.name, */
+    /*         ports_right->rec->name ); */
+    if( ( ports_left->connect_cnt > 1 )
+            && ( ports_left->cp_sync == NULL ) )
+        spawn_synchronizer( insttab, ports_left, net_left->id );
+    if( ( ports_right->connect_cnt > 1 )
+            && ( ports_right->cp_sync == NULL ) )
+        spawn_synchronizer( insttab, ports_right, net_right-> id );
+
+#ifdef DOT_CON
+    if( ports_left->cp_sync != NULL ) {
+        id_node_start = ( ( struct inst_attr* )ports_left->cp_sync->attr )->id;
+    }
+    else id_node_start = net_left->id;
+    if( ports_right->cp_sync != NULL ) {
+        id_node_end = ( ( struct inst_attr* )ports_right->cp_sync->attr )->id;
+    }
+    else id_node_end = net_right->id;
+
+    if( ( ( struct port_attr* )ports_left->rec->attr )->mode == VAL_IN ) {
+        id_temp = id_node_start;
+        id_node_start = id_node_end;
+        id_node_end = id_temp;
+    }
+    graph_add_edge( __p_con_graph, id_node_start, id_node_end,
+            ports_left->rec->name, false );
+#endif // DOT_CON
+}
+
+/******************************************************************************/
+void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id ) {
+#ifdef DOT_CON
+    int id_node_start, id_node_end, id_temp;
+#endif // DOT_CON
+    char name[10];
+    // this port connects to multiple other ports -> a copy synchronizer
+    // is needed
+    __node_id++;
+    sprintf( name, "%d", __node_id );
+    port->cp_sync = instrec_put( insttab, name, *utarray_back( __scope_stack ),
+            ID_CPSYNC, __node_id, NULL );
+#ifdef DOT_CON
+    // create a copy synchroniyer for each connect instruction
+    graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+            FLAG_NET );
+    graph_add_node( __p_con_graph, __node_id, "+", SHAPE_CIRCLE );
+    id_node_start = __node_id;
+    id_node_end = net_id;
+    if( ( ( struct port_attr* )port->rec->attr )->mode == VAL_OUT ) {
+        id_temp = id_node_start;
+        id_node_start = id_node_end;
+        id_node_end = id_temp;
+    }
+    graph_add_edge( __p_con_graph, id_node_start, id_node_end,
+            port->rec->name, false );
+#endif // DOT_CON
+}
+
+/******************************************************************************/
+void check_port_connection( symrec** insttab, ast_node* net1, ast_node* net2,
+        bool connect ) {
     symrec* op_left = instrec_get( insttab, net1->ast_id.name,
             *utarray_back( __scope_stack ), net1->id );
     if ( op_left == NULL ) return;
@@ -122,8 +185,6 @@ void connect_port( symrec** insttab, ast_node* net1, ast_node* net2 ) {
             p_attr_right = ( struct port_attr* )ports_right->rec->attr;
             if( // ports have the same name
                 ( strcmp( ports_left->rec->name, ports_right->rec->name ) == 0 )
-                // ports are not yet connected
-                && !ports_left->is_connected && !ports_right->is_connected
                 // the left port is in DS and the right is in US
                 && ( ( ( p_attr_left->collection == VAL_DOWN )
                         && ( p_attr_right->collection == VAL_UP ) )
@@ -131,28 +192,18 @@ void connect_port( symrec** insttab, ast_node* net1, ast_node* net2 ) {
                     || ( ( p_attr_left->collection == VAL_NONE )
                             && ( p_attr_right->collection == VAL_NONE ) ) )
               ) {
-                /* printf( " %s.%s connects with %s.%s\n", */
-                /*         op_left->name, ports_left->rec->name, */
-                /*         op_right->name, ports_right->rec->name ); */
-                if( p_attr_left->mode == p_attr_right->mode ) {
+                if( connect ) {
+                    connect_port( insttab, ports_left, ports_right, net1, net2 );
+                }
+                else if( p_attr_left->mode == p_attr_right->mode ) {
                     // same name and same mode -> cannot connect
                     sprintf( __error_msg, ERROR_BAD_MODE, ERR_ERROR,
                             ports_right->rec->name, op_right->name );
                     report_yyerror( __error_msg, ports_right->rec->line );
                 }
                 else {
-                    ports_left->is_connected = true;
-                    ports_right->is_connected = true;
-#ifdef DOT_CON
-                    id_node_start = net1->id;
-                    id_node_end = net2->id;
-                    if( p_attr_left->mode == VAL_IN ) {
-                        id_node_start = net2->id;
-                        id_node_end = net1->id;
-                    }
-                    graph_add_edge( __p_con_graph, id_node_start, id_node_end,
-                            ports_left->rec->name, false );
-#endif // DOT_CON
+                    ports_left->connect_cnt++;
+                    ports_right->connect_cnt++;
                 }
             }
             ports_right = ports_right->next;
@@ -171,14 +222,14 @@ void connect_sport( symrec* net, ast_node* ast_con_id ) {
     ports = ( ( struct inst_attr* ) net->attr )->ports;
     while ( ports != NULL ) {
         p_attr = ( struct port_attr* )ports->rec->attr;
-        if( // port is not yet connected
-            !ports->is_connected
-            // port has the same name as the connect declaration
-            && ( strcmp( ports->rec->name, ast_con_id->ast_id.name ) == 0 )
+        if( // port has the same name as the connect declaration
+            ( strcmp( ports->rec->name, ast_con_id->ast_id.name ) == 0 )
+            // port is not yet connected
+            && ( ports->connect_cnt == 0 )
             // port is a side port
             && ( p_attr->collection == VAL_SIDE )
         ) {
-            ports->is_connected = true;
+            ports->connect_cnt++;
             // draw a side port connection
             id_node_start = ( ( struct inst_attr* )net->attr )->id;
             id_node_end = ast_con_id->id;
@@ -296,6 +347,8 @@ void id_check( symrec** symtab, symrec** insttab, ast_node* ast ) {
 #endif // DOT_CON && DOT_STRUCT
             id_check( symtab, insttab, ast->op.left );
             id_check( symtab, insttab, ast->op.right );
+            check_connection( insttab, ast, false );
+            check_connection( insttab, ast, true );
 #if defined(DOT_CON) && defined(DOT_STRUCT)
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
                     FLAG_NET );
@@ -304,7 +357,6 @@ void id_check( symrec** symtab, symrec** insttab, ast_node* ast ) {
             graph_finish_subgraph( __n_con_graph );
             graph_finish_subgraph( __p_con_graph );
 #endif // DOT_CON && DOT_STRUCT
-            connect( insttab, ast );
             break;
         case AST_ID:
             // check the context of the symbol
@@ -553,11 +605,14 @@ symrec* instrec_put( symrec** insttab, char* name, int scope, int type, int id,
     attr->id = id;
     attr->net = rec;
     // copy portlist from symtab to insttab
-    sym_ports = ( ( struct net_attr* )rec->attr )->ports;
+    if( rec != NULL )
+        sym_ports = ( ( struct net_attr* )rec->attr )->ports;
     while( sym_ports != NULL  ) {
         inst_ports = ( struct symrec_list* )malloc( sizeof( symrec_list ) );
         inst_ports->rec = sym_ports->rec;
         inst_ports->next = port_list;
+        inst_ports->connect_cnt = 0;
+        inst_ports->cp_sync = NULL;
         port_list = inst_ports;
         sym_ports = sym_ports->next;
     }

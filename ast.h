@@ -27,7 +27,8 @@ typedef enum {
     ID_PORT,
     ID_IPORT,
     ID_CNET,
-    ID_CPORT
+    ID_CPORT,
+    ID_CPSYNC
 } id_type;
 typedef enum {
     ATTR_MODE,

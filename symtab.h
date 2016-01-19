@@ -38,7 +38,8 @@ struct symrec {
 // linked list to associate ports to nets
 struct symrec_list {
     symrec*         rec;            // pointer to port in symbol table
-    bool            is_connected;   // flag to control the port connections
+    symrec*         cp_sync;        // pointer to copy synchronizer in instance table
+    int             connect_cnt;    // counter to control the port connections
     symrec_list*    next;           // next element in the list
 };
 // attributes of a net (can also be a box)
@@ -79,7 +80,7 @@ void context_check( ast_node* );
  * @param symrec**:     pointer to the instance table
  * @param ast_node*:    pointer to the ast node
  * */
-void connect( symrec**, ast_node* );
+void check_connection( symrec**, ast_node*, bool );
 
 /**
  * establish the port connections. This function establishes the port connections
@@ -89,7 +90,19 @@ void connect( symrec**, ast_node* );
  * @param ast_node*:    pointer to the first net operand
  * @param ast_node*:    pointer to the second ast node
  * */
-void connect_port( symrec**, ast_node*, ast_node* );
+void check_port_connection( symrec**, ast_node*, ast_node*, bool );
+
+/**
+ * add a copy synchronizer instance to the instance table
+ *
+ * */
+void spawn_synchronizer( symrec**, symrec_list*, int );
+
+/**
+ * connect the ports
+ *
+ * */
+void connect_port( symrec**, symrec_list*, symrec_list*, ast_node*, ast_node* );
 
 /**
  * connect the side ports
