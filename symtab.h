@@ -159,6 +159,11 @@ symrec* instrec_get( symrec**, char*, int, int );
 symrec* instrec_put( symrec**, char*, int, int, int, symrec* );
 
 /**
+ *
+ * */
+void report_yyerror( const char*, int );
+
+/**
  * Get an identifier from the symbol table.
  *
  * @param symrec**:     pointer to the hashtable

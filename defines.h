@@ -65,9 +65,12 @@
 #define MAX_STACK_SIZE  100
 
 // errors
-#define ERROR_UNDEFINED_ID  "error: use of undeclared identifier '%s'"
-#define ERROR_DUPLICATE_ID  "error: redefinition of '%s'"
-#define ERROR_TOO_FEW_CONNECTS  "error: too few connecting nets spezified in '%s'"
-#define ERROR_BAD_MODE  "error: mode of port '%s' in '%s' does not match connection"
+#define ERR_WARNING "warning"
+#define ERR_ERROR   "error"
+
+#define ERROR_UNDEFINED_ID      "%s: use of undeclared identifier '%s'"
+#define ERROR_DUPLICATE_ID      "%s: redefinition of '%s'"
+#define ERROR_TOO_FEW_CONNECTS  "%s: too few connecting nets spezified in '%s'"
+#define ERROR_BAD_MODE          "%s: mode of port '%s' in '%s' does not match connection"
 
 #endif /* DEFINES_H */

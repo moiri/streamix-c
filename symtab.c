@@ -140,11 +140,9 @@ void connect_port( symrec** insttab, ast_node* net1, ast_node* net2 ) {
                 /*         op_right->name, ports_right->rec->name ); */
                 if( p_attr_left->mode == p_attr_right->mode ) {
                     // same name and same mode -> cannot connect
-                    yylineno = ports_right->rec->line;
-                    yynerrs++;
-                    sprintf( __error_msg, ERROR_BAD_MODE,
+                    sprintf( __error_msg, ERROR_BAD_MODE, ERR_ERROR,
                             ports_right->rec->name, op_right->name );
-                    yyerror( __error_msg );
+                    report_yyerror( __error_msg, ports_right->rec->line );
                 }
                 else {
                     ports_left->is_connected = true;
@@ -601,6 +599,13 @@ symrec* instrec_put( symrec** insttab, char* name, int scope, int type, int id,
 }
 
 /******************************************************************************/
+void report_yyerror( const char* msg, int line ) {
+    yylineno = line;
+    yynerrs++;
+    yyerror( msg );
+}
+
+/******************************************************************************/
 symrec* symrec_get( symrec** symtab, char *name, int line ) {
     int* p = NULL;
     symrec* item = NULL;
@@ -623,9 +628,8 @@ symrec* symrec_get( symrec** symtab, char *name, int line ) {
         if( item != NULL ) break; // found a match
     }
     if( item == NULL ) {
-        sprintf( __error_msg, ERROR_UNDEFINED_ID, name );
-        yylineno = line;
-        yyerror( __error_msg );
+        sprintf( __error_msg, ERROR_UNDEFINED_ID, ERR_ERROR, name );
+        report_yyerror( __error_msg, line );
     }
     return item;
 }
@@ -699,9 +703,8 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
         free( new_item->name );
         free( new_item->key );
         free( new_item );
-        sprintf( __error_msg, ERROR_DUPLICATE_ID, name );
-        yylineno = line;
-        yyerror( __error_msg );
+        sprintf( __error_msg, ERROR_DUPLICATE_ID, ERR_ERROR, name );
+        report_yyerror( __error_msg, line );
         item = NULL;
     }
     return item;
