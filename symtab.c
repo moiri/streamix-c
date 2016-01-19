@@ -395,15 +395,12 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
 }
 
 /******************************************************************************/
-void* inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
+void inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
     ast_list* list = NULL;
     symrec* net = NULL;
-    int inst_cnt = 0;
-    int symb_cnt = 0;
-    void* res = NULL;
     static int _scope = 0;
 
-    if( ast == NULL ) return NULL;
+    if( ast == NULL ) return;
 
     switch( ast->node_type ) {
         case AST_CONNECT:
@@ -419,9 +416,7 @@ void* inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
         case AST_CONNECTS:
             list = ast->ast_list;
             while( list != NULL ) {
-                symb_cnt++;
-                inst_cnt += *( int *)inst_check( insttab, list->ast_node,
-                        ast_con_id );
+                inst_check( insttab, list->ast_node, ast_con_id );
                 list = list->next;
             }
             break;
@@ -531,10 +526,8 @@ void* inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
                 while( net != NULL ) {
                     // create a side port connection to the copy synchronizer
                     connect_sport( net, ast_con_id );
-                    inst_cnt++;
                     net = net->next;
                 }
-                res = (void*)&inst_cnt;
             }
 #ifdef DOT_CON
             else if( ast->ast_id.type == ID_NET && net != NULL ) {
@@ -552,7 +545,6 @@ void* inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
         default:
             ;
     }
-    return res;
 }
 
 /******************************************************************************/

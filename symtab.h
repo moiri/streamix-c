@@ -146,10 +146,8 @@ void* id_install( symrec**, ast_node*, bool );
  * @param symrec**:     pointer to the instance table
  * @param ast_node*:    pointer to the ast node
  * @param ast_node*:    prapagate the connect id ast node internally
- * @return void*:
- *      the return value is used to propagate information backward
  * */
-void* inst_check( symrec**, ast_node*, ast_node* );
+void inst_check( symrec**, ast_node*, ast_node* );
 
 /**
  * Get an instance from the instance table.
