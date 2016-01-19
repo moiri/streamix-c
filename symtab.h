@@ -68,19 +68,15 @@ struct inst_attr {
 };
 
 /**
- * Check the context of all identifiers in the program
- *
- * @param ast_node*:    pointer to the ast node
- * */
-void context_check( ast_node* );
-
-/**
  * establish the connections of the network equations
  *
  * @param symrec**:     pointer to the instance table
  * @param ast_node*:    pointer to the ast node
+ * @param bool:         flag to indicate wheather it is a check run (false) or
+ *                      whether copy sinchronizers are spawned and connections are
+ *                      drawn
  * */
-void check_connection( symrec**, ast_node*, bool );
+void connection_check( symrec**, ast_node*, bool );
 
 /**
  * establish the port connections. This function establishes the port connections
@@ -89,26 +85,36 @@ void check_connection( symrec**, ast_node*, bool );
  * @param symrec**:     pointer to the symbol table
  * @param ast_node*:    pointer to the first net operand
  * @param ast_node*:    pointer to the second ast node
+ * @param bool:         flag to indicate wheather it is a check run (false) or
+ *                      whether copy sinchronizers are spawned and connections are
+ *                      drawn
  * */
-void check_port_connection( symrec**, ast_node*, ast_node*, bool );
+void connection_check_port( symrec**, ast_node*, ast_node*, bool );
 
 /**
- * add a copy synchronizer instance to the instance table
- *
- * */
-void spawn_synchronizer( symrec**, symrec_list*, int );
-
-/**
- * connect the ports
- *
+ * spawn copy synchronizers if necessary and connect the ports of a serial connection
+ * @param symrec**:     pointer to the instance table
+ * @param symrec_list*: pointer to the port of the left operand
+ * @param symrec_list*: pointer to the port of the right operand
+ * @param ast_node*:    pointer to the left operand
+ * @param ast_node*:    pointer to the right operand
  * */
 void connect_port( symrec**, symrec_list*, symrec_list*, ast_node*, ast_node* );
 
 /**
- * connect the side ports
+ * connect the side ports forced by a connect insrtuction
  *
+ * @symrec* net:    pointer to a net instance
+ * @ast_node*:      pointer to the ast node of the connect instruction
  * */
 void connect_sport( symrec*, ast_node* );
+
+/**
+ * Check the context of all identifiers in the program
+ *
+ * @param ast_node*:    pointer to the ast node
+ * */
+void context_check( ast_node* );
 
 /**
  * check whether the given identificator is in the symbol table.
@@ -178,6 +184,15 @@ symrec* instrec_put( symrec**, char*, int, int, int, symrec* );
  * @param int:          line number
  * */
 void report_yyerror( const char*, int );
+
+/**
+ * add a copy synchronizer instance to the instance table
+ *
+ * @param symrec**:     pointer to the instance table
+ * @param symrec_list*: pointer to the port, assoziated with the copy synchronizer
+ * @param int:          id of the net instance the port belongs to
+ * */
+void spawn_synchronizer( symrec**, symrec_list*, int );
 
 /**
  * Get an identifier from the symbol table.
