@@ -123,17 +123,16 @@ void connect_port( symrec** insttab, ast_node* net1, ast_node* net2 ) {
         while (ports_right != NULL ) {
             /* printf( " %s.%s\n", op_right->name, ports_right->rec->name ); */
             p_attr_right = ( struct port_attr* )ports_right->rec->attr;
-            if( // ports are not yet connected
-                    !ports_left->is_connected && !ports_right->is_connected
-                // ports have the same name
-                    && ( strcmp( ports_left->rec->name,
-                            ports_right->rec->name ) == 0 )
+            if( // ports have the same name
+                ( strcmp( ports_left->rec->name, ports_right->rec->name ) == 0 )
+                // ports are not yet connected
+                && !ports_left->is_connected && !ports_right->is_connected
                 // the left port is in DS and the right is in US
-                    && ( ( ( p_attr_left->collection == VAL_DOWN )
-                                && ( p_attr_right->collection == VAL_UP ) )
+                && ( ( ( p_attr_left->collection == VAL_DOWN )
+                        && ( p_attr_right->collection == VAL_UP ) )
                     // or they are both in no collection
-                            || ( ( p_attr_left->collection == VAL_NONE )
-                                && ( p_attr_right->collection == VAL_NONE ) ) )
+                    || ( ( p_attr_left->collection == VAL_NONE )
+                            && ( p_attr_right->collection == VAL_NONE ) ) )
               ) {
                 /* printf( " %s.%s connects with %s.%s\n", */
                 /*         op_left->name, ports_left->rec->name, */

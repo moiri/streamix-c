@@ -159,7 +159,10 @@ symrec* instrec_get( symrec**, char*, int, int );
 symrec* instrec_put( symrec**, char*, int, int, int, symrec* );
 
 /**
+ * Helper function to report an error with the yyerror function
  *
+ * @param const char*:  error string
+ * @param int:          line number
  * */
 void report_yyerror( const char*, int );
 
