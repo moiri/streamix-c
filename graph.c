@@ -192,7 +192,8 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
             // coupling
             if (ptr->port.coupling != 0) {
                 draw_ast_graph_step( graph, ptr->port.coupling );
-                graph_add_edge( graph, ptr->id, ptr->port.coupling->id, NULL,                        false );
+                graph_add_edge( graph, ptr->id, ptr->port.coupling->id, NULL,
+                        false );
             }
             break;
         default:
@@ -211,12 +212,13 @@ void graph_add_edge ( FILE* graph, int start, int end, char* label, bool side ) 
     fprintf(graph, "\tid%d->id%d", start, end);
 #ifdef DOT_EDGE_LABEL
     if( ( label != NULL ) && side )
-        fprintf( graph, "[xlabel=\"%s\", fontsize=10, color=navy]", label );
+        fprintf( graph, "[xlabel=\"%s\", fontsize=10, color=%s]", label,
+                COLOR_SIDE );
     else if( ( label != NULL ) && !side )
         fprintf( graph, "[xlabel=\"%s\", fontsize=10]", label );
 #else
     if( side )
-        fprintf( graph, "[color=navy]" );
+        fprintf( graph, "[color=%s]", COLOR_SIDE );
 #endif // DOT_EDGE_LABEL
     fprintf( graph, ";\n" );
 }
@@ -236,6 +238,7 @@ void graph_finish_subgraph (FILE* graph) {
     fprintf(graph, "\t}\n");
 }
 
+/******************************************************************************/
 void graph_fix_dot( char* t_path, char* r_path ) {
     FILE* r_graph;
     FILE* t_graph;
@@ -379,7 +382,7 @@ void graph_init_subgraph( FILE* graph, char* name, int style ) {
             fprintf( graph, "\tlabel=\"%s\";\n", name );
             fprintf( graph, "\tstyle=dotted;\n" );
 #ifdef DOT_COLOR
-            fprintf( graph, "\tcolor=chartreuse3;\n" );
+            fprintf( graph, "\tcolor=%s;\n", COLOR_PARALLEL );
 #else
             fprintf( graph, "\tcolor=invis;\n" );
 #endif // DOT_CON
@@ -389,7 +392,7 @@ void graph_init_subgraph( FILE* graph, char* name, int style ) {
             fprintf( graph, "\tlabel=\"%s\";\n", name );
             fprintf( graph, "\tstyle=dashed;\n" );
 #ifdef DOT_COLOR
-            fprintf( graph, "\tcolor=cadetblue3;\n" );
+            fprintf( graph, "\tcolor=%s;\n", COLOR_SERIAL );
 #else
             fprintf( graph, "\tcolor=invis;\n" );
 #endif // DOT_CON

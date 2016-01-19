@@ -44,6 +44,10 @@
 #define SHAPE_OCTAGON   "octagon"
 #define SHAPE_CIRCLE    "circle"
 
+#define COLOR_SIDE      "goldenrod3"
+#define COLOR_PARALLEL  "chartreuse3"
+#define COLOR_SERIAL    "cadetblue3"
+
 #define STYLE_DEFAULT       0
 #define STYLE_N_CON_GRAPH   1
 #define STYLE_P_CON_GRAPH   2
