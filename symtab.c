@@ -108,7 +108,8 @@ void connection_check_port( symrec** insttab, ast_node* net1, ast_node* net2,
                 else if( p_attr_left->mode == p_attr_right->mode ) {
                     // same name and same mode -> cannot connect
                     sprintf( __error_msg, ERROR_BAD_MODE, ERR_ERROR,
-                            ports_right->rec->name, op_right->name);
+                            ports_right->rec->name, op_right->name,
+                            op_left->name, ports_left->rec->line );
                     report_yyerror( __error_msg, ports_right->rec->line );
                 }
                 else {

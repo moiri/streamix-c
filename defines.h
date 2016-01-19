@@ -71,6 +71,6 @@
 #define ERROR_UNDEFINED_ID      "%s: use of undeclared identifier '%s'"
 #define ERROR_DUPLICATE_ID      "%s: redefinition of '%s'"
 #define ERROR_TOO_FEW_CONNECTS  "%s: too few connecting nets spezified in '%s'"
-#define ERROR_BAD_MODE          "%s: mode of port '%s' in '%s' does not match connection"
+#define ERROR_BAD_MODE          "%s: conflicting modes of ports '%s' in '%s' and '%s' (line %d)"
 
 #endif /* DEFINES_H */
