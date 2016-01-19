@@ -19,9 +19,10 @@
     extern int yylex();
     extern int yyparse();
     extern FILE *yyin;
+    extern int yylineno;
+    extern char* yytext;
     void yyerror ( const char* );
     ast_node* ast;
-    int num_errors = 0;
     char* src_file_name;
     /* FILE* con_graph; */
 %}
@@ -296,7 +297,7 @@ int main( int argc, char **argv ) {
     context_check( ast );
 
     /* fclose(con_graph); */
-    if( num_errors > 0 ) printf( " Error count: %d\n", num_errors );
+    if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );
 #ifdef DOT_AST
     else draw_ast_graph( ast );
 #endif // DOT_AST
@@ -310,6 +311,8 @@ int main( int argc, char **argv ) {
  * @param: char* s:  error string
  * */
 void yyerror( const char* s ) {
-    num_errors++;
-    printf( "%s: %s\n", src_file_name, s );
+    if( strlen(yytext) == 0 )
+        printf( "%s: %d: %s\n", src_file_name, yylineno, s );
+    else
+        printf( "%s: %d: %s '%s'\n", src_file_name, yylineno, s, yytext );
 }

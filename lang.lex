@@ -15,6 +15,7 @@
 %}
 %option noinput
 %option nounput
+%option yylineno
 
 %%
     /* skip whitespaces and CR */

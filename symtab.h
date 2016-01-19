@@ -30,6 +30,7 @@ struct symrec {
     char*       name;   // name of the symbol
     int         scope;  // scope of the record
     int         type;   // VAL_NET, VAL_BOX, VAL_PORT
+    int         line;   // line position in the source file
     void*       attr;   // a struct of attributes
     symrec*     next;   // pointer to the next element (handle collisions)
     UT_hash_handle hh;  // makes this structure hashable
@@ -87,9 +88,8 @@ void connect( symrec**, ast_node* );
  * @param symrec**:     pointer to the symbol table
  * @param ast_node*:    pointer to the first net operand
  * @param ast_node*:    pointer to the second ast node
- * @param bool:         flag indicating if side ports are checked
  * */
-void connect_port( symrec**, ast_node*, ast_node*, bool );
+void connect_port( symrec**, ast_node*, ast_node* );
 
 /**
  * connect the side ports

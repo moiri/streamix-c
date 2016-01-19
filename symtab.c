@@ -9,6 +9,8 @@
 
 /* handle errors with the bison error function */
 extern void yyerror ( const char* );
+extern int yylineno;
+extern int yynerrs;
 char __error_msg[ CONST_ERROR_LEN ];
 
 /* global variables */
@@ -86,7 +88,7 @@ void connect( symrec** insttab, ast_node* ast ) {
             graph_add_edge( __n_con_graph, op_left->id, op_right->id, NULL,
                     false );
 #endif // DOT_CON
-            connect_port( insttab, op_left, op_right, false );
+            connect_port( insttab, op_left, op_right );
         }
         while (j_ptr != 0);
     }
@@ -94,8 +96,7 @@ void connect( symrec** insttab, ast_node* ast ) {
 }
 
 /******************************************************************************/
-void connect_port( symrec** insttab, ast_node* net1, ast_node* net2,
-        bool side ) {
+void connect_port( symrec** insttab, ast_node* net1, ast_node* net2 ) {
 #ifdef DOT_CON
     int id_node_start, id_node_end;
 #endif // DOT_CON
@@ -127,35 +128,38 @@ void connect_port( symrec** insttab, ast_node* net1, ast_node* net2,
                 // ports have the same name
                     && ( strcmp( ports_left->rec->name,
                             ports_right->rec->name ) == 0 )
-                // ports are of opposite mode
-                    && ( p_attr_left->mode != p_attr_right->mode )
                 // the left port is in DS and the right is in US
-                    && ( ( ( ( ( p_attr_left->collection == VAL_DOWN )
+                    && ( ( ( p_attr_left->collection == VAL_DOWN )
                                 && ( p_attr_right->collection == VAL_UP ) )
                     // or they are both in no collection
                             || ( ( p_attr_left->collection == VAL_NONE )
                                 && ( p_attr_right->collection == VAL_NONE ) ) )
-                    // and we are not considering side ports
-                        && !side )
-                    // or we are considering side ports and both potrs are SP
-                        || ( side && ( p_attr_left->collection == VAL_SIDE
-                                && p_attr_right->collection == VAL_SIDE ) ) )
-            ) {
+              ) {
                 /* printf( " %s.%s connects with %s.%s\n", */
                 /*         op_left->name, ports_left->rec->name, */
                 /*         op_right->name, ports_right->rec->name ); */
-                ports_left->is_connected = true;
-                ports_right->is_connected = true;
-#ifdef DOT_CON
-                id_node_start = net1->id;
-                id_node_end = net2->id;
-                if( p_attr_left->mode == VAL_IN ) {
-                    id_node_start = net2->id;
-                    id_node_end = net1->id;
+                if( p_attr_left->mode == p_attr_right->mode ) {
+                    // same name and same mode -> cannot connect
+                    yylineno = ports_right->rec->line;
+                    yynerrs++;
+                    sprintf( __error_msg, ERROR_BAD_MODE,
+                            ports_right->rec->name, op_right->name );
+                    yyerror( __error_msg );
                 }
-                graph_add_edge( __p_con_graph, id_node_start, id_node_end,
-                        ports_left->rec->name, side );
+                else {
+                    ports_left->is_connected = true;
+                    ports_right->is_connected = true;
+#ifdef DOT_CON
+                    id_node_start = net1->id;
+                    id_node_end = net2->id;
+                    if( p_attr_left->mode == VAL_IN ) {
+                        id_node_start = net2->id;
+                        id_node_end = net1->id;
+                    }
+                    graph_add_edge( __p_con_graph, id_node_start, id_node_end,
+                            ports_left->rec->name, false );
 #endif // DOT_CON
+                }
             }
             ports_right = ports_right->next;
         }
@@ -199,6 +203,8 @@ void connect_sport( symrec* net, ast_node* ast_con_id ) {
 void id_check( symrec** symtab, symrec** insttab, ast_node* ast ) {
     ast_list* list = NULL;
     symrec* rec = NULL;
+
+    if( ast == NULL ) return;
 
     switch( ast->node_type ) {
         case AST_CONNECT:
@@ -341,6 +347,8 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
     symrec_list* port_list = NULL;
     bool set_sync = false;
 
+    if( ast == NULL ) return NULL;
+
     switch( ast->node_type ) {
         case AST_SYNC:
             __sync_id++;
@@ -445,6 +453,8 @@ void* inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
     int inst_cnt = 0;
     int symb_cnt = 0;
     void* res = NULL;
+
+    if( ast == NULL ) return NULL;
 
     switch( ast->node_type ) {
         case AST_CONNECT:
@@ -613,7 +623,8 @@ symrec* symrec_get( symrec** symtab, char *name, int line ) {
         if( item != NULL ) break; // found a match
     }
     if( item == NULL ) {
-        sprintf( __error_msg, ERROR_UNDEFINED_ID, line, name );
+        sprintf( __error_msg, ERROR_UNDEFINED_ID, name );
+        yylineno = line;
         yyerror( __error_msg );
     }
     return item;
@@ -634,6 +645,7 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
     new_item = ( symrec* )malloc( sizeof( symrec ) );
     new_item->scope = scope;
     new_item->type = type;
+    new_item->line = line;
     new_item->key = ( char* )malloc( strlen( key ) + 1 );
     strcpy( new_item->key, key );
     new_item->attr = attr;
@@ -687,7 +699,8 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
         free( new_item->name );
         free( new_item->key );
         free( new_item );
-        sprintf( __error_msg, ERROR_DUPLICATE_ID, line, name );
+        sprintf( __error_msg, ERROR_DUPLICATE_ID, name );
+        yylineno = line;
         yyerror( __error_msg );
         item = NULL;
     }

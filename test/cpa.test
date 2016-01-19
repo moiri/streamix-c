@@ -18,8 +18,8 @@ box CPA (
     side out car_r_out
 ) on func_cpa
 
-net Car { up in car (car_l_in), up out car (car_l_out),
-        down in car (car_r_in), down out car (car_r_out) } {
+net Car { up in car_next (car_l_in), up out car_prev (car_l_out),
+        down in car_prev (car_r_in), down out car_next (car_r_out) } {
     connect dist {DS, DC}
 
     box MB (in block, out break_cmd) on func_mb

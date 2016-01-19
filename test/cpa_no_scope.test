@@ -28,8 +28,12 @@ box ABS (
     out abs
 ) on func_abs
 
-net Car { down in car (car_l_in), down out car (car_l_out),
-        up in car (car_r_in), up out car (car_r_out) } {
+net Car {
+        down out car_next (car_l_out),
+        up in car_next (car_r_in),
+        down in car_prev (car_l_in),
+        up out car_prev (car_r_out) }
+    {
     connect dist {DS, DC}
 
     ( ( ( RS | B | MB ).ABS.DC ) | DS ).CPA
