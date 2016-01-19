@@ -11,11 +11,10 @@
 extern void yyerror ( const char* );
 extern int yylineno;
 extern int yynerrs;
+extern int __node_id;
 char __error_msg[ CONST_ERROR_LEN ];
 
 /* global variables */
-int         __scope = 0;    // global scope counter
-int         __sync_id = 0;  // used to assemble ports to sync groups
 UT_array*   __scope_stack;  // stack to handle the scope
 #ifdef DOT_CON
 FILE*       __n_con_graph;  // file handler for the net connection graph
@@ -28,19 +27,17 @@ extern int  __node_id;
 void context_check( ast_node* ast ) {
     symrec* insttab = NULL;       // hash table to store the instances
     symrec* symtab = NULL;        // hash table to store the symbols
+    int scope = 0;
 
 #ifdef DOT_CON
     __n_con_graph = fopen( N_CON_DOT_PATH, "w" );
     __p_con_graph = fopen( P_CON_DOT_PATH, "w" );
 #endif // DOT_CON
 
-    __scope = 0;
     utarray_new( __scope_stack, &ut_int_icd );
-    utarray_push_back( __scope_stack, &__scope );
+    utarray_push_back( __scope_stack, &scope );
     id_install( &symtab, ast, false );
-    __scope = 0;
     id_check( &symtab, &insttab, ast );
-    __scope = 0;
     inst_check( &insttab, ast, NULL );
 
 #ifdef DOT_CON
@@ -200,6 +197,7 @@ void connect_sport( symrec* net, ast_node* ast_con_id ) {
 void id_check( symrec** symtab, symrec** insttab, ast_node* ast ) {
     ast_list* list = NULL;
     symrec* rec = NULL;
+    static int _scope = 0;
 
     if( ast == NULL ) return;
 
@@ -238,11 +236,11 @@ void id_check( symrec** symtab, symrec** insttab, ast_node* ast ) {
 #endif // DOT_CON
             break;
         case AST_BOX:
-            __scope++;
+            _scope++;
             break;
         case AST_WRAP:
-            __scope++;
-            utarray_push_back( __scope_stack, &__scope );
+            _scope++;
+            utarray_push_back( __scope_stack, &_scope );
 #ifdef DOT_CON
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
                     FLAG_WRAP );
@@ -339,16 +337,18 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
     ast_list* list = NULL;
     net_attr* b_attr = NULL;
     port_attr* p_attr = NULL;
-    void* res = NULL;
     symrec_list* ptr = NULL;
     symrec_list* port_list = NULL;
+    void* res = NULL;
     bool set_sync = false;
+    static int _scope = 0;
+    static int _sync_id = 0; // used to assemble ports to sync groups
 
     if( ast == NULL ) return NULL;
 
     switch( ast->node_type ) {
         case AST_SYNC:
-            __sync_id++;
+            _sync_id++;
             set_sync = true;
         case AST_PORTS:
             list = ast->ast_list;
@@ -371,8 +371,8 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
             }
             break;
         case AST_BOX:
-            __scope++;
-            utarray_push_back( __scope_stack, &__scope );
+            _scope++;
+            utarray_push_back( __scope_stack, &_scope );
             port_list = ( struct symrec_list* )id_install( symtab,
                     ast->box.ports, set_sync );
             utarray_pop_back( __scope_stack );
@@ -385,8 +385,8 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
                     ( void* )b_attr, ast->box.id->ast_id.line );
             break;
         case AST_WRAP:
-            __scope++;
-            utarray_push_back( __scope_stack, &__scope );
+            _scope++;
+            utarray_push_back( __scope_stack, &_scope );
             id_install( symtab, ast->wrap.stmts, set_sync );
             port_list = ( struct symrec_list* )id_install( symtab,
                     ast->wrap.ports, set_sync );
@@ -412,7 +412,7 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
                 if( is_sync ) {
                     p_attr->decoupled =
                         (ast->port.coupling == NULL) ? false : true;
-                    p_attr->sync_id = __sync_id;
+                    p_attr->sync_id = _sync_id;
                 }
                 // set collection
                 if ( list == NULL )
@@ -450,6 +450,7 @@ void* inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
     int inst_cnt = 0;
     int symb_cnt = 0;
     void* res = NULL;
+    static int _scope = 0;
 
     if( ast == NULL ) return NULL;
 
@@ -481,11 +482,11 @@ void* inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
             }
             break;
         case AST_BOX:
-            __scope++;
+            _scope++;
             break;
         case AST_WRAP:
-            __scope++;
-            utarray_push_back( __scope_stack, &__scope );
+            _scope++;
+            utarray_push_back( __scope_stack, &_scope );
             inst_check( insttab, ast->wrap.stmts, ast_con_id );
             utarray_pop_back( __scope_stack );
             break;
