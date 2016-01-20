@@ -1,0 +1,6 @@
+box A( out x ) on fct_a
+box B( out x ) on fct_b
+box C( in x ) on fct_c
+box D( in x ) on fct_d
+
+(A|B).(C|D)

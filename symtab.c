@@ -651,6 +651,8 @@ void report_yyerror( const char* msg, int line ) {
 void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id ) {
 #ifdef DOT_CON
     int id_node_start, id_node_end, id_temp;
+    char symbol[4];
+    sprintf( symbol, "×" );
 #endif // DOT_CON
     char name[10];
     // this port connects to multiple other ports -> a copy synchronizer
@@ -663,14 +665,15 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id ) {
     // create a copy synchroniyer for each connect instruction
     graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
             FLAG_NET );
-    graph_add_node( __p_con_graph, __node_id, "+", SHAPE_CIRCLE );
     id_node_start = __node_id;
     id_node_end = net_id;
     if( ( ( struct port_attr* )port->rec->attr )->mode == VAL_OUT ) {
         id_temp = id_node_start;
         id_node_start = id_node_end;
         id_node_end = id_temp;
+        sprintf( symbol, "+" );
     }
+    graph_add_node( __p_con_graph, __node_id, symbol, SHAPE_CIRCLE );
     graph_add_edge( __p_con_graph, id_node_start, id_node_end,
             port->rec->name, false );
 #endif // DOT_CON

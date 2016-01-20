@@ -46,6 +46,7 @@ char** attr_label[] = {
     coupling_label,
     state_label
 };
+int __cluster_id = 0;
 
 /******************************************************************************/
 void draw_ast_graph (ast_node* start) {
@@ -376,9 +377,10 @@ void graph_init( FILE* graph, int style ) {
 
 /******************************************************************************/
 void graph_init_subgraph( FILE* graph, char* name, int style ) {
+    __cluster_id++;
     switch (style) {
         case STYLE_PARALLEL:
-            fprintf( graph, "\tsubgraph clusterP {\n" );
+            fprintf( graph, "\tsubgraph clusterP%d {\n", __cluster_id );
             fprintf( graph, "\tlabel=\"%s\";\n", name );
             fprintf( graph, "\tstyle=dotted;\n" );
 #ifdef DOT_COLOR
@@ -388,7 +390,7 @@ void graph_init_subgraph( FILE* graph, char* name, int style ) {
 #endif // DOT_CON
             break;
         case STYLE_SERIAL:
-            fprintf( graph, "\tsubgraph clusterS {\n" );
+            fprintf( graph, "\tsubgraph clusterS%d {\n", __cluster_id );
             fprintf( graph, "\tlabel=\"%s\";\n", name );
             fprintf( graph, "\tstyle=dashed;\n" );
 #ifdef DOT_COLOR
@@ -398,7 +400,7 @@ void graph_init_subgraph( FILE* graph, char* name, int style ) {
 #endif // DOT_CON
             break;
         case STYLE_WRAPPER:
-            fprintf( graph, "\tsubgraph clusterW {\n" );
+            fprintf( graph, "\tsubgraph clusterW%d {\n", __cluster_id );
             fprintf( graph, "\tlabel=\"%s\";\n", name );
             break;
         default:
