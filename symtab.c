@@ -22,12 +22,16 @@ FILE*       __p_con_graph;  // file handler for the port connection graph
 extern int  __node_id;
 #endif // DOT_CON
 
+
+
 /******************************************************************************/
 void connection_check( symrec** insttab, ast_node* ast, bool connect ) {
     ast_list* i_ptr;
     ast_list* j_ptr;
     ast_node* op_left;
     ast_node* op_right;
+    symrec_list* ports = NULL;
+    symrec* op_inst = NULL;
     // match ports of left.con_right with right.con_left
     i_ptr = ast->op.left->op.con_right;
     do {
@@ -64,12 +68,76 @@ void connection_check( symrec** insttab, ast_node* ast, bool connect ) {
         while (j_ptr != 0);
     }
     while (i_ptr != 0);
+
+    // perform checks on port connections
+    if( !connect ) {
+        // left operators
+        i_ptr = ast->op.left->op.con_right;
+        do {
+            if (ast->op.left->node_type == AST_ID) {
+                // left operator is an ID
+                op_left = ast->op.left;
+                i_ptr = ( ast_list* )0;   // stop condition of loop
+            }
+            else {
+                // left operator is a net (opeartion)
+                op_left = i_ptr->ast_node;
+                i_ptr = i_ptr->next;
+            }
+            // get net instance from instance table
+            op_inst = instrec_get( insttab, op_left->ast_id.name,
+                    *utarray_back( __scope_stack ), op_left->id );
+            if ( op_inst == NULL ) return;
+            // iterate trough ports and check the connection count
+            ports = ( ( struct inst_attr* ) op_inst->attr )->ports;
+            while ( ports != NULL ) {
+                if( ports->connect_cnt == 0 ) {
+                    // ERROR: this port is left unconnected
+                    sprintf( __error_msg, ERROR_NO_PORT_CON, ERR_ERROR,
+                            ports->rec->name, op_inst->name );
+                    report_yyerror( __error_msg, op_left->ast_id.line );
+                }
+                ports = ports->next;
+            }
+        }
+        while (i_ptr != 0);
+
+        // right operators
+        j_ptr = ast->op.right->op.con_left;
+        do {
+            if (ast->op.right->node_type == AST_ID) {
+                // right operator is an ID
+                op_right = ast->op.right;
+                j_ptr = ( ast_list* )0;
+            }
+            else {
+                // right operator is a net (opeartion)
+                op_right = j_ptr->ast_node;
+                j_ptr = j_ptr->next;
+            }
+            // get net instance from instance table
+            op_inst = instrec_get( insttab, op_right->ast_id.name,
+                    *utarray_back( __scope_stack ), op_right->id );
+            // iterate trough ports and check the connection count
+            ports = ( ( struct inst_attr* ) op_inst->attr )->ports;
+            while ( ports != NULL ) {
+                if( ports->connect_cnt == 0 ) {
+                    // ERROR: this port is left unconnected
+                    sprintf( __error_msg, ERROR_NO_PORT_CON, ERR_ERROR,
+                            ports->rec->name, op_inst->name );
+                    report_yyerror( __error_msg, op_right->ast_id.line );
+                }
+                ports = ports->next;
+            }
+        }
+        while (j_ptr != 0);
+    }
 }
 
 /******************************************************************************/
 void connection_check_port( symrec** insttab, ast_node* net1, ast_node* net2,
         bool connect ) {
-    bool connected = false;
+    bool is_connected = false;
     symrec_list* ports_left = NULL;
     symrec_list* ports_right = NULL;
     port_attr* p_attr_left = NULL;
@@ -122,7 +190,7 @@ void connection_check_port( symrec** insttab, ast_node* net1, ast_node* net2,
                     p_attr_right->collection = VAL_UP;
                     ports_left->connect_cnt++;
                     ports_right->connect_cnt++;
-                    connected = true;
+                    is_connected = true;
                     /* printf( "Connection check of %s.%s and %s.%s\n", */
                     /*         net1->ast_id.name, ports_left->rec->name, */
                     /*         net2->ast_id.name, ports_right->rec->name ); */
@@ -133,11 +201,11 @@ void connection_check_port( symrec** insttab, ast_node* net1, ast_node* net2,
         ports_left = ports_left->next;
     }
 
-    if( !connect && !connected ) {
-        // we are doing a check run and
+    // perform further checks on port connections
+    if( !connect && !is_connected ) {
         // ERROR: there is no connection between the two nets
-        sprintf( __error_msg, ERROR_NO_CONNECTION, ERR_ERROR,
-                op_right->name, op_left->name );
+        sprintf( __error_msg, ERROR_NO_NET_CON, ERR_ERROR, op_right->name,
+                op_left->name );
         report_yyerror( __error_msg, net2->ast_id.line );
     }
 }

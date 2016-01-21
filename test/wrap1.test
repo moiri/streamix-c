@@ -1,0 +1,7 @@
+net W { in p1, out p2 } {
+    box A ( in p1, out p_int ) on func_a
+    box B ( in p_int, out p2 ) on func_b
+    A.B
+}
+
+W
