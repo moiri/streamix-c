@@ -69,57 +69,76 @@ void connection_check( symrec** insttab, ast_node* ast, bool connect ) {
 /******************************************************************************/
 void connection_check_port( symrec** insttab, ast_node* net1, ast_node* net2,
         bool connect ) {
+    bool connected = false;
+    symrec_list* ports_left = NULL;
+    symrec_list* ports_right = NULL;
+    port_attr* p_attr_left = NULL;
+    port_attr* p_attr_right = NULL;
+
+    // get net instances from instance tables
     symrec* op_left = instrec_get( insttab, net1->ast_id.name,
             *utarray_back( __scope_stack ), net1->id );
     if ( op_left == NULL ) return;
-    /* printf("get instance %s with id %d in scope %d\n", op_left->name, */
-    /*         ( ( struct inst_attr* ) op_left->attr )->id, op_left->scope ); */
     symrec* op_right = instrec_get( insttab, net2->ast_id.name,
             *utarray_back( __scope_stack ), net2->id );
     if ( op_right == NULL ) return;
-    /* printf("get instance %s with id %d in scope %d\n", op_right->name, */
-    /*         ( ( struct inst_attr* ) op_right->attr )->id, op_right->scope ); */
-    symrec_list* ports_left;
-    symrec_list* ports_right;
-    port_attr* p_attr_left;
-    port_attr* p_attr_right;
+
     // check whether ports can connect
     ports_left = ( ( struct inst_attr* ) op_left->attr )->ports;
     while ( ports_left != NULL ) {
-        /* printf( " %s.%s\n", op_left->name, ports_left->rec->name ); */
         p_attr_left = ( struct port_attr* )ports_left->rec->attr;
         ports_right = ( ( struct inst_attr* ) op_right->attr )->ports;
         while (ports_right != NULL ) {
-            /* printf( " %s.%s\n", op_right->name, ports_right->rec->name ); */
             p_attr_right = ( struct port_attr* )ports_right->rec->attr;
             if( // ports have the same name
                 ( strcmp( ports_left->rec->name, ports_right->rec->name ) == 0 )
-                // the left port is in DS and the right is in US
-                && ( ( ( p_attr_left->collection == VAL_DOWN )
-                        && ( p_attr_right->collection == VAL_UP ) )
-                    // or they are both in no collection
-                    || ( ( p_attr_left->collection == VAL_NONE )
+                // the left port is in DS
+                && ( ( p_attr_left->collection == VAL_DOWN )
+                    // or we are doing checks and the port is in no collection
+                        || ( !connect
+                            && ( p_attr_left->collection == VAL_NONE ) ) )
+                // the right port is in US
+                && ( ( p_attr_right->collection == VAL_UP )
+                    // or we are doing checks and the port is in no collection
+                        || ( !connect
                             && ( p_attr_right->collection == VAL_NONE ) ) )
               ) {
                 if( connect ) {
+                    // checks heve been done previously, now do connections
                     connect_port( insttab, ports_left, ports_right, net1,
                             net2 );
                 }
                 else if( p_attr_left->mode == p_attr_right->mode ) {
-                    // same name and same mode -> cannot connect
+                    // ERROR: cannot connect ports with the same name and mode
                     sprintf( __error_msg, ERROR_BAD_MODE, ERR_ERROR,
                             ports_right->rec->name, op_right->name,
                             op_left->name, ports_left->rec->line );
                     report_yyerror( __error_msg, ports_right->rec->line );
                 }
                 else {
+                    // we are only checking and there is no mode error
+                    // -> assign collections and increase connection count
+                    p_attr_left->collection = VAL_DOWN;
+                    p_attr_right->collection = VAL_UP;
                     ports_left->connect_cnt++;
                     ports_right->connect_cnt++;
+                    connected = true;
+                    /* printf( "Connection check of %s.%s and %s.%s\n", */
+                    /*         net1->ast_id.name, ports_left->rec->name, */
+                    /*         net2->ast_id.name, ports_right->rec->name ); */
                 }
             }
             ports_right = ports_right->next;
         }
         ports_left = ports_left->next;
+    }
+
+    if( !connect && !connected ) {
+        // we are doing a check run and
+        // ERROR: there is no connection between the two nets
+        sprintf( __error_msg, ERROR_NO_CONNECTION, ERR_ERROR,
+                op_right->name, op_left->name );
+        report_yyerror( __error_msg, net2->ast_id.line );
     }
 }
 
@@ -129,7 +148,7 @@ void connect_port( symrec** insttab, symrec_list* ports_left,
 #ifdef DOT_CON
     int id_node_start, id_node_end, id_temp;
 #endif // DOT_CON
-    /* printf( " %s.%s connects with %s.%s\n", net_left->ast_id.name, */
+    /* printf( "Connect %s.%s with %s.%s\n", net_left->ast_id.name, */
     /*         ports_left->rec->name, net_right->ast_id.name, */
     /*         ports_right->rec->name ); */
     if( ( ports_left->connect_cnt > 1 )

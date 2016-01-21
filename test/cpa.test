@@ -8,8 +8,8 @@ box DC (
 ) on func_dc
 box CPA (
     sync {
-        decoupled up in dist,
-        up in dc
+        decoupled in dist,
+        in dc
     },
     out cpa,
     side in car_l_in,
@@ -24,11 +24,11 @@ net Car { up in car_next (car_l_in), up out car_prev (car_l_out),
 
     box MB (in block, out break_cmd) on func_mb
 
-    net ABS { down in dc, out abs } {
+    net ABS { in dc, out abs } {
         box ABS (
             in speed,
             in break_cmd,
-            down in dc,
+            in dc,
             out break_abs,
             out block,
             out abs
