@@ -79,8 +79,8 @@ struct inst_attr {
 void connection_check( symrec**, ast_node*, bool );
 
 /**
- * establish the port connections. This function establishes the port connections
- * and adds the corresponding edges to the port connection graph
+ * establish and check the port connections. This function establishes the port
+ * connections and adds the corresponding edges to the port connection graph
  *
  * @param symrec**:     pointer to the symbol table
  * @param ast_node*:    pointer to the first net operand
@@ -90,6 +90,15 @@ void connection_check( symrec**, ast_node*, bool );
  *                      drawn
  * */
 void connection_check_port( symrec**, ast_node*, ast_node*, bool );
+
+/**
+ * check whether all ports are connected
+ *
+ * @param symrec**:     pointer to the symbol table
+ * @param ast_node*:    pointer to the net operand
+ * @param ast_list*:    pointer to the connecting net operands
+ * */
+void connection_check_port_final( symrec**, ast_node*, ast_list* );
 
 /**
  * spawn copy synchronizers if necessary and connect the ports of a serial connection
