@@ -68,6 +68,13 @@ struct inst_attr {
 };
 
 /**
+ * Check the context of all identifiers in the program
+ *
+ * @param ast_node*:    pointer to the ast node
+ * */
+void check_context( ast_node* );
+
+/**
  * establish the connections of the network equations
  *
  * @param symrec**:     pointer to the instance table
@@ -101,6 +108,30 @@ void connection_check_port( symrec**, ast_node*, ast_node*, bool );
 void connection_check_port_final( symrec**, ast_node*, ast_list* );
 
 /**
+ * establish the connections of the connect instructions
+ *
+ * @param symrec**:     pointer to the instance table
+ * @param ast_node*:    pointer to the ast node
+ * @param bool:         flag to indicate wheather it is a check run (false) or
+ *                      whether copy sinchronizers are spawned and connections are
+ *                      drawn
+ * */
+void connection_check_side( symrec** insttab, ast_node* ast, bool connect );
+
+/**
+ * establish and check the side port connections. This function establishes the port
+ * connections and adds the corresponding edges to the port connection graph
+ *
+ * @param symrec**:     pointer to the symbol table
+ * @param symrec*:      pointer to the first net operand
+ * @param symrec*:      pointer to the second ast node
+ * @param bool:         flag to indicate wheather it is a check run (false) or
+ *                      whether copy sinchronizers are spawned and connections are
+ *                      drawn
+ * */
+void connection_check_side_port( symrec**, symrec*, symrec*, bool );
+
+/**
  * spawn copy synchronizers if necessary and connect the ports of a serial connection
  * @param symrec**:     pointer to the instance table
  * @param symrec_list*: pointer to the port of the left operand
@@ -108,7 +139,7 @@ void connection_check_port_final( symrec**, ast_node*, ast_list* );
  * @param ast_node*:    pointer to the left operand
  * @param ast_node*:    pointer to the right operand
  * */
-void connect_port( symrec**, symrec_list*, symrec_list*, ast_node*, ast_node* );
+void connect_port( symrec**, symrec*, symrec*, symrec_list*, symrec_list* );
 
 /**
  * connect the side ports forced by a connect insrtuction
@@ -116,14 +147,7 @@ void connect_port( symrec**, symrec_list*, symrec_list*, ast_node*, ast_node* );
  * @symrec* net:    pointer to a net instance
  * @ast_node*:      pointer to the ast node of the connect instruction
  * */
-void connect_sport( symrec*, ast_node* );
-
-/**
- * Check the context of all identifiers in the program
- *
- * @param ast_node*:    pointer to the ast node
- * */
-void context_check( ast_node* );
+void connection_check_sport( symrec*, ast_node* );
 
 /**
  * check whether the given identificator is in the symbol table.
@@ -156,7 +180,7 @@ void* id_install( symrec**, ast_node*, bool );
  * @param ast_node*:    pointer to the ast node
  * @param ast_node*:    prapagate the connect id ast node internally
  * */
-void inst_check( symrec**, ast_node*, ast_node* );
+void inst_check( symrec**, ast_node* );
 
 /**
  * Get an instance from the instance table.
@@ -164,7 +188,6 @@ void inst_check( symrec**, ast_node*, ast_node* );
  * @param symrec**:     pointer to the hashtable
  * @param char*:        name of the record
  * @param int:          scope of the record
- * @param int:          id of the instance
  * @return symrec*:
  *      a pointer to the location where the data is stored
  * */

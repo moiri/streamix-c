@@ -88,8 +88,9 @@
 
 #define ERROR_UNDEFINED_ID  "%s: use of undeclared identifier '%s'"
 #define ERROR_DUPLICATE_ID  "%s: redefinition of '%s'"
-#define ERROR_BAD_MODE      "%s: conflicting modes of ports '%s' in '%s' and '%s' (line %d)"
-#define ERROR_NO_NET_CON    "%s: no port connection in serial combinition of '%s' and '%s'"
-#define ERROR_NO_PORT_CON   "%s: port '%s' in '%s' is not connected"
+#define ERROR_BAD_MODE      "%s: conflicting modes of ports '%s' in '%s'(%d) and '%s'(%d) (line %d)"
+#define ERROR_NO_NET_CON    "%s: no port connection in serial combinition of '%s'(%d) and '%s'(%d)"
+#define ERROR_NO_PORT_CON   "%s: port '%s' in '%s'(%d) is not connected"
+#define ERROR_NO_PORT       "%s: no side port '%s' in '%s'(%d)"
 
 #endif /* DEFINES_H */

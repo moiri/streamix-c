@@ -294,7 +294,7 @@ int main( int argc, char **argv ) {
         yyparse();
     } while( !feof( yyin ) );
 
-    context_check( ast );
+    check_context( ast );
 
     /* fclose(con_graph); */
     if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );
