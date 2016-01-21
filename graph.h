@@ -47,19 +47,19 @@ void graph_add_divider ( FILE*, int, const char );
  * @param int:      id of the start node
  * @param int:      id of the end node
  * @param char*:    name of the edge
- * @param bool:     flag to indicate wheter it is a side port
+ * @param int:      style of the edge
  * */
-void graph_add_edge ( FILE*, int, int, char*, bool );
+void graph_add_edge ( FILE*, int, int, char*, int );
 
 /**
  * Add a inode to the graph
  *
- * @param FILE*:        file pointer to the dot file
- * @param int:          id of the node
- * @param char*:        name of the node
- * @param const char*:  shape of the node (SHAPE_BOX, SHAPE_ELLIPSE)
+ * @param FILE*:    file pointer to the dot file
+ * @param int:      id of the node
+ * @param char*:    name of the node
+ * @param int:      style of the node
  * */
-void graph_add_node ( FILE*, int, char*, const char* );
+void graph_add_node ( FILE*, int, char*, int );
 
 /**
  * Adds final bracket to the dot file

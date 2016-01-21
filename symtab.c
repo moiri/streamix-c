@@ -57,7 +57,7 @@ void connection_check( symrec** insttab, ast_node* ast, bool connect ) {
             /*         op_right->ast_id.name ); */
 #ifdef DOT_CON
             if( connect ) graph_add_edge( __n_con_graph, op_left->id,
-                    op_right->id, NULL, false );
+                    op_right->id, NULL, STYLE_E_DEFAULT );
 #endif // DOT_CON
             connection_check_port( insttab, op_left, op_right, connect );
         }
@@ -221,7 +221,7 @@ void connect_port( symrec** insttab, symrec_list* ports_left,
         id_node_end = id_temp;
     }
     graph_add_edge( __p_con_graph, id_node_start, id_node_end,
-            ports_left->rec->name, false );
+            ports_left->rec->name, STYLE_E_DEFAULT );
 #endif // DOT_CON
 }
 
@@ -252,7 +252,7 @@ void connect_sport( symrec* net, ast_node* ast_con_id ) {
                 id_node_start = ast_con_id->id;
             }
             graph_add_edge( __p_con_graph, id_node_start, id_node_end,
-                    ports->rec->name, true );
+                    ports->rec->name, STYLE_E_SIDE );
 #endif // DOT_CON
         }
         ports = ports->next;
@@ -475,7 +475,7 @@ void inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
                     FLAG_CONNECT );
             graph_add_node( __p_con_graph, ast->connect.id->id, "+",
-                    SHAPE_CIRCLE );
+                    STYLE_N_NET_CP );
 #endif // DOT_CON
             inst_check( insttab, ast->connect.connects, ast->connect.id );
             break;
@@ -492,8 +492,8 @@ void inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
                     FLAG_STMTS );
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
                     FLAG_STMTS );
-            graph_init( __n_con_graph, STYLE_N_CON_GRAPH );
-            graph_init( __p_con_graph, STYLE_P_CON_GRAPH );
+            graph_init( __n_con_graph, STYLE_G_CON_NET );
+            graph_init( __p_con_graph, STYLE_G_CON_PORT );
 #endif // DOT_CON
             list = ast->ast_list;
             while( list != NULL ) {
@@ -521,9 +521,9 @@ void inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
                     FLAG_WRAP );
             graph_init_subgraph( __n_con_graph, ast->wrap.id->ast_id.name,
-                    STYLE_WRAPPER );
+                    STYLE_SG_WRAPPER );
             graph_init_subgraph( __p_con_graph, ast->wrap.id->ast_id.name,
-                    STYLE_WRAPPER );
+                    STYLE_SG_WRAPPER );
 #endif // DOT_CON
             inst_check( insttab, ast->wrap.stmts, ast_con_id );
             // add synchroniyers if necessary
@@ -548,8 +548,8 @@ void inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
                     FLAG_NET );
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
                     FLAG_NET );
-            graph_init_subgraph( __n_con_graph, "", STYLE_PARALLEL );
-            graph_init_subgraph( __p_con_graph, "", STYLE_PARALLEL );
+            graph_init_subgraph( __n_con_graph, "", STYLE_SG_PARALLEL );
+            graph_init_subgraph( __p_con_graph, "", STYLE_SG_PARALLEL );
 #endif // DOT_CON && DOT_STRUCT
             inst_check( insttab, ast->op.left, ast_con_id );
             inst_check( insttab, ast->op.right, ast_con_id );
@@ -568,8 +568,8 @@ void inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
                     FLAG_NET );
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
                     FLAG_NET );
-            graph_init_subgraph( __n_con_graph, "", STYLE_SERIAL );
-            graph_init_subgraph( __p_con_graph, "", STYLE_SERIAL );
+            graph_init_subgraph( __n_con_graph, "", STYLE_SG_SERIAL );
+            graph_init_subgraph( __p_con_graph, "", STYLE_SG_SERIAL );
 #endif // DOT_CON && DOT_STRUCT
             inst_check( insttab, ast->op.left, ast_con_id );
             inst_check( insttab, ast->op.right, ast_con_id );
@@ -605,9 +605,9 @@ void inst_check( symrec** insttab, ast_node* ast, ast_node* ast_con_id ) {
                 graph_add_divider ( __p_con_graph,
                         *utarray_back( __scope_stack ), FLAG_NET );
                 graph_add_node( __n_con_graph, ast->id, ast->ast_id.name,
-                        SHAPE_BOX );
+                        STYLE_N_NET_BOX );
                 graph_add_node( __p_con_graph, ast->id, ast->ast_id.name,
-                        SHAPE_BOX );
+                        STYLE_N_NET_BOX );
             }
 #endif // DOT_CON
             break;
@@ -742,9 +742,9 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id ) {
         id_node_end = id_temp;
         sprintf( symbol, "+" );
     }
-    graph_add_node( __p_con_graph, __node_id, symbol, SHAPE_CIRCLE );
+    graph_add_node( __p_con_graph, __node_id, symbol, STYLE_N_NET_CP );
     graph_add_edge( __p_con_graph, id_node_start, id_node_end,
-            port->rec->name, false );
+            port->rec->name, STYLE_E_DEFAULT );
 #endif // DOT_CON
 }
 

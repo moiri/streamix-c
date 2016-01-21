@@ -48,13 +48,31 @@
 #define COLOR_PARALLEL  "chartreuse3"
 #define COLOR_SERIAL    "cadetblue3"
 
-#define STYLE_DEFAULT       0
-#define STYLE_N_CON_GRAPH   1
-#define STYLE_P_CON_GRAPH   2
-#define STYLE_WRAPPER       3
-#define STYLE_PARALLEL      4
-#define STYLE_SERIAL        5
 
+// styles of graphs
+#define STYLE_G_DEFAULT     0
+#define STYLE_G_CON_NET     1
+#define STYLE_G_CON_PORT    2
+#define STYLE_G_AST         3
+
+// styles of subgraphs
+#define STYLE_SG_WRAPPER    10
+#define STYLE_SG_PARALLEL   11
+#define STYLE_SG_SERIAL     12
+
+// styles of edges
+#define STYLE_E_DEFAULT     20
+#define STYLE_E_SIDE        21
+
+// styles of nodes
+#define STYLE_N_DEFAULT     31
+#define STYLE_N_NET_BOX     32
+#define STYLE_N_NET_CP      33
+#define STYLE_N_AST_ATTR    34
+#define STYLE_N_AST_NODE    35
+#define STYLE_N_AST_ID      36
+
+// flags taht are used to reorder the dot file
 #define FLAG_STMTS      's'
 #define FLAG_STMTS_END  'S'
 #define FLAG_WRAP       'w'
