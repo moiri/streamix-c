@@ -221,53 +221,53 @@ void graph_add_divider ( FILE* graph, int scope, const char flag ) {
 /******************************************************************************/
 void graph_add_edge ( FILE* graph, int start, int end, char* label,
         int style ) {
+    fprintf(graph, "\tid%d->id%d", start, end);
     switch( style ) {
         case STYLE_E_DEFAULT:
-            fprintf(graph, "\tid%d->id%d", start, end);
 #ifdef DOT_EDGE_LABEL
             if( label != NULL )
                 fprintf( graph, "[xlabel=\"%s\", fontsize=10]", label );
 #endif // DOT_EDGE_LABEL
-            fprintf( graph, ";\n" );
             break;
         case STYLE_E_SIDE:
-            fprintf(graph, "\tid%d->id%d", start, end);
             fprintf( graph, "[color=%s", COLOR_SIDE );
 #ifdef DOT_EDGE_LABEL
             fprintf( graph, ", xlabel=\"%s\", fontsize=10", label );
 #endif // DOT_EDGE_LABEL
-            fprintf( graph, "];\n" );
+            fprintf( graph, "]" );
             break;
         default:
             ;
     }
+    fprintf( graph, ";\n" );
 }
 
 /******************************************************************************/
 void graph_add_node ( FILE* graph, int id, char* name, int style ) {
+    fprintf( graph, "\tid%d [label=\"%s\"", id, name );
     switch( style ) {
         case STYLE_N_DEFAULT:
-            fprintf( graph, "\tid%d [label=\"%s\"];\n", id, name );
             break;
+        case STYLE_N_NET_CPS:
+            fprintf( graph, ", color=%s", COLOR_SIDE );
         case STYLE_N_NET_CP:
-            fprintf( graph, "\tid%d [label=\"%s\", width=0.3, fixedsize=true,\
-                    shape=%s];\n", id,
-                    name, SHAPE_CIRCLE );
+            fprintf( graph, ", width=0.3, fixedsize=true, shape=%s",
+                    SHAPE_CIRCLE );
             break;
         case STYLE_N_AST_ATTR:
-            fprintf( graph, "\tid%d [label=\"%s\", shape=%s];\n", id, name,
-                    SHAPE_OCTAGON );
+            fprintf( graph, ", shape=%s", SHAPE_OCTAGON );
             break;
         case STYLE_N_AST_NODE:
-            fprintf( graph, "\tid%d [label=\"%s\", shape=%s];\n", id, name,
-                    SHAPE_ELLIPSE );
+            fprintf( graph, ", shape=%s", SHAPE_ELLIPSE );
             break;
         case STYLE_N_NET_BOX:
         case STYLE_N_AST_ID:
-            fprintf( graph, "\tid%d [label=\"%s\", shape=%s];\n", id, name,
-                    SHAPE_BOX );
+            fprintf( graph, ", shape=%s", SHAPE_BOX );
             break;
+        default:
+            ;
     }
+    fprintf( graph, "];\n" );
 }
 
 /******************************************************************************/

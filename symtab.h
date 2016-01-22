@@ -105,7 +105,7 @@ void connection_check_port( symrec**, ast_node*, ast_node*, bool );
  * @param ast_node*:    pointer to the net operand
  * @param ast_list*:    pointer to the connecting net operands
  * */
-void connection_check_port_final( symrec**, ast_node*, ast_list* );
+void connection_check_port_all( symrec**, ast_node*, ast_list* );
 
 /**
  * establish the connections of the connect instructions
@@ -116,7 +116,7 @@ void connection_check_port_final( symrec**, ast_node*, ast_list* );
  *                      whether copy sinchronizers are spawned and connections are
  *                      drawn
  * */
-void connection_check_side( symrec** insttab, ast_node* ast, bool connect );
+void connection_check_side( symrec**, ast_node*, bool );
 
 /**
  * establish and check the side port connections. This function establishes the port
@@ -124,12 +124,23 @@ void connection_check_side( symrec** insttab, ast_node* ast, bool connect );
  *
  * @param symrec**:     pointer to the symbol table
  * @param symrec*:      pointer to the first net operand
- * @param symrec*:      pointer to the second ast node
+ * @param symrec*:      pointer to the second net operand
+ * @param ast_node*:    pointer to the connect ast node
  * @param bool:         flag to indicate wheather it is a check run (false) or
  *                      whether copy sinchronizers are spawned and connections are
  *                      drawn
  * */
-void connection_check_side_port( symrec**, symrec*, symrec*, bool );
+void connection_check_side_port( symrec**, symrec*, symrec*, ast_node*, bool );
+
+/**
+ * Get the pointer to the corresponding side port or return a NULL pointer
+ *
+ * @param symrec*:      pointer to the net operand
+ * @param ast_node*:    pointer to the connect ast node
+ * @return symrec_list:
+ *      pointer to the side port or NULL if no side port has been found
+ * */
+symrec_list* connection_check_side_port_get( symrec*, ast_node* );
 
 /**
  * spawn copy synchronizers if necessary and connect the ports of a serial connection
@@ -138,16 +149,9 @@ void connection_check_side_port( symrec**, symrec*, symrec*, bool );
  * @param symrec_list*: pointer to the port of the right operand
  * @param ast_node*:    pointer to the left operand
  * @param ast_node*:    pointer to the right operand
+ * @param bool:         indicater wheter it is part of a side port connection
  * */
-void connect_port( symrec**, symrec*, symrec*, symrec_list*, symrec_list* );
-
-/**
- * connect the side ports forced by a connect insrtuction
- *
- * @symrec* net:    pointer to a net instance
- * @ast_node*:      pointer to the ast node of the connect instruction
- * */
-void connection_check_sport( symrec*, ast_node* );
+void connect_port( symrec**, symrec*, symrec*, symrec_list*, symrec_list*, bool );
 
 /**
  * check whether the given identificator is in the symbol table.
@@ -221,8 +225,9 @@ void report_yyerror( const char*, int );
  * @param symrec**:     pointer to the instance table
  * @param symrec_list*: pointer to the port, assoziated with the copy synchronizer
  * @param int:          id of the net instance the port belongs to
+ * @param bool:         indicater wheter it is part of a side port connection
  * */
-void spawn_synchronizer( symrec**, symrec_list*, int );
+void spawn_synchronizer( symrec**, symrec_list*, int, bool );
 
 /**
  * Get an identifier from the symbol table.
