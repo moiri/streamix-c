@@ -36,11 +36,11 @@ void check_context( ast_node* ast ) {
     utarray_new( __scope_stack, &ut_int_icd );
     utarray_push_back( __scope_stack, &scope );
     // install all symbols in the symtab
-    id_install( &symtab, ast, false );
+    install_ids( &symtab, ast, false );
     // check the context of all symbols and install instances in the insttab
-    id_check( &symtab, &insttab, ast );
+    check_ids( &symtab, &insttab, ast );
     // check the connections and draw the connection graphs
-    inst_check( &insttab, ast );
+    check_instances( &insttab, ast );
 
 #ifdef DOT_CON
     fclose( __n_con_graph );
@@ -48,6 +48,205 @@ void check_context( ast_node* ast ) {
     graph_fix_dot( TEMP_DOT_PATH, N_CON_DOT_PATH );
     graph_fix_dot( TEMP_DOT_PATH, P_CON_DOT_PATH );
 #endif // DOT_CON
+}
+
+/******************************************************************************/
+void check_ids( symrec** symtab, symrec** insttab, ast_node* ast ) {
+    ast_list* list = NULL;
+    symrec* rec = NULL;
+    static int _scope = 0;
+
+    if( ast == NULL ) return;
+
+    switch( ast->node_type ) {
+        case AST_CONNECT:
+            check_ids( symtab, insttab, ast->connect.connects );
+            break;
+        case AST_CONNECTS:
+            list = ast->ast_list;
+            while( list != NULL ) {
+                check_ids( symtab, insttab, list->ast_node );
+                list = list->next;
+            }
+            break;
+        case AST_STMTS:
+            list = ast->ast_list;
+            while( list != NULL ) {
+                check_ids( symtab, insttab, list->ast_node );
+                list = list->next;
+            }
+            break;
+        case AST_BOX:
+            _scope++;
+            break;
+        case AST_WRAP:
+            _scope++;
+            utarray_push_back( __scope_stack, &_scope );
+            check_ids( symtab, insttab, ast->wrap.stmts );
+            utarray_pop_back( __scope_stack );
+            break;
+        case AST_NET:
+            check_ids( symtab, insttab, ast->ast_node );
+            break;
+        case AST_PARALLEL:
+            check_ids( symtab, insttab, ast->op.left );
+            check_ids( symtab, insttab, ast->op.right );
+            break;
+        case AST_SERIAL:
+            check_ids( symtab, insttab, ast->op.left );
+            check_ids( symtab, insttab, ast->op.right );
+            break;
+        case AST_ID:
+            // check the context of the symbol
+            rec = symrec_get( symtab, ast->ast_id.name, ast->ast_id.line );
+            // add a net symbol to the instance table
+            if( ast->ast_id.type == ID_NET && rec != NULL ) {
+                /* printf( "put instance %s(%d)\n", ast->ast_id.name, ast->id ); */
+                instrec_put( insttab, ast->ast_id.name,
+                        *utarray_back( __scope_stack ), ast->ast_id.type,
+                        ast->id, rec );
+            }
+            break;
+        default:
+            ;
+    }
+}
+
+/******************************************************************************/
+void check_instances( symrec** insttab, ast_node* ast ) {
+    ast_list* list = NULL;
+    static int _scope = 0;
+
+    if( ast == NULL ) return;
+
+    switch( ast->node_type ) {
+        case AST_CONNECT:
+            connection_check_side( insttab, ast, false );
+            connection_check_side( insttab, ast, true );
+            break;
+        case AST_STMTS:
+#ifdef DOT_CON
+            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_STMTS );
+            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_STMTS );
+            graph_init( __n_con_graph, STYLE_G_CON_NET );
+            graph_init( __p_con_graph, STYLE_G_CON_PORT );
+#endif // DOT_CON
+            list = ast->ast_list;
+            while( list != NULL ) {
+                check_instances( insttab, list->ast_node );
+                list = list->next;
+            }
+#ifdef DOT_CON
+            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_STMTS_END );
+            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_STMTS_END );
+            graph_finish( __n_con_graph );
+            graph_finish( __p_con_graph );
+#endif // DOT_CON
+            break;
+        case AST_BOX:
+            _scope++;
+            break;
+        case AST_WRAP:
+            _scope++;
+            utarray_push_back( __scope_stack, &_scope );
+#ifdef DOT_CON
+            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_WRAP );
+            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_WRAP );
+            graph_init_subgraph( __n_con_graph, ast->wrap.id->ast_id.name,
+                    STYLE_SG_WRAPPER );
+            graph_init_subgraph( __p_con_graph, ast->wrap.id->ast_id.name,
+                    STYLE_SG_WRAPPER );
+#endif // DOT_CON
+            check_instances( insttab, ast->wrap.stmts );
+            // add synchroniyers if necessary
+            // ...
+#ifdef DOT_CON
+            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_WRAP_END );
+            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_WRAP_END );
+            graph_finish_subgraph( __n_con_graph );
+            graph_finish_subgraph( __p_con_graph );
+#endif // DOT_CON
+            // add invisible elements outside the wrapper and their connections
+            utarray_pop_back( __scope_stack );
+            break;
+        case AST_NET:
+            check_instances( insttab, ast->ast_node );
+            break;
+        case AST_PARALLEL:
+#if defined(DOT_CON) && defined(DOT_STRUCT)
+            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_NET );
+            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_NET );
+            graph_init_subgraph( __n_con_graph, "", STYLE_SG_PARALLEL );
+            graph_init_subgraph( __p_con_graph, "", STYLE_SG_PARALLEL );
+#endif // DOT_CON && DOT_STRUCT
+            check_instances( insttab, ast->op.left );
+            check_instances( insttab, ast->op.right );
+            // check whether all ports are connected
+            connection_check_port_all( insttab, ast->op.left );
+            connection_check_port_all( insttab, ast->op.right );
+#if defined(DOT_CON) && defined(DOT_STRUCT)
+            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_NET );
+            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_NET );
+            graph_finish_subgraph( __n_con_graph );
+            graph_finish_subgraph( __p_con_graph );
+#endif // DOT_CON && DOT_STRUCT
+            break;
+        case AST_SERIAL:
+#if defined(DOT_CON) && defined(DOT_STRUCT)
+            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_NET );
+            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_NET );
+            graph_init_subgraph( __n_con_graph, "", STYLE_SG_SERIAL );
+            graph_init_subgraph( __p_con_graph, "", STYLE_SG_SERIAL );
+#endif // DOT_CON && DOT_STRUCT
+            check_instances( insttab, ast->op.left );
+            check_instances( insttab, ast->op.right );
+            // count connections and check context
+            connection_check( insttab, ast, false );
+            // check whether all ports are connected
+            connection_check_port_all( insttab, ast->op.left );
+            connection_check_port_all( insttab, ast->op.right );
+            // spawn copy synchronizers and draw connections
+            connection_check( insttab, ast, true );
+#if defined(DOT_CON) && defined(DOT_STRUCT)
+            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_NET );
+            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_NET );
+            graph_finish_subgraph( __n_con_graph );
+            graph_finish_subgraph( __p_con_graph );
+#endif // DOT_CON && DOT_STRUCT
+            break;
+        case AST_ID:
+#ifdef DOT_CON
+            if( ast->ast_id.type == ID_NET ) {
+                graph_add_divider ( __n_con_graph,
+                        *utarray_back( __scope_stack ), FLAG_NET );
+                graph_add_divider ( __p_con_graph,
+                        *utarray_back( __scope_stack ), FLAG_NET );
+                graph_add_node( __n_con_graph, ast->id, ast->ast_id.name,
+                        STYLE_N_NET_BOX );
+                graph_add_node( __p_con_graph, ast->id, ast->ast_id.name,
+                        STYLE_N_NET_BOX );
+            }
+#endif // DOT_CON
+            break;
+        default:
+            ;
+    }
 }
 
 /******************************************************************************/
@@ -210,20 +409,16 @@ void connection_check_side( symrec** insttab, ast_node* ast, bool connect ) {
     // iterate through all symbols in the connection list
     list_next = list = ast->connect.connects->ast_list;
     do {
-        /* printf( "====> new run\n" ); */
         while( list != NULL ) {
-            /* printf( "list: %p\n", list ); */
             // the IDs of all the instances connect referres to is unknown
             if( net == NULL )
                 net = instrec_get( insttab, list->ast_node->ast_id.name,
                         *utarray_back( __scope_stack ), -1 );
             // iterate through all the instances with the same symbol
             while( net != NULL ) {
-                /* printf( "net: %p\n", net ); */
                 if( op_left == NULL ) {
                     // left operand is not yet assigned
                     op_left = net;
-                    /* printf( "op_left: %s\n", op_left->name ); */
                 }
                 else {
                     // left operand is already assigned, lets assign the right one
@@ -240,7 +435,6 @@ void connection_check_side( symrec** insttab, ast_node* ast, bool connect ) {
                 }
                 net = net->next;
                 if( first ) {
-                    /* printf( "net_next: %p\n", net ); */
                     net_next = net;
                     if( net_next == NULL ) list_next = list_next->next;
                     first = false;
@@ -248,7 +442,6 @@ void connection_check_side( symrec** insttab, ast_node* ast, bool connect ) {
             }
             list = list->next;
             if( first ) {
-                /* printf( "list_next: %p\n", list ); */
                 list_next = list;
                 first = false;
             }
@@ -260,9 +453,6 @@ void connection_check_side( symrec** insttab, ast_node* ast, bool connect ) {
         list = list_next;
         net = net_next;
     } while( ( list_next != NULL ) );
-
-    /* printf( "We are done here\n\n" ); */
-
 }
 
 /******************************************************************************/
@@ -364,69 +554,7 @@ void connect_port( symrec** insttab, symrec* op_left, symrec* op_right,
 }
 
 /******************************************************************************/
-void id_check( symrec** symtab, symrec** insttab, ast_node* ast ) {
-    ast_list* list = NULL;
-    symrec* rec = NULL;
-    static int _scope = 0;
-
-    if( ast == NULL ) return;
-
-    switch( ast->node_type ) {
-        case AST_CONNECT:
-            id_check( symtab, insttab, ast->connect.connects );
-            break;
-        case AST_CONNECTS:
-            list = ast->ast_list;
-            while( list != NULL ) {
-                id_check( symtab, insttab, list->ast_node );
-                list = list->next;
-            }
-            break;
-        case AST_STMTS:
-            list = ast->ast_list;
-            while( list != NULL ) {
-                id_check( symtab, insttab, list->ast_node );
-                list = list->next;
-            }
-            break;
-        case AST_BOX:
-            _scope++;
-            break;
-        case AST_WRAP:
-            _scope++;
-            utarray_push_back( __scope_stack, &_scope );
-            id_check( symtab, insttab, ast->wrap.stmts );
-            utarray_pop_back( __scope_stack );
-            break;
-        case AST_NET:
-            id_check( symtab, insttab, ast->ast_node );
-            break;
-        case AST_PARALLEL:
-            id_check( symtab, insttab, ast->op.left );
-            id_check( symtab, insttab, ast->op.right );
-            break;
-        case AST_SERIAL:
-            id_check( symtab, insttab, ast->op.left );
-            id_check( symtab, insttab, ast->op.right );
-            break;
-        case AST_ID:
-            // check the context of the symbol
-            rec = symrec_get( symtab, ast->ast_id.name, ast->ast_id.line );
-            // add a net symbol to the instance table
-            if( ast->ast_id.type == ID_NET && rec != NULL ) {
-                /* printf( "put instance %s(%d)\n", ast->ast_id.name, ast->id ); */
-                instrec_put( insttab, ast->ast_id.name,
-                        *utarray_back( __scope_stack ), ast->ast_id.type,
-                        ast->id, rec );
-            }
-            break;
-        default:
-            ;
-    }
-}
-
-/******************************************************************************/
-void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
+void* install_ids( symrec** symtab, ast_node* ast, bool is_sync ) {
     ast_list* list = NULL;
     net_attr* b_attr = NULL;
     port_attr* p_attr = NULL;
@@ -446,7 +574,7 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
         case AST_PORTS:
             list = ast->ast_list;
             while (list != NULL) {
-                res = id_install( symtab, list->ast_node, set_sync );
+                res = install_ids( symtab, list->ast_node, set_sync );
                 ptr = ( struct symrec_list* )res;
                 while( ( ( struct symrec_list* ) res)->next != NULL )
                     res = ( ( struct symrec_list* )res )->next;
@@ -459,14 +587,14 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
         case AST_STMTS:
             list = ast->ast_list;
             while (list != NULL) {
-                id_install( symtab, list->ast_node, set_sync );
+                install_ids( symtab, list->ast_node, set_sync );
                 list = list->next;
             }
             break;
         case AST_BOX:
             _scope++;
             utarray_push_back( __scope_stack, &_scope );
-            port_list = ( struct symrec_list* )id_install( symtab,
+            port_list = ( struct symrec_list* )install_ids( symtab,
                     ast->box.ports, set_sync );
             utarray_pop_back( __scope_stack );
             // prepare symbol attributes and install symbol
@@ -480,8 +608,8 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
         case AST_WRAP:
             _scope++;
             utarray_push_back( __scope_stack, &_scope );
-            id_install( symtab, ast->wrap.stmts, set_sync );
-            port_list = ( struct symrec_list* )id_install( symtab,
+            install_ids( symtab, ast->wrap.stmts, set_sync );
+            port_list = ( struct symrec_list* )install_ids( symtab,
                     ast->wrap.ports, set_sync );
             utarray_pop_back( __scope_stack );
             // prepare symbol attributes and install symbol
@@ -534,143 +662,6 @@ void* id_install( symrec** symtab, ast_node* ast, bool is_sync ) {
     port_list = NULL;
     ptr = NULL;
     return res;
-}
-
-/******************************************************************************/
-void inst_check( symrec** insttab, ast_node* ast ) {
-    ast_list* list = NULL;
-    static int _scope = 0;
-
-    if( ast == NULL ) return;
-
-    switch( ast->node_type ) {
-        case AST_CONNECT:
-            connection_check_side( insttab, ast, false );
-            connection_check_side( insttab, ast, true );
-            break;
-        case AST_STMTS:
-#ifdef DOT_CON
-            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_STMTS );
-            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_STMTS );
-            graph_init( __n_con_graph, STYLE_G_CON_NET );
-            graph_init( __p_con_graph, STYLE_G_CON_PORT );
-#endif // DOT_CON
-            list = ast->ast_list;
-            while( list != NULL ) {
-                inst_check( insttab, list->ast_node );
-                list = list->next;
-            }
-#ifdef DOT_CON
-            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_STMTS_END );
-            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_STMTS_END );
-            graph_finish( __n_con_graph );
-            graph_finish( __p_con_graph );
-#endif // DOT_CON
-            break;
-        case AST_BOX:
-            _scope++;
-            break;
-        case AST_WRAP:
-            _scope++;
-            utarray_push_back( __scope_stack, &_scope );
-#ifdef DOT_CON
-            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_WRAP );
-            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_WRAP );
-            graph_init_subgraph( __n_con_graph, ast->wrap.id->ast_id.name,
-                    STYLE_SG_WRAPPER );
-            graph_init_subgraph( __p_con_graph, ast->wrap.id->ast_id.name,
-                    STYLE_SG_WRAPPER );
-#endif // DOT_CON
-            inst_check( insttab, ast->wrap.stmts );
-            // add synchroniyers if necessary
-            // ...
-#ifdef DOT_CON
-            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_WRAP_END );
-            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_WRAP_END );
-            graph_finish_subgraph( __n_con_graph );
-            graph_finish_subgraph( __p_con_graph );
-#endif // DOT_CON
-            // add invisible elements outside the wrapper and their connections
-            utarray_pop_back( __scope_stack );
-            break;
-        case AST_NET:
-            inst_check( insttab, ast->ast_node );
-            break;
-        case AST_PARALLEL:
-#if defined(DOT_CON) && defined(DOT_STRUCT)
-            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_NET );
-            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_NET );
-            graph_init_subgraph( __n_con_graph, "", STYLE_SG_PARALLEL );
-            graph_init_subgraph( __p_con_graph, "", STYLE_SG_PARALLEL );
-#endif // DOT_CON && DOT_STRUCT
-            inst_check( insttab, ast->op.left );
-            inst_check( insttab, ast->op.right );
-            // check whether all ports are connected
-            connection_check_port_all( insttab, ast->op.left );
-            connection_check_port_all( insttab, ast->op.right );
-#if defined(DOT_CON) && defined(DOT_STRUCT)
-            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_NET );
-            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_NET );
-            graph_finish_subgraph( __n_con_graph );
-            graph_finish_subgraph( __p_con_graph );
-#endif // DOT_CON && DOT_STRUCT
-            break;
-        case AST_SERIAL:
-#if defined(DOT_CON) && defined(DOT_STRUCT)
-            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_NET );
-            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_NET );
-            graph_init_subgraph( __n_con_graph, "", STYLE_SG_SERIAL );
-            graph_init_subgraph( __p_con_graph, "", STYLE_SG_SERIAL );
-#endif // DOT_CON && DOT_STRUCT
-            inst_check( insttab, ast->op.left );
-            inst_check( insttab, ast->op.right );
-            // count connections and check context
-            connection_check( insttab, ast, false );
-            // check whether all ports are connected
-            connection_check_port_all( insttab, ast->op.left );
-            connection_check_port_all( insttab, ast->op.right );
-            // spawn copy synchronizers and draw connections
-            connection_check( insttab, ast, true );
-#if defined(DOT_CON) && defined(DOT_STRUCT)
-            graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_NET );
-            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-                    FLAG_NET );
-            graph_finish_subgraph( __n_con_graph );
-            graph_finish_subgraph( __p_con_graph );
-#endif // DOT_CON && DOT_STRUCT
-            break;
-        case AST_ID:
-#ifdef DOT_CON
-            if( ast->ast_id.type == ID_NET ) {
-                graph_add_divider ( __n_con_graph,
-                        *utarray_back( __scope_stack ), FLAG_NET );
-                graph_add_divider ( __p_con_graph,
-                        *utarray_back( __scope_stack ), FLAG_NET );
-                graph_add_node( __n_con_graph, ast->id, ast->ast_id.name,
-                        STYLE_N_NET_BOX );
-                graph_add_node( __p_con_graph, ast->id, ast->ast_id.name,
-                        STYLE_N_NET_BOX );
-            }
-#endif // DOT_CON
-            break;
-        default:
-            ;
-    }
 }
 
 /******************************************************************************/

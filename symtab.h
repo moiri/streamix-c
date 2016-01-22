@@ -160,7 +160,7 @@ void connect_port( symrec**, symrec*, symrec*, symrec_list*, symrec_list*, bool 
  * @param instrec**:    pointer to the instance table
  * @param ast_node*:    pointer to the ast node
  * */
-void id_check( symrec**, symrec**, ast_node* );
+void check_ids( symrec**, symrec**, ast_node* );
 
 /**
  * put symbol names into the symbol table. this includes collision and scope
@@ -173,7 +173,7 @@ void id_check( symrec**, symrec**, ast_node* );
  *      the return value is used to propagate back the information of which
  *      ports belong to which net
  * */
-void* id_install( symrec**, ast_node*, bool );
+void* install_ids( symrec**, ast_node*, bool );
 
 /**
  * checks the connect construct and establishes the corresponding side port
@@ -183,7 +183,7 @@ void* id_install( symrec**, ast_node*, bool );
  * @param ast_node*:    pointer to the ast node
  * @param ast_node*:    prapagate the connect id ast node internally
  * */
-void inst_check( symrec**, ast_node* );
+void check_instances( symrec**, ast_node* );
 
 /**
  * Get an instance from the instance table.
