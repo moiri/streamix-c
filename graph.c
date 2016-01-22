@@ -244,24 +244,31 @@ void graph_add_edge ( FILE* graph, int start, int end, char* label,
 
 /******************************************************************************/
 void graph_add_node ( FILE* graph, int id, char* name, int style ) {
-    fprintf( graph, "\tid%d [label=\"%s\"", id, name );
     switch( style ) {
         case STYLE_N_DEFAULT:
+            fprintf( graph, "\tid%d [label=\"%s\"", id, name );
             break;
         case STYLE_N_NET_CPS:
+            fprintf( graph, "\tid%d [label=\"%s\"", id, name );
             fprintf( graph, ", color=%s", COLOR_SIDE );
         case STYLE_N_NET_CP:
             fprintf( graph, ", width=0.3, fixedsize=true, shape=%s",
                     SHAPE_CIRCLE );
             break;
         case STYLE_N_AST_ATTR:
+            fprintf( graph, "\tid%d [label=\"%s\"", id, name );
             fprintf( graph, ", shape=%s", SHAPE_OCTAGON );
             break;
         case STYLE_N_AST_NODE:
+            fprintf( graph, "\tid%d [label=\"%s\"", id, name );
             fprintf( graph, ", shape=%s", SHAPE_ELLIPSE );
             break;
         case STYLE_N_NET_BOX:
+            fprintf( graph, "\tid%d [label=\"%s (%d)\"", id, name, id );
+            fprintf( graph, ", shape=%s", SHAPE_BOX );
+            break;
         case STYLE_N_AST_ID:
+            fprintf( graph, "\tid%d [label=\"%s\"", id, name );
             fprintf( graph, ", shape=%s", SHAPE_BOX );
             break;
         default:
