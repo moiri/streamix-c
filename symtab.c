@@ -93,17 +93,6 @@ void connection_check( symrec** insttab, ast_node* ast, bool connect ) {
     }
     while (i_ptr != 0);
 
-    // perform checks on port connections
-    if( connect ) {
-        // do it only after the connections have been established
-        // left operators
-        connection_check_port_all( insttab, ast->op.left,
-                ast->op.left->op.con_right );
-
-        // right operators
-        connection_check_port_all( insttab, ast->op.right,
-                ast->op.right->op.con_left );
-    }
 }
 
 /******************************************************************************/
@@ -187,39 +176,25 @@ void connection_check_port( symrec** insttab, ast_node* net1, ast_node* net2,
 }
 
 /******************************************************************************/
-void connection_check_port_all( symrec** insttab, ast_node* op,
-        ast_list* ptr ) {
+void connection_check_port_all( symrec** insttab, ast_node* op ) {
     symrec* op_inst = NULL;
     symrec_list* ports = NULL;
-    // left operators
-    do {
-        if (op->node_type == AST_ID) {
-            // left operator is an ID
-            ptr = ( ast_list* )0;   // stop condition of loop
+    // get net instance from instance table
+    op_inst = instrec_get( insttab, op->ast_id.name,
+            *utarray_back( __scope_stack ), op->id );
+    if ( op_inst == NULL ) return;
+    // iterate trough ports and check the connection count
+    ports = ( ( struct inst_attr* ) op_inst->attr )->ports;
+    while ( ports != NULL ) {
+        if( ports->connect_cnt == 0 ) {
+            // ERROR: this port is left unconnected
+            sprintf( __error_msg, ERROR_NO_PORT_CON, ERR_ERROR,
+                    ports->rec->name, op_inst->name,
+                    ( ( struct inst_attr* )op_inst->attr )->id );
+            report_yyerror( __error_msg, op->ast_id.line );
         }
-        else {
-            // left operator is a net (opeartion)
-            op = ptr->ast_node;
-            ptr = ptr->next;
-        }
-        // get net instance from instance table
-        op_inst = instrec_get( insttab, op->ast_id.name,
-                *utarray_back( __scope_stack ), op->id );
-        if ( op_inst == NULL ) return;
-        // iterate trough ports and check the connection count
-        ports = ( ( struct inst_attr* ) op_inst->attr )->ports;
-        while ( ports != NULL ) {
-            if( ports->connect_cnt == 0 ) {
-                // ERROR: this port is left unconnected
-                sprintf( __error_msg, ERROR_NO_PORT_CON, ERR_ERROR,
-                        ports->rec->name, op_inst->name,
-                        ( ( struct inst_attr* )op_inst->attr )->id );
-                report_yyerror( __error_msg, op->ast_id.line );
-            }
-            ports = ports->next;
-        }
+        ports = ports->next;
     }
-    while (ptr != 0);
 }
 
 /******************************************************************************/
@@ -570,13 +545,6 @@ void inst_check( symrec** insttab, ast_node* ast ) {
 
     switch( ast->node_type ) {
         case AST_CONNECT:
-/* #ifdef DOT_CON */
-/*             // create a copy synchroniyer for each connect instruction */
-/*             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ), */
-/*                     FLAG_CONNECT ); */
-/*             graph_add_node( __p_con_graph, ast->connect.id->id, "+", */
-/*                     STYLE_N_NET_CP ); */
-/* #endif // DOT_CON */
             connection_check_side( insttab, ast, false );
             connection_check_side( insttab, ast, true );
             break;
@@ -647,6 +615,9 @@ void inst_check( symrec** insttab, ast_node* ast ) {
 #endif // DOT_CON && DOT_STRUCT
             inst_check( insttab, ast->op.left );
             inst_check( insttab, ast->op.right );
+            // check whether all ports are connected
+            connection_check_port_all( insttab, ast->op.left );
+            connection_check_port_all( insttab, ast->op.right );
 #if defined(DOT_CON) && defined(DOT_STRUCT)
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
                     FLAG_NET );
@@ -669,6 +640,9 @@ void inst_check( symrec** insttab, ast_node* ast ) {
             inst_check( insttab, ast->op.right );
             // count connections and check context
             connection_check( insttab, ast, false );
+            // check whether all ports are connected
+            connection_check_port_all( insttab, ast->op.left );
+            connection_check_port_all( insttab, ast->op.right );
             // spawn copy synchronizers and draw connections
             connection_check( insttab, ast, true );
 #if defined(DOT_CON) && defined(DOT_STRUCT)

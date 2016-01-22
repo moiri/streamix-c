@@ -99,13 +99,12 @@ void connection_check( symrec**, ast_node*, bool );
 void connection_check_port( symrec**, ast_node*, ast_node*, bool );
 
 /**
- * check whether all ports are connected
+ * check whether all ports of the net are connected
  *
  * @param symrec**:     pointer to the symbol table
  * @param ast_node*:    pointer to the net operand
- * @param ast_list*:    pointer to the connecting net operands
  * */
-void connection_check_port_all( symrec**, ast_node*, ast_list* );
+void connection_check_port_all( symrec**, ast_node* );
 
 /**
  * establish the connections of the connect instructions
