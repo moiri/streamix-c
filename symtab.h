@@ -75,6 +75,26 @@ struct inst_attr {
 void check_context( ast_node* );
 
 /**
+ * check whether the given identificator is in the symbol table.
+ * This is a recursive function.
+ *
+ * @param symrec**:     pointer to the symbol table
+ * @param instrec**:    pointer to the instance table
+ * @param ast_node*:    pointer to the ast node
+ * */
+void check_ids( symrec**, symrec**, ast_node* );
+
+/**
+ * checks the connect construct and establishes the corresponding side port
+ * connections and copy synchronizers
+ *
+ * @param symrec**:     pointer to the instance table
+ * @param ast_node*:    pointer to the ast node
+ * @param ast_node*:    prapagate the connect id ast node internally
+ * */
+void check_instances( symrec**, ast_node* );
+
+/**
  * establish the connections of the network equations
  *
  * @param symrec**:     pointer to the instance table
@@ -153,16 +173,6 @@ symrec_list* connection_check_side_port_get( symrec*, ast_node* );
 void connect_port( symrec**, symrec*, symrec*, symrec_list*, symrec_list*, bool );
 
 /**
- * check whether the given identificator is in the symbol table.
- * This is a recursive function.
- *
- * @param symrec**:     pointer to the symbol table
- * @param instrec**:    pointer to the instance table
- * @param ast_node*:    pointer to the ast node
- * */
-void check_ids( symrec**, symrec**, ast_node* );
-
-/**
  * put symbol names into the symbol table. this includes collision and scope
  * handling. This is a recursive funtion.
  *
@@ -174,16 +184,6 @@ void check_ids( symrec**, symrec**, ast_node* );
  *      ports belong to which net
  * */
 void* install_ids( symrec**, ast_node*, bool );
-
-/**
- * checks the connect construct and establishes the corresponding side port
- * connections and copy synchronizers
- *
- * @param symrec**:     pointer to the instance table
- * @param ast_node*:    pointer to the ast node
- * @param ast_node*:    prapagate the connect id ast node internally
- * */
-void check_instances( symrec**, ast_node* );
 
 /**
  * Get an instance from the instance table.
