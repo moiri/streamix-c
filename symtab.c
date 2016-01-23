@@ -42,7 +42,7 @@ void check_context( ast_node* ast ) {
     // check the connections and draw the connection graphs
     check_instances( &insttab, ast );
     // check whether all ports are connected
-    /* check_port_all( &insttab, ast ); */
+    check_port_all( &insttab, ast );
 
 #ifdef DOT_CON
     fclose( __n_con_graph );
@@ -461,13 +461,12 @@ void connection_check_side( symrec** insttab, ast_node* ast, bool connect ) {
                 else {
                     // left operand is already assigned, lets assign the right one
                     op_right = net;
-                    /* printf( "op_right: %s\n", op_right->name ); */
-                    // do the connection check
-                    /* printf( "Check side port connection %s(%d) -- %s(%d)\n", */
-                    /*         op_left->name, */
+                    /* printf( "%d Check side port connection %s(%d) -- %s(%d)\n", */
+                    /*         connect, op_left->name, */
                     /*         ( ( struct inst_attr* )op_left->attr )->id, */
                     /*         op_right->name, */
                     /*         ( ( struct inst_attr* )op_right->attr )->id ); */
+                    // do the connection check
                     connection_check_side_port( insttab, op_left, op_right,
                             ast->connect.id, connect );
                 }
@@ -499,8 +498,8 @@ void connection_check_side_port( symrec** insttab, symrec* op_left,
     symrec_list* port_left = NULL;
     symrec_list* port_right = NULL;
 
-    port_left = connection_check_side_port_get( op_left, ast_con_id );
-    port_right = connection_check_side_port_get( op_right, ast_con_id );
+    port_left = connection_check_side_port_get( op_left, ast_con_id, connect );
+    port_right = connection_check_side_port_get( op_right, ast_con_id, connect );
 
     // check whether ports can connect
     if( ( port_left != NULL ) && ( port_right != NULL )
@@ -517,15 +516,15 @@ void connection_check_side_port( symrec** insttab, symrec* op_left,
             port_left->connect_cnt++;
             port_right->connect_cnt++;
             /* printf( "Connection check of %s.%s and %s.%s\n", */
-            /*         net1->ast_id.name, ports_left->rec->name, */
-            /*         net2->ast_id.name, ports_right->rec->name ); */
+            /*         op_left->name, port_left->rec->name, */
+            /*         op_right->name, port_right->rec->name ); */
         }
     }
 }
 
 /******************************************************************************/
 symrec_list* connection_check_side_port_get( symrec* op,
-        ast_node* ast_con_id ) {
+        ast_node* ast_con_id, bool connect ) {
     symrec_list* ports = NULL;
     port_attr* p_attr = NULL;
 
@@ -541,7 +540,7 @@ symrec_list* connection_check_side_port_get( symrec* op,
         }
         ports = ports->next;
     }
-    if( ports == NULL ) {
+    if( ( ports == NULL ) && !connect ) {
         // ERROR: this net has no such side port
         sprintf( __error_msg, ERROR_NO_PORT, ERR_ERROR,
                 ast_con_id->ast_id.name, op->name,

@@ -164,10 +164,13 @@ void connection_check_side_port( symrec**, symrec*, symrec*, ast_node*, bool );
  *
  * @param symrec*:      pointer to the net operand
  * @param ast_node*:    pointer to the connect ast node
+ * @param bool:         flag to indicate wheather it is a check run (false) or
+ *                      whether copy sinchronizers are spawned and connections are
+ *                      drawn
  * @return symrec_list:
  *      pointer to the side port or NULL if no side port has been found
  * */
-symrec_list* connection_check_side_port_get( symrec*, ast_node* );
+symrec_list* connection_check_side_port_get( symrec*, ast_node*, bool );
 
 /**
  * spawn copy synchronizers if necessary and connect the ports of a serial connection
