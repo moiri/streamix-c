@@ -75,6 +75,7 @@ void graph_finish ( FILE* );
  * */
 void graph_finish_subgraph ( FILE* );
 
+#ifdef DOT_CON
 /**
  * The dot instructions are put into a file following the ast structure.
  * Because of the nesting of wrappers the order of the instructions is not
@@ -86,6 +87,7 @@ void graph_finish_subgraph ( FILE* );
  * @param char*:    path to the dot file to be reordered
  * */
 void graph_fix_dot( char*, char* );
+#endif // DOT_CON
 
 /**
  * Initializes the file with the dot header to draw a graph

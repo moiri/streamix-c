@@ -518,8 +518,8 @@ void connect_port( symrec** insttab, symrec* op_left, symrec* op_right,
         symrec_list* ports_left, symrec_list* ports_right, bool side ) {
 #ifdef DOT_CON
     int id_node_start, id_node_end, id_temp;
-    int style_edge = STYLE_E_DEFAULT;
-    if( side ) style_edge = STYLE_E_SIDE;
+    int style_edge = STYLE_E_PORT;
+    if( side ) style_edge = STYLE_E_SPORT;
 #endif // DOT_CON
     /* printf( "Connect %s.%s with %s.%s\n", op_left->name, */
     /*         ports_left->rec->name, op_right->name, */
@@ -536,12 +536,22 @@ void connect_port( symrec** insttab, symrec* op_left, symrec* op_right,
 #ifdef DOT_CON
     if( ports_left->cp_sync != NULL ) {
         id_node_start = ( ( struct inst_attr* )ports_left->cp_sync->attr )->id;
+        if( side ) style_edge = STYLE_E_SPORT;
     }
-    else id_node_start = ( ( struct inst_attr* )op_left->attr )->id;
+    else {
+        id_node_start = ( ( struct inst_attr* )op_left->attr )->id;
+        if( side ) style_edge = STYLE_E_SPORT_IN;
+    }
     if( ports_right->cp_sync != NULL ) {
         id_node_end = ( ( struct inst_attr* )ports_right->cp_sync->attr )->id;
     }
-    else id_node_end = ( ( struct inst_attr* )op_right->attr )->id;
+    else {
+        id_node_end = ( ( struct inst_attr* )op_right->attr )->id;
+        if( side && ( style_edge == STYLE_E_SPORT_IN ) )
+            style_edge = STYLE_E_SPORT_BI;
+        else if( side && ( style_edge == STYLE_E_SPORT ) )
+            style_edge = STYLE_E_SPORT_OUT;
+    }
 
     if( ( ( struct port_attr* )ports_left->rec->attr )->mode == VAL_IN ) {
         id_temp = id_node_start;
@@ -770,10 +780,12 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
 #ifdef DOT_CON
     int id_node_start, id_node_end, id_temp;
     char symbol[4];
-    int style_edge = STYLE_E_DEFAULT;
+    int style_edge = STYLE_E_PORT;
     int style_node = STYLE_N_NET_CP;
+    int flag = FLAG_NET;
+    if( side ) flag = FLAG_CONNECT;
     if( side ) {
-        style_edge = STYLE_E_SIDE;
+        style_edge = STYLE_E_SPORT_OUT;
         style_node = STYLE_N_NET_CPS;
     }
     sprintf( symbol, "×" );
@@ -788,10 +800,13 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
 #ifdef DOT_CON
     // create a copy synchroniyer for each connect instruction
     graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-            FLAG_NET );
+            flag );
     id_node_start = __node_id;
     id_node_end = net_id;
     if( ( ( struct port_attr* )port->rec->attr )->mode == VAL_OUT ) {
+        if( side ) {
+            style_edge = STYLE_E_SPORT_IN;
+        }
         id_temp = id_node_start;
         id_node_start = id_node_end;
         id_node_end = id_temp;
