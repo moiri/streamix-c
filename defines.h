@@ -63,10 +63,10 @@
 // styles of edges
 #define STYLE_E_DEFAULT     20
 #define STYLE_E_PORT        21
-#define STYLE_E_SPORT_IN    22
-#define STYLE_E_SPORT_OUT   23
-#define STYLE_E_SPORT_BI    24
-#define STYLE_E_SPORT       25
+#define STYLE_E_SPORT       22
+#define STYLE_E_SPORT_IN    23
+#define STYLE_E_SPORT_OUT   24
+#define STYLE_E_SPORT_BI    25
 
 // styles of nodes
 #define STYLE_N_DEFAULT     31

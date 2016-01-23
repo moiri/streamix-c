@@ -74,7 +74,7 @@ $(DOT_N_CON_FILE).pdf: $(DOT_N_CON_FILE).dot
 	rm -f dot/tmpfile*
 
 $(DOT_P_CON_FILE).pdf: $(DOT_P_CON_FILE).dot
-	dot -Tpdf $(DOT_P_CON_FILE).dot | csplit --quiet --elide-empty-files --prefix=dot/tmpfile - "/%%EOF/+1" "{*}"
+	dot -Tpdf -Gnewrank $(DOT_P_CON_FILE).dot | csplit --quiet --elide-empty-files --prefix=dot/tmpfile - "/%%EOF/+1" "{*}"
 	gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$(DOT_P_CON_FILE).pdf dot/tmpfile*
 	rm -f dot/tmpfile*
 

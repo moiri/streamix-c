@@ -245,6 +245,7 @@ void graph_add_edge ( FILE* graph, int start, int end, char* label,
                     || ( style == STYLE_E_SPORT_BI ) )
                 fprintf( graph, ":s" );
             fprintf( graph, "[color=%s", COLOR_SIDE );
+            fprintf( graph, ", constraint=false" );
 #ifdef DOT_EDGE_LABEL
             fprintf( graph, ", xlabel=\"%s\", fontsize=10", label );
 #endif // DOT_EDGE_LABEL
@@ -290,6 +291,10 @@ void graph_add_node ( FILE* graph, int id, char* name, int style ) {
             ;
     }
     fprintf( graph, "];\n" );
+}
+/******************************************************************************/
+void graph_add_rank( FILE* graph, int id1, int id2 ) {
+    fprintf( graph, "\t{ rank=same; id%d; id%d; }\n", id1, id2 );
 }
 
 /******************************************************************************/
@@ -423,15 +428,15 @@ void graph_fix_dot( char* t_path, char* r_path ) {
 /******************************************************************************/
 void graph_init( FILE* graph, int style ) {
     fprintf(graph, "digraph {\n");
+    fprintf(graph, "\trankdir=LR;\n");
     switch (style) {
         case STYLE_G_CON_NET:
             fprintf(graph, "\tedge [dir=none];\n");
-            fprintf(graph, "\trankdir=LR;\n");
             break;
         case STYLE_G_CON_PORT:
-            fprintf(graph, "\trankdir=LR;\n");
 #ifdef DOT_EDGE_LABEL
             fprintf(graph, "\tranksep=0.75;\n");
+            /* fprintf(graph, "\tnodesep=0.75;\n"); */
 #endif // DOT_EDGE_LABEL
             // caused sideprts and copy synchrniyers to behave strange
             /* fprintf(graph, "\tsplines=false;\n"); */

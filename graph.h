@@ -59,7 +59,8 @@ void graph_add_edge ( FILE*, int, int, char*, int );
  * @param char*:    name of the node
  * @param int:      style of the node
  * */
-void graph_add_node ( FILE*, int, char*, int );
+void graph_add_node( FILE*, int, char*, int );
+void graph_add_rank( FILE*, int, int );
 
 /**
  * Adds final bracket to the dot file

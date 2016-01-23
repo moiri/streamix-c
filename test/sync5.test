@@ -1,0 +1,6 @@
+box A( up down out x ) on fct_a
+box B( out x ) on fct_b
+box C( up down in x ) on fct_c
+box D( in x ) on fct_d
+
+D.A.C.B

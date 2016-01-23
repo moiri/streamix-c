@@ -42,7 +42,7 @@ void check_context( ast_node* ast ) {
     // check the connections and draw the connection graphs
     check_instances( &insttab, ast );
     // check whether all ports are connected
-    check_port_all( &insttab, ast );
+    /* check_port_all( &insttab, ast ); */
 
 #ifdef DOT_CON
     fclose( __n_con_graph );
@@ -325,6 +325,10 @@ void connection_check( symrec** insttab, ast_node* ast, bool connect ) {
         while (j_ptr != 0);
     }
     while (i_ptr != 0);
+/* #ifdef DOT_CON */
+/*         if( connect ) graph_add_rank( __p_con_graph, op_left->id, */
+/*                 op_right->id ); */
+/* #endif // DOT_CON */
 
 }
 
