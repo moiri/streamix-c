@@ -41,6 +41,8 @@ void check_context( ast_node* ast ) {
     check_ids( &symtab, &insttab, ast );
     // check the connections and draw the connection graphs
     check_instances( &insttab, ast );
+    // check whether all ports are connected
+    check_port_all( &insttab, ast );
 
 #ifdef DOT_CON
     fclose( __n_con_graph );
@@ -164,8 +166,6 @@ void check_instances( symrec** insttab, ast_node* ast ) {
                     STYLE_SG_WRAPPER );
 #endif // DOT_CON
             check_instances( insttab, ast->wrap.stmts );
-            // add synchroniyers if necessary
-            // ...
 #ifdef DOT_CON
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
                     FLAG_WRAP_END );
@@ -191,9 +191,6 @@ void check_instances( symrec** insttab, ast_node* ast ) {
 #endif // DOT_CON && DOT_STRUCT
             check_instances( insttab, ast->op.left );
             check_instances( insttab, ast->op.right );
-            // check whether all ports are connected
-            connection_check_port_all( insttab, ast->op.left );
-            connection_check_port_all( insttab, ast->op.right );
 #if defined(DOT_CON) && defined(DOT_STRUCT)
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
                     FLAG_NET );
@@ -216,9 +213,6 @@ void check_instances( symrec** insttab, ast_node* ast ) {
             check_instances( insttab, ast->op.right );
             // count connections and check context
             connection_check( insttab, ast, false );
-            // check whether all ports are connected
-            connection_check_port_all( insttab, ast->op.left );
-            connection_check_port_all( insttab, ast->op.right );
             // spawn copy synchronizers and draw connections
             connection_check( insttab, ast, true );
 #if defined(DOT_CON) && defined(DOT_STRUCT)
@@ -243,6 +237,46 @@ void check_instances( symrec** insttab, ast_node* ast ) {
                         STYLE_N_NET_BOX );
             }
 #endif // DOT_CON
+            break;
+        default:
+            ;
+    }
+}
+
+/******************************************************************************/
+void check_port_all( symrec** insttab, ast_node* ast ) {
+    ast_list* list = NULL;
+    static int _scope = 0;
+
+    if( ast == NULL ) return;
+
+    switch( ast->node_type ) {
+        case AST_STMTS:
+            list = ast->ast_list;
+            while( list != NULL ) {
+                check_port_all( insttab, list->ast_node );
+                list = list->next;
+            }
+            break;
+        case AST_BOX:
+            _scope++;
+            break;
+        case AST_WRAP:
+            _scope++;
+            utarray_push_back( __scope_stack, &_scope );
+            check_port_all( insttab, ast->wrap.stmts );
+            utarray_pop_back( __scope_stack );
+            break;
+        case AST_NET:
+            check_port_all( insttab, ast->ast_node );
+            break;
+        case AST_PARALLEL:
+        case AST_SERIAL:
+            check_port_all( insttab, ast->op.left );
+            check_port_all( insttab, ast->op.right );
+            break;
+        case AST_ID:
+            connection_check_port_all( insttab, ast );
             break;
         default:
             ;

@@ -70,7 +70,7 @@ struct inst_attr {
 /**
  * Check the context of all identifiers in the program
  *
- * @param ast_node*:    pointer to the ast node
+ * @param ast_node*:    pointer to the root ast node
  * */
 void check_context( ast_node* );
 
@@ -80,7 +80,7 @@ void check_context( ast_node* );
  *
  * @param symrec**:     pointer to the symbol table
  * @param instrec**:    pointer to the instance table
- * @param ast_node*:    pointer to the ast node
+ * @param ast_node*:    pointer to the root ast node
  * */
 void check_ids( symrec**, symrec**, ast_node* );
 
@@ -89,10 +89,18 @@ void check_ids( symrec**, symrec**, ast_node* );
  * connections and copy synchronizers
  *
  * @param symrec**:     pointer to the instance table
- * @param ast_node*:    pointer to the ast node
+ * @param ast_node*:    pointer to the root ast node
  * @param ast_node*:    prapagate the connect id ast node internally
  * */
 void check_instances( symrec**, ast_node* );
+
+/**
+ * check whether all ports are connected
+ *
+ * @param symrec**:     pointer to the instance table
+ * @param ast_node*:    pointer to the root ast node
+ * */
+void check_port_all( symrec**, ast_node* );
 
 /**
  * establish the connections of the network equations
