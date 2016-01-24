@@ -32,6 +32,8 @@
 
 #define VAL_STATELESS   0
 
+#define VAL_THIS    "this"
+
 // drawing
 #define AST_DOT_PATH    "dot/ast_graph.dot"
 #define N_CON_DOT_PATH  "dot/net_connection_graph.dot"

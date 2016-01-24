@@ -42,7 +42,7 @@ void check_context( ast_node* ast ) {
     // check the connections and draw the connection graphs
     check_instances( &insttab, ast );
     // check whether all ports are connected
-    check_port_all( &insttab, ast );
+    /* check_port_all( &insttab, ast ); */
 
 #ifdef DOT_CON
     fclose( __n_con_graph );
@@ -61,9 +61,11 @@ void check_ids( symrec** symtab, symrec** insttab, ast_node* ast ) {
     if( ast == NULL ) return;
 
     switch( ast->node_type ) {
+        case AST_LINK:
         case AST_CONNECT:
             check_ids( symtab, insttab, ast->connect.connects );
             break;
+        case AST_LINKS:
         case AST_CONNECTS:
             list = ast->ast_list;
             while( list != NULL ) {
@@ -84,6 +86,11 @@ void check_ids( symrec** symtab, symrec** insttab, ast_node* ast ) {
         case AST_WRAP:
             _scope++;
             utarray_push_back( __scope_stack, &_scope );
+            // add the symbol 'this' to the instance table referring to this net
+            rec = symrec_get( symtab, ast->wrap.id->ast_id.name,
+                    ast->wrap.id->ast_id.line );
+            instrec_put( insttab, VAL_THIS, *utarray_back( __scope_stack ),
+                    ast->wrap.id->ast_id.type, ast->wrap.id->id, rec );
             check_ids( symtab, insttab, ast->wrap.stmts );
             utarray_pop_back( __scope_stack );
             break;
@@ -122,9 +129,12 @@ void check_instances( symrec** insttab, ast_node* ast ) {
     if( ast == NULL ) return;
 
     switch( ast->node_type ) {
+        case AST_LINK:
+            connection_check_side( insttab, ast, true, false );
+            break;
         case AST_CONNECT:
-            connection_check_side( insttab, ast, false );
-            connection_check_side( insttab, ast, true );
+            connection_check_side( insttab, ast, false, false );
+            connection_check_side( insttab, ast, false, true );
             break;
         case AST_STMTS:
 #ifdef DOT_CON
@@ -435,7 +445,8 @@ void connection_check_port_all( symrec** insttab, ast_node* op ) {
 }
 
 /******************************************************************************/
-void connection_check_side( symrec** insttab, ast_node* ast, bool connect ) {
+void connection_check_side( symrec** insttab, ast_node* ast, bool link,
+        bool connect ) {
     ast_list* list = NULL;
     ast_list* list_next = NULL;
     symrec* net = NULL;
@@ -443,6 +454,12 @@ void connection_check_side( symrec** insttab, ast_node* ast, bool connect ) {
     symrec* op_left = NULL;
     symrec* op_right = NULL;
     bool first = true;
+
+    if( link ) {
+        // there can only be one instance of 'this' in this scope
+        op_left = instrec_get( insttab, VAL_THIS,
+                        *utarray_back( __scope_stack ), -1 );
+    }
 
     // iterate through all symbols in the connection list
     list_next = list = ast->connect.connects->ast_list;
@@ -468,7 +485,7 @@ void connection_check_side( symrec** insttab, ast_node* ast, bool connect ) {
                     /*         ( ( struct inst_attr* )op_right->attr )->id ); */
                     // do the connection check
                     connection_check_side_port( insttab, op_left, op_right,
-                            ast->connect.id, connect );
+                            ast->connect.id, link, connect );
                 }
                 net = net->next;
                 if( first ) {
@@ -494,17 +511,25 @@ void connection_check_side( symrec** insttab, ast_node* ast, bool connect ) {
 
 /******************************************************************************/
 void connection_check_side_port( symrec** insttab, symrec* op_left,
-        symrec* op_right, ast_node* ast_con_id, bool connect ) {
+        symrec* op_right, ast_node* ast_con_id, bool link, bool connect ) {
     symrec_list* port_left = NULL;
     symrec_list* port_right = NULL;
 
-    port_left = connection_check_side_port_get( op_left, ast_con_id, connect );
-    port_right = connection_check_side_port_get( op_right, ast_con_id, connect );
+    port_left = connection_check_side_port_get( op_left, ast_con_id, link,
+            connect );
+    port_right = connection_check_side_port_get( op_right, ast_con_id, link,
+            connect );
 
     // check whether ports can connect
-    if( ( port_left != NULL ) && ( port_right != NULL )
-        && ( ( ( struct port_attr* )port_left->rec->attr )->mode !=
-            ( ( struct port_attr* )port_right->rec->attr )->mode ) ) {
+    if( ( port_left != NULL )
+            && ( port_right != NULL )
+            && ( ( !link
+                   && ( ( ( struct port_attr* )port_left->rec->attr )->mode !=
+                    ( ( struct port_attr* )port_right->rec->attr )->mode ) )
+                || ( link
+                   && ( ( ( struct port_attr* )port_left->rec->attr )->mode ==
+                    ( ( struct port_attr* )port_right->rec->attr )->mode ) )
+               ) ) {
         if( connect ) {
             // checks heve been done previously, now do connections
             connect_port( insttab, op_left, op_right, port_left, port_right,
@@ -524,7 +549,7 @@ void connection_check_side_port( symrec** insttab, symrec* op_left,
 
 /******************************************************************************/
 symrec_list* connection_check_side_port_get( symrec* op,
-        ast_node* ast_con_id, bool connect ) {
+        ast_node* ast_con_id, bool link, bool connect ) {
     symrec_list* ports = NULL;
     port_attr* p_attr = NULL;
 
@@ -533,8 +558,9 @@ symrec_list* connection_check_side_port_get( symrec* op,
         p_attr = ( struct port_attr* )ports->rec->attr;
         if( // ports have the same name
             ( strcmp( ports->rec->name, ast_con_id->ast_id.name ) == 0 )
-            // the left port is in SP
-            && ( p_attr->collection == VAL_SIDE )
+            // the port is in SP or we are checking links
+            && ( ( !link && ( p_attr->collection == VAL_SIDE ) )
+                || link )
               ) {
             break;
         }

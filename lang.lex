@@ -32,6 +32,7 @@ out             {yylval.ival = VAL_OUT;return OUT;}
 box             {yylval.ival = VAL_BOX;return BOX;}
 net             {yylval.ival = VAL_NET;return NET;}
 connect         return CONNECT;
+link            return LINK;
 stateless       {yylval.ival = VAL_STATELESS;return STATELESS;}
 decoupled       {yylval.ival = VAL_DECOUPLED;return DECOUPLED;}
 sync            return SYNC;

@@ -14,6 +14,8 @@ char* node_label[] = {
     "connecting",
     "coupling",
     "internal ID",
+    "link",
+    "linking",
     "mode",
     "net",
     "parallel",
@@ -82,6 +84,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
         // draw a list-node with its children
         case AST_COLLECT:
         case AST_CONNECTS:
+        case AST_LINKS:
         case AST_STMTS:
         case AST_PORTS:
         case AST_SYNC:
@@ -124,6 +127,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
                     STYLE_E_DEFAULT );
             break;
         // draw special nodes
+        case AST_LINK:
         case AST_CONNECT:
             graph_add_node( graph, ptr->id, node_label[ ptr->node_type ],
                     STYLE_N_AST_NODE );

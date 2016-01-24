@@ -37,13 +37,13 @@
     struct ast_node* nval;
     struct ast_list* lval;
 };
-%token ON SYNC CONNECT
+%token ON SYNC CONNECT LINK
 %token <ival> BOX NET IN OUT UP DOWN SIDE DECOUPLED STATELESS
 %token <sval> IDENTIFIER
-%type <nval> net nets stmt decl_box decl_net decl_connect
+%type <nval> net nets stmt decl_box decl_net decl_connect decl_link
 %type <nval> decl_bport syncport decl_nport port_mode port_class
 %type <nval> opt_state opt_decoupled opt_renaming
-%type <lval> stmts connect_list opt_connect_id
+%type <lval> stmts connect_list opt_connect_id link_list opt_link_id
 %type <lval> opt_decl_bport opt_syncport opt_decl_nport opt_port_class
 %left '|'
 %left '.'
@@ -70,6 +70,7 @@ stmts:
 stmt:
     nets {$$ = $1;}
 |   decl_connect {$$ = $1;}
+|   decl_link {$$ = $1;}
 ;
 
 nets:
@@ -84,6 +85,36 @@ nets:
     }
 ;
 
+decl_link:
+    LINK IDENTIFIER '{' link_list '}' {
+        $$ = ast_add_link(
+            ast_add_id( $2, @2.last_line, ID_LPORT ),
+            ast_add_list( $4, AST_LINKS )
+        );
+    }
+;
+
+link_list:
+    IDENTIFIER opt_link_id {
+        $$ = ast_add_list_elem(
+            ast_add_id( $1, @1.last_line, ID_LNET ),
+            $2
+        );
+    }
+;
+
+opt_link_id:
+    %empty {
+        $$ = ( ast_list* )0;
+    }
+|   ',' IDENTIFIER opt_link_id {
+        $$ = ast_add_list_elem(
+            ast_add_id( $2, @2.last_line, ID_LNET ),
+            $3
+        );
+    }
+;
+
 decl_connect:
     CONNECT IDENTIFIER '{' connect_list '}' {
         $$ = ast_add_connect(
@@ -94,10 +125,13 @@ decl_connect:
 ;
 
 connect_list:
-    IDENTIFIER opt_connect_id {
+    IDENTIFIER ',' IDENTIFIER opt_connect_id {
         $$ = ast_add_list_elem(
             ast_add_id( $1, @1.last_line, ID_CNET ),
-            $2
+            ast_add_list_elem(
+                ast_add_id( $3, @3.last_line, ID_CNET ),
+                $4
+            )
         );
     }
 |   '*' {

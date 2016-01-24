@@ -27,7 +27,9 @@ typedef enum {
     ID_PORT,
     ID_IPORT,
     ID_CNET,
+    ID_LNET,
     ID_CPORT,
+    ID_LPORT,
     ID_CPSYNC
 } id_type;
 typedef enum {
@@ -48,6 +50,8 @@ typedef enum {
     AST_CONNECTS,
     AST_COUPLING,
     AST_INT_ID,
+    AST_LINK,
+    AST_LINKS,
     AST_MODE,
     AST_NET,
     AST_PARALLEL,
@@ -180,6 +184,16 @@ ast_node* ast_add_connect ( ast_node*, ast_node* );
  *      a pointer to the location where the data was stored
  * */
 ast_node* ast_add_id ( char*, int, int );
+
+/**
+ * Add a link declaration to the AST.
+ *
+ * @param ast_node*:    pointer to the link id ast
+ * @param ast_node*:    pointer to the linkig net list node
+ * @return: ast_node*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_node* ast_add_link ( ast_node*, ast_node* );
 
 /**
  * Add a list as node to the AST.
