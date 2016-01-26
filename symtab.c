@@ -23,7 +23,8 @@ extern int  __node_id;
 #endif // DOT_CON
 
 /******************************************************************************/
-void check_context( ast_node* ast ) {
+void check_context( ast_node* ast )
+{
     symrec* insttab = NULL;       // hash table to store the instances
     symrec* symtab = NULL;        // hash table to store the symbols
     int scope = 0;
@@ -53,7 +54,8 @@ void check_context( ast_node* ast ) {
 }
 
 /******************************************************************************/
-void check_ids( symrec** symtab, symrec** insttab, ast_node* ast ) {
+void check_ids( symrec** symtab, symrec** insttab, ast_node* ast )
+{
     ast_list* list = NULL;
     symrec* rec = NULL;
     static int _scope = 0;
@@ -122,7 +124,8 @@ void check_ids( symrec** symtab, symrec** insttab, ast_node* ast ) {
 }
 
 /******************************************************************************/
-void check_instances( symrec** insttab, ast_node* ast ) {
+void check_instances( symrec** insttab, ast_node* ast )
+{
     ast_list* list = NULL;
     static int _scope = 0;
 
@@ -224,9 +227,9 @@ void check_instances( symrec** insttab, ast_node* ast ) {
             check_instances( insttab, ast->op.left );
             check_instances( insttab, ast->op.right );
             // count connections and check context
-            connection_check( insttab, ast, false );
+            connection_check_serial( insttab, ast, false );
             // spawn copy synchronizers and draw connections
-            connection_check( insttab, ast, true );
+            connection_check_serial( insttab, ast, true );
 #if defined(DOT_CON) && defined(DOT_STRUCT)
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
                     FLAG_NET );
@@ -256,7 +259,8 @@ void check_instances( symrec** insttab, ast_node* ast ) {
 }
 
 /******************************************************************************/
-void check_port_all( symrec** insttab, ast_node* ast ) {
+void check_port_all( symrec** insttab, ast_node* ast )
+{
     ast_list* list = NULL;
     static int _scope = 0;
 
@@ -299,7 +303,257 @@ void check_port_all( symrec** insttab, ast_node* ast ) {
 }
 
 /******************************************************************************/
-void connection_check( symrec** insttab, ast_node* ast, bool connect ) {
+void connection_check_connect( symrec** insttab, ast_node* ast, bool connect )
+{
+    ast_list* list = NULL;
+    ast_list* list_next = NULL;
+    symrec* net = NULL;
+    symrec* net_next = NULL;
+    symrec* op_left = NULL;
+    symrec* op_right = NULL;
+    bool first = true;
+
+    // iterate through all symbols in the connection list
+    list_next = list = ast->connect.connects->ast_list;
+    do {
+        while( list != NULL ) {
+            // the IDs of all the instances connect referres to is unknown
+            if( net == NULL )
+                net = instrec_get( insttab, list->ast_node->ast_id.name,
+                        *utarray_back( __scope_stack ), -1 );
+            // iterate through all the instances with the same symbol
+            while( net != NULL ) {
+                if( op_left == NULL ) {
+                    // left operand is not yet assigned
+                    op_left = net;
+                }
+                else {
+                    // left operand is already assigned, lets assign the right one
+                    op_right = net;
+                    /* printf( "%d Check side port connection %s(%d) -- %s(%d)\n", */
+                    /*         connect, op_left->name, */
+                    /*         ( ( struct inst_attr* )op_left->attr )->id, */
+                    /*         op_right->name, */
+                    /*         ( ( struct inst_attr* )op_right->attr )->id ); */
+                    // do the connection check
+                    connection_check_connect_port( insttab, op_left, op_right,
+                            ast->connect.id, connect );
+                }
+                net = net->next;
+                if( first ) {
+                    net_next = net;
+                    if( net_next == NULL ) list_next = list_next->next;
+                    first = false;
+                }
+            }
+            list = list->next;
+            if( first ) {
+                list_next = list;
+                first = false;
+            }
+        }
+        // check the next element in the list with every other element
+        op_left = NULL;
+        op_right = NULL;
+        first = true;
+        list = list_next;
+        net = net_next;
+    } while( ( list_next != NULL ) );
+}
+
+/******************************************************************************/
+void connection_check_connect_port( symrec** insttab, symrec* op_left,
+        symrec* op_right, ast_node* ast_con_id, bool connect )
+{
+    symrec_list* port_left = NULL;
+    symrec_list* port_right = NULL;
+
+    port_left = connection_check_connect_port_get( op_left, ast_con_id,
+            connect );
+    port_right = connection_check_connect_port_get( op_right, ast_con_id,
+            connect );
+
+    // check whether ports can connect
+    if( ( port_left != NULL ) && ( port_right != NULL )
+            // exactly one needs to be true in order to connect:
+            //  either it is a link or the modes are different
+            && ( ( ( struct port_attr* )port_left->rec->attr )->mode !=
+                    ( ( struct port_attr* )port_right->rec->attr )->mode )
+            ) {
+        if( connect ) {
+            // checks heve been done previously, now do connections
+            connect_port( insttab, op_left, op_right, port_left, port_right,
+                    true );
+        }
+        else {
+            // we are only checking and there is no mode error
+            // -> assign collections and increase connection count
+            port_left->connect_cnt++;
+            port_right->connect_cnt++;
+            /* printf( "Connection of %s.%s and %s.%s is valid\n", */
+            /*         op_left->name, port_left->rec->name, */
+            /*         op_right->name, port_right->rec->name ); */
+        }
+    }
+}
+
+/******************************************************************************/
+symrec_list* connection_check_connect_port_get( symrec* op, ast_node* ast_id,
+        bool connect )
+{
+    symrec_list* ports = NULL;
+    port_attr* p_attr = NULL;
+
+    ports = ( ( struct inst_attr* ) op->attr )->ports;
+    while ( ports != NULL ) {
+        p_attr = ( struct port_attr* )ports->rec->attr;
+        if( ( strcmp( ports->rec->name, ast_id->ast_id.name ) == 0 )
+            && ( p_attr->collection == VAL_SIDE ) ) {
+            // ports have the same name and the collection matches
+            break;
+        }
+        ports = ports->next;
+    }
+    if( ( ports == NULL ) && !connect ) {
+        // ERROR: this net has no such port
+        sprintf( __error_msg, ERROR_UNDEF_PORT, ERR_ERROR,
+                ast_id->ast_id.name, op->name,
+                ( ( struct inst_attr* )op->attr)->id );
+        report_yyerror( __error_msg, ast_id->ast_id.line );
+    }
+    return ports;
+}
+
+/******************************************************************************/
+void connection_check_link( symrec** insttab, ast_node* ast, bool connect )
+{
+    ast_list* list = NULL;
+    symrec* op_left = NULL;
+    symrec* op_right = NULL;
+
+    // there can only be one instance of 'this' in this scope
+    op_left = instrec_get( insttab, VAL_THIS, *utarray_back( __scope_stack ),
+            -1 );
+
+    // iterate through all symbols in the connection list
+    list = ast->connect.connects->ast_list;
+    while( list != NULL ) {
+        // the IDs of all the instances connect referres to is unknown
+        op_right = instrec_get( insttab, list->ast_node->ast_id.name,
+                *utarray_back( __scope_stack ), -1 );
+        // iterate through all the instances with the same symbol
+        while( op_right != NULL ) {
+            /* printf( "%d Check link %s(%d) -- %s(%d)\n", */
+            /*         connect, op_left->name, */
+            /*         ( ( struct inst_attr* )op_left->attr )->id, */
+            /*         op_right->name, */
+            /*         ( ( struct inst_attr* )op_right->attr )->id ); */
+            // do the connection check
+            connection_check_link_port( insttab, op_left, op_right,
+                    ast->connect.id, connect );
+            op_right = op_right->next;
+        }
+        list = list->next;
+    }
+}
+
+/******************************************************************************/
+void connection_check_link_port( symrec** insttab, symrec* op_left,
+        symrec* op_right, ast_node* ast_id, bool connect )
+{
+    symrec_list* ports_left = NULL;
+    symrec_list* ports_right = NULL;
+    port_attr* p_attr_left = NULL;
+    port_attr* p_attr_right = NULL;
+    char* name_left = NULL;
+    char* name_right = NULL;
+
+    // check whether ports can connect
+    ports_left = ( ( struct inst_attr* ) op_left->attr )->ports;
+    while ( ports_left != NULL ) {
+        p_attr_left = ( struct port_attr* )ports_left->rec->attr;
+        name_left = ports_left->rec->name;
+        if( p_attr_left->int_name != NULL )
+            name_left = p_attr_left->int_name;
+        if( strcmp( name_left, ast_id->ast_id.name ) != 0 ) {
+            ports_left = ports_left->next;
+            continue;
+        }
+        ports_right = ( ( struct inst_attr* ) op_right->attr )->ports;
+        while (ports_right != NULL ) {
+            p_attr_right = ( struct port_attr* )ports_right->rec->attr;
+            name_right = ports_right->rec->name;
+            if( p_attr_right->int_name != NULL )
+                name_right = p_attr_right->int_name;
+            if( strcmp( name_right, ast_id->ast_id.name ) != 0 ) {
+                ports_right = ports_right->next;
+                continue;
+            }
+            // at this point we have two port with the same name as the link
+            if( connect ) {
+                // checks have been done previously, now do connections
+                connect_port( insttab, op_left, op_right, ports_left,
+                        ports_right, false );
+            }
+            else if( p_attr_left->mode != p_attr_right->mode ) {
+                // ERROR: cannot link ports with different modes
+                sprintf( __error_msg, ERROR_BAD_MODE, ERR_ERROR,
+                        ast_id->ast_id.name, op_left->name,
+                        ( ( struct inst_attr* )op_left->attr )->id,
+                        op_right->name,
+                        ( ( struct inst_attr* )op_right->attr )->id,
+                        ports_left->rec->line );
+                report_yyerror( __error_msg, ports_right->rec->line );
+            }
+            else {
+                // we are only checking and there is no mode error
+                ports_left->connect_cnt++;
+                ports_right->connect_cnt++;
+                /* printf( "Connection of %s(%d).%s and %s(%d).%s is valid\n", */
+                /*         op_left->name, */
+                /*         ( ( struct inst_attr* )op_left->attr )->id, name_left, */
+                /*         op_right->name, */
+                /*         ( ( struct inst_attr* )op_right->attr )->id, name_right */
+                /* ); */
+            }
+            ports_right = ports_right->next;
+        }
+        ports_left = ports_left->next;
+    }
+}
+
+/******************************************************************************/
+void connection_check_port_all( symrec** insttab, char* name, int id,
+        int line )
+{
+    symrec* op_inst = NULL;
+    symrec_list* ports = NULL;
+    char* port_name = NULL;
+    // get net instance from instance table
+    op_inst = instrec_get( insttab, name,
+            *utarray_back( __scope_stack ), id );
+    if ( op_inst == NULL ) return;
+    // iterate trough ports and check the connection count
+    ports = ( ( struct inst_attr* ) op_inst->attr )->ports;
+    while ( ports != NULL ) {
+        if( ports->connect_cnt == 0 ) {
+            port_name = ports->rec->name;
+            if( ( ( ( struct port_attr* )ports->rec->attr )->int_name != NULL )
+                   && ( strcmp( name, VAL_THIS ) == 0 ) ) {
+                port_name = ( ( struct port_attr* )ports->rec->attr )->int_name;
+            }
+            // ERROR: this port is left unconnected
+            sprintf( __error_msg, ERROR_NO_PORT_CON, ERR_ERROR, port_name,
+                    op_inst->name, ( ( struct inst_attr* )op_inst->attr )->id );
+            report_yyerror( __error_msg, line );
+        }
+        ports = ports->next;
+    }
+}
+
+/******************************************************************************/
+void connection_check_serial( symrec** insttab, ast_node* ast, bool connect )
+{
     ast_list* i_ptr;
     ast_list* j_ptr;
     ast_node* op_left;
@@ -335,7 +589,7 @@ void connection_check( symrec** insttab, ast_node* ast, bool connect ) {
             if( connect ) graph_add_edge( __n_con_graph, op_left->id,
                     op_right->id, NULL, STYLE_E_DEFAULT );
 #endif // DOT_CON
-            connection_check_port( insttab, op_left, op_right, connect );
+            connection_check_serial_port( insttab, op_left, op_right, connect );
         }
         while (j_ptr != 0);
     }
@@ -348,98 +602,9 @@ void connection_check( symrec** insttab, ast_node* ast, bool connect ) {
 }
 
 /******************************************************************************/
-void connection_check_connect( symrec** insttab, ast_node* ast, bool connect ) {
-    ast_list* list = NULL;
-    ast_list* list_next = NULL;
-    symrec* net = NULL;
-    symrec* net_next = NULL;
-    symrec* op_left = NULL;
-    symrec* op_right = NULL;
-    bool first = true;
-
-    // iterate through all symbols in the connection list
-    list_next = list = ast->connect.connects->ast_list;
-    do {
-        while( list != NULL ) {
-            // the IDs of all the instances connect referres to is unknown
-            if( net == NULL )
-                net = instrec_get( insttab, list->ast_node->ast_id.name,
-                        *utarray_back( __scope_stack ), -1 );
-            // iterate through all the instances with the same symbol
-            while( net != NULL ) {
-                if( op_left == NULL ) {
-                    // left operand is not yet assigned
-                    op_left = net;
-                }
-                else {
-                    // left operand is already assigned, lets assign the right one
-                    op_right = net;
-                    /* printf( "%d Check side port connection %s(%d) -- %s(%d)\n", */
-                    /*         connect, op_left->name, */
-                    /*         ( ( struct inst_attr* )op_left->attr )->id, */
-                    /*         op_right->name, */
-                    /*         ( ( struct inst_attr* )op_right->attr )->id ); */
-                    // do the connection check
-                    connection_check_port_id( insttab, op_left, op_right,
-                            ast->connect.id, false, connect );
-                }
-                net = net->next;
-                if( first ) {
-                    net_next = net;
-                    if( net_next == NULL ) list_next = list_next->next;
-                    first = false;
-                }
-            }
-            list = list->next;
-            if( first ) {
-                list_next = list;
-                first = false;
-            }
-        }
-        // check the next element in the list with every other element
-        op_left = NULL;
-        op_right = NULL;
-        first = true;
-        list = list_next;
-        net = net_next;
-    } while( ( list_next != NULL ) );
-}
-
-/******************************************************************************/
-void connection_check_link( symrec** insttab, ast_node* ast, bool connect ) {
-    ast_list* list = NULL;
-    symrec* op_left = NULL;
-    symrec* op_right = NULL;
-
-    // there can only be one instance of 'this' in this scope
-    op_left = instrec_get( insttab, VAL_THIS, *utarray_back( __scope_stack ),
-            -1 );
-
-    // iterate through all symbols in the connection list
-    list = ast->connect.connects->ast_list;
-    while( list != NULL ) {
-        // the IDs of all the instances connect referres to is unknown
-        op_right = instrec_get( insttab, list->ast_node->ast_id.name,
-                *utarray_back( __scope_stack ), -1 );
-        // iterate through all the instances with the same symbol
-        while( op_right != NULL ) {
-            /* printf( "%d Check link %s(%d) -- %s(%d)\n", */
-            /*         connect, op_left->name, */
-            /*         ( ( struct inst_attr* )op_left->attr )->id, */
-            /*         op_right->name, */
-            /*         ( ( struct inst_attr* )op_right->attr )->id ); */
-            // do the connection check
-            connection_check_port_id( insttab, op_left, op_right,
-                    ast->connect.id, true, connect );
-            op_right = op_right->next;
-        }
-        list = list->next;
-    }
-}
-
-/******************************************************************************/
-void connection_check_port( symrec** insttab, ast_node* net1, ast_node* net2,
-        bool connect ) {
+void connection_check_serial_port( symrec** insttab, ast_node* net1,
+        ast_node* net2, bool connect )
+{
     bool is_connected = false;
     symrec_list* ports_left = NULL;
     symrec_list* ports_right = NULL;
@@ -475,7 +640,7 @@ void connection_check_port( symrec** insttab, ast_node* net1, ast_node* net2,
                             && ( p_attr_right->collection == VAL_NONE ) ) )
               ) {
                 if( connect ) {
-                    // checks heve been done previously, now do connections
+                    // checks have been done previously, now do connections
                     connect_port( insttab, op_left, op_right, ports_left,
                             ports_right, false );
                 }
@@ -518,98 +683,9 @@ void connection_check_port( symrec** insttab, ast_node* net1, ast_node* net2,
 }
 
 /******************************************************************************/
-void connection_check_port_all( symrec** insttab, char* name, int id,
-        int line ) {
-    symrec* op_inst = NULL;
-    symrec_list* ports = NULL;
-    // get net instance from instance table
-    op_inst = instrec_get( insttab, name,
-            *utarray_back( __scope_stack ), id );
-    if ( op_inst == NULL ) return;
-    // iterate trough ports and check the connection count
-    ports = ( ( struct inst_attr* ) op_inst->attr )->ports;
-    while ( ports != NULL ) {
-        if( ports->connect_cnt == 0 ) {
-            // ERROR: this port is left unconnected
-            sprintf( __error_msg, ERROR_NO_PORT_CON, ERR_ERROR,
-                    ports->rec->name, op_inst->name,
-                    ( ( struct inst_attr* )op_inst->attr )->id );
-            report_yyerror( __error_msg, line );
-        }
-        ports = ports->next;
-    }
-}
-
-/******************************************************************************/
-void connection_check_port_id( symrec** insttab, symrec* op_left,
-        symrec* op_right, ast_node* ast_con_id, bool link, bool connect ) {
-    symrec_list* port_left = NULL;
-    symrec_list* port_right = NULL;
-
-    port_left = connection_check_port_id_get( op_left, ast_con_id, link,
-            connect );
-    port_right = connection_check_port_id_get( op_right, ast_con_id, link,
-            connect );
-
-    // check whether ports can connect
-    if( ( port_left != NULL ) && ( port_right != NULL )
-            // exactly one needs to be true in order to connect:
-            //  either it is a link or the modes are different
-            && ( link != (
-                    ( ( struct port_attr* )port_left->rec->attr )->mode !=
-                    ( ( struct port_attr* )port_right->rec->attr )->mode )
-            ) ) {
-        if( connect ) {
-            // checks heve been done previously, now do connections
-            connect_port( insttab, op_left, op_right, port_left, port_right,
-                    true );
-        }
-        else {
-            // we are only checking and there is no mode error
-            // -> assign collections and increase connection count
-            port_left->connect_cnt++;
-            port_right->connect_cnt++;
-            /* printf( "Connection of %s.%s and %s.%s is valid\n", */
-            /*         op_left->name, port_left->rec->name, */
-            /*         op_right->name, port_right->rec->name ); */
-        }
-    }
-}
-
-/******************************************************************************/
-symrec_list* connection_check_port_id_get( symrec* op, ast_node* ast_id,
-        bool link, bool connect ) {
-    symrec_list* ports = NULL;
-    port_attr* p_attr = NULL;
-    char* name = NULL;
-
-    ports = ( ( struct inst_attr* ) op->attr )->ports;
-    while ( ports != NULL ) {
-        p_attr = ( struct port_attr* )ports->rec->attr;
-        name = ports->rec->name;
-        if( link && ( p_attr->int_name != NULL ) ) {
-            name = p_attr->int_name;
-        }
-        if( ( strcmp( name, ast_id->ast_id.name ) == 0 )
-            && ( link || ( p_attr->collection == VAL_SIDE ) ) ) {
-            // ports have the same name and the collection matches
-            break;
-        }
-        ports = ports->next;
-    }
-    if( ( ports == NULL ) && !connect ) {
-        // ERROR: this net has no such port
-        sprintf( __error_msg, ERROR_UNDEF_PORT, ERR_ERROR,
-                ast_id->ast_id.name, op->name,
-                ( ( struct inst_attr* )op->attr)->id );
-        report_yyerror( __error_msg, ast_id->ast_id.line );
-    }
-    return ports;
-}
-
-/******************************************************************************/
 void connect_port( symrec** insttab, symrec* op_left, symrec* op_right,
-        symrec_list* ports_left, symrec_list* ports_right, bool side ) {
+        symrec_list* ports_left, symrec_list* ports_right, bool side )
+{
 #ifdef DOT_CON
     int id_node_start, id_node_end, id_temp;
     int style_edge = STYLE_E_PORT;
@@ -658,7 +734,8 @@ void connect_port( symrec** insttab, symrec* op_left, symrec* op_right,
 }
 
 /******************************************************************************/
-void* install_ids( symrec** symtab, ast_node* ast, bool is_sync ) {
+void* install_ids( symrec** symtab, ast_node* ast, bool is_sync )
+{
     ast_list* list = NULL;
     net_attr* b_attr = NULL;
     port_attr* p_attr = NULL;
@@ -777,7 +854,8 @@ void* install_ids( symrec** symtab, ast_node* ast, bool is_sync ) {
 }
 
 /******************************************************************************/
-symrec* instrec_get( symrec** insttab, char* name, int scope, int id ) {
+symrec* instrec_get( symrec** insttab, char* name, int scope, int id )
+{
     symrec* item = NULL;
     char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
 
@@ -806,7 +884,8 @@ symrec* instrec_get( symrec** insttab, char* name, int scope, int id ) {
 
 /******************************************************************************/
 symrec* instrec_put( symrec** insttab, char* name, int scope, int type, int id,
-        symrec* rec ) {
+        symrec* rec )
+{
     char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
     inst_attr* attr = NULL;
     symrec_list* inst_ports = NULL;
@@ -870,7 +949,8 @@ symrec* instrec_put( symrec** insttab, char* name, int scope, int type, int id,
 }
 
 /******************************************************************************/
-void report_yyerror( const char* msg, int line ) {
+void report_yyerror( const char* msg, int line )
+{
     yylineno = line;
     yynerrs++;
     yyerror( msg );
@@ -878,7 +958,8 @@ void report_yyerror( const char* msg, int line ) {
 
 /******************************************************************************/
 void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
-        bool side ) {
+        bool side )
+{
 #ifdef DOT_CON
     int id_node_start, id_node_end, id_temp;
     char symbol[4];
@@ -921,7 +1002,8 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
 }
 
 /******************************************************************************/
-symrec* symrec_get( symrec** symtab, char *name, int line ) {
+symrec* symrec_get( symrec** symtab, char *name, int line )
+{
     int* p = NULL;
     symrec* item = NULL;
     char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
@@ -951,7 +1033,8 @@ symrec* symrec_get( symrec** symtab, char *name, int line ) {
 
 /******************************************************************************/
 symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
-        void* attr, int line ) {
+        void* attr, int line )
+{
     symrec* item = NULL;
     symrec* new_item = NULL;
     symrec* previous_item = NULL;

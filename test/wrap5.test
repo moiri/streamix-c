@@ -1,0 +1,8 @@
+box L( out p ) on fl
+net W { up down in p } {
+    link p { A }
+    box A ( up down in p ) on func_a
+    A
+}
+
+L.W
