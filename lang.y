@@ -333,7 +333,7 @@ int main( int argc, char **argv ) {
     /* fclose(con_graph); */
     if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );
 #ifdef DOT_AST
-    else draw_ast_graph( ast );
+    draw_ast_graph( ast );
 #endif // DOT_AST
 
     return 0;

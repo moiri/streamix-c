@@ -93,11 +93,11 @@
 #define ERR_WARNING "warning"
 #define ERR_ERROR   "error"
 
-#define ERROR_UNDEFINED_ID  "%s: use of undeclared identifier '%s'"
+#define ERROR_UNDEF_ID      "%s: use of undeclared identifier '%s'"
 #define ERROR_DUPLICATE_ID  "%s: redefinition of '%s'"
 #define ERROR_BAD_MODE      "%s: conflicting modes of ports '%s' in '%s'(%d) and '%s'(%d) (line %d)"
 #define ERROR_NO_NET_CON    "%s: no port connection in serial combinition of '%s'(%d) and '%s'(%d)"
 #define ERROR_NO_PORT_CON   "%s: port '%s' in '%s'(%d) is not connected"
-#define ERROR_NO_PORT       "%s: no side port '%s' in '%s'(%d)"
+#define ERROR_UNDEF_PORT    "%s: use of undeclared port '%s' in '%s'(%d)"
 
 #endif /* DEFINES_H */

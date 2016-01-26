@@ -50,6 +50,7 @@ struct net_attr {
 };
 // attributes of ports (all kind of ports: box (sync) or net)
 struct port_attr {
+    char*   int_name;       // internal name or NULL
     int     mode;           // input or output
     int     collection;     // VAL_UP, VAL_DOWN, VAL_SIDE
     // sync attributes
@@ -114,6 +115,28 @@ void check_port_all( symrec**, ast_node* );
 void connection_check( symrec**, ast_node*, bool );
 
 /**
+ * establish the connections of the connect instructions
+ *
+ * @param symrec**:     pointer to the instance table
+ * @param ast_node*:    pointer to the ast node
+ * @param bool:         flag to indicate wheather it is a check run (false) or
+ *                      whether copy sinchronizers are spawned and connections are
+ *                      drawn
+ * */
+void connection_check_connect( symrec**, ast_node*, bool );
+
+/**
+ * check and establish the connections of the link instructions
+ *
+ * @param symrec**:     pointer to the instance table
+ * @param ast_node*:    pointer to the ast node
+ * @param bool:         flag to indicate wheather it is a check run (false) or
+ *                      whether copy sinchronizers are spawned and connections are
+ *                      drawn
+ * */
+void connection_check_link( symrec**, ast_node*, bool );
+
+/**
  * establish and check the port connections. This function establishes the port
  * connections and adds the corresponding edges to the port connection graph
  *
@@ -135,33 +158,21 @@ void connection_check_port( symrec**, ast_node*, ast_node*, bool );
 void connection_check_port_all( symrec**, ast_node* );
 
 /**
- * establish the connections of the connect instructions
- *
- * @param symrec**:     pointer to the instance table
- * @param ast_node*:    pointer to the ast node
- * @param bool:         flag to indicate whether links are checked (true) or
- *                      connects (false)
- * @param bool:         flag to indicate wheather it is a check run (false) or
- *                      whether copy sinchronizers are spawned and connections are
- *                      drawn
- * */
-void connection_check_side( symrec**, ast_node*, bool, bool );
-
-/**
- * establish and check the side port connections. This function establishes the port
+ * establish and check port connections by searching for a specific port name
+ * given by the ast_id parameter. This function establishes the port
  * connections and adds the corresponding edges to the port connection graph
  *
  * @param symrec**:     pointer to the symbol table
  * @param symrec*:      pointer to the first net operand
  * @param symrec*:      pointer to the second net operand
- * @param ast_node*:    pointer to the connect ast node
+ * @param ast_node*:    pointer to the id ast node
  * @param bool:         flag to indicate whether links are checked (true) or
  *                      connects (false)
  * @param bool:         flag to indicate wheather it is a check run (false) or
  *                      whether copy sinchronizers are spawned and connections are
  *                      drawn
  * */
-void connection_check_side_port( symrec**, symrec*, symrec*, ast_node*, bool, bool );
+void connection_check_port_id( symrec**, symrec*, symrec*, ast_node*, bool, bool );
 
 /**
  * Get the pointer to the corresponding side port or return a NULL pointer
@@ -176,7 +187,7 @@ void connection_check_side_port( symrec**, symrec*, symrec*, ast_node*, bool, bo
  * @return symrec_list:
  *      pointer to the side port or NULL if no side port has been found
  * */
-symrec_list* connection_check_side_port_get( symrec*, ast_node*, bool, bool );
+symrec_list* connection_check_port_id_get( symrec*, ast_node*, bool, bool );
 
 /**
  * spawn copy synchronizers if necessary and connect the ports of a serial connection

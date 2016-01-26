@@ -1,6 +1,6 @@
 net W { in p1(a), out p2(b) } {
-    link a {A}
-    link b {B}
+    link a { A }
+    link b { B }
     box A ( in a, out p_int ) on func_a
     box B ( in p_int, out b ) on func_b
     A.B
