@@ -468,6 +468,7 @@ void connection_check_link( symrec** insttab, ast_node* ast, bool connect )
 void connection_check_link_port( symrec** insttab, symrec* op_left,
         symrec* op_right, ast_node* ast_id, bool connect )
 {
+    bool is_connected = false;
     symrec_list* ports_left = NULL;
     symrec_list* ports_right = NULL;
     port_attr* p_attr_left = NULL;
@@ -516,6 +517,7 @@ void connection_check_link_port( symrec** insttab, symrec* op_left,
                 // we are only checking and there is no mode error
                 ports_left->connect_cnt++;
                 ports_right->connect_cnt++;
+                is_connected = true;
                 /* printf( "Connection of %s(%d).%s and %s(%d).%s is valid\n", */
                 /*         op_left->name, */
                 /*         ( ( struct inst_attr* )op_left->attr )->id, name_left, */
@@ -526,6 +528,14 @@ void connection_check_link_port( symrec** insttab, symrec* op_left,
             ports_right = ports_right->next;
         }
         ports_left = ports_left->next;
+    }
+
+    // perform further checks on port connections
+    if( !connect && !is_connected ) {
+        // ERROR: there is no connection between the wrapper and this net
+        sprintf( __error_msg, ERROR_UNDEF_PORT, ERR_ERROR, ast_id->ast_id.name,
+                op_right->name, ( ( struct inst_attr* )op_right->attr )->id );
+        report_yyerror( __error_msg, ast_id->ast_id.line );
     }
 }
 
