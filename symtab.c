@@ -276,6 +276,8 @@ void check_port_all( symrec** insttab, ast_node* ast ) {
         case AST_WRAP:
             _scope++;
             utarray_push_back( __scope_stack, &_scope );
+            connection_check_port_all( insttab, VAL_THIS, ast->wrap.id->id,
+                    ast->wrap.id->ast_id.line );
             check_port_all( insttab, ast->wrap.stmts );
             utarray_pop_back( __scope_stack );
             break;
@@ -288,7 +290,8 @@ void check_port_all( symrec** insttab, ast_node* ast ) {
             check_port_all( insttab, ast->op.right );
             break;
         case AST_ID:
-            connection_check_port_all( insttab, ast );
+            connection_check_port_all( insttab, ast->ast_id.name, ast->id,
+                    ast->ast_id.line );
             break;
         default:
             ;
@@ -515,12 +518,13 @@ void connection_check_port( symrec** insttab, ast_node* net1, ast_node* net2,
 }
 
 /******************************************************************************/
-void connection_check_port_all( symrec** insttab, ast_node* op ) {
+void connection_check_port_all( symrec** insttab, char* name, int id,
+        int line ) {
     symrec* op_inst = NULL;
     symrec_list* ports = NULL;
     // get net instance from instance table
-    op_inst = instrec_get( insttab, op->ast_id.name,
-            *utarray_back( __scope_stack ), op->id );
+    op_inst = instrec_get( insttab, name,
+            *utarray_back( __scope_stack ), id );
     if ( op_inst == NULL ) return;
     // iterate trough ports and check the connection count
     ports = ( ( struct inst_attr* ) op_inst->attr )->ports;
@@ -530,7 +534,7 @@ void connection_check_port_all( symrec** insttab, ast_node* op ) {
             sprintf( __error_msg, ERROR_NO_PORT_CON, ERR_ERROR,
                     ports->rec->name, op_inst->name,
                     ( ( struct inst_attr* )op_inst->attr )->id );
-            report_yyerror( __error_msg, op->ast_id.line );
+            report_yyerror( __error_msg, line );
         }
         ports = ports->next;
     }

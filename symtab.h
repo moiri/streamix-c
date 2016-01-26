@@ -153,9 +153,11 @@ void connection_check_port( symrec**, ast_node*, ast_node*, bool );
  * check whether all ports of the net are connected
  *
  * @param symrec**:     pointer to the symbol table
- * @param ast_node*:    pointer to the net operand
+ * @param char*:        name of the net
+ * @param int:          id of the net
+ * @param int:          line number of the occurance in the source code
  * */
-void connection_check_port_all( symrec**, ast_node* );
+void connection_check_port_all( symrec**, char*, int, int );
 
 /**
  * establish and check port connections by searching for a specific port name
