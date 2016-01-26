@@ -363,27 +363,34 @@ void connection_check_connect( symrec** insttab, ast_node* ast, bool connect )
 
 /******************************************************************************/
 void connection_check_connect_port( symrec** insttab, symrec* op_left,
-        symrec* op_right, ast_node* ast_con_id, bool connect )
+        symrec* op_right, ast_node* ast_id, bool connect )
 {
     symrec_list* port_left = NULL;
     symrec_list* port_right = NULL;
 
-    port_left = connection_check_connect_port_get( op_left, ast_con_id,
+    port_left = connection_check_connect_port_get( op_left, ast_id,
             connect );
-    port_right = connection_check_connect_port_get( op_right, ast_con_id,
+    port_right = connection_check_connect_port_get( op_right, ast_id,
             connect );
 
     // check whether ports can connect
-    if( ( port_left != NULL ) && ( port_right != NULL )
-            // exactly one needs to be true in order to connect:
-            //  either it is a link or the modes are different
-            && ( ( ( struct port_attr* )port_left->rec->attr )->mode !=
-                    ( ( struct port_attr* )port_right->rec->attr )->mode )
-            ) {
+    if( ( port_left != NULL ) && ( port_right != NULL ) ) {
+        // each operand has a side port with the appropriate name
         if( connect ) {
             // checks heve been done previously, now do connections
             connect_port( insttab, op_left, op_right, port_left, port_right,
                     true );
+        }
+        else if ( ( ( struct port_attr* )port_left->rec->attr )->mode ==
+                    ( ( struct port_attr* )port_right->rec->attr )->mode ) {
+            // ERROR: cannot connect side ports with the same mdoe
+            sprintf( __error_msg, ERROR_BAD_MODE, ERR_ERROR,
+                    ast_id->ast_id.name, op_left->name,
+                    ( ( struct inst_attr* )op_left->attr )->id,
+                    op_right->name,
+                    ( ( struct inst_attr* )op_right->attr )->id,
+                    port_left->rec->line );
+            report_yyerror( __error_msg, port_right->rec->line );
         }
         else {
             // we are only checking and there is no mode error
