@@ -171,9 +171,9 @@ void check_instances( symrec** insttab, ast_node* ast ) {
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
                     FLAG_WRAP );
             graph_init_subgraph( __n_con_graph, ast->wrap.id->ast_id.name,
-                    STYLE_SG_WRAPPER );
+                    ast->id, STYLE_SG_WRAPPER );
             graph_init_subgraph( __p_con_graph, ast->wrap.id->ast_id.name,
-                    STYLE_SG_WRAPPER );
+                    ast->id, STYLE_SG_WRAPPER );
 #endif // DOT_CON
             check_instances( insttab, ast->wrap.stmts );
 #ifdef DOT_CON
@@ -196,8 +196,10 @@ void check_instances( symrec** insttab, ast_node* ast ) {
                     FLAG_NET );
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
                     FLAG_NET );
-            graph_init_subgraph( __n_con_graph, "", STYLE_SG_PARALLEL );
-            graph_init_subgraph( __p_con_graph, "", STYLE_SG_PARALLEL );
+            graph_init_subgraph( __n_con_graph, "", ast->id,
+                    STYLE_SG_PARALLEL );
+            graph_init_subgraph( __p_con_graph, "", ast->id,
+                    STYLE_SG_PARALLEL );
 #endif // DOT_CON && DOT_STRUCT
             check_instances( insttab, ast->op.left );
             check_instances( insttab, ast->op.right );
@@ -216,8 +218,8 @@ void check_instances( symrec** insttab, ast_node* ast ) {
                     FLAG_NET );
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
                     FLAG_NET );
-            graph_init_subgraph( __n_con_graph, "", STYLE_SG_SERIAL );
-            graph_init_subgraph( __p_con_graph, "", STYLE_SG_SERIAL );
+            graph_init_subgraph( __n_con_graph, "", ast->id, STYLE_SG_SERIAL );
+            graph_init_subgraph( __p_con_graph, "", ast->id, STYLE_SG_SERIAL );
 #endif // DOT_CON && DOT_STRUCT
             check_instances( insttab, ast->op.left );
             check_instances( insttab, ast->op.right );

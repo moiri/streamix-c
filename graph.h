@@ -103,8 +103,9 @@ void graph_init ( FILE*, int );
  *
  * @param FILE*:    file pointer to the dot file
  * @param char*:    name of the net that is represented as a subgraph
+ * @param int:      id of the node
  * @param int:      scope of the net that is represented as a subgraph
  * */
-void graph_init_subgraph ( FILE*, char*, int );
+void graph_init_subgraph ( FILE*, char*, int, int );
 
 #endif /* GRAPH_H */

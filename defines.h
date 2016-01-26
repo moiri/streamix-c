@@ -11,7 +11,7 @@
 
 // constants
 #define CONST_ERROR_LEN 256
-#define CONST_SCOPE_LEN 4
+#define CONST_SCOPE_LEN 9
 
 // scanner values
 #define VAL_NONE    0

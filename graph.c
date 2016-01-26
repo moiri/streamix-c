@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int __cluster_id = 0;
-
 #ifdef DOT_AST
 char* node_label[] = {
     "box decl",
@@ -451,11 +449,10 @@ void graph_init( FILE* graph, int style ) {
 }
 
 /******************************************************************************/
-void graph_init_subgraph( FILE* graph, char* name, int style ) {
-    __cluster_id++;
+void graph_init_subgraph( FILE* graph, char* name, int id, int style ) {
     switch (style) {
         case STYLE_SG_PARALLEL:
-            fprintf( graph, "\tsubgraph clusterP%d {\n", __cluster_id );
+            fprintf( graph, "\tsubgraph clusterP%d {\n", id );
             fprintf( graph, "\tlabel=\"%s\";\n", name );
             fprintf( graph, "\tstyle=dotted;\n" );
 #ifdef DOT_COLOR
@@ -465,7 +462,7 @@ void graph_init_subgraph( FILE* graph, char* name, int style ) {
 #endif // DOT_CON
             break;
         case STYLE_SG_SERIAL:
-            fprintf( graph, "\tsubgraph clusterS%d {\n", __cluster_id );
+            fprintf( graph, "\tsubgraph clusterS%d {\n", id );
             fprintf( graph, "\tlabel=\"%s\";\n", name );
             fprintf( graph, "\tstyle=dashed;\n" );
 #ifdef DOT_COLOR
@@ -475,7 +472,7 @@ void graph_init_subgraph( FILE* graph, char* name, int style ) {
 #endif // DOT_CON
             break;
         case STYLE_SG_WRAPPER:
-            fprintf( graph, "\tsubgraph clusterW%d {\n", __cluster_id );
+            fprintf( graph, "\tsubgraph clusterW%d {\n", id );
             fprintf( graph, "\tlabel=\"%s\";\n", name );
             break;
         default:

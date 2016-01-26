@@ -1,3 +1,5 @@
+box L( out p1 ) on fl
+box R( in p2 ) on fr
 net W { in p1, out p2 } {
     link p1 { A }
     link p2 { B }
@@ -6,4 +8,4 @@ net W { in p1, out p2 } {
     A.B
 }
 
-W
+L.W.R
