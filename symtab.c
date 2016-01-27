@@ -39,6 +39,8 @@ void check_context( ast_node* ast )
     // install all symbols in the symtab
     install_ids( &symtab, ast, false );
     // check the context of all symbols and install instances in the insttab
+    instrec_put( &insttab, VAL_THIS, *utarray_back( __scope_stack ),
+            ID_WRAP, -1, NULL );
     check_ids( &symtab, &insttab, ast );
     // check the connections and draw the connection graphs
     check_instances( &insttab, ast );
@@ -313,6 +315,7 @@ void connection_check_connect( symrec** insttab, ast_node* ast, bool connect )
     symrec* op_left = NULL;
     symrec* op_right = NULL;
     bool first = true;
+    bool is_connected = false;
 
     // iterate through all symbols in the connection list
     list_next = list = ast->connect.connects->ast_list;
@@ -337,8 +340,8 @@ void connection_check_connect( symrec** insttab, ast_node* ast, bool connect )
                     /*         op_right->name, */
                     /*         ( ( struct inst_attr* )op_right->attr )->id ); */
                     // do the connection check
-                    connection_check_connect_port( insttab, op_left, op_right,
-                            ast->connect.id, connect );
+                    is_connected |= connection_check_connect_port( insttab,
+                            op_left, op_right, ast->connect.id, connect );
                 }
                 net = net->next;
                 if( first ) {
@@ -360,14 +363,25 @@ void connection_check_connect( symrec** insttab, ast_node* ast, bool connect )
         list = list_next;
         net = net_next;
     } while( ( list_next != NULL ) );
+
+    if ( !connect && !is_connected ) {
+        // ERROR: cannot connect side ports with the same mode
+        net = instrec_get( insttab, VAL_THIS, *utarray_back( __scope_stack ),
+                -1 );
+        sprintf( __error_msg, ERROR_BAD_MODE_SIDE, ERR_ERROR,
+                ast->connect.id->ast_id.name, net->name,
+                ( ( struct inst_attr* )net->attr )->id );
+        report_yyerror( __error_msg, ast->connect.id->ast_id.line );
+    }
 }
 
 /******************************************************************************/
-void connection_check_connect_port( symrec** insttab, symrec* op_left,
+bool connection_check_connect_port( symrec** insttab, symrec* op_left,
         symrec* op_right, ast_node* ast_id, bool connect )
 {
     symrec_list* port_left = NULL;
     symrec_list* port_right = NULL;
+    bool is_connected = false;
 
     port_left = connection_check_connect_port_get( op_left, ast_id,
             connect );
@@ -376,33 +390,27 @@ void connection_check_connect_port( symrec** insttab, symrec* op_left,
 
     // check whether ports can connect
     if( ( port_left != NULL ) && ( port_right != NULL ) ) {
-        // each operand has a side port with the appropriate name
-        if( connect ) {
-            // checks heve been done previously, now do connections
-            connect_port_connect( insttab, op_left, op_right, port_left,
-                    port_right );
-        }
-        else if ( ( ( struct port_attr* )port_left->rec->attr )->mode ==
+        if ( ( ( struct port_attr* )port_left->rec->attr )->mode !=
                     ( ( struct port_attr* )port_right->rec->attr )->mode ) {
-            // ERROR: cannot connect side ports with the same mdoe
-            sprintf( __error_msg, ERROR_BAD_MODE, ERR_ERROR,
-                    ast_id->ast_id.name, op_left->name,
-                    ( ( struct inst_attr* )op_left->attr )->id,
-                    op_right->name,
-                    ( ( struct inst_attr* )op_right->attr )->id,
-                    port_left->rec->line );
-            report_yyerror( __error_msg, port_right->rec->line );
-        }
-        else {
-            // we are only checking and there is no mode error
-            // -> assign collections and increase connection count
-            port_left->connect_cnt++;
-            port_right->connect_cnt++;
-            /* printf( "Connection of %s.%s and %s.%s is valid\n", */
-            /*         op_left->name, port_left->rec->name, */
-            /*         op_right->name, port_right->rec->name ); */
+            // each operand has a side port with the appropriate name and the
+            // mode matches
+            if( connect ) {
+                // checks have been done previously, now do connections
+                connect_port_connect( insttab, op_left, op_right, port_left,
+                        port_right );
+            }
+            else {
+                // we are only checking and there is no mode error
+                is_connected = true;
+                port_left->connect_cnt++;
+                port_right->connect_cnt++;
+                /* printf( "Connection of %s.%s and %s.%s is valid\n", */
+                /*         op_left->name, port_left->rec->name, */
+                /*         op_right->name, port_right->rec->name ); */
+            }
         }
     }
+    return is_connected;
 }
 
 /******************************************************************************/
@@ -513,28 +521,30 @@ void connection_check_link_port( symrec** insttab, symrec* op_left,
                 continue;
             }
             // at this point we have two port with the same name as the link
-            if( connect ) {
-                // checks have been done previously, now do connections
-                connect_port_link( insttab, op_left, op_right, ports_left,
-                        ports_right, sync_id );
+            if( p_attr_left->mode == p_attr_right->mode ) {
+                if( connect ) {
+                    // checks have been done previously, now do connections
+                    connect_port_link( insttab, op_left, op_right, ports_left,
+                            ports_right, sync_id );
+                }
+                else {
+                    // we are only checking and there is no mode error
+                    ports_left->connect_cnt++;
+                    ports_right->connect_cnt++;
+                    is_connected = true;
+                    /* printf( "Connection of %s(%d).%s and %s(%d).%s is valid\n", */
+                    /*         op_left->name, i_attr_left->id, name_left, */
+                    /*         op_right->name, i_attr_right->id, name_right */
+                    /* ); */
+                }
             }
-            else if( p_attr_left->mode != p_attr_right->mode ) {
+            else if( !connect ) {
                 // ERROR: cannot link ports with different modes
                 sprintf( __error_msg, ERROR_BAD_MODE, ERR_ERROR,
                         ast_id->ast_id.name, op_left->name, i_attr_left->id,
                         op_right->name, i_attr_right->id,
                         ports_left->rec->line );
                 report_yyerror( __error_msg, ports_right->rec->line );
-            }
-            else {
-                // we are only checking and there is no mode error
-                ports_left->connect_cnt++;
-                ports_right->connect_cnt++;
-                is_connected = true;
-                /* printf( "Connection of %s(%d).%s and %s(%d).%s is valid\n", */
-                /*         op_left->name, i_attr_left->id, name_left, */
-                /*         op_right->name, i_attr_right->id, name_right */
-                /* ); */
             }
             ports_right = ports_right->next;
         }
@@ -671,12 +681,23 @@ void connection_check_serial_port( symrec** insttab, ast_node* net1,
                         /*     && ( p_attr_right->collection == VAL_NONE ) ) ) */
                     || ( p_attr_right->collection == VAL_NONE ) )
               ) {
-                if( connect ) {
-                    // checks have been done previously, now do connections
-                    connect_port_serial( insttab, op_left, op_right, ports_left,
-                            ports_right );
+                if( p_attr_left->mode != p_attr_right->mode ) {
+                    if( connect ) {
+                        // checks have been done previously, now do connections
+                        connect_port_serial( insttab, op_left, op_right,
+                                ports_left, ports_right );
+                    }
+                    else {
+                        // we are only checking and there is no mode error
+                        ports_left->connect_cnt++;
+                        ports_right->connect_cnt++;
+                        is_connected = true;
+                        /* printf( "Connection check of %s.%s and %s.%s\n", */
+                        /*         net1->ast_id.name, ports_left->rec->name, */
+                        /*         net2->ast_id.name, ports_right->rec->name ); */
+                    }
                 }
-                else if( p_attr_left->mode == p_attr_right->mode ) {
+                else if( !connect ) {
                     // ERROR: cannot connect ports with the same name and mode
                     sprintf( __error_msg, ERROR_BAD_MODE, ERR_ERROR,
                             ports_right->rec->name, op_left->name,
@@ -685,18 +706,6 @@ void connection_check_serial_port( symrec** insttab, ast_node* net1,
                             ( ( struct inst_attr* )op_right->attr )->id,
                             ports_left->rec->line );
                     report_yyerror( __error_msg, ports_right->rec->line );
-                }
-                else {
-                    // we are only checking and there is no mode error
-                    // -> assign collections and increase connection count
-                    /* p_attr_left->collection = VAL_DOWN; */
-                    /* p_attr_right->collection = VAL_UP; */
-                    ports_left->connect_cnt++;
-                    ports_right->connect_cnt++;
-                    is_connected = true;
-                    /* printf( "Connection check of %s.%s and %s.%s\n", */
-                    /*         net1->ast_id.name, ports_left->rec->name, */
-                    /*         net2->ast_id.name, ports_right->rec->name ); */
                 }
             }
             ports_right = ports_right->next;

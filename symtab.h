@@ -127,7 +127,7 @@ void connection_check_connect( symrec**, ast_node*, bool );
  *                      whether copy sinchronizers are spawned and connections are
  *                      drawn
  * */
-void connection_check_connect_port( symrec**, symrec*, symrec*, ast_node*, bool );
+bool connection_check_connect_port( symrec**, symrec*, symrec*, ast_node*, bool );
 
 /**
  * Get the pointer to the corresponding side port or return a NULL pointer

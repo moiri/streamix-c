@@ -257,7 +257,7 @@ void graph_add_edge ( FILE* graph, int start, int end, char* label,
                     || ( style == STYLE_E_SPORT_BI ) )
                 fprintf( graph, ":s" );
             fprintf( graph, "[color=%s", COLOR_SIDE );
-            fprintf( graph, ", constraint=false" );
+            /* fprintf( graph, ", constraint=false" ); */
 #ifdef DOT_EDGE_LABEL
             fprintf( graph, ", xlabel=\"%s\", fontsize=10", label );
 #endif // DOT_EDGE_LABEL
@@ -346,7 +346,7 @@ void graph_fix_dot( char* t_path, char* r_path )
 {
     FILE* r_graph;
     FILE* t_graph;
-    FILE* d_graph;
+    /* FILE* d_graph; */
     char str[512];
     char* ptr = NULL;
     char flag;
