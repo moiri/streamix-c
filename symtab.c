@@ -661,15 +661,15 @@ void connection_check_serial_port( symrec** insttab, ast_node* net1,
                 // the left port is in DS
                 && ( ( p_attr_left->collection == VAL_DOWN )
                     // or we are doing checks and the port is in no collection
-                        || ( !connect
-                            && ( p_attr_left->collection == VAL_NONE ) ) )
-                    /* || ( p_attr_left->collection == VAL_NONE ) ) */
+                        /* || ( !connect */
+                            /* && ( p_attr_left->collection == VAL_NONE ) ) ) */
+                    || ( p_attr_left->collection == VAL_NONE ) )
                 // the right port is in US
                 && ( ( p_attr_right->collection == VAL_UP )
                     // or we are doing checks and the port is in no collection
-                        || ( !connect
-                            && ( p_attr_right->collection == VAL_NONE ) ) )
-                    /* || ( p_attr_right->collection == VAL_NONE ) ) */
+                        /* || ( !connect */
+                        /*     && ( p_attr_right->collection == VAL_NONE ) ) ) */
+                    || ( p_attr_right->collection == VAL_NONE ) )
               ) {
                 if( connect ) {
                     // checks have been done previously, now do connections
@@ -689,8 +689,8 @@ void connection_check_serial_port( symrec** insttab, ast_node* net1,
                 else {
                     // we are only checking and there is no mode error
                     // -> assign collections and increase connection count
-                    p_attr_left->collection = VAL_DOWN;
-                    p_attr_right->collection = VAL_UP;
+                    /* p_attr_left->collection = VAL_DOWN; */
+                    /* p_attr_right->collection = VAL_UP; */
                     ports_left->connect_cnt++;
                     ports_right->connect_cnt++;
                     is_connected = true;
