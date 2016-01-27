@@ -1142,41 +1142,6 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
 }
 
 /******************************************************************************/
-void spawn_synchronizer_link( symrec** insttab, symrec_list* port, int net_id )
-{
-#ifdef DOT_CON
-    int id_node_start, id_node_end, id_temp;
-    char symbol[4];
-    sprintf( symbol, "×" );
-#endif // DOT_CON
-    char name[10];
-    // this port connects to multiple other ports -> a copy synchronizer
-    // is needed
-    __node_id++;
-    sprintf( name, "%d", __node_id );
-    port->cp_sync = instrec_put( insttab, name, *utarray_back( __scope_stack ),
-            ID_CPSYNC, __node_id, NULL );
-#ifdef DOT_CON
-    // create a copy synchroniyer for each connect instruction
-    id_node_start = __node_id;
-    id_node_end = net_id;
-    if( ( ( struct port_attr* )port->rec->attr )->mode == VAL_IN ) {
-        id_temp = id_node_start;
-        id_node_start = id_node_end;
-        id_node_end = id_temp;
-        sprintf( symbol, "+" );
-    }
-    graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-            FLAG_NET );
-    graph_add_node( __p_con_graph, __node_id, symbol, STYLE_N_NET_CPL );
-    graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-            FLAG_WRAP_PRE );
-    graph_add_edge( __p_con_graph, id_node_start, id_node_end,
-            port->rec->name, STYLE_E_LPORT );
-#endif // DOT_CON
-}
-
-/******************************************************************************/
 symrec* symrec_get( symrec** symtab, char *name, int line )
 {
     int* p = NULL;

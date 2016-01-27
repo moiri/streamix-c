@@ -456,13 +456,14 @@ void graph_fix_dot( char* t_path, char* r_path )
     }
     fclose( t_graph );
     // copy the fixed dot file back to the original file
-    r_graph = fopen( r_path, "r" );
-    d_graph = fopen( DEBUG_DOT_PATH, "w" );
-    while( fgets( str, 512, r_graph ) ) {
-        fprintf( d_graph, "%s", str );
-    }
-    fclose( r_graph );
-    fclose( d_graph );
+    /* // save the original file in order to debug */
+    /* r_graph = fopen( r_path, "r" ); */
+    /* d_graph = fopen( DEBUG_DOT_PATH, "w" ); */
+    /* while( fgets( str, 512, r_graph ) ) { */
+    /*     fprintf( d_graph, "%s", str ); */
+    /* } */
+    /* fclose( r_graph ); */
+    /* fclose( d_graph ); */
     t_graph = fopen( t_path, "r" );
     r_graph = fopen( r_path, "w" );
     while( fgets( str, 512, t_graph ) ) {

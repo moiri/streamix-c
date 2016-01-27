@@ -270,7 +270,6 @@ void report_yyerror( const char*, int );
  * @param bool:         indicater wheter it is part of a side port connection
  * */
 void spawn_synchronizer( symrec**, symrec_list*, int, int );
-void spawn_synchronizer_link( symrec**, symrec_list*, int );
 
 /**
  * Get an identifier from the symbol table.
