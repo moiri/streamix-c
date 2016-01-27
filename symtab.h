@@ -166,7 +166,7 @@ void connection_check_link( symrec**, ast_node*, bool );
  *                      whether copy sinchronizers are spawned and connections are
  *                      drawn
  * */
-void connection_check_link_port( symrec**, symrec*, symrec*, ast_node*, bool );
+void connection_check_link_port( symrec**, symrec*, symrec*, ast_node*, int, bool );
 
 /**
  * check whether all ports of the net are connected
@@ -211,7 +211,9 @@ void connection_check_serial_port( symrec**, ast_node*, ast_node*, bool );
  * @param ast_node*:    pointer to the right operand
  * @param bool:         indicater wheter it is part of a side port connection
  * */
-void connect_port( symrec**, symrec*, symrec*, symrec_list*, symrec_list*, bool );
+void connect_port_connect( symrec**, symrec*, symrec*, symrec_list*, symrec_list* );
+void connect_port_link( symrec**, symrec*, symrec*, symrec_list*, symrec_list*, int );
+void connect_port_serial( symrec**, symrec*, symrec*, symrec_list*, symrec_list* );
 
 /**
  * put symbol names into the symbol table. this includes collision and scope
@@ -267,7 +269,8 @@ void report_yyerror( const char*, int );
  * @param int:          id of the net instance the port belongs to
  * @param bool:         indicater wheter it is part of a side port connection
  * */
-void spawn_synchronizer( symrec**, symrec_list*, int, bool );
+void spawn_synchronizer( symrec**, symrec_list*, int, int );
+void spawn_synchronizer_link( symrec**, symrec_list*, int );
 
 /**
  * Get an identifier from the symbol table.

@@ -134,6 +134,7 @@ void check_instances( symrec** insttab, ast_node* ast )
     switch( ast->node_type ) {
         case AST_LINK:
             connection_check_link( insttab, ast, false );
+            connection_check_link( insttab, ast, true );
             break;
         case AST_CONNECT:
             connection_check_connect( insttab, ast, false );
@@ -378,8 +379,8 @@ void connection_check_connect_port( symrec** insttab, symrec* op_left,
         // each operand has a side port with the appropriate name
         if( connect ) {
             // checks heve been done previously, now do connections
-            connect_port( insttab, op_left, op_right, port_left, port_right,
-                    true );
+            connect_port_connect( insttab, op_left, op_right, port_left,
+                    port_right );
         }
         else if ( ( ( struct port_attr* )port_left->rec->attr )->mode ==
                     ( ( struct port_attr* )port_right->rec->attr )->mode ) {
@@ -437,6 +438,7 @@ void connection_check_link( symrec** insttab, ast_node* ast, bool connect )
     ast_list* list = NULL;
     symrec* op_left = NULL;
     symrec* op_right = NULL;
+    int sync_id = -1;
 
     // there can only be one instance of 'this' in this scope
     op_left = instrec_get( insttab, VAL_THIS, *utarray_back( __scope_stack ),
@@ -448,6 +450,17 @@ void connection_check_link( symrec** insttab, ast_node* ast, bool connect )
         // the IDs of all the instances connect referres to is unknown
         op_right = instrec_get( insttab, list->ast_node->ast_id.name,
                 *utarray_back( __scope_stack ), -1 );
+
+#ifdef DOT_CON
+        // create an invisible node to draw the wrapper connections
+        if( connect ) {
+            __node_id++;
+            sync_id = __node_id;
+            graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+                    FLAG_WRAP_PRE );
+            graph_add_node( __p_con_graph, sync_id, "", STYLE_N_NET_INVIS );
+        }
+#endif // DOT_CON
         // iterate through all the instances with the same symbol
         while( op_right != NULL ) {
             /* printf( "%d Check link %s(%d) -- %s(%d)\n", */
@@ -457,7 +470,7 @@ void connection_check_link( symrec** insttab, ast_node* ast, bool connect )
             /*         ( ( struct inst_attr* )op_right->attr )->id ); */
             // do the connection check
             connection_check_link_port( insttab, op_left, op_right,
-                    ast->connect.id, connect );
+                    ast->connect.id, sync_id, connect );
             op_right = op_right->next;
         }
         list = list->next;
@@ -466,7 +479,7 @@ void connection_check_link( symrec** insttab, ast_node* ast, bool connect )
 
 /******************************************************************************/
 void connection_check_link_port( symrec** insttab, symrec* op_left,
-        symrec* op_right, ast_node* ast_id, bool connect )
+        symrec* op_right, ast_node* ast_id, int sync_id, bool connect )
 {
     bool is_connected = false;
     symrec_list* ports_left = NULL;
@@ -475,6 +488,8 @@ void connection_check_link_port( symrec** insttab, symrec* op_left,
     port_attr* p_attr_right = NULL;
     char* name_left = NULL;
     char* name_right = NULL;
+    inst_attr* i_attr_left = ( struct inst_attr* )op_left->attr;
+    inst_attr* i_attr_right = ( struct inst_attr* )op_right->attr;
 
     // check whether ports can connect
     ports_left = ( ( struct inst_attr* ) op_left->attr )->ports;
@@ -500,16 +515,14 @@ void connection_check_link_port( symrec** insttab, symrec* op_left,
             // at this point we have two port with the same name as the link
             if( connect ) {
                 // checks have been done previously, now do connections
-                connect_port( insttab, op_left, op_right, ports_left,
-                        ports_right, false );
+                connect_port_link( insttab, op_left, op_right, ports_left,
+                        ports_right, sync_id );
             }
             else if( p_attr_left->mode != p_attr_right->mode ) {
                 // ERROR: cannot link ports with different modes
                 sprintf( __error_msg, ERROR_BAD_MODE, ERR_ERROR,
-                        ast_id->ast_id.name, op_left->name,
-                        ( ( struct inst_attr* )op_left->attr )->id,
-                        op_right->name,
-                        ( ( struct inst_attr* )op_right->attr )->id,
+                        ast_id->ast_id.name, op_left->name, i_attr_left->id,
+                        op_right->name, i_attr_right->id,
                         ports_left->rec->line );
                 report_yyerror( __error_msg, ports_right->rec->line );
             }
@@ -519,10 +532,8 @@ void connection_check_link_port( symrec** insttab, symrec* op_left,
                 ports_right->connect_cnt++;
                 is_connected = true;
                 /* printf( "Connection of %s(%d).%s and %s(%d).%s is valid\n", */
-                /*         op_left->name, */
-                /*         ( ( struct inst_attr* )op_left->attr )->id, name_left, */
-                /*         op_right->name, */
-                /*         ( ( struct inst_attr* )op_right->attr )->id, name_right */
+                /*         op_left->name, i_attr_left->id, name_left, */
+                /*         op_right->name, i_attr_right->id, name_right */
                 /* ); */
             }
             ports_right = ports_right->next;
@@ -534,34 +545,36 @@ void connection_check_link_port( symrec** insttab, symrec* op_left,
     if( !connect && !is_connected ) {
         // ERROR: there is no connection between the wrapper and this net
         sprintf( __error_msg, ERROR_UNDEF_PORT, ERR_ERROR, ast_id->ast_id.name,
-                op_right->name, ( ( struct inst_attr* )op_right->attr )->id );
+                op_right->name, i_attr_right->id );
         report_yyerror( __error_msg, ast_id->ast_id.line );
     }
 }
 
 /******************************************************************************/
-void connection_check_port_all( symrec** insttab, char* name, int id,
-        int line )
+void connection_check_port_all( symrec** insttab, char* name, int id, int line )
 {
     symrec* op_inst = NULL;
     symrec_list* ports = NULL;
+    port_attr* p_attr = NULL;
+    inst_attr* i_attr = NULL;
     char* port_name = NULL;
     // get net instance from instance table
-    op_inst = instrec_get( insttab, name,
-            *utarray_back( __scope_stack ), id );
+    op_inst = instrec_get( insttab, name, *utarray_back( __scope_stack ), id );
     if ( op_inst == NULL ) return;
+    i_attr = ( struct inst_attr* )op_inst->attr;
     // iterate trough ports and check the connection count
     ports = ( ( struct inst_attr* ) op_inst->attr )->ports;
+    p_attr = ( struct port_attr* )ports->rec->attr;
     while ( ports != NULL ) {
         if( ports->connect_cnt == 0 ) {
             port_name = ports->rec->name;
-            if( ( ( ( struct port_attr* )ports->rec->attr )->int_name != NULL )
-                   && ( strcmp( name, VAL_THIS ) == 0 ) ) {
-                port_name = ( ( struct port_attr* )ports->rec->attr )->int_name;
+            if( ( p_attr->int_name != NULL )
+                    && ( strcmp( name, VAL_THIS ) == 0 ) ) {
+                port_name = p_attr->int_name;
             }
             // ERROR: this port is left unconnected
             sprintf( __error_msg, ERROR_NO_PORT_CON, ERR_ERROR, port_name,
-                    op_inst->name, ( ( struct inst_attr* )op_inst->attr )->id );
+                    i_attr->net->name, op_inst->name, i_attr->id );
             report_yyerror( __error_msg, line );
         }
         ports = ports->next;
@@ -650,16 +663,18 @@ void connection_check_serial_port( symrec** insttab, ast_node* net1,
                     // or we are doing checks and the port is in no collection
                         || ( !connect
                             && ( p_attr_left->collection == VAL_NONE ) ) )
+                    /* || ( p_attr_left->collection == VAL_NONE ) ) */
                 // the right port is in US
                 && ( ( p_attr_right->collection == VAL_UP )
                     // or we are doing checks and the port is in no collection
                         || ( !connect
                             && ( p_attr_right->collection == VAL_NONE ) ) )
+                    /* || ( p_attr_right->collection == VAL_NONE ) ) */
               ) {
                 if( connect ) {
                     // checks have been done previously, now do connections
-                    connect_port( insttab, op_left, op_right, ports_left,
-                            ports_right, false );
+                    connect_port_serial( insttab, op_left, op_right, ports_left,
+                            ports_right );
                 }
                 else if( p_attr_left->mode == p_attr_right->mode ) {
                     // ERROR: cannot connect ports with the same name and mode
@@ -700,13 +715,12 @@ void connection_check_serial_port( symrec** insttab, ast_node* net1,
 }
 
 /******************************************************************************/
-void connect_port( symrec** insttab, symrec* op_left, symrec* op_right,
-        symrec_list* ports_left, symrec_list* ports_right, bool side )
+void connect_port_connect( symrec** insttab, symrec* op_left, symrec* op_right,
+        symrec_list* ports_left, symrec_list* ports_right )
 {
 #ifdef DOT_CON
     int id_node_start, id_node_end, id_temp;
-    int style_edge = STYLE_E_PORT;
-    if( side ) style_edge = STYLE_E_SPORT;
+    int style_edge = STYLE_E_SPORT;
 #endif // DOT_CON
     /* printf( "Connect %s.%s with %s.%s\n", op_left->name, */
     /*         ports_left->rec->name, op_right->name, */
@@ -714,29 +728,29 @@ void connect_port( symrec** insttab, symrec* op_left, symrec* op_right,
     if( ( ports_left->connect_cnt > 1 )
             && ( ports_left->cp_sync == NULL ) )
         spawn_synchronizer( insttab, ports_left,
-                ( ( struct inst_attr* )op_left->attr )->id, side );
+                ( ( struct inst_attr* )op_left->attr )->id, TYPE_CONNECT );
     if( ( ports_right->connect_cnt > 1 )
             && ( ports_right->cp_sync == NULL ) )
         spawn_synchronizer( insttab, ports_right,
-                ( ( struct inst_attr* )op_right->attr )->id, side );
+                ( ( struct inst_attr* )op_right->attr )->id, TYPE_CONNECT );
 
 #ifdef DOT_CON
     if( ports_left->cp_sync != NULL ) {
         id_node_start = ( ( struct inst_attr* )ports_left->cp_sync->attr )->id;
-        if( side ) style_edge = STYLE_E_SPORT;
+        style_edge = STYLE_E_SPORT;
     }
     else {
         id_node_start = ( ( struct inst_attr* )op_left->attr )->id;
-        if( side ) style_edge = STYLE_E_SPORT_IN;
+        style_edge = STYLE_E_SPORT_IN;
     }
     if( ports_right->cp_sync != NULL ) {
         id_node_end = ( ( struct inst_attr* )ports_right->cp_sync->attr )->id;
     }
     else {
         id_node_end = ( ( struct inst_attr* )op_right->attr )->id;
-        if( side && ( style_edge == STYLE_E_SPORT_IN ) )
+        if( style_edge == STYLE_E_SPORT_IN )
             style_edge = STYLE_E_SPORT_BI;
-        else if( side && ( style_edge == STYLE_E_SPORT ) )
+        else if( style_edge == STYLE_E_SPORT )
             style_edge = STYLE_E_SPORT_OUT;
     }
 
@@ -747,6 +761,93 @@ void connect_port( symrec** insttab, symrec* op_left, symrec* op_right,
     }
     graph_add_edge( __p_con_graph, id_node_start, id_node_end,
             ports_left->rec->name, style_edge );
+#endif // DOT_CON
+}
+
+/******************************************************************************/
+void connect_port_link( symrec** insttab, symrec* op_left, symrec* op_right,
+        symrec_list* ports_left, symrec_list* ports_right, int id_invis )
+{
+#ifdef DOT_CON
+    int id_node_start, id_node_end, id_temp;
+#endif // DOT_CON
+    /* printf( "Connect %s.%s with %s.%s\n", op_left->name, */
+    /*         ports_left->rec->name, op_right->name, */
+    /*         ports_right->rec->name ); */
+    if( ( ports_left->connect_cnt > 1 )
+            && ( ports_left->cp_sync == NULL ) )
+        spawn_synchronizer( insttab, ports_left, id_invis, TYPE_LINK );
+    if( ( ports_right->connect_cnt > 1 )
+            && ( ports_right->cp_sync == NULL ) )
+        spawn_synchronizer( insttab, ports_right,
+                ( ( struct inst_attr* )op_right->attr )->id, TYPE_LS );
+
+#ifdef DOT_CON
+    if( ports_left->cp_sync != NULL ) {
+        id_node_start = ( ( struct inst_attr* )ports_left->cp_sync->attr )->id;
+    }
+    else {
+        id_node_start = id_invis;
+    }
+    if( ports_right->cp_sync != NULL ) {
+        id_node_end = ( ( struct inst_attr* )ports_right->cp_sync->attr )->id;
+    }
+    else {
+        id_node_end = ( ( struct inst_attr* )op_right->attr )->id;
+    }
+
+    if( ( ( struct port_attr* )ports_right->rec->attr )->mode == VAL_OUT ) {
+        id_temp = id_node_start;
+        id_node_start = id_node_end;
+        id_node_end = id_temp;
+    }
+    graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+            FLAG_WRAP_PRE );
+    graph_add_edge( __p_con_graph, id_node_start, id_node_end,
+            ports_left->rec->name, STYLE_E_LPORT );
+#endif // DOT_CON
+}
+
+/******************************************************************************/
+void connect_port_serial( symrec** insttab, symrec* op_left, symrec* op_right,
+        symrec_list* ports_left, symrec_list* ports_right )
+{
+#ifdef DOT_CON
+    int id_node_start, id_node_end, id_temp;
+#endif // DOT_CON
+    /* printf( "Connect %s.%s with %s.%s\n", op_left->name, */
+    /*         ports_left->rec->name, op_right->name, */
+    /*         ports_right->rec->name ); */
+    if( ( ports_left->connect_cnt > 1 )
+            && ( ports_left->cp_sync == NULL ) )
+        spawn_synchronizer( insttab, ports_left,
+                ( ( struct inst_attr* )op_left->attr )->id, TYPE_SERIAL );
+    if( ( ports_right->connect_cnt > 1 )
+            && ( ports_right->cp_sync == NULL ) )
+        spawn_synchronizer( insttab, ports_right,
+                ( ( struct inst_attr* )op_right->attr )->id, TYPE_SERIAL );
+
+#ifdef DOT_CON
+    if( ports_left->cp_sync != NULL ) {
+        id_node_start = ( ( struct inst_attr* )ports_left->cp_sync->attr )->id;
+    }
+    else {
+        id_node_start = ( ( struct inst_attr* )op_left->attr )->id;
+    }
+    if( ports_right->cp_sync != NULL ) {
+        id_node_end = ( ( struct inst_attr* )ports_right->cp_sync->attr )->id;
+    }
+    else {
+        id_node_end = ( ( struct inst_attr* )op_right->attr )->id;
+    }
+
+    if( ( ( struct port_attr* )ports_left->rec->attr )->mode == VAL_IN ) {
+        id_temp = id_node_start;
+        id_node_start = id_node_end;
+        id_node_end = id_temp;
+    }
+    graph_add_edge( __p_con_graph, id_node_start, id_node_end,
+            ports_left->rec->name, STYLE_E_PORT );
 #endif // DOT_CON
 }
 
@@ -975,19 +1076,77 @@ void report_yyerror( const char* msg, int line )
 
 /******************************************************************************/
 void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
-        bool side )
+        int type )
+{
+#ifdef DOT_CON
+    int id_node_start, id_node_end, id_temp, style_edge, style_node,
+        flag_node, flag_edge, mode;
+    char symbol[4];
+    sprintf( symbol, "×" );
+#endif // DOT_CON
+    char name[10];
+    // this port connects to multiple other ports -> a copy synchronizer
+    // is needed
+    __node_id++;
+    sprintf( name, "%d", __node_id );
+    port->cp_sync = instrec_put( insttab, name, *utarray_back( __scope_stack ),
+            ID_CPSYNC, __node_id, NULL );
+#ifdef DOT_CON
+    // set properties according to type
+    switch( type ) {
+        case TYPE_CONNECT:
+            mode = VAL_OUT;
+            flag_edge = flag_node = FLAG_CONNECT;
+            style_edge = STYLE_E_SPORT_OUT;
+            style_node = STYLE_N_NET_CPS;
+            break;
+        case TYPE_LINK:
+            mode = VAL_IN;
+            flag_edge = FLAG_WRAP_PRE;
+            flag_node = FLAG_NET;
+            style_edge = STYLE_E_LPORT;
+            style_node = STYLE_N_NET_CPL;
+            break;
+        case TYPE_SERIAL:
+            mode = VAL_OUT;
+            flag_edge = flag_node = FLAG_NET;
+            style_edge = STYLE_E_PORT;
+            style_node = STYLE_N_NET_CP;
+            break;
+        case TYPE_LS:
+            mode = VAL_OUT;
+            flag_edge = flag_node = FLAG_NET;
+            style_edge = STYLE_E_LPORT;
+            style_node = STYLE_N_NET_CPL;
+            break;
+    }
+
+    // create a copy synchroniyer for each connect instruction
+    id_node_start = __node_id;
+    id_node_end = net_id;
+    if( ( ( struct port_attr* )port->rec->attr )->mode == mode ) {
+        if( type == TYPE_CONNECT ) style_edge = STYLE_E_SPORT_IN;
+        id_temp = id_node_start;
+        id_node_start = id_node_end;
+        id_node_end = id_temp;
+        sprintf( symbol, "+" );
+    }
+    graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+            flag_node );
+    graph_add_node( __p_con_graph, __node_id, symbol, style_node );
+    graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+            flag_edge );
+    graph_add_edge( __p_con_graph, id_node_start, id_node_end,
+            port->rec->name, style_edge );
+#endif // DOT_CON
+}
+
+/******************************************************************************/
+void spawn_synchronizer_link( symrec** insttab, symrec_list* port, int net_id )
 {
 #ifdef DOT_CON
     int id_node_start, id_node_end, id_temp;
     char symbol[4];
-    int style_edge = STYLE_E_PORT;
-    int style_node = STYLE_N_NET_CP;
-    int flag = FLAG_NET;
-    if( side ) flag = FLAG_CONNECT;
-    if( side ) {
-        style_edge = STYLE_E_SPORT_OUT;
-        style_node = STYLE_N_NET_CPS;
-    }
     sprintf( symbol, "×" );
 #endif // DOT_CON
     char name[10];
@@ -999,22 +1158,21 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
             ID_CPSYNC, __node_id, NULL );
 #ifdef DOT_CON
     // create a copy synchroniyer for each connect instruction
-    graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
-            flag );
     id_node_start = __node_id;
     id_node_end = net_id;
-    if( ( ( struct port_attr* )port->rec->attr )->mode == VAL_OUT ) {
-        if( side ) {
-            style_edge = STYLE_E_SPORT_IN;
-        }
+    if( ( ( struct port_attr* )port->rec->attr )->mode == VAL_IN ) {
         id_temp = id_node_start;
         id_node_start = id_node_end;
         id_node_end = id_temp;
         sprintf( symbol, "+" );
     }
-    graph_add_node( __p_con_graph, __node_id, symbol, style_node );
+    graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+            FLAG_NET );
+    graph_add_node( __p_con_graph, __node_id, symbol, STYLE_N_NET_CPL );
+    graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
+            FLAG_WRAP_PRE );
     graph_add_edge( __p_con_graph, id_node_start, id_node_end,
-            port->rec->name, style_edge );
+            port->rec->name, STYLE_E_LPORT );
 #endif // DOT_CON
 }
 

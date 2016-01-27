@@ -5,7 +5,8 @@
 #include <stdlib.h>
 
 #ifdef DOT_AST
-char* node_label[] = {
+char* node_label[] =
+{
     "box decl",
     "collection",
     "connect",
@@ -27,22 +28,27 @@ char* node_label[] = {
     "sync",
     "net decl"
 };
-char* mode_label[] = {
+char* mode_label[] =
+{
     "in",
     "out"
 };
-char* class_label[] = {
+char* class_label[] =
+{
     "up",
     "down",
     "side"
 };
-char* coupling_label[] = {
+char* coupling_label[] =
+{
     "decoupled"
 };
-char* state_label[] = {
+char* state_label[] =
+{
     "stateless"
 };
-char** attr_label[] = {
+char** attr_label[] =
+{
     mode_label,
     class_label,
     coupling_label,
@@ -50,7 +56,8 @@ char** attr_label[] = {
 };
 
 /******************************************************************************/
-void draw_ast_graph( ast_node* start ) {
+void draw_ast_graph( ast_node* start )
+{
     FILE* ast_graph = fopen( AST_DOT_PATH, "w" );
     graph_init( ast_graph, STYLE_G_DEFAULT );
     draw_ast_graph_step( ast_graph, start );
@@ -59,7 +66,8 @@ void draw_ast_graph( ast_node* start ) {
 }
 
 /******************************************************************************/
-void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
+void draw_ast_graph_step (FILE* graph, ast_node* ptr)
+{
     ast_list* ast_list_ptr;
 
     switch (ptr->node_type) {
@@ -217,13 +225,15 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr) {
 #endif // DOT_AST
 
 /******************************************************************************/
-void graph_add_divider ( FILE* graph, int scope, const char flag ) {
+void graph_add_divider ( FILE* graph, int scope, const char flag )
+{
     fprintf(graph, "%s%c%d\n", DOT_PATTERN, flag, scope );
 }
 
 /******************************************************************************/
 void graph_add_edge ( FILE* graph, int start, int end, char* label,
-        int style ) {
+        int style )
+{
     switch( style ) {
         case STYLE_E_DEFAULT:
             fprintf(graph, "\tid%d->id%d", start, end);
@@ -253,6 +263,15 @@ void graph_add_edge ( FILE* graph, int start, int end, char* label,
 #endif // DOT_EDGE_LABEL
             fprintf( graph, "]" );
             break;
+        case STYLE_E_LPORT:
+            fprintf(graph, "\tid%d->id%d", start, end);
+            fprintf( graph, "[color=%s", COLOR_LINK );
+            /* fprintf( graph, ", constraint=false" ); */
+#ifdef DOT_EDGE_LABEL
+            fprintf( graph, ", xlabel=\"%s\", fontsize=10", label );
+#endif // DOT_EDGE_LABEL
+            fprintf( graph, "]" );
+            break;
         default:
             ;
     }
@@ -260,18 +279,22 @@ void graph_add_edge ( FILE* graph, int start, int end, char* label,
 }
 
 /******************************************************************************/
-void graph_add_node ( FILE* graph, int id, char* name, int style ) {
+void graph_add_node ( FILE* graph, int id, char* name, int style )
+{
     switch( style ) {
         case STYLE_N_DEFAULT:
             fprintf( graph, "\tid%d [label=\"%s\"", id, name );
             break;
         case STYLE_N_NET_CPS:
+        case STYLE_N_NET_CPL:
         case STYLE_N_NET_CP:
             fprintf( graph, "\tid%d [label=\"%s\"", id, name );
             fprintf( graph, ", width=0.3, fixedsize=true, margin=0, shape=%s",
                     SHAPE_CIRCLE );
             if( style == STYLE_N_NET_CPS )
                 fprintf( graph, ", color=%s", COLOR_SIDE );
+            if( style == STYLE_N_NET_CPL )
+                fprintf( graph, ", color=%s", COLOR_LINK );
             break;
         case STYLE_N_AST_ATTR:
             fprintf( graph, "\tid%d [label=\"%s\"", id, name );
@@ -285,6 +308,10 @@ void graph_add_node ( FILE* graph, int id, char* name, int style ) {
             fprintf( graph, "\tid%d [label=<%s<SUB>%d</SUB>>", id, name, id );
             fprintf( graph, ", shape=%s", SHAPE_BOX );
             break;
+        case STYLE_N_NET_INVIS:
+            fprintf( graph, "\tid%d [label=\"\", fixedsize=\"false\"", id );
+            fprintf( graph, ", width=0, height=0, shape=none" );
+            break;
         case STYLE_N_AST_ID:
             fprintf( graph, "\tid%d [label=\"%s\"", id, name );
             fprintf( graph, ", shape=%s", SHAPE_BOX );
@@ -294,26 +321,32 @@ void graph_add_node ( FILE* graph, int id, char* name, int style ) {
     }
     fprintf( graph, "];\n" );
 }
+
 /******************************************************************************/
-void graph_add_rank( FILE* graph, int id1, int id2 ) {
+void graph_add_rank( FILE* graph, int id1, int id2 )
+{
     fprintf( graph, "\t{ rank=same; id%d; id%d; }\n", id1, id2 );
 }
 
 /******************************************************************************/
-void graph_finish (FILE* graph) {
+void graph_finish (FILE* graph)
+{
     fprintf(graph, "}\n");
 }
 
 /******************************************************************************/
-void graph_finish_subgraph (FILE* graph) {
+void graph_finish_subgraph (FILE* graph)
+{
     fprintf(graph, "\t}\n");
 }
 
 #ifdef DOT_CON
 /******************************************************************************/
-void graph_fix_dot( char* t_path, char* r_path ) {
+void graph_fix_dot( char* t_path, char* r_path )
+{
     FILE* r_graph;
     FILE* t_graph;
+    FILE* d_graph;
     char str[512];
     char* ptr = NULL;
     char flag;
@@ -341,7 +374,7 @@ void graph_fix_dot( char* t_path, char* r_path ) {
                         if( scope <= last_scope ) continue;
                         if( flag != next_flag ) continue;
                         last_scope = scope;
-                        next_flag = FLAG_WRAP;
+                        next_flag = FLAG_WRAP_PRE;
                         copy = true;
                         break;
                     case FLAG_WRAP:
@@ -355,6 +388,7 @@ void graph_fix_dot( char* t_path, char* r_path ) {
                         copy = true;
                         break;
                     case FLAG_WRAP_END:
+                    case FLAG_WRAP_PRE:
                     case FLAG_STMTS_END:
                     case FLAG_NET:
                     case FLAG_CONNECT:
@@ -375,6 +409,9 @@ void graph_fix_dot( char* t_path, char* r_path ) {
             case FLAG_STMTS:
                 // no new stmts -> we are done
                 done = true;
+                break;
+            case FLAG_WRAP_PRE:
+                next_flag = FLAG_WRAP;
                 break;
             case FLAG_WRAP:
                 // no wrapper in this scope -> copy nets
@@ -419,6 +456,13 @@ void graph_fix_dot( char* t_path, char* r_path ) {
     }
     fclose( t_graph );
     // copy the fixed dot file back to the original file
+    r_graph = fopen( r_path, "r" );
+    d_graph = fopen( DEBUG_DOT_PATH, "w" );
+    while( fgets( str, 512, r_graph ) ) {
+        fprintf( d_graph, "%s", str );
+    }
+    fclose( r_graph );
+    fclose( d_graph );
     t_graph = fopen( t_path, "r" );
     r_graph = fopen( r_path, "w" );
     while( fgets( str, 512, t_graph ) ) {
@@ -428,7 +472,8 @@ void graph_fix_dot( char* t_path, char* r_path ) {
 #endif // DOT_CON
 
 /******************************************************************************/
-void graph_init( FILE* graph, int style ) {
+void graph_init( FILE* graph, int style )
+{
     fprintf(graph, "digraph {\n");
     fprintf(graph, "\trankdir=LR;\n");
     switch (style) {
@@ -449,7 +494,8 @@ void graph_init( FILE* graph, int style ) {
 }
 
 /******************************************************************************/
-void graph_init_subgraph( FILE* graph, char* name, int id, int style ) {
+void graph_init_subgraph( FILE* graph, char* name, int id, int style )
+{
     switch (style) {
         case STYLE_SG_PARALLEL:
             fprintf( graph, "\tsubgraph clusterP%d {\n", id );

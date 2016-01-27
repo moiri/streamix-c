@@ -1,8 +1,9 @@
-box L( out p ) on fl
-net W { up down in p } {
-    link p { A }
-    box A ( up down in p ) on func_a
+box L( out p1, in p2 ) on fl
+net W { up down in p1, up down out p2 } {
+    link p1 { A }
+    link p2 { A }
+    box A ( up down in p1, up down out p2 ) on func_a
     A
 }
 
-L.W
+L.W.L

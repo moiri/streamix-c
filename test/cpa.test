@@ -21,23 +21,33 @@ box CPA (
 net Car { up in car_next (car_l_in), up out car_prev (car_l_out),
         down in car_prev (car_r_in), down out car_next (car_r_out) } {
     connect dist {DS, DC}
+    link car_l_in { CPA }
+    link car_l_out { CPA }
+    link car_r_in { CPA }
+    link car_r_out { CPA }
 
     box MB (in block, out break_cmd) on func_mb
 
     net ABS { in dc, out abs } {
+        link dc { ABS }
+        link abs { ABS }
         box ABS (
             in speed,
             in break_cmd,
-            in dc,
+            side in dc,
             out break_abs,
             out block,
-            out abs
+            side out abs
         ) on func_abs
 
         Sensors.ABS
     }
 
     net Sensors { out speed, in block, out break_cmd, in break_abs } {
+        link speed { RS }
+        link block { MB }
+        link break_cmd { MB }
+        link break_abs { B }
         stateless box RS (out speed) on func_rs
 
         RS|B|MB
@@ -45,5 +55,7 @@ net Car { up in car_next (car_l_in), up out car_prev (car_l_out),
 
     (ABS.DC|DS).CPA
 }
+box CarS( out car_next, in car_prev ) on fcs
+box CarE( in car_next, out car_prev ) on fce
 
-Car.Car.Car
+CarS.Car.Car.Car.CarE
