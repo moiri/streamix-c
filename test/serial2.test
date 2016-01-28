@@ -1,0 +1,3 @@
+box A( out a ) on fa
+box B( in a ) on fb
+A.B.A
