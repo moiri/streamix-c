@@ -91,7 +91,6 @@ void check_ids( symrec**, symrec**, ast_node* );
  *
  * @param symrec**:     pointer to the instance table
  * @param ast_node*:    pointer to the root ast node
- * @param ast_node*:    prapagate the connect id ast node internally
  * */
 void check_instances( symrec**, ast_node* );
 
@@ -109,14 +108,14 @@ void check_port_all( symrec**, ast_node* );
  * @param symrec**:     pointer to the instance table
  * @param ast_node*:    pointer to the ast node
  * @param bool:         flag to indicate wheather it is a check run (false) or
- *                      whether copy sinchronizers are spawned and connections are
- *                      drawn
+ *                      whether copy sinchronizers are spawned and connections
+ *                      are drawn
  * */
 void connection_check_connect( symrec**, ast_node*, bool );
 
 /**
- * establish and check 'connect' port connections by searching for a specific port name
- * given by the ast_id parameter. This function establishes the port
+ * establish and check 'connect' port connections by searching for a specific
+ * port name given by the ast_id parameter. This function establishes the port
  * connections and adds the corresponding edges to the port connection graph
  *
  * @param symrec**:     pointer to the symbol table
@@ -124,10 +123,13 @@ void connection_check_connect( symrec**, ast_node*, bool );
  * @param symrec*:      pointer to the second net operand
  * @param ast_node*:    pointer to the id ast node
  * @param bool:         flag to indicate wheather it is a check run (false) or
- *                      whether copy sinchronizers are spawned and connections are
- *                      drawn
+ *                      whether copy sinchronizers are spawned and connections
+ *                      are drawn
+ * @return bool:
+ *      true if the connection check was successful, false otherwise
  * */
-bool connection_check_connect_port( symrec**, symrec*, symrec*, ast_node*, bool );
+bool connection_check_connect_port( symrec**, symrec*, symrec*, ast_node*,
+        bool );
 
 /**
  * Get the pointer to the corresponding side port or return a NULL pointer
@@ -135,8 +137,8 @@ bool connection_check_connect_port( symrec**, symrec*, symrec*, ast_node*, bool 
  * @param symrec*:      pointer to the net operand
  * @param ast_node*:    pointer to the connect ast node
  * @param bool:         flag to indicate wheather it is a check run (false) or
- *                      whether copy sinchronizers are spawned and connections are
- *                      drawn
+ *                      whether copy sinchronizers are spawned and connections
+ *                      are drawn
  * @return symrec_list:
  *      pointer to the side port or NULL if no side port has been found
  * */
@@ -148,25 +150,27 @@ symrec_list* connection_check_connect_port_get( symrec*, ast_node*, bool );
  * @param symrec**:     pointer to the instance table
  * @param ast_node*:    pointer to the ast node
  * @param bool:         flag to indicate wheather it is a check run (false) or
- *                      whether copy sinchronizers are spawned and connections are
- *                      drawn
+ *                      whether copy sinchronizers are spawned and connections
+ *                      are drawn
  * */
 void connection_check_link( symrec**, ast_node*, bool );
 
 /**
- * establish and check 'link' port connections by searching for a specific port name
- * given by the ast_id parameter. This function establishes the port
+ * establish and check 'link' port connections by searching for a specific port
+ * name given by the ast_id parameter. This function establishes the port
  * connections and adds the corresponding edges to the port connection graph
  *
  * @param symrec**:     pointer to the symbol table
  * @param symrec*:      pointer to the first net operand
  * @param symrec*:      pointer to the second net operand
  * @param ast_node*:    pointer to the id ast node
+ * @param int:          id of the invisible helper node to draw the links
  * @param bool:         flag to indicate wheather it is a check run (false) or
- *                      whether copy sinchronizers are spawned and connections are
- *                      drawn
+ *                      whether copy sinchronizers are spawned and connections
+ *                      are drawn
  * */
-void connection_check_link_port( symrec**, symrec*, symrec*, ast_node*, int, bool );
+void connection_check_link_port( symrec**, symrec*, symrec*, ast_node*, int,
+        bool );
 
 /**
  * check whether all ports of the net are connected
@@ -184,8 +188,8 @@ void connection_check_port_all( symrec**, char*, int, int );
  * @param symrec**:     pointer to the instance table
  * @param ast_node*:    pointer to the ast node
  * @param bool:         flag to indicate wheather it is a check run (false) or
- *                      whether copy sinchronizers are spawned and connections are
- *                      drawn
+ *                      whether copy sinchronizers are spawned and connections
+ *                      are drawn
  * */
 void connection_check_serial( symrec**, ast_node*, bool );
 
@@ -197,23 +201,50 @@ void connection_check_serial( symrec**, ast_node*, bool );
  * @param ast_node*:    pointer to the first net operand
  * @param ast_node*:    pointer to the second ast node
  * @param bool:         flag to indicate wheather it is a check run (false) or
- *                      whether copy sinchronizers are spawned and connections are
- *                      drawn
+ *                      whether copy sinchronizers are spawned and connections
+ *                      are drawn
  * */
 void connection_check_serial_port( symrec**, ast_node*, ast_node*, bool );
 
 /**
- * spawn copy synchronizers if necessary and connect the ports of a serial connection
+ * spawn copy synchronizers if necessary and connect the ports of a connect
+ * instruction
+ *
  * @param symrec**:     pointer to the instance table
+ * @param symrec*:      pointer to the instance of the left operand
+ * @param symrec*:      pointer to the instance of the right operand
  * @param symrec_list*: pointer to the port of the left operand
  * @param symrec_list*: pointer to the port of the right operand
- * @param ast_node*:    pointer to the left operand
- * @param ast_node*:    pointer to the right operand
- * @param bool:         indicater wheter it is part of a side port connection
  * */
-void connect_port_connect( symrec**, symrec*, symrec*, symrec_list*, symrec_list* );
-void connect_port_link( symrec**, symrec*, symrec*, symrec_list*, symrec_list*, int );
-void connect_port_serial( symrec**, symrec*, symrec*, symrec_list*, symrec_list* );
+void connect_port_connect( symrec**, symrec*, symrec*, symrec_list*,
+        symrec_list* );
+
+/**
+ * spawn copy synchronizers if necessary and connect the ports of a link
+ * instruction
+ *
+ * @param symrec**:     pointer to the instance table
+ * @param symrec*:      pointer to the instance of the left operand
+ * @param symrec*:      pointer to the instance of the right operand
+ * @param symrec_list*: pointer to the port of the left operand
+ * @param symrec_list*: pointer to the port of the right operand
+ * @param int:          id of the invisible helper node to draw the links
+ * */
+void connect_port_link( symrec**, symrec*, symrec*, symrec_list*, symrec_list*,
+        int );
+
+/**
+ * spawn copy synchronizers if necessary and connect the ports of a serial
+ * combination
+ *
+ * @param symrec**:     pointer to the instance table
+ * @param symrec*:      pointer to the instance of the left operand
+ * @param symrec*:      pointer to the instance of the right operand
+ * @param symrec_list*: pointer to the port of the left operand
+ * @param symrec_list*: pointer to the port of the right operand
+ * */
+void connect_port_serial( symrec**, symrec*, symrec*, symrec_list*,
+        symrec_list* );
 
 /**
  * put symbol names into the symbol table. this includes collision and scope
@@ -231,9 +262,10 @@ void* install_ids( symrec**, ast_node*, bool );
 /**
  * Get an instance from the instance table.
  *
- * @param symrec**:     pointer to the hashtable
+ * @param symrec**:     pointer to the instance hashtable
  * @param char*:        name of the record
  * @param int:          scope of the record
+ * @param int:          id of the record
  * @return symrec*:
  *      a pointer to the location where the data is stored
  * */
@@ -242,7 +274,7 @@ symrec* instrec_get( symrec**, char*, int, int );
 /**
  * Add an instance to the instance table.
  *
- * @param symrec**:     pointer to the hashtable
+ * @param symrec**:     pointer to the instance hashtable
  * @param char*:        name of the record
  * @param int:          scope of the record
  * @param int:          type of the record
@@ -265,9 +297,11 @@ void report_yyerror( const char*, int );
  * add a copy synchronizer instance to the instance table
  *
  * @param symrec**:     pointer to the instance table
- * @param symrec_list*: pointer to the port, assoziated with the copy synchronizer
+ * @param symrec_list*: pointer to the port, assoziated with the copy
+ *                      synchronizer
  * @param int:          id of the net instance the port belongs to
- * @param bool:         indicater wheter it is part of a side port connection
+ * @param int:          type of the synchronizer to distinguish between mode
+ *                      checks and colors
  * */
 void spawn_synchronizer( symrec**, symrec_list*, int, int );
 

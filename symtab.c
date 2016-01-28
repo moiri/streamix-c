@@ -114,7 +114,6 @@ void check_ids( symrec** symtab, symrec** insttab, ast_node* ast )
             rec = symrec_get( symtab, ast->ast_id.name, ast->ast_id.line );
             // add a net symbol to the instance table
             if( ast->ast_id.type == ID_NET && rec != NULL ) {
-                /* printf( "put instance %s(%d)\n", ast->ast_id.name, ast->id ); */
                 instrec_put( insttab, ast->ast_id.name,
                         *utarray_back( __scope_stack ), ast->ast_id.type,
                         ast->id, rec );
@@ -334,11 +333,13 @@ void connection_check_connect( symrec** insttab, ast_node* ast, bool connect )
                 else {
                     // left operand is already assigned, lets assign the right one
                     op_right = net;
-                    /* printf( "%d Check side port connection %s(%d) -- %s(%d)\n", */
-                    /*         connect, op_left->name, */
-                    /*         ( ( struct inst_attr* )op_left->attr )->id, */
-                    /*         op_right->name, */
-                    /*         ( ( struct inst_attr* )op_right->attr )->id ); */
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+                    printf( "%d Check side port connection %s(%d) -- %s(%d)\n",
+                            connect, op_left->name,
+                            ( ( struct inst_attr* )op_left->attr )->id,
+                            op_right->name,
+                            ( ( struct inst_attr* )op_right->attr )->id );
+#endif // DEBUG
                     // do the connection check
                     is_connected |= connection_check_connect_port( insttab,
                             op_left, op_right, ast->connect.id, connect );
@@ -404,9 +405,11 @@ bool connection_check_connect_port( symrec** insttab, symrec* op_left,
                 is_connected = true;
                 port_left->connect_cnt++;
                 port_right->connect_cnt++;
-                /* printf( "Connection of %s.%s and %s.%s is valid\n", */
-                /*         op_left->name, port_left->rec->name, */
-                /*         op_right->name, port_right->rec->name ); */
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+                printf( "Connection of %s.%s and %s.%s is valid\n",
+                        op_left->name, port_left->rec->name,
+                        op_right->name, port_right->rec->name );
+#endif // DEBUG
             }
         }
     }
@@ -446,7 +449,7 @@ void connection_check_link( symrec** insttab, ast_node* ast, bool connect )
     ast_list* list = NULL;
     symrec* op_left = NULL;
     symrec* op_right = NULL;
-    int sync_id = -1;
+    int hnode_id = -1;
 
     // there can only be one instance of 'this' in this scope
     op_left = instrec_get( insttab, VAL_THIS, *utarray_back( __scope_stack ),
@@ -463,22 +466,24 @@ void connection_check_link( symrec** insttab, ast_node* ast, bool connect )
         // create an invisible node to draw the wrapper connections
         if( connect ) {
             __node_id++;
-            sync_id = __node_id;
+            hnode_id = __node_id;
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
                     FLAG_WRAP_PRE );
-            graph_add_node( __p_con_graph, sync_id, "", STYLE_N_NET_INVIS );
+            graph_add_node( __p_con_graph, hnode_id, "", STYLE_N_NET_INVIS );
         }
 #endif // DOT_CON
         // iterate through all the instances with the same symbol
         while( op_right != NULL ) {
-            /* printf( "%d Check link %s(%d) -- %s(%d)\n", */
-            /*         connect, op_left->name, */
-            /*         ( ( struct inst_attr* )op_left->attr )->id, */
-            /*         op_right->name, */
-            /*         ( ( struct inst_attr* )op_right->attr )->id ); */
+#if defined(DEBUG) || defined(DEBUG_LINK)
+            printf( "%d Check link %s(%d) -- %s(%d)\n",
+                    connect, op_left->name,
+                    ( ( struct inst_attr* )op_left->attr )->id,
+                    op_right->name,
+                    ( ( struct inst_attr* )op_right->attr )->id );
+#endif // DEBUG
             // do the connection check
             connection_check_link_port( insttab, op_left, op_right,
-                    ast->connect.id, sync_id, connect );
+                    ast->connect.id, hnode_id, connect );
             op_right = op_right->next;
         }
         list = list->next;
@@ -487,7 +492,7 @@ void connection_check_link( symrec** insttab, ast_node* ast, bool connect )
 
 /******************************************************************************/
 void connection_check_link_port( symrec** insttab, symrec* op_left,
-        symrec* op_right, ast_node* ast_id, int sync_id, bool connect )
+        symrec* op_right, ast_node* ast_id, int hnode_id, bool connect )
 {
     bool is_connected = false;
     symrec_list* ports_left = NULL;
@@ -507,6 +512,10 @@ void connection_check_link_port( symrec** insttab, symrec* op_left,
         if( p_attr_left->int_name != NULL )
             name_left = p_attr_left->int_name;
         if( strcmp( name_left, ast_id->ast_id.name ) != 0 ) {
+#if defined(DEBUG) || defined(DEBUG_LINK)
+            printf("%s != %s in %s\n", ast_id->ast_id.name, name_left,
+                    op_left->name );
+#endif // DEBUG
             ports_left = ports_left->next;
             continue;
         }
@@ -517,6 +526,10 @@ void connection_check_link_port( symrec** insttab, symrec* op_left,
             if( p_attr_right->int_name != NULL )
                 name_right = p_attr_right->int_name;
             if( strcmp( name_right, ast_id->ast_id.name ) != 0 ) {
+#if defined(DEBUG) || defined(DEBUG_LINK)
+                printf("%s != %s in %s\n", ast_id->ast_id.name, name_right,
+                        op_right->name );
+#endif // DEBUG
                 ports_right = ports_right->next;
                 continue;
             }
@@ -525,17 +538,20 @@ void connection_check_link_port( symrec** insttab, symrec* op_left,
                 if( connect ) {
                     // checks have been done previously, now do connections
                     connect_port_link( insttab, op_left, op_right, ports_left,
-                            ports_right, sync_id );
+                            ports_right, hnode_id );
                 }
                 else {
                     // we are only checking and there is no mode error
                     ports_left->connect_cnt++;
                     ports_right->connect_cnt++;
                     is_connected = true;
-                    /* printf( "Connection of %s(%d).%s and %s(%d).%s is valid\n", */
-                    /*         op_left->name, i_attr_left->id, name_left, */
-                    /*         op_right->name, i_attr_right->id, name_right */
-                    /* ); */
+#if defined(DEBUG) || defined(DEBUG_LINK)
+                    printf( "Link connection of %s(%d).%s and %s(%d).%s"
+                            " is valid\n",
+                            op_left->name, i_attr_left->id, name_left,
+                            op_right->name, i_attr_right->id, name_right
+                    );
+#endif // DEBUG
                 }
             }
             else if( !connect ) {
@@ -576,12 +592,16 @@ void connection_check_port_all( symrec** insttab, char* name, int id, int line )
     ports = ( ( struct inst_attr* ) op_inst->attr )->ports;
     p_attr = ( struct port_attr* )ports->rec->attr;
     while ( ports != NULL ) {
+        port_name = ports->rec->name;
+        if( ( p_attr->int_name != NULL )
+                && ( strcmp( name, VAL_THIS ) == 0 ) ) {
+            port_name = p_attr->int_name;
+        }
+#if defined(DEBUG) || defined(DEBUG_PORT)
+        printf( "Is %s(%d).%s connected?\n", op_inst->name, i_attr->id,
+                port_name );
+#endif // DEBUG
         if( ports->connect_cnt == 0 ) {
-            port_name = ports->rec->name;
-            if( ( p_attr->int_name != NULL )
-                    && ( strcmp( name, VAL_THIS ) == 0 ) ) {
-                port_name = p_attr->int_name;
-            }
             // ERROR: this port is left unconnected
             sprintf( __error_msg, ERROR_NO_PORT_CON, ERR_ERROR, port_name,
                     i_attr->net->name, op_inst->name, i_attr->id );
@@ -623,8 +643,10 @@ void connection_check_serial( symrec** insttab, ast_node* ast, bool connect )
                 op_right = j_ptr->ast_node;
                 j_ptr = j_ptr->next;
             }
-            /* printf( "'%s' conncets with '%s'\n", op_left->ast_id.name, */
-            /*         op_right->ast_id.name ); */
+#if defined(DEBUG) || defined(DEBUG_SERIAL)
+            printf( "'%s' conncets with '%s'\n", op_left->ast_id.name,
+                    op_right->ast_id.name );
+#endif // DEBUG
 #ifdef DOT_CON
             if( connect ) graph_add_edge( __n_con_graph, op_left->id,
                     op_right->id, NULL, STYLE_E_DEFAULT );
@@ -692,9 +714,14 @@ void connection_check_serial_port( symrec** insttab, ast_node* net1,
                         ports_left->connect_cnt++;
                         ports_right->connect_cnt++;
                         is_connected = true;
-                        /* printf( "Connection check of %s.%s and %s.%s\n", */
-                        /*         net1->ast_id.name, ports_left->rec->name, */
-                        /*         net2->ast_id.name, ports_right->rec->name ); */
+#if defined(DEBUG) || defined(DEBUG_SERIAL)
+                        printf( "Serial connection of %s(%d).%s and"
+                                " %s(%d).%s is valid \n", op_left->name,
+                                ( ( struct inst_attr* )op_left->attr )->id,
+                                ports_left->rec->name, op_right->name,
+                                ( ( struct inst_attr* )op_right->attr )->id,
+                                ports_right->rec->name );
+#endif // DEBUG
                     }
                 }
                 else if( !connect ) {
@@ -731,9 +758,10 @@ void connect_port_connect( symrec** insttab, symrec* op_left, symrec* op_right,
     int id_node_start, id_node_end, id_temp;
     int style_edge = STYLE_E_SPORT;
 #endif // DOT_CON
-    /* printf( "Connect %s.%s with %s.%s\n", op_left->name, */
-    /*         ports_left->rec->name, op_right->name, */
-    /*         ports_right->rec->name ); */
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+    printf( "Connect %s.%s with %s.%s\n", op_left->name, ports_left->rec->name,
+            op_right->name, ports_right->rec->name );
+#endif // DEBUG
     if( ( ports_left->connect_cnt > 1 )
             && ( ports_left->cp_sync == NULL ) )
         spawn_synchronizer( insttab, ports_left,
@@ -780,9 +808,10 @@ void connect_port_link( symrec** insttab, symrec* op_left, symrec* op_right,
 #ifdef DOT_CON
     int id_node_start, id_node_end, id_temp;
 #endif // DOT_CON
-    /* printf( "Connect %s.%s with %s.%s\n", op_left->name, */
-    /*         ports_left->rec->name, op_right->name, */
-    /*         ports_right->rec->name ); */
+#if defined(DEBUG) || defined(DEBUG_LINK)
+    printf( "Connect %s.%s with %s.%s\n", op_left->name, ports_left->rec->name,
+            op_right->name, ports_right->rec->name );
+#endif // DEBUG
     if( ( ports_left->connect_cnt > 1 )
             && ( ports_left->cp_sync == NULL ) )
         spawn_synchronizer( insttab, ports_left, id_invis, TYPE_LINK );
@@ -824,9 +853,10 @@ void connect_port_serial( symrec** insttab, symrec* op_left, symrec* op_right,
 #ifdef DOT_CON
     int id_node_start, id_node_end, id_temp;
 #endif // DOT_CON
-    /* printf( "Connect %s.%s with %s.%s\n", op_left->name, */
-    /*         ports_left->rec->name, op_right->name, */
-    /*         ports_right->rec->name ); */
+#if defined(DEBUG) || defined(DEBUG_SERIAL)
+    printf( "Connect %s.%s with %s.%s\n", op_left->name, ports_left->rec->name,
+            op_right->name, ports_right->rec->name );
+#endif // DEBUG
     if( ( ports_left->connect_cnt > 1 )
             && ( ports_left->cp_sync == NULL ) )
         spawn_synchronizer( insttab, ports_left,
@@ -986,13 +1016,23 @@ symrec* instrec_get( symrec** insttab, char* name, int scope, int id )
     symrec* item = NULL;
     char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
 
+#if defined(DEBUG) || defined(DEBUG_INST)
+    printf( "search instance %s with id %d in scope %d\n", name, id, scope );
+#endif // DEBUG
+
     // generate key
     sprintf( key, "%s%d", name, scope );
     HASH_FIND_STR( *insttab, key, item );
 
-    if( id == -1 )
+    if( id == -1 ) {
         // if no id is available, collision handling must be done manually
+#if defined(DEBUG) || defined(DEBUG_INST)
+        if( item != NULL )
+            printf( "found instances of %s in scope %d\n", item->name,
+                    item->scope );
+#endif // DEBUG
         return item;
+    }
 
     // find the instance with the matching id and handle key collisions
     while( item != NULL ) {
@@ -1000,8 +1040,10 @@ symrec* instrec_get( symrec** insttab, char* name, int scope, int id )
             && memcmp( item->name, name, strlen( name ) ) == 0
             && item->scope == scope
             && ( ( struct inst_attr* )item->attr )->id == id ) {
-            /* printf( "found instance %s with id %d in scope %d\n", item->name, */
-            /*         ( ( struct inst_attr* )item->attr)->id, item->scope ); */
+#if defined(DEBUG) || defined(DEBUG_INST)
+            printf( "found instance %s with id %d in scope %d\n", item->name,
+                    ( ( struct inst_attr* )item->attr)->id, item->scope );
+#endif // DEBUG
             break; // found a match
         }
         item = item->next;
@@ -1070,8 +1112,10 @@ symrec* instrec_put( symrec** insttab, char* name, int scope, int type, int id,
 
         previous_item->next = new_item;
     }
-    /* printf( "put net instance %s with id %d in scope %d\n", new_item->name, */
-    /*         ( ( struct inst_attr* )new_item->attr)->id, new_item->scope ); */
+#if defined(DEBUG) || defined(DEBUG_INST)
+    printf( "put net instance %s with id %d in scope %d\n", new_item->name,
+            ( ( struct inst_attr* )new_item->attr)->id, new_item->scope );
+#endif // DEBUG
     return new_item;
 }
 
@@ -1177,6 +1221,11 @@ symrec* symrec_get( symrec** symtab, char *name, int line )
         sprintf( __error_msg, ERROR_UNDEF_ID, ERR_ERROR, name );
         report_yyerror( __error_msg, line );
     }
+#if defined(DEBUG) || defined(DEBUG_SYMB)
+    else {
+        printf( "found symbol %s in scope %d\n", item->name, item->scope );
+    }
+#endif // DEBUG
     return item;
 }
 
@@ -1227,8 +1276,8 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
                         /*     == ( ( struct port_attr* )item->attr )->mode ) */
                         && ( ( ( struct port_attr* )attr )->collection
                             == ( ( struct port_attr* )item->attr )->collection )
-                       )
-                    ) ) {
+                    )
+                ) ) {
                 // found an identical entry -> error
                 is_identical = true;
                 break;
@@ -1254,5 +1303,10 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
         report_yyerror( __error_msg, line );
         item = NULL;
     }
+#if defined(DEBUG) || defined(DEBUG_SYMB)
+    else {
+        printf( "added symbol %s in scope %d\n", item->name, item->scope );
+    }
+#endif // DEBUG
     return item;
 }

@@ -47,6 +47,8 @@ flags = [
 '-DDOT_STRUCT',
 '-DDOT_COLOR',
 '-DDOT_EDGE_LABEL',
+'-DDOT_SYNC_FIRST',
+'-DDEBUG',
 # You 100% do NOT need -DUSE_CLANG_COMPLETER in your flags; only the YCM
 # source code needs it.
 '-DUSE_CLANG_COMPLETER',

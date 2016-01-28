@@ -344,9 +344,12 @@ void graph_finish_subgraph (FILE* graph)
 /******************************************************************************/
 void graph_fix_dot( char* t_path, char* r_path )
 {
+#if defined(DEBUG) || defined(DEBUG_GRAPH)
+    char d_path[40];
+    FILE* d_graph;
+#endif // DEBUG
     FILE* r_graph;
     FILE* t_graph;
-    /* FILE* d_graph; */
     char str[512];
     char* ptr = NULL;
     char flag;
@@ -455,15 +458,18 @@ void graph_fix_dot( char* t_path, char* r_path )
         fclose( r_graph );
     }
     fclose( t_graph );
+#if defined(DEBUG) || defined(DEBUG_GRAPH)
+    // save the original file in order to debug
+    sprintf( d_path, "%s.dbg", r_path );
+    r_graph = fopen( r_path, "r" );
+    d_graph = fopen( d_path, "w" );
+    while( fgets( str, 512, r_graph ) ) {
+        fprintf( d_graph, "%s", str );
+    }
+    fclose( r_graph );
+    fclose( d_graph );
+#endif // DEBUG
     // copy the fixed dot file back to the original file
-    /* // save the original file in order to debug */
-    /* r_graph = fopen( r_path, "r" ); */
-    /* d_graph = fopen( DEBUG_DOT_PATH, "w" ); */
-    /* while( fgets( str, 512, r_graph ) ) { */
-    /*     fprintf( d_graph, "%s", str ); */
-    /* } */
-    /* fclose( r_graph ); */
-    /* fclose( d_graph ); */
     t_graph = fopen( t_path, "r" );
     r_graph = fopen( r_path, "w" );
     while( fgets( str, 512, t_graph ) ) {

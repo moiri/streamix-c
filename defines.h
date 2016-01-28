@@ -9,6 +9,15 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+/* #define DEBUG */
+/* #define DEBUG_INST */
+/* #define DEBUG_SYMB */
+/* #define DEBUG_CONNECT */
+/* #define DEBUG_LINK */
+/* #define DEBUG_SERIAL */
+/* #define DEBUG_PORT */
+#define DEBUG_GRAPH
+
 // constants
 #define CONST_ERROR_LEN 256
 #define CONST_SCOPE_LEN 9
@@ -39,7 +48,6 @@
 #define N_CON_DOT_PATH  "dot/net_connection_graph.dot"
 #define P_CON_DOT_PATH  "dot/port_connection_graph.dot"
 #define TEMP_DOT_PATH   "dot/graph.dot.tmp"
-#define DEBUG_DOT_PATH  "dot/graph.dot.dbg"
 #define DOT_PATTERN     "// ===>"
 
 #define SHAPE_BOX       "box"
