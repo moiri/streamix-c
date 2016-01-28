@@ -1,0 +1,9 @@
+box A( out a ) on fa
+box B( in a, out p ) on fb
+net W{ in p(p_int) }{
+    link p_int { A }
+    box A( in p_int, out b ) on fa
+    box B( in b ) on fb
+    A.B
+}
+A.B.W
