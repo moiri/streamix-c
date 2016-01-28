@@ -1,1 +1,7 @@
-a.(b|c.(q|d.e.(b|d)))
+box A(out a) on fa
+box B(in a) on fa
+box C(in a, out c) on fa
+box D(in c, out d) on fa
+box E(in d, out a, out c) on fa
+box Q(in c) on fa
+A.(B|C.(Q|D.E.(B|D)))

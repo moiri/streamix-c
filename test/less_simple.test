@@ -1,13 +1,13 @@
-box A (side in c) on func_a
-box B (side in c) on func_b
-box C (side in c) on func_c
-box D (side in c) on func_d
-box E (side in c) on func_e
-box F (side in c) on func_f
-box G (side in c) on func_g
-box H (side in c) on func_h
-box I (side in c) on func_i
-box J (side in c) on func_j
-box K (side in c) on func_k
+box A (out a) on func_a
+box B (up down in a) on func_b
+box C (out a, out c) on func_c
+box D (in c, out g) on func_d
+box E (in c, out d) on func_e
+box F (in c, out f) on func_f
+box G (in d, in f, out g) on func_g
+box H (in g) on func_h
+box I (in g) on func_i
+box J (in g, out j) on func_j
+box K (in j) on func_k
 
 (A . B . C . (D | (E | F) . G)) . (H | I | J . K)
