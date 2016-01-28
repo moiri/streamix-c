@@ -88,11 +88,14 @@ void check_ids( symrec** symtab, symrec** insttab, ast_node* ast )
             _scope++;
             break;
         case AST_WRAP:
+            // in order to add the this instance to the instance table we need
+            // to get the decalration of the net before we put another scope on
+            // the stack
+            rec = symrec_get( symtab, ast->wrap.id->ast_id.name,
+                    ast->wrap.id->ast_id.line );
             _scope++;
             utarray_push_back( __scope_stack, &_scope );
             // add the symbol 'this' to the instance table referring to this net
-            rec = symrec_get( symtab, ast->wrap.id->ast_id.name,
-                    ast->wrap.id->ast_id.line );
             instrec_put( insttab, VAL_THIS, *utarray_back( __scope_stack ),
                     ast->wrap.id->ast_id.type, ast->wrap.id->id, rec );
             check_ids( symtab, insttab, ast->wrap.stmts );
