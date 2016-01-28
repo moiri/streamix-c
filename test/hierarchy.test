@@ -1,10 +1,16 @@
 box A ( out a1, out a2 ) on func_a
 box B ( in b1, in b2 ) on func_b
 net C { in a1 (ca1), in a2 (ca2), out b1 (cb1), out b2 (cb2) } {
+    link ca1 { CA }
+    link ca2 { CC }
+    link cb1 { CB }
+    link cb2 { CD }
 
     box CA ( in ca1, out cb_int1 ) on func_ca
 
     net CB { in cb_int1 (cba), out cb1 (cbc) } {
+        link cba { CBA }
+        link cbc { CBB }
         box CBA ( in cba, out cbb ) on func_cba
         box CBB ( in cbb, out cbc ) on func_cbb
 
