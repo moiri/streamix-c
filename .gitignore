@@ -5,3 +5,4 @@
 *.pyc
 dot/
 parser
+test/*.res

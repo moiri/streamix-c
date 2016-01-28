@@ -13,6 +13,8 @@ INCLUDES = symtab.h \
 INCLUDES_DIR = -Iuthash/include
 CFLAGS = -Wall -lfl
 
+DEBUG_FLAGS = -g -O0
+
 DOT_PATH = dot
 DOT_AST_FILE = $(DOT_PATH)/ast_graph
 DOT_N_CON_FILE = $(DOT_PATH)/net_connection_graph
@@ -30,9 +32,13 @@ DOT_FLAGS += -DDOT_EDGE_LABEL
 # position the syncroniyers before the nets
 DOT_FLAGS += -DDOT_SYNC_FIRST
 
+TEST_IN = test
+TEST_OUT = res
+TEST_SOL = sol
 TEST_PATH = test
-TEST_FILE = cpa.test
-TEST = $(TEST_PATH)/$(TEST_FILE)
+IN_PATH = test
+IN_FILE = cpa.test
+INPUT = $(IN_PATH)/$(IN_FILE)
 
 all: $(PARSER)
 
@@ -41,12 +47,17 @@ all: $(PARSER)
 dot: CFLAGS += $(DOT_FLAGS)
 dot: $(PARSER)
 
+debug: CFLAGS += $(DEBUG_FLAGS)
+debug: $(PARSER)
+
 # compile with dot stuff and debug flags, run the executable after
 # compilation and generate graph pdfs
-debug: CFLAGS += -g -O0 $(DOT_FLAGS)
-debug: clean $(PARSER)
 rdebug: CFLAGS += -g -O0 $(DOT_FLAGS)
 rdebug: clean $(PARSER) run graph
+
+# run tests on all files in the test path
+test: CFLAGS += -g -O0 $(DOT_FLAGS)
+test: clean $(PARSER) run_test
 
 # compile project
 $(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(SOURCES) $(INCLUDES)
@@ -92,4 +103,13 @@ graph: $(DOT_AST_FILE).pdf $(DOT_N_CON_FILE).pdf $(DOT_P_CON_FILE).pdf
 
 # used for debugging to save time
 run:
-	./$(PARSER) $(TEST)
+	./$(PARSER) $(INPUT)
+
+# ./$(PARSER) $$file > $$file.$(TEST_OUT); \
+#
+run_test:
+	for file in $(TEST_PATH)/*.$(TEST_IN); do \
+		echo $$file; \
+		./$(PARSER) $$file > $${file%.*}.$(TEST_OUT); \
+		diff $${file%.*}.$(TEST_OUT) $${file%.*}.$(TEST_SOL); \
+	done
