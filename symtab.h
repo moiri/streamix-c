@@ -95,7 +95,8 @@ void check_ids( symrec**, symrec**, ast_node* );
 void check_instances( symrec**, ast_node* );
 
 /**
- * check whether all ports are connected
+ * check whether all ports are connected spawn synchronizers and draw the nodes,
+ * synchroniyers and connections
  *
  * @param symrec**:     pointer to the instance table
  * @param ast_node*:    pointer to the root ast node
