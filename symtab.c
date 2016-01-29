@@ -131,7 +131,9 @@ void check_ids( symrec** symtab, symrec** insttab, ast_node* ast )
 void check_instances( symrec** insttab, ast_node* ast )
 {
     ast_list* list = NULL;
+    symrec* net = NULL;
     static int _scope = 0;
+    int net_type;
 
     if( ast == NULL ) return;
 
@@ -247,14 +249,18 @@ void check_instances( symrec** insttab, ast_node* ast )
         case AST_ID:
 #ifdef DOT_CON
             if( ast->ast_id.type == ID_NET ) {
+                net = instrec_get( insttab, ast->ast_id.name,
+                        *utarray_back( __scope_stack ), ast->id );
                 graph_add_divider ( __n_con_graph,
                         *utarray_back( __scope_stack ), FLAG_NET );
                 graph_add_divider ( __p_con_graph,
                         *utarray_back( __scope_stack ), FLAG_NET );
+                net_type = STYLE_N_NET_BOX;
+                if( net->type == VAL_NET ) net_type = STYLE_N_NET_WRAP;
                 graph_add_node( __n_con_graph, ast->id, ast->ast_id.name,
-                        STYLE_N_NET_BOX );
+                        net_type );
                 graph_add_node( __p_con_graph, ast->id, ast->ast_id.name,
-                        STYLE_N_NET_BOX );
+                        net_type );
             }
 #endif // DOT_CON
             break;

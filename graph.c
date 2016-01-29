@@ -305,8 +305,11 @@ void graph_add_node ( FILE* graph, int id, char* name, int style )
             fprintf( graph, ", shape=%s", SHAPE_ELLIPSE );
             break;
         case STYLE_N_NET_BOX:
+        case STYLE_N_NET_WRAP:
             fprintf( graph, "\tid%d [label=<%s<SUB>%d</SUB>>", id, name, id );
             fprintf( graph, ", shape=%s", SHAPE_BOX );
+            if( style == STYLE_N_NET_WRAP )
+                fprintf( graph, ", color=%s", COLOR_LINK );
             break;
         case STYLE_N_NET_INVIS:
             fprintf( graph, "\tid%d [label=\"\", fixedsize=\"false\"", id );
@@ -526,6 +529,7 @@ void graph_init_subgraph( FILE* graph, char* name, int id, int style )
             break;
         case STYLE_SG_WRAPPER:
             fprintf( graph, "\tsubgraph clusterW%d {\n", id );
+            fprintf( graph, "\tcolor=%s;\n", COLOR_LINK );
             fprintf( graph, "\tlabel=\"%s\";\n", name );
             break;
         default:

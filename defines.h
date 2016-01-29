@@ -84,13 +84,14 @@
 // styles of nodes
 #define STYLE_N_DEFAULT     31
 #define STYLE_N_NET_BOX     32
-#define STYLE_N_NET_CP      33
-#define STYLE_N_NET_CPS     34
-#define STYLE_N_NET_CPL     35
-#define STYLE_N_NET_INVIS   36
-#define STYLE_N_AST_ATTR    37
-#define STYLE_N_AST_NODE    38
-#define STYLE_N_AST_ID      39
+#define STYLE_N_NET_WRAP    33
+#define STYLE_N_NET_CP      34
+#define STYLE_N_NET_CPS     35
+#define STYLE_N_NET_CPL     36
+#define STYLE_N_NET_INVIS   37
+#define STYLE_N_AST_ATTR    38
+#define STYLE_N_AST_NODE    39
+#define STYLE_N_AST_ID      40
 
 // flags that are used to reorder the dot file
 #define FLAG_STMTS      's'
