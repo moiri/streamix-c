@@ -528,9 +528,8 @@ void connection_check_link_port( symrec** insttab, symrec* op_left,
         ports_right = ( ( struct inst_attr* ) op_right->attr )->ports;
         while (ports_right != NULL ) {
             p_attr_right = ( struct port_attr* )ports_right->rec->attr;
+            // we always need the 'outer' name of the right operand
             name_right = ports_right->rec->name;
-            if( p_attr_right->int_name != NULL )
-                name_right = p_attr_right->int_name;
             if( strcmp( name_right, ast_id->ast_id.name ) != 0 ) {
 #if defined(DEBUG) || defined(DEBUG_LINK)
                 printf("%s != %s in '%s'(%s, %d)\n", ast_id->ast_id.name,
