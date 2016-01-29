@@ -478,8 +478,9 @@ void connection_check_link( symrec** insttab, ast_node* ast, bool connect )
         // iterate through all the instances with the same symbol
         while( op_right != NULL ) {
 #if defined(DEBUG) || defined(DEBUG_LINK)
-            printf( "%d Check link %s(%d) -- %s(%d)\n",
+            printf( "%d Check link '%s'(%s, %d) -- '%s'(%d)\n",
                     connect, op_left->name,
+                    ( ( struct inst_attr* )op_left->attr )->net->name,
                     ( ( struct inst_attr* )op_left->attr )->id,
                     op_right->name,
                     ( ( struct inst_attr* )op_right->attr )->id );
@@ -516,8 +517,10 @@ void connection_check_link_port( symrec** insttab, symrec* op_left,
             name_left = p_attr_left->int_name;
         if( strcmp( name_left, ast_id->ast_id.name ) != 0 ) {
 #if defined(DEBUG) || defined(DEBUG_LINK)
-            printf("%s != %s in %s\n", ast_id->ast_id.name, name_left,
-                    op_left->name );
+            printf("%s != %s in '%s'(%s, %d)\n", ast_id->ast_id.name, name_left,
+                    op_left->name,
+                    ( ( struct inst_attr* )op_left->attr )->net->name,
+                    ( ( struct inst_attr* )op_left->attr )->id );
 #endif // DEBUG
             ports_left = ports_left->next;
             continue;
@@ -530,8 +533,10 @@ void connection_check_link_port( symrec** insttab, symrec* op_left,
                 name_right = p_attr_right->int_name;
             if( strcmp( name_right, ast_id->ast_id.name ) != 0 ) {
 #if defined(DEBUG) || defined(DEBUG_LINK)
-                printf("%s != %s in %s\n", ast_id->ast_id.name, name_right,
-                        op_right->name );
+                printf("%s != %s in '%s'(%s, %d)\n", ast_id->ast_id.name,
+                        name_right, op_right->name,
+                        ( ( struct inst_attr* )op_right->attr )->net->name,
+                        ( ( struct inst_attr* )op_right->attr )->id );
 #endif // DEBUG
                 ports_right = ports_right->next;
                 continue;
@@ -1020,7 +1025,7 @@ symrec* instrec_get( symrec** insttab, char* name, int scope, int id )
     char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
 
 #if defined(DEBUG) || defined(DEBUG_INST)
-    printf( "search instance %s with id %d in scope %d\n", name, id, scope );
+    printf( "search instance '%s' with id %d in scope %d\n", name, id, scope );
 #endif // DEBUG
 
     // generate key
@@ -1031,7 +1036,8 @@ symrec* instrec_get( symrec** insttab, char* name, int scope, int id )
         // if no id is available, collision handling must be done manually
 #if defined(DEBUG) || defined(DEBUG_INST)
         if( item != NULL )
-            printf( "found instances of %s in scope %d\n", item->name,
+            printf( "found instances of '%s'(%s) in scope %d\n", item->name,
+                    ( ( struct inst_attr*) item->attr )->net->name,
                     item->scope );
 #endif // DEBUG
         return item;

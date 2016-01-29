@@ -16,7 +16,7 @@
 /* #define DEBUG_LINK */
 /* #define DEBUG_SERIAL */
 /* #define DEBUG_PORT */
-#define DEBUG_GRAPH
+/* #define DEBUG_GRAPH */
 
 // constants
 #define CONST_ERROR_LEN 256
