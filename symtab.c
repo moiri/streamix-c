@@ -118,8 +118,8 @@ void check_ids( symrec** symtab, symrec** insttab, ast_node* ast )
             // add a net symbol to the instance table
             if( ast->ast_id.type == ID_NET && rec != NULL ) {
                 instrec_put( insttab, ast->ast_id.name,
-                        *utarray_back( __scope_stack ), ast->ast_id.type,
-                        ast->id, rec );
+                        *utarray_back( __scope_stack ), rec->type, ast->id,
+                        rec );
             }
             break;
         default:
