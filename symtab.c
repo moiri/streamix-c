@@ -40,7 +40,7 @@ void check_context( ast_node* ast )
     install_ids( &symtab, ast, false );
     // check the context of all symbols and install instances in the insttab
     instrec_put( &insttab, VAL_THIS, *utarray_back( __scope_stack ),
-            ID_WRAP, -1, NULL );
+            VAL_NET, -1, NULL );
     check_ids( &symtab, &insttab, ast );
     // check the connections and count the connection of each port
     check_instances( &insttab, ast );
@@ -98,7 +98,7 @@ void check_ids( symrec** symtab, symrec** insttab, ast_node* ast )
             utarray_push_back( __scope_stack, &_scope );
             // add the symbol 'this' to the instance table referring to this net
             instrec_put( insttab, VAL_THIS, *utarray_back( __scope_stack ),
-                    ast->wrap.id->ast_id.type, ast->wrap.id->id, rec );
+                    VAL_NET, ast->wrap.id->id, rec );
             check_ids( symtab, insttab, ast->wrap.stmts );
             utarray_pop_back( __scope_stack );
             break;
@@ -918,6 +918,7 @@ void* install_ids( symrec** symtab, ast_node* ast, bool is_sync )
     symrec_list* port_list = NULL;
     void* res = NULL;
     bool set_sync = false;
+    int type;
     static int _scope = 0;
     static int _sync_id = 0; // used to assemble ports to sync groups
 
@@ -958,8 +959,8 @@ void* install_ids( symrec** symtab, ast_node* ast, bool is_sync )
             b_attr->state = ( ast->box.state == NULL ) ? true : false;
             b_attr->ports = port_list;
             symrec_put( symtab, ast->box.id->ast_id.name,
-                    *utarray_back( __scope_stack ), ast->box.id->ast_id.type,
-                    ( void* )b_attr, ast->box.id->ast_id.line );
+                    *utarray_back( __scope_stack ), VAL_BOX, ( void* )b_attr,
+                    ast->box.id->ast_id.line );
             break;
         case AST_WRAP:
             _scope++;
@@ -973,8 +974,8 @@ void* install_ids( symrec** symtab, ast_node* ast, bool is_sync )
             b_attr->state = false;
             b_attr->ports = port_list;
             symrec_put( symtab, ast->wrap.id->ast_id.name,
-                    *utarray_back( __scope_stack ), ast->wrap.id->ast_id.type,
-                    ( void* )b_attr, ast->wrap.id->ast_id.line );
+                    *utarray_back( __scope_stack ), VAL_NET, ( void* )b_attr,
+                    ast->wrap.id->ast_id.line );
             break;
         case AST_PORT:
             // prepare symbol attributes
@@ -988,8 +989,10 @@ void* install_ids( symrec** symtab, ast_node* ast, bool is_sync )
                 strcpy( p_attr->int_name,
                         ast->port.int_id->ast_node->ast_id.name );
             }
+            type = VAL_PORT;
             // add sync attributes if port is a sync port
             if( is_sync ) {
+                type = VAL_SPORT;
                 p_attr->decoupled =
                     (ast->port.coupling == NULL) ? false : true;
                 p_attr->sync_id = _sync_id;
@@ -1002,10 +1005,8 @@ void* install_ids( symrec** symtab, ast_node* ast, bool is_sync )
                     ast->port.collection->ast_node->ast_attr.val;
             }
             // install symbol and return pointer to the symbol record
-            res = ( void* )symrec_put( symtab,
-                    ast->port.id->ast_id.name,
-                    *utarray_back( __scope_stack ),
-                    ast->port.id->ast_id.type, p_attr,
+            res = ( void* )symrec_put( symtab, ast->port.id->ast_id.name,
+                    *utarray_back( __scope_stack ), type, p_attr,
                     ast->port.id->ast_id.line );
             ptr = ( symrec_list* )malloc( sizeof( symrec_list ) );
             ptr->rec = ( struct symrec* )res;
@@ -1154,7 +1155,7 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
     __node_id++;
     sprintf( name, "%d", __node_id );
     port->cp_sync = instrec_put( insttab, name, *utarray_back( __scope_stack ),
-            ID_CPSYNC, __node_id, NULL );
+            VAL_COPY, __node_id, NULL );
 #ifdef DOT_CON
     // set properties according to type
     switch( type ) {
