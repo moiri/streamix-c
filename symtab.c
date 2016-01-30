@@ -181,10 +181,10 @@ void check_instances( symrec** insttab, ast_node* ast )
 void check_port_all( symrec** insttab, ast_node* ast )
 {
     ast_list* list = NULL;
-    symrec* net = NULL;
-    int net_type;
     static int _scope = 0;
 #ifdef DOT_CON
+    symrec* net = NULL;
+    int net_type;
     char* name;
 #endif // DOT_CON
 
@@ -232,8 +232,8 @@ void check_port_all( symrec** insttab, ast_node* ast )
 #endif // DOT_CON
             _scope++;
             utarray_push_back( __scope_stack, &_scope );
-            sprintf( name, "%s, %d)", name, *utarray_back( __scope_stack ) );
 #ifdef DOT_CON
+            sprintf( name, "%s, %d)", name, *utarray_back( __scope_stack ) );
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
                     FLAG_WRAP );
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
