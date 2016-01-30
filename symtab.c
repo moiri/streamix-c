@@ -836,6 +836,18 @@ void connect_port_link( symrec** insttab, symrec* op_left, symrec* op_right,
 {
 #ifdef DOT_CON
     int id_node_start, id_node_end, id_temp, style;
+    char* name;
+    if( ( ( struct port_attr* )ports_left->rec->attr )->int_name != NULL ) {
+        name = ( char* )malloc( strlen( ports_left->rec->name )
+            + strlen( ( ( struct port_attr* )ports_left->rec->attr )->int_name )
+            + 4 );
+        sprintf( name, "%s (%s)", ports_left->rec->name,
+                ( ( struct port_attr* )ports_left->rec->attr )->int_name );
+    }
+    else {
+        name = ( char* )malloc( strlen( ports_left->rec->name ) + 1 );
+        sprintf( name, "%s", ports_left->rec->name );
+    }
 #endif // DOT_CON
 #if defined(DEBUG) || defined(DEBUG_LINK)
     printf( "Connect %s.%s with %s.%s\n", op_left->name, ports_left->rec->name,
@@ -873,8 +885,8 @@ void connect_port_link( symrec** insttab, symrec* op_left, symrec* op_right,
         style = STYLE_E_LSPORT;
     graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
             FLAG_WRAP_PRE );
-    graph_add_edge( __p_con_graph, id_node_start, id_node_end,
-            ports_left->rec->name, style );
+    graph_add_edge( __p_con_graph, id_node_start, id_node_end, name, style );
+    free( name );
 #endif // DOT_CON
 }
 
@@ -1162,7 +1174,7 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
         flag_node, flag_edge, mode;
     char symbol[4];
     port_attr* p_attr = ( struct port_attr* )port->rec->attr;
-    sprintf( symbol, "×" );
+    char* name_edge;
 #endif // DOT_CON
     char name[10];
     // this port connects to multiple other ports -> a copy synchronizer
@@ -1219,13 +1231,24 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
         id_node_end = id_temp;
         sprintf( symbol, "+" );
     }
+    if( p_attr->int_name != NULL ) {
+        name_edge = ( char* )malloc( strlen( port->rec->name )
+            + strlen( p_attr->int_name ) + 4 );
+        sprintf( name_edge, "%s (%s)", port->rec->name, p_attr->int_name );
+    }
+    else {
+        name_edge = ( char* )malloc( strlen( port->rec->name ) + 1 );
+        sprintf( name_edge, "%s", port->rec->name );
+    }
+    sprintf( symbol, "×" );
     graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
             flag_node );
     graph_add_node( __p_con_graph, __node_id, symbol, style_node );
     graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
             flag_edge );
     graph_add_edge( __p_con_graph, id_node_start, id_node_end,
-            port->rec->name, style_edge );
+            name_edge, style_edge );
+    free( name_edge );
 #endif // DOT_CON
 }
 
