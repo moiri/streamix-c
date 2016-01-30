@@ -1,0 +1,5 @@
+box A(in a) on fa
+box B(in b) on fb
+box C(out a, out b) on fc
+
+(A|B).C

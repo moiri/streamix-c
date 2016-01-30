@@ -1,0 +1,14 @@
+box A( out a ) on fa
+box B( in a, out p ) on fb
+net W{ in p( p_int ) }{
+    link p_int { A }
+    box A( in p_int, out b ) on faa
+    box B( in b, out c ) on fbb
+    net W{ in c(w) } {
+        link w { W }
+        box W(in w) on fw
+        W|W
+    }
+    A.B.W
+}
+A.B.W

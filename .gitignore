@@ -6,3 +6,5 @@
 dot/
 parser
 test/*.res
+test/*.pdf
+test/*.log

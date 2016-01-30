@@ -38,8 +38,8 @@ TEST_OUT = res
 TEST_SOL = sol
 TEST_PATH = test
 IN_PATH = test
-IN_FILE = cpa.test
-INPUT = $(IN_PATH)/$(IN_FILE)
+IN_FILE = cpa
+INPUT = $(IN_PATH)/$(IN_FILE).$(TEST_IN)
 
 all: $(PARSER)
 
@@ -48,17 +48,17 @@ all: $(PARSER)
 dot: CFLAGS += $(DOT_FLAGS)
 dot: $(PARSER)
 
+# compile with dot stuff and debug flags
 debug: CFLAGS += $(DEBUG_FLAGS)
 debug: $(PARSER)
 
-# compile with dot stuff and debug flags, run the executable after
-# compilation and generate graph pdfs
-rdebug: CFLAGS += -g -O0 $(DOT_FLAGS)
-rdebug: clean $(PARSER) run graph
-
 # run tests on all files in the test path
 test: CFLAGS += -g -O0 $(DOT_FLAGS)
-test: clean $(PARSER) run_test
+test: clean $(PARSER) run_test_all
+
+# run tests on one file in the input
+test1: CFLAGS += -g -O0 $(DOT_FLAGS)
+test1: clean $(PARSER) run_test graph
 
 # compile project
 $(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(SOURCES) $(INCLUDES)
@@ -90,7 +90,7 @@ $(DOT_P_CON_FILE).pdf: $(DOT_P_CON_FILE).dot
 	gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$(DOT_P_CON_FILE).pdf dot/tmpfile*
 	rm -f dot/tmpfile*
 
-.PHONY: clean graph run
+.PHONY: clean graph run run_test run_test_all
 
 clean:
 	rm -f $(PROJECT).tab.c
@@ -106,11 +106,21 @@ graph: $(DOT_AST_FILE).pdf $(DOT_N_CON_FILE).pdf $(DOT_P_CON_FILE).pdf
 run:
 	./$(PARSER) $(INPUT)
 
-# ./$(PARSER) $$file > $$file.$(TEST_OUT); \
-#
 run_test:
+	touch $(INPUT:.$(TEST_IN)=.$(TEST_SOL))
+	./$(PARSER) $(INPUT) > $(INPUT:.$(TEST_IN)=.$(TEST_OUT))
+	diff <(sed 's/[0-9]+)/*)/g' $(INPUT:.$(TEST_IN)=.$(TEST_OUT))) $(INPUT:.$(TEST_IN)=.$(TEST_SOL))
+
+run_test_all:
+	printf " Testlog " > $(TEST_PATH)/test.log
+	date >> $(TEST_PATH)/test.log
+	printf "======================================\n\n" >> $(TEST_PATH)/test.log
 	for file in $(TEST_PATH)/*.$(TEST_IN); do \
-		echo $$file; \
+		echo $$file >> $(TEST_PATH)/test.log; \
 		./$(PARSER) $$file > $${file%.*}.$(TEST_OUT); \
-		diff <(sed 's/[0-9]*)/*)/g' $${file%.*}.$(TEST_OUT)) $${file%.*}.$(TEST_SOL); \
+		diff <(sed 's/[0-9]+)/*)/g' $${file%.*}.$(TEST_OUT)) $${file%.*}.$(TEST_SOL) >> $(TEST_PATH)/test.log; \
+		make graph; \
+		cp $(DOT_AST_FILE).pdf $${file%.*}_ast.pdf; \
+		cp $(DOT_N_CON_FILE).pdf $${file%.*}_gn.pdf; \
+		cp $(DOT_P_CON_FILE).pdf $${file%.*}_gp.pdf; \
 	done
