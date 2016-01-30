@@ -184,6 +184,9 @@ void check_port_all( symrec** insttab, ast_node* ast )
     symrec* net = NULL;
     int net_type;
     static int _scope = 0;
+#ifdef DOT_CON
+    char* name;
+#endif // DOT_CON
 
     if( ast == NULL ) return;
 
@@ -221,17 +224,25 @@ void check_port_all( symrec** insttab, ast_node* ast )
             _scope++;
             break;
         case AST_WRAP:
+#ifdef DOT_CON
+            name = ( char* )malloc( strlen(ast->wrap.id->ast_id.name)
+                    + 2*CONST_SCOPE_LEN + 5 );
+            sprintf( name, "%s (%d", ast->wrap.id->ast_id.name,
+                    *utarray_back( __scope_stack ) );
+#endif // DOT_CON
             _scope++;
             utarray_push_back( __scope_stack, &_scope );
+            sprintf( name, "%s, %d)", name, *utarray_back( __scope_stack ) );
 #ifdef DOT_CON
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
                     FLAG_WRAP );
             graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
                     FLAG_WRAP );
-            graph_init_subgraph( __n_con_graph, ast->wrap.id->ast_id.name,
+            graph_init_subgraph( __n_con_graph, name,
                     ast->id, STYLE_SG_WRAPPER );
-            graph_init_subgraph( __p_con_graph, ast->wrap.id->ast_id.name,
+            graph_init_subgraph( __p_con_graph, name,
                     ast->id, STYLE_SG_WRAPPER );
+            free( name );
 #endif // DOT_CON
             connection_check_port_all( insttab, VAL_THIS, ast->wrap.id->id,
                     ast->wrap.id->ast_id.line );
