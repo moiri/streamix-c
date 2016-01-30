@@ -109,7 +109,7 @@ run:
 run_test:
 	touch $(INPUT:.$(TEST_IN)=.$(TEST_SOL))
 	./$(PARSER) $(INPUT) > $(INPUT:.$(TEST_IN)=.$(TEST_OUT))
-	diff <(sed 's/[0-9]+)/*)/g' $(INPUT:.$(TEST_IN)=.$(TEST_OUT))) $(INPUT:.$(TEST_IN)=.$(TEST_SOL))
+	diff <(sed -r 's/[0-9]+\)/*)/g' $(INPUT:.$(TEST_IN)=.$(TEST_OUT))) $(INPUT:.$(TEST_IN)=.$(TEST_SOL))
 
 run_test_all:
 	printf " Testlog " > $(TEST_PATH)/test.log
@@ -118,7 +118,7 @@ run_test_all:
 	for file in $(TEST_PATH)/*.$(TEST_IN); do \
 		echo $$file >> $(TEST_PATH)/test.log; \
 		./$(PARSER) $$file > $${file%.*}.$(TEST_OUT); \
-		diff <(sed 's/[0-9]+)/*)/g' $${file%.*}.$(TEST_OUT)) $${file%.*}.$(TEST_SOL) >> $(TEST_PATH)/test.log; \
+		diff <(sed -r 's/[0-9]+\)/*)/g' $${file%.*}.$(TEST_OUT)) $${file%.*}.$(TEST_SOL) >> $(TEST_PATH)/test.log; \
 		make graph; \
 		cp $(DOT_AST_FILE).pdf $${file%.*}_ast.pdf; \
 		cp $(DOT_N_CON_FILE).pdf $${file%.*}_gn.pdf; \
