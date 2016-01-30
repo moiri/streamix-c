@@ -485,12 +485,15 @@ void graph_fix_dot( char* t_path, char* r_path )
 void graph_init( FILE* graph, int style )
 {
     fprintf(graph, "digraph {\n");
-    fprintf(graph, "\trankdir=LR;\n");
     switch (style) {
+        case STYLE_G_DEFAULT:
+            break;
         case STYLE_G_CON_NET:
+            fprintf(graph, "\trankdir=LR;\n");
             fprintf(graph, "\tedge [dir=none];\n");
             break;
         case STYLE_G_CON_PORT:
+            fprintf(graph, "\trankdir=LR;\n");
 #ifdef DOT_EDGE_LABEL
             fprintf(graph, "\tranksep=0.75;\n");
             /* fprintf(graph, "\tnodesep=0.75;\n"); */
