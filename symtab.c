@@ -978,46 +978,38 @@ void* install_ids( symrec** symtab, ast_node* ast, bool is_sync )
             break;
         case AST_PORT:
             // prepare symbol attributes
-            if( ast->port.collection != NULL )
-                list = ast->port.collection->ast_list;
-            // insert one port for each collection attribute but only one if no
-            // collection is set.
-            do {
-                p_attr = ( port_attr* )malloc( sizeof( port_attr ) );
-                p_attr->mode = ast->port.mode->ast_node->ast_attr.val;
-                // add internal name if available
-                p_attr->int_name = NULL;
-                if( ast->port.int_id != NULL ) {
-                    p_attr->int_name = ( char* )malloc( strlen(
-                                ast->port.int_id->ast_node->ast_id.name ) + 1 );
-                    strcpy( p_attr->int_name,
-                            ast->port.int_id->ast_node->ast_id.name );
-                }
-                // add sync attributes if port is a sync port
-                if( is_sync ) {
-                    p_attr->decoupled =
-                        (ast->port.coupling == NULL) ? false : true;
-                    p_attr->sync_id = _sync_id;
-                }
-                // set collection
-                if ( list == NULL )
-                    p_attr->collection = VAL_NONE;
-                else {
-                    p_attr->collection = list->ast_node->ast_attr.val;
-                    list = list->next;
-                }
-                // install symbol and return pointer to the symbol record
-                res = ( void* )symrec_put( symtab,
-                        ast->port.id->ast_id.name,
-                        *utarray_back( __scope_stack ),
-                        ast->port.id->ast_id.type, p_attr,
-                        ast->port.id->ast_id.line );
-                ptr = ( symrec_list* )malloc( sizeof( symrec_list ) );
-                ptr->rec = ( struct symrec* )res;
-                ptr->next = port_list;
-                port_list = ptr;
+            p_attr = ( port_attr* )malloc( sizeof( port_attr ) );
+            p_attr->mode = ast->port.mode->ast_node->ast_attr.val;
+            // add internal name if available
+            p_attr->int_name = NULL;
+            if( ast->port.int_id != NULL ) {
+                p_attr->int_name = ( char* )malloc( strlen(
+                            ast->port.int_id->ast_node->ast_id.name ) + 1 );
+                strcpy( p_attr->int_name,
+                        ast->port.int_id->ast_node->ast_id.name );
             }
-            while( list != NULL );
+            // add sync attributes if port is a sync port
+            if( is_sync ) {
+                p_attr->decoupled =
+                    (ast->port.coupling == NULL) ? false : true;
+                p_attr->sync_id = _sync_id;
+            }
+            // set collection
+            if( ast->port.collection == NULL )
+                p_attr->collection = VAL_NONE;
+            else {
+                p_attr->collection =
+                    ast->port.collection->ast_node->ast_attr.val;
+            }
+            // install symbol and return pointer to the symbol record
+            res = ( void* )symrec_put( symtab,
+                    ast->port.id->ast_id.name,
+                    *utarray_back( __scope_stack ),
+                    ast->port.id->ast_id.type, p_attr,
+                    ast->port.id->ast_id.line );
+            ptr = ( symrec_list* )malloc( sizeof( symrec_list ) );
+            ptr->rec = ( struct symrec* )res;
+            ptr->next = NULL;
             res = ( void* )ptr;   // return pointer to the port list
             break;
         default:

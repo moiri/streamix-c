@@ -1,5 +1,5 @@
 box A (out a) on func_a
-box B (up down in a) on func_b
+box B (in a) on func_b
 box C (out a, out c) on func_c
 box D (in c, out g) on func_d
 box E (in c, out d) on func_e

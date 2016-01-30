@@ -28,31 +28,16 @@ char* node_label[] =
     "sync",
     "net decl"
 };
-char* mode_label[] =
+char* attr_label[] =
 {
-    "in",
-    "out"
-};
-char* class_label[] =
-{
+    "none",
     "up",
     "down",
-    "side"
-};
-char* coupling_label[] =
-{
-    "decoupled"
-};
-char* state_label[] =
-{
+    "side",
+    "in",
+    "out",
+    "decoupled",
     "stateless"
-};
-char** attr_label[] =
-{
-    mode_label,
-    class_label,
-    coupling_label,
-    state_label
 };
 
 /******************************************************************************/
@@ -70,13 +55,15 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
 {
     ast_list* ast_list_ptr;
 
+    if( ptr == NULL ) return;
+
     switch (ptr->node_type) {
         // reached a leaf node of the AST -> add box or octagon to drawing
         case AST_ATTR:
             graph_add_node(
                     graph,
                     ptr->id,
-                    attr_label[ptr->ast_attr.attr_type][ptr->ast_attr.val],
+                    attr_label[ptr->ast_attr.val],
                     STYLE_N_AST_ATTR
             );
             break;
@@ -88,7 +75,6 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
                     STYLE_N_AST_ID);
             break;
         // draw a list-node with its children
-        case AST_COLLECT:
         case AST_CONNECTS:
         case AST_LINKS:
         case AST_STMTS:
@@ -121,6 +107,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
                     STYLE_E_DEFAULT );
             break;
         // draw simple nodes
+        case AST_COLLECT:
         case AST_COUPLING:
         case AST_STATE:
         case AST_NET:

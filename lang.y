@@ -41,10 +41,10 @@
 %token <ival> BOX NET IN OUT UP DOWN SIDE DECOUPLED STATELESS
 %token <sval> IDENTIFIER
 %type <nval> net nets stmt decl_box decl_net decl_connect decl_link
-%type <nval> decl_bport syncport decl_nport port_mode port_class
-%type <nval> opt_state opt_decoupled opt_renaming
+%type <nval> decl_bport syncport decl_nport port_mode
+%type <nval> opt_state opt_decoupled opt_renaming opt_port_class
 %type <lval> stmts connect_list opt_connect_id link_list opt_link_id
-%type <lval> opt_decl_bport opt_syncport opt_decl_nport opt_port_class
+%type <lval> opt_decl_bport opt_syncport opt_decl_nport
 %left '|'
 %left '.'
 %start start
@@ -185,7 +185,7 @@ decl_bport:
         $$ = ast_add_port(
             ast_add_id( $3, @3.last_line, ID_PORT ),
             ( ast_node* )0, // no internal id
-            ast_add_list( $1, AST_COLLECT ),
+            ast_add_node( $1, AST_COLLECT ),
             ast_add_node( $2, AST_MODE ),
             ( ast_node* )0, // no coupling
             PORT_BOX
@@ -196,13 +196,6 @@ decl_bport:
             ast_add_list_elem( $3, $4 ),
             AST_SYNC
         );
-    }
-;
-
-opt_port_class:
-    %empty { $$ = ( ast_list* )0; }
-|   port_class opt_port_class {
-        $$ = ast_add_list_elem( $1, $2 );
     }
 ;
 
@@ -218,7 +211,7 @@ syncport:
         $$ = ast_add_port(
             ast_add_id( $4, @4.last_line, ID_PORT ),
             (ast_node*)0, // no internal id
-            ast_add_list( $2, AST_COLLECT ),
+            ast_add_node( $2, AST_COLLECT ),
             ast_add_node( ast_add_attr( $3, ATTR_MODE ), AST_MODE ),
             ast_add_node( $1, AST_COUPLING ),
             PORT_SYNC
@@ -236,8 +229,9 @@ port_mode:
 |   OUT  { $$ = ast_add_attr( $1, ATTR_MODE );}
 ;
 
-port_class:
-    UP   { $$ = ast_add_attr( $1, ATTR_COLLECT ); }
+opt_port_class:
+    %empty { $$ = ( ast_node* )0; }
+|   UP   { $$ = ast_add_attr( $1, ATTR_COLLECT ); }
 |   DOWN { $$ = ast_add_attr( $1, ATTR_COLLECT ); }
 |   SIDE { $$ = ast_add_attr( $1, ATTR_COLLECT ); }
 ;
@@ -286,7 +280,7 @@ decl_nport:
         $$ = ast_add_port(
             ast_add_id( $3, @3.last_line, ID_PORT ),
             $4,
-            ast_add_list( $1, AST_COLLECT ),
+            ast_add_node( $1, AST_COLLECT ),
             ast_add_node( $2, AST_MODE ),
             ( ast_node* )0, // no coupling
             PORT_NET

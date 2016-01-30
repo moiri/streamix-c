@@ -22,24 +22,26 @@
 #define CONST_ERROR_LEN 256
 #define CONST_SCOPE_LEN 9
 
-// scanner values
-#define VAL_NONE    0
-#define VAL_UP      1
-#define VAL_DOWN    2
-#define VAL_SIDE    3
+// scanner values (attributes)
+#define VAL_NONE        0
+#define VAL_UP          1
+#define VAL_DOWN        2
+#define VAL_SIDE        3
 
-#define VAL_IN      0
-#define VAL_OUT     1
+#define VAL_IN          4
+#define VAL_OUT         5
 
-#define VAL_BOX     0
-#define VAL_NET     1
-#define VAL_PORT    2
-#define VAL_SPORT   3
-#define VAL_COPY    4
+#define VAL_DECOUPLED   6
 
-#define VAL_DECOUPLED   0
+#define VAL_STATELESS   7
 
-#define VAL_STATELESS   0
+// scanner values (elements)
+#define VAL_BOX     1
+#define VAL_NET     2
+#define VAL_PORT    3
+#define VAL_SPORT   4
+#define VAL_COPY    5
+
 
 #define VAL_THIS    "this"
 

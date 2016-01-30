@@ -1,16 +1,16 @@
 stateless box RS( out speed ) on func_rs
-stateless box DS( down side out dist ) on func_ds
+stateless box DS( side out dist ) on func_ds
 stateless box B( in break_abs ) on func_b
 box MB( in block, out break_cmd ) on func_mb
 box DC(
     in abs,
     in cpa,
     side in dist,
-    down up out dc
+    out dc
 ) on func_dc
 box CPA(
     sync {
-        decoupled up in dist,
+        decoupled side in dist,
         up in dc
     },
     out cpa,
@@ -38,9 +38,9 @@ net Car{
     link car_l_out { CPA }
     link car_r_in { CPA }
     link car_r_out { CPA }
-    connect dist { DS, DC }
+    connect dist { DS, DC, CPA }
 
-    ( ( ( RS | B | MB ).ABS.DC ) | DS ).CPA
+    DS | ( RS | B | MB ).ABS.DC.CPA
 }
 
 box CarS( out car_next, in car_prev ) on fcs

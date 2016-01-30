@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 PROJECT = lang
 PARSER = parser
 
@@ -111,5 +112,5 @@ run_test:
 	for file in $(TEST_PATH)/*.$(TEST_IN); do \
 		echo $$file; \
 		./$(PARSER) $$file > $${file%.*}.$(TEST_OUT); \
-		diff $${file%.*}.$(TEST_OUT) $${file%.*}.$(TEST_SOL); \
+		diff <(sed 's/[0-9]*)/*)/g' $${file%.*}.$(TEST_OUT)) $${file%.*}.$(TEST_SOL); \
 	done
