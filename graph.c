@@ -251,8 +251,12 @@ void graph_add_edge ( FILE* graph, int start, int end, char* label,
             fprintf( graph, "]" );
             break;
         case STYLE_E_LPORT:
+        case STYLE_E_LSPORT:
             fprintf(graph, "\tid%d->id%d", start, end);
-            fprintf( graph, "[color=%s", COLOR_LINK );
+            if( style == STYLE_E_LPORT )
+                fprintf( graph, "[color=%s", COLOR_LINK );
+            else if( style == STYLE_E_LSPORT )
+                fprintf( graph, "[color=%s", COLOR_SLINK );
             /* fprintf( graph, ", constraint=false" ); */
 #ifdef DOT_EDGE_LABEL
             fprintf( graph, ", xlabel=\"%s\", fontsize=10", label );
@@ -272,6 +276,7 @@ void graph_add_node ( FILE* graph, int id, char* name, int style )
         case STYLE_N_DEFAULT:
             fprintf( graph, "\tid%d [label=\"%s\"", id, name );
             break;
+        case STYLE_N_NET_CPLS:
         case STYLE_N_NET_CPS:
         case STYLE_N_NET_CPL:
         case STYLE_N_NET_CP:
@@ -280,8 +285,10 @@ void graph_add_node ( FILE* graph, int id, char* name, int style )
                     SHAPE_CIRCLE );
             if( style == STYLE_N_NET_CPS )
                 fprintf( graph, ", color=%s", COLOR_SIDE );
-            if( style == STYLE_N_NET_CPL )
+            else if( style == STYLE_N_NET_CPL )
                 fprintf( graph, ", color=%s", COLOR_LINK );
+            else if( style == STYLE_N_NET_CPLS )
+                fprintf( graph, ", color=%s", COLOR_SLINK );
             break;
         case STYLE_N_AST_ATTR:
             fprintf( graph, "\tid%d [label=\"%s\"", id, name );
@@ -296,7 +303,9 @@ void graph_add_node ( FILE* graph, int id, char* name, int style )
             fprintf( graph, "\tid%d [label=<%s<SUB>%d</SUB>>", id, name, id );
             fprintf( graph, ", shape=%s", SHAPE_BOX );
             if( style == STYLE_N_NET_WRAP )
-                fprintf( graph, ", color=%s", COLOR_LINK );
+                fprintf( graph, ", color=%s", COLOR_N_WRAP );
+            else if( style == STYLE_N_NET_BOX )
+                fprintf( graph, ", color=%s", COLOR_N_BOX );
             break;
         case STYLE_N_NET_INVIS:
             fprintf( graph, "\tid%d [label=\"\", fixedsize=\"false\"", id );
@@ -519,7 +528,7 @@ void graph_init_subgraph( FILE* graph, char* name, int id, int style )
             break;
         case STYLE_SG_WRAPPER:
             fprintf( graph, "\tsubgraph clusterW%d {\n", id );
-            fprintf( graph, "\tcolor=%s;\n", COLOR_LINK );
+            fprintf( graph, "\tcolor=%s;\n", COLOR_WRAP );
             fprintf( graph, "\tlabel=\"%s\";\n", name );
             break;
         default:

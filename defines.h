@@ -61,6 +61,10 @@
 #define COLOR_PARALLEL  "chartreuse3"
 #define COLOR_SERIAL    "cadetblue3"
 #define COLOR_LINK      "deepskyblue4"
+#define COLOR_SLINK     COLOR_SIDE      // a link that is a side port
+#define COLOR_N_BOX     "black"         // net with a box declaration
+#define COLOR_N_WRAP    COLOR_LINK      // net with a net declaration
+#define COLOR_WRAP      COLOR_LINK      // net declaration
 
 
 // styles of graphs
@@ -82,14 +86,16 @@
 #define STYLE_E_SPORT_OUT   24
 #define STYLE_E_SPORT_BI    25
 #define STYLE_E_LPORT       26
+#define STYLE_E_LSPORT      27
 
 // styles of nodes
-#define STYLE_N_DEFAULT     31
-#define STYLE_N_NET_BOX     32
-#define STYLE_N_NET_WRAP    33
-#define STYLE_N_NET_CP      34
-#define STYLE_N_NET_CPS     35
-#define STYLE_N_NET_CPL     36
+#define STYLE_N_DEFAULT     30
+#define STYLE_N_NET_BOX     31
+#define STYLE_N_NET_WRAP    32
+#define STYLE_N_NET_CP      33
+#define STYLE_N_NET_CPS     34
+#define STYLE_N_NET_CPL     35
+#define STYLE_N_NET_CPLS    36
 #define STYLE_N_NET_INVIS   37
 #define STYLE_N_AST_ATTR    38
 #define STYLE_N_AST_NODE    39

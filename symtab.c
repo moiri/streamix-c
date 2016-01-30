@@ -824,7 +824,7 @@ void connect_port_link( symrec** insttab, symrec* op_left, symrec* op_right,
         symrec_list* ports_left, symrec_list* ports_right, int id_invis )
 {
 #ifdef DOT_CON
-    int id_node_start, id_node_end, id_temp;
+    int id_node_start, id_node_end, id_temp, style;
 #endif // DOT_CON
 #if defined(DEBUG) || defined(DEBUG_LINK)
     printf( "Connect %s.%s with %s.%s\n", op_left->name, ports_left->rec->name,
@@ -857,10 +857,13 @@ void connect_port_link( symrec** insttab, symrec* op_left, symrec* op_right,
         id_node_start = id_node_end;
         id_node_end = id_temp;
     }
+    style = STYLE_E_LPORT;
+    if( ( ( struct port_attr* )ports_left->rec->attr )->collection == VAL_SIDE )
+        style = STYLE_E_LSPORT;
     graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
             FLAG_WRAP_PRE );
     graph_add_edge( __p_con_graph, id_node_start, id_node_end,
-            ports_left->rec->name, STYLE_E_LPORT );
+            ports_left->rec->name, style );
 #endif // DOT_CON
 }
 
@@ -1147,6 +1150,7 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
     int id_node_start, id_node_end, id_temp, style_edge, style_node,
         flag_node, flag_edge, mode;
     char symbol[4];
+    port_attr* p_attr = ( struct port_attr* )port->rec->attr;
     sprintf( symbol, "×" );
 #endif // DOT_CON
     char name[10];
@@ -1171,6 +1175,10 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
             flag_node = FLAG_NET;
             style_edge = STYLE_E_LPORT;
             style_node = STYLE_N_NET_CPL;
+            if( p_attr->collection == VAL_SIDE ) {
+                style_edge = STYLE_E_LSPORT;
+                style_node = STYLE_N_NET_CPLS;
+            }
             break;
         case TYPE_SERIAL:
             mode = VAL_OUT;
@@ -1183,6 +1191,10 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
             flag_edge = flag_node = FLAG_NET;
             style_edge = STYLE_E_LPORT;
             style_node = STYLE_N_NET_CPL;
+            if( p_attr->collection == VAL_SIDE ) {
+                style_edge = STYLE_E_LSPORT;
+                style_node = STYLE_N_NET_CPLS;
+            }
             break;
     }
 
