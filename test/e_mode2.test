@@ -1,0 +1,6 @@
+box A( side in a ) on af
+box B( side in a ) on bf
+
+connect a { A, B }
+
+A|B
