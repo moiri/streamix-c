@@ -101,6 +101,12 @@ link_list:
             $2
         );
     }
+|   '*' {
+        $$ = ast_add_list_elem(
+            ast_add_star(),
+            ( ast_list* )0
+        );
+    }
 ;
 
 opt_link_id:
