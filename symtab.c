@@ -1224,6 +1224,7 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
     // create a copy synchroniyer for each connect instruction
     id_node_start = __node_id;
     id_node_end = net_id;
+    sprintf( symbol, "×" );
     if( ( ( struct port_attr* )port->rec->attr )->mode == mode ) {
         if( type == TYPE_CONNECT ) style_edge = STYLE_E_SPORT_IN;
         id_temp = id_node_start;
@@ -1240,7 +1241,6 @@ void spawn_synchronizer( symrec** insttab, symrec_list* port, int net_id,
         name_edge = ( char* )malloc( strlen( port->rec->name ) + 1 );
         sprintf( name_edge, "%s", port->rec->name );
     }
-    sprintf( symbol, "×" );
     graph_add_divider ( __p_con_graph, *utarray_back( __scope_stack ),
             flag_node );
     graph_add_node( __p_con_graph, __node_id, symbol, style_node );
