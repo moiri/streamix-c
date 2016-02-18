@@ -1,7 +1,7 @@
-box A (out a) on func_a
-box B (out b) on func_b
-box C (in a, in b) on func_c
-box D (in a, in b) on func_d
+box A (out a)
+box B (out b)
+box C (in a, in b)
+box D (in a, in b)
 
 (A|B).(C|D)
 

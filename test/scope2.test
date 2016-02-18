@@ -1,10 +1,10 @@
-box A( out a ) on fa
-box B( in a, out p ) on fb
-net W{ in p( p_int ) }{
+box A( out a )
+box B( in a, out p )
+wrapper W{ in p( p_int ) }{
     link p_int { A }
-    box A( in p_int, out b ) on faa
-    box B( in b, out c ) on fbb
-    box W( in c ) on fw
+    box A( in p_int, out b )
+    box B( in b, out c )
+    box W( in c )
     A.B.W
 }
 A.B.W

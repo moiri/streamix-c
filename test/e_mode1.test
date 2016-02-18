@@ -1,4 +1,4 @@
-box A( in a ) on af
-box B( in a ) on bf
+box A( in a )
+box B( in a )
 
 A.B

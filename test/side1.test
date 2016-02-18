@@ -1,5 +1,5 @@
 connect p1 { A, B }
-box A( side out p1, out p2 ) on func_a
-box B( side in p1, in p2 ) on func_b
+box A( side out p1, out p2 )
+box B( side in p1, in p2 )
 
 A.B

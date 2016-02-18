@@ -1,10 +1,10 @@
-box L( out p1 ) on fl
-box R( in p2 ) on fr
-net W { in p1, out p2 } {
+box L( out p1 )
+box R( in p2 )
+wrapper W { in p1, out p2 } {
     link p1 { A }
     link p2 { B }
-    box A ( in p1, out p_int ) on func_a
-    box B ( in p_int, out p2 ) on func_b
+    box A ( in p1, out p_int )
+    box B ( in p_int, out p2 )
     A.B
 }
 

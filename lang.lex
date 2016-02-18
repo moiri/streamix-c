@@ -23,14 +23,13 @@
 \n              ++yylloc.last_line;
 
     /* keywords */
-on              return ON;
 up              {yylval.ival = VAL_UP;return UP;}
 down            {yylval.ival = VAL_DOWN;return DOWN;}
 side            {yylval.ival = VAL_SIDE;return SIDE;}
 in              {yylval.ival = VAL_IN;return IN;}
 out             {yylval.ival = VAL_OUT;return OUT;}
 box             {yylval.ival = VAL_BOX;return BOX;}
-net             {yylval.ival = VAL_NET;return NET;}
+wrapper         {yylval.ival = VAL_NET;return WRAPPER;}
 connect         return CONNECT;
 link            return LINK;
 stateless       {yylval.ival = VAL_STATELESS;return STATELESS;}

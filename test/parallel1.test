@@ -1,5 +1,5 @@
-box A(in a) on fa
-box B(in b) on fb
-box C(out a, out b) on fc
+box A(in a)
+box B(in b)
+box C(out a, out b)
 
 (A|B).C

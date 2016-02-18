@@ -1,6 +1,6 @@
-box A( out x ) on fct_a
-box B( out x ) on fct_b
-box C( in x ) on fct_c
-box D( in x ) on fct_d
+box A( out x )
+box B( out x )
+box C( in x )
+box D( in x )
 
 D.A.C.B

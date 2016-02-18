@@ -1,5 +1,5 @@
-box A( side in a ) on af
-box B( side in a ) on bf
+box A( side in a )
+box B( side in a )
 
 connect a { A, B }
 

@@ -37,14 +37,14 @@
     struct ast_node* nval;
     struct ast_list* lval;
 };
-%token ON SYNC CONNECT LINK
-%token <ival> BOX NET IN OUT UP DOWN SIDE DECOUPLED STATELESS
+%token SYNC CONNECT LINK
+%token <ival> BOX WRAPPER IN OUT UP DOWN SIDE DECOUPLED STATELESS
 %token <sval> IDENTIFIER
-%type <nval> net stmt decl_box decl_net decl_connect decl_link
-%type <nval> decl_bport syncport decl_nport port_mode
+%type <nval> net stmt decl_box decl_wrap decl_connect decl_link
+%type <nval> decl_box_port decl_sync_port decl_wrap_port port_mode
 %type <nval> opt_state opt_decoupled opt_renaming opt_port_class
 %type <lval> stmts connect_list opt_connect_id link_list opt_link_id
-%type <lval> opt_decl_bport opt_syncport opt_decl_nport
+%type <lval> opt_decl_box_port opt_sync_port opt_decl_wrap_port
 %left '|'
 %left '.'
 %start start
@@ -72,7 +72,7 @@ stmt:
 |   decl_connect { $$ = $1; }
 |   decl_link { $$ = $1; }
 |   decl_box { $$ = $1; }
-|   decl_net { $$ = $1; }
+|   decl_wrap { $$ = $1; }
 ;
 
 decl_link:
@@ -152,7 +152,7 @@ opt_connect_id:
 
 /* box declarartion */
 decl_box:
-    opt_state BOX IDENTIFIER '(' decl_bport opt_decl_bport ')' ON IDENTIFIER {
+    opt_state BOX IDENTIFIER '(' decl_box_port opt_decl_box_port ')' {
         $$ = ast_add_box(
             ast_add_id( $3, @3.last_line, ID_BOX ),
             ast_add_list(
@@ -169,14 +169,14 @@ opt_state:
 |   STATELESS { $$ = ast_add_attr( $1, ATTR_STATE ); }
 ;
 
-opt_decl_bport:
+opt_decl_box_port:
     %empty { $$ = ( ast_list* )0; }
-|   ',' decl_bport opt_decl_bport {
+|   ',' decl_box_port opt_decl_box_port {
         $$ = ast_add_list_elem( $2, $3 );
     }
 ;
 
-decl_bport:
+decl_box_port:
     opt_port_class port_mode IDENTIFIER {
         $$ = ast_add_port(
             ast_add_id( $3, @3.last_line, ID_PORT ),
@@ -187,7 +187,7 @@ decl_bport:
             PORT_BOX
         );
     }
-|   SYNC '{' syncport opt_syncport '}' {
+|   SYNC '{' decl_sync_port opt_sync_port '}' {
         $$ = ast_add_list(
             ast_add_list_elem( $3, $4 ),
             AST_SYNC
@@ -195,14 +195,14 @@ decl_bport:
     }
 ;
 
-opt_syncport:
+opt_sync_port:
     %empty { $$ = ( ast_list* )0; }
-|   ',' syncport opt_syncport {
+|   ',' decl_sync_port opt_sync_port {
         $$ = ast_add_list_elem( $2, $3 );
     }
 ;
 
-syncport:
+decl_sync_port:
     opt_decoupled opt_port_class IN IDENTIFIER {
         $$ = ast_add_port(
             ast_add_id( $4, @4.last_line, ID_PORT ),
@@ -249,8 +249,8 @@ net:
 ;
 
 /* wrapper declaration */
-decl_net:
-    NET IDENTIFIER '{' decl_nport opt_decl_nport '}' '{' stmts '}' {
+decl_wrap:
+    WRAPPER IDENTIFIER '{' decl_wrap_port opt_decl_wrap_port '}' '{' stmts '}' {
         /* install($2, *( int* )utarray_back( scope_stack ), $1, NULL, */
         /*         @2.last_line); */
         $$ = ast_add_wrap(
@@ -264,14 +264,14 @@ decl_net:
     }
 ;
 
-opt_decl_nport:
+opt_decl_wrap_port:
     %empty { $$ = ( ast_list* )0; }
-|   ',' decl_nport opt_decl_nport {
+|   ',' decl_wrap_port opt_decl_wrap_port {
         $$ = ast_add_list_elem( $2, $3 );
     }
 ;
 
-decl_nport:
+decl_wrap_port:
     opt_port_class port_mode IDENTIFIER opt_renaming {
         $$ = ast_add_port(
             ast_add_id( $3, @3.last_line, ID_PORT ),

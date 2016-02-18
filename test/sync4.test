@@ -1,6 +1,6 @@
-box A( in x ) on fct_a
-box B( in x ) on fct_b
-box C( out x ) on fct_c
-box D( out x ) on fct_d
+box A( in x )
+box B( in x )
+box C( out x )
+box D( out x )
 
 (A|B).(C|D)
