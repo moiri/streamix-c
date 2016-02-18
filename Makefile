@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-PROJECT = lang
+PROJECT = streamix
 PARSER = parser
 
 SOURCES = symtab.c \
