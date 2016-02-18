@@ -40,7 +40,7 @@
 %token ON SYNC CONNECT LINK
 %token <ival> BOX NET IN OUT UP DOWN SIDE DECOUPLED STATELESS
 %token <sval> IDENTIFIER
-%type <nval> net nets stmt decl_box decl_net decl_connect decl_link
+%type <nval> net stmt decl_box decl_net decl_connect decl_link
 %type <nval> decl_bport syncport decl_nport port_mode
 %type <nval> opt_state opt_decoupled opt_renaming opt_port_class
 %type <lval> stmts connect_list opt_connect_id link_list opt_link_id
@@ -68,21 +68,11 @@ stmts:
 ;
 
 stmt:
-    nets {$$ = $1;}
-|   decl_connect {$$ = $1;}
-|   decl_link {$$ = $1;}
-;
-
-nets:
-    net {
-        $$ = ast_add_node( $1, AST_NET );
-    }
-|   decl_box {
-        $$ = $1;
-    }
-|   decl_net {
-        $$ = $1;
-    }
+    net { $$ = ast_add_node( $1, AST_NET ); }
+|   decl_connect { $$ = $1; }
+|   decl_link { $$ = $1; }
+|   decl_box { $$ = $1; }
+|   decl_net { $$ = $1; }
 ;
 
 decl_link:
