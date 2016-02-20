@@ -11,8 +11,9 @@ INCLUDES = symtab.h \
 		   graph.h \
 		   defines.h
 
-INCLUDES_DIR = -Iuthash/include
-CFLAGS = -Wall -lfl
+INCLUDES_DIR = -Iuthash/include -I/usr/local/include/igraph
+LINK_DIR = -L/usr/local/lib
+CFLAGS = -Wall -lfl -ligraph
 
 DEBUG_FLAGS = -g -O0
 
@@ -66,7 +67,7 @@ test1: clean $(PARSER) run_test
 
 # compile project
 $(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(SOURCES) $(INCLUDES)
-	gcc $(SOURCES) $(INCLUDES_DIR) $(PROJECT).tab.c lex.yy.c -o $(PARSER) $(CFLAGS)
+	gcc $(SOURCES) $(INCLUDES_DIR) $(LINK_DIR) $(PROJECT).tab.c lex.yy.c -o $(PARSER) $(CFLAGS)
 
 # compile lexer (flex)
 lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h

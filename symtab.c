@@ -1,5 +1,6 @@
 #include <stdlib.h> /* For malloc in symbol table */
 #include <stdio.h>
+#include <igraph.h>
 #include "symtab.h"
 #include "utarray.h"
 #include "defines.h"
