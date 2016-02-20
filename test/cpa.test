@@ -18,6 +18,10 @@ box CPA (
     side out car_r_out
 )
 
+/**
+ * This is a comment to check wheter multiline comments work
+ * Below the wrapper 'Car' is defined
+ */
 wrapper Car { up in car_next (car_l_in), up out car_prev (car_l_out),
         down in car_prev (car_r_in), down out car_next (car_r_out) } {
     connect dist {ABS, DC, CPA}

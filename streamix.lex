@@ -17,10 +17,19 @@
 %option nounput
 %option yylineno
 
+%x comment
 %%
     /* skip whitespaces and CR */
 [ \t]           ;
 \n              ++yylloc.last_line;
+
+    /* ignore comments */
+"/*"         BEGIN(comment);
+
+<comment>[^*\n]*        /* eat anything that's not a '*' */
+<comment>"*"+[^*/\n]*   /* eat up '*'s not followed by '/'s */
+<comment>\n             ++yylloc.last_line;
+<comment>"*"+"/"        BEGIN(INITIAL);
 
     /* keywords */
 up              {yylval.ival = VAL_UP;return UP;}
