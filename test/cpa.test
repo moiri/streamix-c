@@ -30,6 +30,7 @@ wrapper Car { up in car_next (car_l_in), up out car_prev (car_l_out),
     link car_r_in { CPA }
     link car_r_out { CPA }
 
+    // this is a single line comment
     box MB (in block, out break_cmd)
 
     wrapper ABS { in dc, out abs, side out dist } {

@@ -31,6 +31,8 @@
 <comment>\n             ++yylloc.last_line;
 <comment>"*"+"/"        BEGIN(INITIAL);
 
+"//".*          { /* DO NOTHING */ }
+
     /* keywords */
 up              {yylval.ival = VAL_UP;return UP;}
 down            {yylval.ival = VAL_DOWN;return DOWN;}
