@@ -36,7 +36,8 @@ typedef enum {
     ATTR_MODE,
     ATTR_COLLECT,
     ATTR_COUPLING,
-    ATTR_STATE
+    ATTR_STATE,
+    ATTR_STATIC
 } attr_type;
 typedef enum {
     PORT_SYNC,

@@ -37,27 +37,59 @@
     struct ast_node* nval;
     struct ast_list* lval;
 };
+/* keywods */
 %token SYNC CONNECT LINK
-%token <ival> BOX WRAPPER IN OUT UP DOWN SIDE DECOUPLED STATELESS
+%token <ival> BOX WRAPPER IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC
+
+/* optional and variable keyword tokens */
+%type <nval> kw_opt_state
+%type <nval> kw_opt_decoupled
+%type <nval> kw_opt_port_class
+%type <nval> kw_port_mode
+
+/* idenitifiers */
 %token <sval> IDENTIFIER
-%type <nval> net stmt decl_box decl_wrap decl_connect decl_link
-%type <nval> decl_box_port decl_sync_port decl_wrap_port port_mode
-%type <nval> opt_state opt_decoupled opt_renaming opt_port_class
-%type <lval> stmts connect_list opt_connect_id link_list opt_link_id
-%type <lval> opt_decl_box_port opt_sync_port opt_decl_wrap_port
+
+/* declarations */
+%type <nval> stmt
+%type <nval> net
+%type <nval> decl_link
+%type <nval> decl_link_id
+%type <nval> decl_box
+%type <nval> decl_box_port
+%type <nval> decl_sync_port
+%type <nval> decl_wrap
+%type <nval> decl_wrap_port
+%type <nval> decl_int_port
+
+/* lists */
+%type <lval> stmts
+%type <lval> link_list
+%type <lval> opt_link_list
+%type <lval> box_port_list
+%type <lval> opt_box_port_list
+%type <lval> sync_port_list
+%type <lval> opt_sync_port_list
+%type <lval> wrap_port_list
+%type <lval> opt_wrap_port_list
+%type <lval> int_port_list
+%type <lval> opt_int_port_list
+
+
 %left '|'
 %left '.'
-%start start
+%start program
 
 %%
 /* Grammar rules */
-
-start:
+/* start of the grammer */
+program:
     stmts {
         ast = ast_add_list( $1, AST_STMTS );
     }
 ;
 
+/* a list of statements describing the program */
 stmts:
     %empty {
         $$ = ( ast_list* )0;
@@ -69,167 +101,9 @@ stmts:
 
 stmt:
     net { $$ = ast_add_node( $1, AST_NET ); }
-|   decl_connect { $$ = $1; }
 |   decl_link { $$ = $1; }
 |   decl_box { $$ = $1; }
 |   decl_wrap { $$ = $1; }
-;
-
-decl_link:
-    LINK IDENTIFIER '{' link_list '}' {
-        $$ = ast_add_link(
-            ast_add_id( $2, @2.last_line, ID_LPORT ),
-            ast_add_list( $4, AST_LINKS )
-        );
-    }
-;
-
-link_list:
-    IDENTIFIER opt_link_id {
-        $$ = ast_add_list_elem(
-            ast_add_id( $1, @1.last_line, ID_LNET ),
-            $2
-        );
-    }
-|   '*' {
-        $$ = ast_add_list_elem(
-            ast_add_star(),
-            ( ast_list* )0
-        );
-    }
-;
-
-opt_link_id:
-    %empty {
-        $$ = ( ast_list* )0;
-    }
-|   ',' IDENTIFIER opt_link_id {
-        $$ = ast_add_list_elem(
-            ast_add_id( $2, @2.last_line, ID_LNET ),
-            $3
-        );
-    }
-;
-
-decl_connect:
-    CONNECT IDENTIFIER '{' connect_list '}' {
-        $$ = ast_add_connect(
-            ast_add_id( $2, @2.last_line, ID_CPORT ),
-            ast_add_list( $4, AST_CONNECTS )
-        );
-    }
-;
-
-connect_list:
-    IDENTIFIER ',' IDENTIFIER opt_connect_id {
-        $$ = ast_add_list_elem(
-            ast_add_id( $1, @1.last_line, ID_CNET ),
-            ast_add_list_elem(
-                ast_add_id( $3, @3.last_line, ID_CNET ),
-                $4
-            )
-        );
-    }
-|   '*' {
-        $$ = ast_add_list_elem(
-            ast_add_star(),
-            ( ast_list* )0
-        );
-    }
-;
-
-opt_connect_id:
-    %empty {
-        $$ = ( ast_list* )0;
-    }
-|   ',' IDENTIFIER opt_connect_id {
-        $$ = ast_add_list_elem(
-            ast_add_id( $2, @2.last_line, ID_CNET ),
-            $3
-        );
-    }
-;
-
-/* box declarartion */
-decl_box:
-    opt_state BOX IDENTIFIER '(' decl_box_port opt_decl_box_port ')' {
-        $$ = ast_add_box(
-            ast_add_id( $3, @3.last_line, ID_BOX ),
-            ast_add_list(
-                ast_add_list_elem( $5, $6 ),
-                AST_PORTS
-            ),
-            ast_add_node( $1, AST_STATE )
-        );
-    }
-;
-
-opt_state:
-    %empty { $$ = ( ast_node* )0; }
-|   STATELESS { $$ = ast_add_attr( $1, ATTR_STATE ); }
-;
-
-opt_decl_box_port:
-    %empty { $$ = ( ast_list* )0; }
-|   ',' decl_box_port opt_decl_box_port {
-        $$ = ast_add_list_elem( $2, $3 );
-    }
-;
-
-decl_box_port:
-    opt_port_class port_mode IDENTIFIER {
-        $$ = ast_add_port(
-            ast_add_id( $3, @3.last_line, ID_PORT ),
-            ( ast_node* )0, // no internal id
-            ast_add_node( $1, AST_COLLECT ),
-            ast_add_node( $2, AST_MODE ),
-            ( ast_node* )0, // no coupling
-            PORT_BOX
-        );
-    }
-|   SYNC '{' decl_sync_port opt_sync_port '}' {
-        $$ = ast_add_list(
-            ast_add_list_elem( $3, $4 ),
-            AST_SYNC
-        );
-    }
-;
-
-opt_sync_port:
-    %empty { $$ = ( ast_list* )0; }
-|   ',' decl_sync_port opt_sync_port {
-        $$ = ast_add_list_elem( $2, $3 );
-    }
-;
-
-decl_sync_port:
-    opt_decoupled opt_port_class IN IDENTIFIER {
-        $$ = ast_add_port(
-            ast_add_id( $4, @4.last_line, ID_PORT ),
-            (ast_node*)0, // no internal id
-            ast_add_node( $2, AST_COLLECT ),
-            ast_add_node( ast_add_attr( $3, ATTR_MODE ), AST_MODE ),
-            ast_add_node( $1, AST_COUPLING ),
-            PORT_SYNC
-        );
-    }
-;
-
-opt_decoupled:
-    %empty { $$ = ( ast_node* )0; }
-|   DECOUPLED { $$ = ast_add_attr( $1, ATTR_COUPLING ); }
-;
-
-port_mode:
-    IN   { $$ = ast_add_attr( $1, ATTR_MODE );}
-|   OUT  { $$ = ast_add_attr( $1, ATTR_MODE );}
-;
-
-opt_port_class:
-    %empty { $$ = ( ast_node* )0; }
-|   UP   { $$ = ast_add_attr( $1, ATTR_COLLECT ); }
-|   DOWN { $$ = ast_add_attr( $1, ATTR_COLLECT ); }
-|   SIDE { $$ = ast_add_attr( $1, ATTR_COLLECT ); }
 ;
 
 /* net declaration */
@@ -248,50 +122,211 @@ net:
     }
 ;
 
-/* wrapper declaration */
-decl_wrap:
-    WRAPPER IDENTIFIER '{' decl_wrap_port opt_decl_wrap_port '}' '{' stmts '}' {
-        /* install($2, *( int* )utarray_back( scope_stack ), $1, NULL, */
-        /*         @2.last_line); */
-        $$ = ast_add_wrap(
-            ast_add_id( $2, @2.last_line, ID_WRAP ),
-            ast_add_list(
-                ast_add_list_elem( $4, $5 ),
-                AST_PORTS
-            ),
-            ast_add_list( $8, AST_STMTS )
+/* an explicit declaration of a connection of sideports or ports to the */
+/* wrapper interface */
+decl_link:
+    LINK '{' link_list '}' {
+        $$ = ast_add_link( ast_add_list( $4, AST_LINKS ) );
+    }
+;
+
+link_list:
+    decl_link_id ',' decl_link_id opt_link_list {
+        $$ = ast_add_list_elem(
+            $1,
+            ast_add_list_elem( $3, $4 )
+        );
+    }
+|   '*' {
+        $$ = ast_add_list_elem(
+            ast_add_star(),
+            ( ast_list* )0
         );
     }
 ;
 
-opt_decl_wrap_port:
+opt_link_list:
+    %empty {
+        $$ = ( ast_list* )0;
+    }
+|   ',' decl_link_id opt_link_list {
+        $$ = ast_add_list_elem( $2, $3 );
+    }
+;
+
+decl_link_id:
+    IDENTIFIER {
+        $$ = ast_add_id( $1, @1.last_line, ID_LNET );
+    }
+;
+
+/* box declarartion */
+decl_box:
+    kw_opt_state BOX IDENTIFIER '(' box_port_list ')' {
+        $$ = ast_add_box(
+            ast_add_id( $3, @3.last_line, ID_BOX ),
+            ast_add_list( $5, AST_PORTS ),
+            ast_add_node( $1, AST_STATE )
+        );
+    }
+;
+
+box_port_list:
+    decl_box_port opt_box_port_list {
+        $$ = ast_add_list_elem( $1, $2 );
+    }
+;
+
+opt_box_port_list:
     %empty { $$ = ( ast_list* )0; }
-|   ',' decl_wrap_port opt_decl_wrap_port {
+|   ',' decl_box_port opt_box_port_list {
+        $$ = ast_add_list_elem( $2, $3 );
+    }
+;
+
+decl_box_port:
+    kw_opt_port_class kw_port_mode IDENTIFIER {
+        $$ = ast_add_port(
+            ast_add_id( $3, @3.last_line, ID_PORT ),
+            ( ast_node* )0, // no internal id
+            ast_add_node( $1, AST_COLLECT ),
+            ast_add_node( $2, AST_MODE ),
+            ( ast_node* )0, // no coupling
+            PORT_BOX
+        );
+    }
+|   SYNC '{' sync_port_list '}' {
+        $$ = ast_add_list( $3, AST_SYNC );
+    }
+;
+
+sync_port_list:
+    decl_sync_port opt_sync_port_list {
+        $$ = ast_add_list_elem( $1, $2 );
+    }
+;
+
+opt_sync_port_list:
+    %empty { $$ = ( ast_list* )0; }
+|   ',' decl_sync_port opt_sync_port_list {
+        $$ = ast_add_list_elem( $2, $3 );
+    }
+;
+
+decl_sync_port:
+    kw_opt_decoupled kw_opt_port_class IN IDENTIFIER {
+        $$ = ast_add_port(
+            ast_add_id( $4, @4.last_line, ID_PORT ),
+            (ast_node*)0, // no internal id
+            ast_add_node( $2, AST_COLLECT ),
+            ast_add_node( ast_add_attr( $3, ATTR_MODE ), AST_MODE ),
+            ast_add_node( $1, AST_COUPLING ),
+            PORT_SYNC
+        );
+    }
+;
+
+/* wrapper declaration */
+decl_wrap:
+    kw_opt_static WRAPPER IDENTIFIER '{' wrap_port_list '}' '{' stmts '}' {
+        $$ = ast_add_wrap(
+            ast_add_id( $3, @3.last_line, ID_WRAP ),
+            ast_add_list( $5, AST_PORTS ),
+            ast_add_list( $9, AST_STMTS )
+        );
+    }
+;
+
+wrap_port_list:
+    decl_wrap_port opt_wrap_port_list {
+        $$ = ast_add_list_elem( $1, $2 );
+    }
+;
+
+opt_wrap_port_list:
+    %empty { $$ = ( ast_list* )0; }
+|   ',' decl_wrap_port opt_wrap_port_list {
         $$ = ast_add_list_elem( $2, $3 );
     }
 ;
 
 decl_wrap_port:
-    opt_port_class port_mode IDENTIFIER opt_renaming {
+    kw_opt_port_class kw_port_mode IDENTIFIER '{' int_port_list '}' {
         $$ = ast_add_port(
             ast_add_id( $3, @3.last_line, ID_PORT ),
-            $4,
+            ast_add_list( $5, AST_INT_PORTS ), // TODO: update function param
             ast_add_node( $1, AST_COLLECT ),
             ast_add_node( $2, AST_MODE ),
             ( ast_node* )0, // no coupling
             PORT_NET
         );
     }
-;
-
-opt_renaming:
-    %empty { $$ = NULL; }
-|   '(' IDENTIFIER ')' {
-        $$ = ast_add_node(
-            ast_add_id( $2, @2.last_line, ID_IPORT ),
-            AST_INT_ID
+|   kw_opt_port_class kw_port_mode IDENTIFIER {
+        $$ = ast_add_port(
+            ast_add_id( $3, @3.last_line, ID_PORT ),
+            ( ast_list* )0, // no internal port names
+            ast_add_node( $1, AST_COLLECT ),
+            ast_add_node( $2, AST_MODE ),
+            ( ast_node* )0, // no coupling
+            PORT_NET
         );
     }
+|   '{' int_port_list '}' {
+        $$ = ast_add_port(
+            ( ast_node* )0, // these internal ports are "turned off"
+            ast_add_list( $2, AST_INT_PORTS ), // TODO: update function param
+            ( ast_node* )0, // no collection
+            ( ast_node* )0, // no mode
+            ( ast_node* )0, // no coupling
+            PORT_NET
+        );
+    }
+;
+
+int_port_list:
+    decl_int_port opt_int_port_list {
+        $$ = ast_add_list_elem( $1, $2 );
+    }
+;
+
+opt_int_port_list:
+    %empty { $$ = ( ast_list* )0; }
+|   ',' decl_int_port opt_int_port_list {
+        $$ = ast_add_list_elem( $2, $3 );
+    }
+;
+
+decl_int_port:
+    IDENTIFIER {
+        $$ = ast_add_id( $1, @1.last_line, ID_IPORT );
+    }
+;
+
+kw_opt_state:
+    %empty { $$ = ( ast_node* )0; }
+|   STATELESS { $$ = ast_add_attr( $1, ATTR_STATE ); }
+;
+
+kw_opt_decoupled:
+    %empty { $$ = ( ast_node* )0; }
+|   DECOUPLED { $$ = ast_add_attr( $1, ATTR_COUPLING ); }
+;
+
+kw_port_mode:
+    IN   { $$ = ast_add_attr( $1, ATTR_MODE );}
+|   OUT  { $$ = ast_add_attr( $1, ATTR_MODE );}
+;
+
+kw_opt_port_class:
+    %empty { $$ = ( ast_node* )0; }
+|   UP   { $$ = ast_add_attr( $1, ATTR_COLLECT ); }
+|   DOWN { $$ = ast_add_attr( $1, ATTR_COLLECT ); }
+|   SIDE { $$ = ast_add_attr( $1, ATTR_COLLECT ); }
+;
+
+kw_opt_static:
+    %empty { $$ = ( ast_node* )0; }
+|   STATIC { $$ = ast_add_attr( $1, ATTR_STATIC ); }
 ;
 
 %%

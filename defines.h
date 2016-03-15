@@ -35,6 +35,8 @@
 
 #define VAL_STATELESS   7
 
+#define VAL_STATIC      8
+
 // scanner values (elements)
 #define VAL_BOX     1
 #define VAL_NET     2

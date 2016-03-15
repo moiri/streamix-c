@@ -45,6 +45,7 @@ connect         return CONNECT;
 link            return LINK;
 stateless       {yylval.ival = VAL_STATELESS;return STATELESS;}
 decoupled       {yylval.ival = VAL_DECOUPLED;return DECOUPLED;}
+static          {yylval.ival = VAL_STATIC;return STATIC;}
 sync            return SYNC;
 
     /* identifiers */
