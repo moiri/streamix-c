@@ -47,11 +47,8 @@ typedef enum {
 typedef enum {
     AST_BOX,
     AST_COLLECT,
-    AST_CONNECT,
-    AST_CONNECTS,
     AST_COUPLING,
-    AST_INT_ID,
-    AST_LINK,
+    AST_INT_PORTS,
     AST_LINKS,
     AST_MODE,
     AST_NET,
@@ -110,12 +107,6 @@ struct wrap {
     ast_node*   ports;
 };
 
-// AST_CONNECT
-struct connect {
-    ast_node*   id;
-    ast_node*   connects;
-};
-
 // AST_PORT
 struct port {
     port_type   port_type;
@@ -132,12 +123,11 @@ struct ast_node {
     node_type   node_type;
     int         id;         // id of the node -> atm only used for dot graphs
     union {
-        ast_node*       ast_node;   // AST_NET, AST_MODE, AST_COUPLING, AST_STATE
+        ast_node*       ast_node;   // AST_NET, AST_MODE, AST_COUPLING, AST_STATE, AST_CONNECT
         ast_list*       ast_list;   // AST_STMTS, AST_CONNECTS, AST_PORTS, AST_SYNC, AST_COLLECT
         struct ast_attr ast_attr;   // AST_ATTR
         struct ast_id   ast_id;     // AST_ID
         struct box      box;        // AST_BOX
-        struct connect  connect;    // AST_CONNECT
         struct op       op;         // AST_SERIAL, AST_PARALLEL
         struct port     port;       // AST_PORT
         struct wrap     wrap;       // AST_WRAP
@@ -166,16 +156,6 @@ ast_node* ast_add_attr ( int, int );
 ast_node* ast_add_box ( ast_node*, ast_node*, ast_node* );
 
 /**
- * Add a connection declaration to the AST.
- *
- * @param ast_node*:    pointer to the signal id ast
- * @param ast_node*:    pointer to the connecting net list node
- * @return: ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_connect ( ast_node*, ast_node* );
-
-/**
  * Add a leaf (end node) id to the AST.
  *
  * @param char*:    name of the id
@@ -185,16 +165,6 @@ ast_node* ast_add_connect ( ast_node*, ast_node* );
  *      a pointer to the location where the data was stored
  * */
 ast_node* ast_add_id ( char*, int, int );
-
-/**
- * Add a link declaration to the AST.
- *
- * @param ast_node*:    pointer to the link id ast
- * @param ast_node*:    pointer to the linkig net list node
- * @return: ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_link ( ast_node*, ast_node* );
 
 /**
  * Add a list as node to the AST.

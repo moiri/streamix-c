@@ -66,12 +66,7 @@ void check_ids( symrec** symtab, symrec** insttab, ast_node* ast )
     if( ast == NULL ) return;
 
     switch( ast->node_type ) {
-        case AST_LINK:
-        case AST_CONNECT:
-            check_ids( symtab, insttab, ast->connect.connects );
-            break;
         case AST_LINKS:
-        case AST_CONNECTS:
             list = ast->ast_list;
             while( list != NULL ) {
                 check_ids( symtab, insttab, list->ast_node );
@@ -137,12 +132,12 @@ void check_instances( symrec** insttab, ast_node* ast )
     if( ast == NULL ) return;
 
     switch( ast->node_type ) {
-        case AST_LINK:
-            connection_check_link( insttab, ast, false );
-            break;
-        case AST_CONNECT:
-            connection_check_connect( insttab, ast, false );
-            break;
+        /* case AST_LINK: */
+        /*     connection_check_link( insttab, ast, false ); */
+        /*     break; */
+        /* case AST_CONNECT: */
+        /*     connection_check_connect( insttab, ast, false ); */
+        /*     break; */
         case AST_STMTS:
             list = ast->ast_list;
             while( list != NULL ) {
@@ -191,12 +186,12 @@ void check_port_all( symrec** insttab, ast_node* ast )
     if( ast == NULL ) return;
 
     switch( ast->node_type ) {
-        case AST_LINK:
-            connection_check_link( insttab, ast, true );
-            break;
-        case AST_CONNECT:
-            connection_check_connect( insttab, ast, true );
-            break;
+        /* case AST_LINK: */
+        /*     connection_check_link( insttab, ast, true ); */
+        /*     break; */
+        /* case AST_CONNECT: */
+        /*     connection_check_connect( insttab, ast, true ); */
+        /*     break; */
         case AST_STMTS:
 #ifdef DOT_CON
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
@@ -342,7 +337,7 @@ void connection_check_connect( symrec** insttab, ast_node* ast, bool connect )
     bool is_connected = false;
 
     // iterate through all symbols in the connection list
-    list_next = list = ast->connect.connects->ast_list;
+    list_next = list = ast->ast_node->ast_list;
     do {
         while( list != NULL ) {
             // the IDs of all the instances connect referres to is unknown
@@ -366,8 +361,8 @@ void connection_check_connect( symrec** insttab, ast_node* ast, bool connect )
                             ( ( struct inst_attr* )op_right->attr )->id );
 #endif // DEBUG
                     // do the connection check
-                    is_connected |= connection_check_connect_port( insttab,
-                            op_left, op_right, ast->connect.id, connect );
+                    /* is_connected |= connection_check_connect_port( insttab, */
+                    /*         op_left, op_right, ast->connect.id, connect ); */
                 }
                 net = net->next;
                 if( first ) {
@@ -394,10 +389,10 @@ void connection_check_connect( symrec** insttab, ast_node* ast, bool connect )
         // ERROR: cannot connect side ports with the same mode
         net = instrec_get( insttab, VAL_THIS, *utarray_back( __scope_stack ),
                 -1 );
-        sprintf( __error_msg, ERROR_BAD_MODE_SIDE, ERR_ERROR,
-                ast->connect.id->ast_id.name, net->name,
-                ( ( struct inst_attr* )net->attr )->id );
-        report_yyerror( __error_msg, ast->connect.id->ast_id.line );
+        /* sprintf( __error_msg, ERROR_BAD_MODE_SIDE, ERR_ERROR, */
+        /*         ast->connect.id->ast_id.name, net->name, */
+        /*         ( ( struct inst_attr* )net->attr )->id ); */
+        /* report_yyerror( __error_msg, ast->connect.id->ast_id.line ); */
     }
 }
 
@@ -481,7 +476,7 @@ void connection_check_link( symrec** insttab, ast_node* ast, bool connect )
             -1 );
 
     // iterate through all symbols in the connection list
-    list = ast->connect.connects->ast_list;
+    list = ast->ast_node->ast_list;
     while( list != NULL ) {
         // the IDs of all the instances connect referres to is unknown
         op_right = instrec_get( insttab, list->ast_node->ast_id.name,
@@ -508,8 +503,8 @@ void connection_check_link( symrec** insttab, ast_node* ast, bool connect )
                     ( ( struct inst_attr* )op_right->attr )->id );
 #endif // DEBUG
             // do the connection check
-            connection_check_link_port( insttab, op_left, op_right,
-                    ast->connect.id, hnode_id, connect );
+            /* connection_check_link_port( insttab, op_left, op_right, */
+            /*         ast->connect.id, hnode_id, connect ); */
             op_right = op_right->next;
         }
         list = list->next;

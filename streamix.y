@@ -43,6 +43,7 @@
 
 /* optional and variable keyword tokens */
 %type <nval> kw_opt_state
+%type <nval> kw_opt_static
 %type <nval> kw_opt_decoupled
 %type <nval> kw_opt_port_class
 %type <nval> kw_port_mode
@@ -126,7 +127,7 @@ net:
 /* wrapper interface */
 decl_link:
     LINK '{' link_list '}' {
-        $$ = ast_add_link( ast_add_list( $4, AST_LINKS ) );
+        $$ = ast_add_list( $3, AST_LINKS );
     }
 ;
 
@@ -232,7 +233,7 @@ decl_wrap:
         $$ = ast_add_wrap(
             ast_add_id( $3, @3.last_line, ID_WRAP ),
             ast_add_list( $5, AST_PORTS ),
-            ast_add_list( $9, AST_STMTS )
+            ast_add_list( $8, AST_STMTS )
         );
     }
 ;
@@ -254,7 +255,7 @@ decl_wrap_port:
     kw_opt_port_class kw_port_mode IDENTIFIER '{' int_port_list '}' {
         $$ = ast_add_port(
             ast_add_id( $3, @3.last_line, ID_PORT ),
-            ast_add_list( $5, AST_INT_PORTS ), // TODO: update function param
+            ast_add_list( $5, AST_INT_PORTS ),
             ast_add_node( $1, AST_COLLECT ),
             ast_add_node( $2, AST_MODE ),
             ( ast_node* )0, // no coupling
@@ -264,7 +265,7 @@ decl_wrap_port:
 |   kw_opt_port_class kw_port_mode IDENTIFIER {
         $$ = ast_add_port(
             ast_add_id( $3, @3.last_line, ID_PORT ),
-            ( ast_list* )0, // no internal port names
+            ( ast_node* )0, // no internal port names
             ast_add_node( $1, AST_COLLECT ),
             ast_add_node( $2, AST_MODE ),
             ( ast_node* )0, // no coupling
@@ -274,7 +275,7 @@ decl_wrap_port:
 |   '{' int_port_list '}' {
         $$ = ast_add_port(
             ( ast_node* )0, // these internal ports are "turned off"
-            ast_add_list( $2, AST_INT_PORTS ), // TODO: update function param
+            ast_add_list( $2, AST_INT_PORTS ),
             ( ast_node* )0, // no collection
             ( ast_node* )0, // no mode
             ( ast_node* )0, // no coupling
@@ -353,7 +354,7 @@ int main( int argc, char **argv ) {
         yyparse();
     } while( !feof( yyin ) );
 
-    check_context( ast );
+    /* check_context( ast ); */
 
     /* fclose(con_graph); */
     if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );

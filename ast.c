@@ -34,18 +34,6 @@ ast_node* ast_add_box ( ast_node* id, ast_node* ports, ast_node* state ) {
 }
 
 /******************************************************************************/
-ast_node* ast_add_connect ( ast_node* connect, ast_node* connects ) {
-    ast_node* ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->connect.id = connect;
-    ptr->connect.connects = connects;
-    __node_id++;
-    ptr->id = __node_id;
-    ptr->node_type = AST_CONNECT;
-    return ptr;
-}
-
-/******************************************************************************/
 ast_node* ast_add_id ( char* name, int line, int type ) {
     if (name == 0) return (ast_node*)0;
     ast_node *ptr;
@@ -57,18 +45,6 @@ ast_node* ast_add_id ( char* name, int line, int type ) {
     ptr->node_type = AST_ID;
     __node_id++;
     ptr->id = __node_id;
-    return ptr;
-}
-
-/******************************************************************************/
-ast_node* ast_add_link ( ast_node* link, ast_node* links ) {
-    ast_node* ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->connect.id = link;
-    ptr->connect.connects = links;
-    __node_id++;
-    ptr->id = __node_id;
-    ptr->node_type = AST_LINK;
     return ptr;
 }
 
