@@ -29,7 +29,7 @@ struct symrec {
     char*       key;
     char*       name;   // name of the symbol
     int         scope;  // scope of the record
-    int         type;   // VAL_NET, VAL_BOX, VAL_PORT
+    int         type;   // VAL_NET, VAL_BOX, VAL_PORT, VAL_WRAPPER
     int         line;   // line position in the source file
     void*       attr;   // a struct of attributes
     symrec*     next;   // pointer to the next element (handle collisions)

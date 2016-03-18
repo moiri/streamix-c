@@ -41,7 +41,7 @@ void check_context( ast_node* ast )
     install_ids( &symtab, ast, false );
     // check the context of all symbols and install instances in the insttab
     instrec_put( &insttab, VAL_THIS, *utarray_back( __scope_stack ),
-            VAL_NET, -1, NULL );
+            VAL_WRAPPER, -1, NULL );
     check_ids( &symtab, &insttab, ast );
     // check the connections and count the connection of each port
     check_instances( &insttab, ast );
@@ -67,12 +67,7 @@ void check_ids( symrec** symtab, symrec** insttab, ast_node* ast )
     if( ast == NULL ) return;
 
     switch( ast->node_type ) {
-        case AST_LINK:
-        case AST_CONNECT:
-            check_ids( symtab, insttab, ast->connect.connects );
-            break;
         case AST_LINKS:
-        case AST_CONNECTS:
             list = ast->ast_list;
             while( list != NULL ) {
                 check_ids( symtab, insttab, list->ast_node );
@@ -99,7 +94,7 @@ void check_ids( symrec** symtab, symrec** insttab, ast_node* ast )
             utarray_push_back( __scope_stack, &_scope );
             // add the symbol 'this' to the instance table referring to this net
             instrec_put( insttab, VAL_THIS, *utarray_back( __scope_stack ),
-                    VAL_NET, ast->wrap.id->id, rec );
+                    VAL_WRAPPER, ast->wrap.id->id, rec );
             check_ids( symtab, insttab, ast->wrap.stmts );
             utarray_pop_back( __scope_stack );
             break;
@@ -138,12 +133,12 @@ void check_instances( symrec** insttab, ast_node* ast )
     if( ast == NULL ) return;
 
     switch( ast->node_type ) {
-        case AST_LINK:
-            connection_check_link( insttab, ast, false );
-            break;
-        case AST_CONNECT:
-            connection_check_connect( insttab, ast, false );
-            break;
+        /* case AST_LINK: */
+        /*     connection_check_link( insttab, ast, false ); */
+        /*     break; */
+        /* case AST_CONNECT: */
+        /*     connection_check_connect( insttab, ast, false ); */
+        /*     break; */
         case AST_STMTS:
             list = ast->ast_list;
             while( list != NULL ) {
@@ -192,12 +187,12 @@ void check_port_all( symrec** insttab, ast_node* ast )
     if( ast == NULL ) return;
 
     switch( ast->node_type ) {
-        case AST_LINK:
-            connection_check_link( insttab, ast, true );
-            break;
-        case AST_CONNECT:
-            connection_check_connect( insttab, ast, true );
-            break;
+        /* case AST_LINK: */
+        /*     connection_check_link( insttab, ast, true ); */
+        /*     break; */
+        /* case AST_CONNECT: */
+        /*     connection_check_connect( insttab, ast, true ); */
+        /*     break; */
         case AST_STMTS:
 #ifdef DOT_CON
             graph_add_divider ( __n_con_graph, *utarray_back( __scope_stack ),
@@ -315,7 +310,7 @@ void check_port_all( symrec** insttab, ast_node* ast )
                 graph_add_divider ( __p_con_graph,
                         *utarray_back( __scope_stack ), FLAG_NET );
                 net_type = STYLE_N_NET_BOX;
-                if( net->type == VAL_NET ) net_type = STYLE_N_NET_WRAP;
+                if( net->type == VAL_WRAPPER ) net_type = STYLE_N_NET_WRAP;
                 graph_add_node( __n_con_graph, ast->id, ast->ast_id.name,
                         net_type );
                 graph_add_node( __p_con_graph, ast->id, ast->ast_id.name,
@@ -343,7 +338,7 @@ void connection_check_connect( symrec** insttab, ast_node* ast, bool connect )
     bool is_connected = false;
 
     // iterate through all symbols in the connection list
-    list_next = list = ast->connect.connects->ast_list;
+    list_next = list = ast->ast_node->ast_list;
     do {
         while( list != NULL ) {
             // the IDs of all the instances connect referres to is unknown
@@ -367,8 +362,8 @@ void connection_check_connect( symrec** insttab, ast_node* ast, bool connect )
                             ( ( struct inst_attr* )op_right->attr )->id );
 #endif // DEBUG
                     // do the connection check
-                    is_connected |= connection_check_connect_port( insttab,
-                            op_left, op_right, ast->connect.id, connect );
+                    /* is_connected |= connection_check_connect_port( insttab, */
+                    /*         op_left, op_right, ast->connect.id, connect ); */
                 }
                 net = net->next;
                 if( first ) {
@@ -395,10 +390,10 @@ void connection_check_connect( symrec** insttab, ast_node* ast, bool connect )
         // ERROR: cannot connect side ports with the same mode
         net = instrec_get( insttab, VAL_THIS, *utarray_back( __scope_stack ),
                 -1 );
-        sprintf( __error_msg, ERROR_BAD_MODE_SIDE, ERR_ERROR,
-                ast->connect.id->ast_id.name, net->name,
-                ( ( struct inst_attr* )net->attr )->id );
-        report_yyerror( __error_msg, ast->connect.id->ast_id.line );
+        /* sprintf( __error_msg, ERROR_BAD_MODE_SIDE, ERR_ERROR, */
+        /*         ast->connect.id->ast_id.name, net->name, */
+        /*         ( ( struct inst_attr* )net->attr )->id ); */
+        /* report_yyerror( __error_msg, ast->connect.id->ast_id.line ); */
     }
 }
 
@@ -482,7 +477,7 @@ void connection_check_link( symrec** insttab, ast_node* ast, bool connect )
             -1 );
 
     // iterate through all symbols in the connection list
-    list = ast->connect.connects->ast_list;
+    list = ast->ast_node->ast_list;
     while( list != NULL ) {
         // the IDs of all the instances connect referres to is unknown
         op_right = instrec_get( insttab, list->ast_node->ast_id.name,
@@ -509,8 +504,8 @@ void connection_check_link( symrec** insttab, ast_node* ast, bool connect )
                     ( ( struct inst_attr* )op_right->attr )->id );
 #endif // DEBUG
             // do the connection check
-            connection_check_link_port( insttab, op_left, op_right,
-                    ast->connect.id, hnode_id, connect );
+            /* connection_check_link_port( insttab, op_left, op_right, */
+            /*         ast->connect.id, hnode_id, connect ); */
             op_right = op_right->next;
         }
         list = list->next;
@@ -1001,7 +996,7 @@ void* install_ids( symrec** symtab, ast_node* ast, bool is_sync )
             b_attr->state = false;
             b_attr->ports = port_list;
             symrec_put( symtab, ast->wrap.id->ast_id.name,
-                    *utarray_back( __scope_stack ), VAL_NET, ( void* )b_attr,
+                    *utarray_back( __scope_stack ), VAL_WRAPPER, ( void* )b_attr,
                     ast->wrap.id->ast_id.line );
             break;
         case AST_PORT:
@@ -1329,7 +1324,7 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
             if( strlen( item->name ) == strlen( name )
                 && memcmp( item->name, name, strlen( name ) ) == 0
                 && item->scope == scope
-                && ( ( item->type == VAL_BOX || item->type == VAL_NET )
+                && ( ( item->type == VAL_BOX || item->type == VAL_WRAPPER )
                     || ( ( type == VAL_PORT || type == VAL_SPORT )
                         /* && ( ( ( struct port_attr* )attr )->mode */
                         /*     == ( ( struct port_attr* )item->attr )->mode ) */
