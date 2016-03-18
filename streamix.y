@@ -56,7 +56,6 @@
 %type <nval> net
 %type <nval> def_net
 %type <nval> decl_net
-%type <nval> opt_decl_net
 %type <nval> proto_net
 %type <nval> decl_link
 %type <nval> decl_link_id
@@ -294,14 +293,12 @@ proto_net:
 ;
 
 decl_net:
-    opt_decl_net proto_net {
-        $$ = ast_add_assign( $1, $2, AST_NET_DECL );
-    }
-;
-
-opt_decl_net:
-    IDENTIFIER '=' {
-        $$ = ast_add_id( $1, @1.last_line, ID_NET );
+    IDENTIFIER '=' proto_net {
+        $$ = ast_add_assign(
+            ast_add_id( $1, @1.last_line, ID_NET ),
+            $3,
+            AST_NET_DECL
+        );
     }
 ;
 
