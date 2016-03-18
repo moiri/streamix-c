@@ -6,6 +6,8 @@ wrapper W { in p1{a1, a2}, out p2{b} } {
     A = box A ( in a1, in a2, out p_int )
     B = box B ( in p_int, out b )
     N = A.B
+    net N{in a1, in a2, out b}
+    N1 = net N{in a{a1, a2}, out b}
 }
 
 N = L.W.R
