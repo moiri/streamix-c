@@ -102,9 +102,9 @@ stmts:
 
 stmt:
     net { $$ = ast_add_node( $1, AST_NET ); }
-|   decl_link { $$ = $1; }
 |   decl_box { $$ = $1; }
 |   decl_wrap { $$ = $1; }
+|   decl_link { $$ = $1; }
 ;
 
 /* net declaration */
@@ -120,44 +120,6 @@ net:
     }
 |   '(' net ')' {
         $$ = $2;
-    }
-;
-
-/* an explicit declaration of a connection of sideports or ports to the */
-/* wrapper interface */
-decl_link:
-    LINK '{' link_list '}' {
-        $$ = ast_add_list( $3, AST_LINKS );
-    }
-;
-
-link_list:
-    decl_link_id ',' decl_link_id opt_link_list {
-        $$ = ast_add_list_elem(
-            $1,
-            ast_add_list_elem( $3, $4 )
-        );
-    }
-|   '*' {
-        $$ = ast_add_list_elem(
-            ast_add_star(),
-            ( ast_list* )0
-        );
-    }
-;
-
-opt_link_list:
-    %empty {
-        $$ = ( ast_list* )0;
-    }
-|   ',' decl_link_id opt_link_list {
-        $$ = ast_add_list_elem( $2, $3 );
-    }
-;
-
-decl_link_id:
-    IDENTIFIER {
-        $$ = ast_add_id( $1, @1.last_line, ID_LNET );
     }
 ;
 
@@ -303,6 +265,45 @@ decl_int_port:
     }
 ;
 
+/* an explicit declaration of a connection of sideports or ports to the */
+/* wrapper interface */
+decl_link:
+    LINK '{' link_list '}' {
+        $$ = ast_add_list( $3, AST_LINKS );
+    }
+;
+
+link_list:
+    decl_link_id ',' decl_link_id opt_link_list {
+        $$ = ast_add_list_elem(
+            $1,
+            ast_add_list_elem( $3, $4 )
+        );
+    }
+|   '*' {
+        $$ = ast_add_list_elem(
+            ast_add_star(),
+            ( ast_list* )0
+        );
+    }
+;
+
+opt_link_list:
+    %empty {
+        $$ = ( ast_list* )0;
+    }
+|   ',' decl_link_id opt_link_list {
+        $$ = ast_add_list_elem( $2, $3 );
+    }
+;
+
+decl_link_id:
+    IDENTIFIER {
+        $$ = ast_add_id( $1, @1.last_line, ID_LNET );
+    }
+;
+
+/* keywords */
 kw_opt_state:
     %empty { $$ = ( ast_node* )0; }
 |   STATELESS { $$ = ast_add_attr( $1, ATTR_STATE ); }
