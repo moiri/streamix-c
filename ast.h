@@ -44,6 +44,8 @@ typedef enum {
     PORT_NET,
     PORT_BOX
 } port_type;
+// ATTENTION: the order of this enum matches the order of node names
+// "node_label" in graph.c
 typedef enum {
     AST_BOX,
     AST_COLLECT,
@@ -121,10 +123,12 @@ struct port {
 // the AST structure
 struct ast_node {
     node_type   node_type;
-    int         id;         // id of the node -> atm only used for dot graphs
+    int         id;         // id of the node
     union {
-        ast_node*       ast_node;   // AST_NET, AST_MODE, AST_COUPLING, AST_STATE, AST_CONNECT
-        ast_list*       ast_list;   // AST_STMTS, AST_CONNECTS, AST_PORTS, AST_SYNC, AST_COLLECT
+        // AST_NET, AST_MODE, AST_COUPLING, AST_STATE
+        ast_node*       ast_node;
+        // AST_STMTS, AST_LINKS, AST_PORTS, AST_SYNC, AST_COLLECT
+        ast_list*       ast_list;
         struct ast_attr ast_attr;   // AST_ATTR
         struct ast_id   ast_id;     // AST_ID
         struct box      box;        // AST_BOX
