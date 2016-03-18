@@ -40,7 +40,7 @@ void check_context( ast_node* ast )
     install_ids( &symtab, ast, false );
     // check the context of all symbols and install instances in the insttab
     instrec_put( &insttab, VAL_THIS, *utarray_back( __scope_stack ),
-            VAL_NET, -1, NULL );
+            VAL_WRAPPER, -1, NULL );
     check_ids( &symtab, &insttab, ast );
     // check the connections and count the connection of each port
     check_instances( &insttab, ast );
@@ -93,7 +93,7 @@ void check_ids( symrec** symtab, symrec** insttab, ast_node* ast )
             utarray_push_back( __scope_stack, &_scope );
             // add the symbol 'this' to the instance table referring to this net
             instrec_put( insttab, VAL_THIS, *utarray_back( __scope_stack ),
-                    VAL_NET, ast->wrap.id->id, rec );
+                    VAL_WRAPPER, ast->wrap.id->id, rec );
             check_ids( symtab, insttab, ast->wrap.stmts );
             utarray_pop_back( __scope_stack );
             break;
@@ -309,7 +309,7 @@ void check_port_all( symrec** insttab, ast_node* ast )
                 graph_add_divider ( __p_con_graph,
                         *utarray_back( __scope_stack ), FLAG_NET );
                 net_type = STYLE_N_NET_BOX;
-                if( net->type == VAL_NET ) net_type = STYLE_N_NET_WRAP;
+                if( net->type == VAL_WRAPPER ) net_type = STYLE_N_NET_WRAP;
                 graph_add_node( __n_con_graph, ast->id, ast->ast_id.name,
                         net_type );
                 graph_add_node( __p_con_graph, ast->id, ast->ast_id.name,
@@ -995,7 +995,7 @@ void* install_ids( symrec** symtab, ast_node* ast, bool is_sync )
             b_attr->state = false;
             b_attr->ports = port_list;
             symrec_put( symtab, ast->wrap.id->ast_id.name,
-                    *utarray_back( __scope_stack ), VAL_NET, ( void* )b_attr,
+                    *utarray_back( __scope_stack ), VAL_WRAPPER, ( void* )b_attr,
                     ast->wrap.id->ast_id.line );
             break;
         case AST_PORT:
@@ -1323,7 +1323,7 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
             if( strlen( item->name ) == strlen( name )
                 && memcmp( item->name, name, strlen( name ) ) == 0
                 && item->scope == scope
-                && ( ( item->type == VAL_BOX || item->type == VAL_NET )
+                && ( ( item->type == VAL_BOX || item->type == VAL_WRAPPER )
                     || ( ( type == VAL_PORT || type == VAL_SPORT )
                         /* && ( ( ( struct port_attr* )attr )->mode */
                         /*     == ( ( struct port_attr* )item->attr )->mode ) */

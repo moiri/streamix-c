@@ -39,7 +39,7 @@
 };
 /* keywods */
 %token SYNC CONNECT LINK
-%token <ival> BOX WRAPPER IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC
+%token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC
 
 /* optional and variable keyword tokens */
 %type <nval> kw_opt_state
@@ -54,6 +54,7 @@
 /* declarations */
 %type <nval> stmt
 %type <nval> net
+%type <nval> def_net
 %type <nval> decl_link
 %type <nval> decl_link_id
 %type <nval> decl_box
@@ -101,13 +102,24 @@ stmts:
 ;
 
 stmt:
-    net { $$ = ast_add_node( $1, AST_NET ); }
+    def_net {}
+|   net { $$ = ast_add_node( $1, AST_NET ); }
 |   decl_box { $$ = $1; }
 |   decl_wrap { $$ = $1; }
 |   decl_link { $$ = $1; }
 ;
 
-/* net declaration */
+/* net definition */
+def_net:
+    IDENTIFIER '=' net {
+        $$ = ast_add_assign(
+            ast_add_id( $1, @1.last_line, ID_NET ),
+            ast_add_node( $3, AST_NET ),
+            AST_NET_DEF
+        );
+    }
+;
+
 net:
     IDENTIFIER  {
         $$ = ast_add_id( $1, @1.last_line, ID_NET );
@@ -125,11 +137,12 @@ net:
 
 /* box declarartion */
 decl_box:
-    kw_opt_state BOX IDENTIFIER '(' box_port_list ')' {
+    IDENTIFIER '=' kw_opt_state BOX IDENTIFIER '(' box_port_list ')' {
         $$ = ast_add_box(
-            ast_add_id( $3, @3.last_line, ID_BOX ),
-            ast_add_list( $5, AST_PORTS ),
-            ast_add_node( $1, AST_STATE )
+            ast_add_id( $1, @3.last_line, ID_BOX ),
+            ast_add_list( $7, AST_PORTS ),
+            ast_add_node( $3, AST_STATE ),
+            ast_add_node( ast_add_id( $5, @3.last_line, ID_BOX ), AST_BOX_IMPL )
         );
     }
 ;

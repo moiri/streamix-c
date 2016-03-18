@@ -11,6 +11,7 @@
 
 #include <stdbool.h>
 
+typedef struct ast_assign ast_assign;
 typedef struct ast_list ast_list;
 typedef struct ast_node ast_node;
 typedef struct ast_attr ast_attr;
@@ -24,6 +25,7 @@ typedef enum {
     ID_NET,
     ID_WRAP,
     ID_BOX,
+    ID_BOXIMPL,
     ID_PORT,
     ID_IPORT,
     ID_CNET,
@@ -48,12 +50,14 @@ typedef enum {
 // "node_label" in graph.c
 typedef enum {
     AST_BOX,
+    AST_BOX_IMPL,
     AST_COLLECT,
     AST_COUPLING,
     AST_INT_PORTS,
     AST_LINKS,
     AST_MODE,
     AST_NET,
+    AST_NET_DEF,
     AST_PARALLEL,
     AST_PORT,
     AST_PORTS,
@@ -72,6 +76,12 @@ typedef enum {
 struct ast_list {
     ast_node*   ast_node;
     ast_list*   next;
+};
+
+// AST_NET_DEF
+struct ast_assign {
+    ast_node*   id;
+    ast_node*   op;
 };
 
 // AST_ATTR
@@ -98,6 +108,7 @@ struct op {
 // AST_BOX
 struct box {
     ast_node*   id;
+    ast_node*   impl;
     ast_node*   ports;
     ast_node*   state;
 };
@@ -129,6 +140,7 @@ struct ast_node {
         ast_node*       ast_node;
         // AST_STMTS, AST_LINKS, AST_PORTS, AST_SYNC, AST_COLLECT
         ast_list*       ast_list;
+        struct ast_assign ast_assign; // AST_NET_DEF
         struct ast_attr ast_attr;   // AST_ATTR
         struct ast_id   ast_id;     // AST_ID
         struct box      box;        // AST_BOX
@@ -137,6 +149,17 @@ struct ast_node {
         struct wrap     wrap;       // AST_WRAP
     };
 };
+
+/**
+ * Add a an assignment to the AST.
+ *
+ * @param ast_node*:    pointer to the identifier
+ * @param ast_node*:    pointer to the operand
+ * @param int:          AST_NET_DEF
+ * @return ast_node*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_node* ast_add_assign ( ast_node*, ast_node*, int );
 
 /**
  * Add a leaf (end node) attribute to the AST.
@@ -157,7 +180,7 @@ ast_node* ast_add_attr ( int, int );
  * @return: ast_node*:
  *      a pointer to the location where the data was stored
  * */
-ast_node* ast_add_box ( ast_node*, ast_node*, ast_node* );
+ast_node* ast_add_box ( ast_node*, ast_node*, ast_node*, ast_node* );
 
 /**
  * Add a leaf (end node) id to the AST.
@@ -205,7 +228,7 @@ ast_node* ast_add_node ( ast_node*, int );
  *
  * @param ast_node*:    pointer to the left operand
  * @param ast_node*:    pointer to the right operand
- * @param int:          OP_SERIAL, OP_PARALLEL
+ * @param int:          AST_SERIAL, AST_PARALLEL
  * @return ast_node*:
  *      a pointer to the location where the data was stored
  * */

@@ -8,12 +8,14 @@
 char* node_label[] =
 {
     "box decl",
+    "box impl",
     "collection",
     "coupling",
     "internal ID",
     "link",
     "mode",
     "net",
+    "net def",
     "parallel",
     "port decl",
     "ports",
@@ -23,7 +25,7 @@ char* node_label[] =
     "stmt",
     "stmts",
     "sync",
-    "net decl"
+    "wrapper decl"
 };
 char* attr_label[] =
 {
@@ -89,6 +91,19 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
             }
             while (ast_list_ptr != 0);
             break;
+        // draw assignments
+        case AST_NET_DEF:
+            graph_add_node(graph, ptr->id, node_label[ptr->node_type],
+                    STYLE_N_AST_NODE );
+            // draw the id
+            draw_ast_graph_step( graph, ptr->ast_assign.id );
+            graph_add_edge( graph, ptr->id, ptr->ast_assign.id->id, NULL,
+                    STYLE_E_DEFAULT );
+            // draw the step
+            draw_ast_graph_step( graph, ptr->ast_assign.op );
+            graph_add_edge( graph, ptr->id, ptr->ast_assign.op->id, NULL,
+                    STYLE_E_DEFAULT );
+            break;
         // draw operators
         case AST_SERIAL:
         case AST_PARALLEL:
@@ -104,6 +119,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
                     STYLE_E_DEFAULT );
             break;
         // draw simple nodes
+        case AST_BOX_IMPL:
         case AST_COLLECT:
         case AST_COUPLING:
         case AST_STATE:
@@ -122,6 +138,10 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
             // id
             draw_ast_graph_step( graph, ptr->box.id );
             graph_add_edge( graph, ptr->id, ptr->box.id->id, NULL,
+                    STYLE_E_DEFAULT );
+            // id implementation
+            draw_ast_graph_step( graph, ptr->box.impl );
+            graph_add_edge( graph, ptr->id, ptr->box.impl->id, NULL,
                     STYLE_E_DEFAULT );
             // port list
             if (ptr->box.ports != 0) {

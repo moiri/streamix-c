@@ -9,7 +9,21 @@ ast_list* con_ptr = (ast_list*)0;
 ast_list* tmp_con_ptr = (ast_list*)0;
 
 /******************************************************************************/
-ast_node* ast_add_attr ( int val, int type ) {
+ast_node* ast_add_assign ( ast_node* id, ast_node* op, int node_type )
+{
+    ast_node* ptr;
+    ptr = (ast_node*) malloc(sizeof(ast_node));
+    ptr->ast_assign.id = id;
+    ptr->ast_assign.op = op;
+    ptr->node_type = node_type;
+    __node_id++;
+    ptr->id = __node_id;
+    return ptr;
+}
+
+/******************************************************************************/
+ast_node* ast_add_attr ( int val, int type )
+{
     ast_node *ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
     ptr->node_type = AST_ATTR;
@@ -21,10 +35,13 @@ ast_node* ast_add_attr ( int val, int type ) {
 }
 
 /******************************************************************************/
-ast_node* ast_add_box ( ast_node* id, ast_node* ports, ast_node* state ) {
+ast_node* ast_add_box ( ast_node* id, ast_node* ports, ast_node* state,
+        ast_node* impl )
+{
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
     ptr->box.id = id;
+    ptr->box.impl = impl;
     ptr->box.ports = ports;
     ptr->box.state = state;
     __node_id++;
@@ -34,7 +51,8 @@ ast_node* ast_add_box ( ast_node* id, ast_node* ports, ast_node* state ) {
 }
 
 /******************************************************************************/
-ast_node* ast_add_id ( char* name, int line, int type ) {
+ast_node* ast_add_id ( char* name, int line, int type )
+{
     if (name == 0) return (ast_node*)0;
     ast_node *ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
@@ -49,7 +67,8 @@ ast_node* ast_add_id ( char* name, int line, int type ) {
 }
 
 /******************************************************************************/
-ast_node* ast_add_list (ast_list* list, int type) {
+ast_node* ast_add_list (ast_list* list, int type)
+{
     if (list == 0) return (ast_node*)0;
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
@@ -61,7 +80,8 @@ ast_node* ast_add_list (ast_list* list, int type) {
 }
 
 /******************************************************************************/
-ast_list* ast_add_list_elem (ast_node* node, ast_list* list) {
+ast_list* ast_add_list_elem (ast_node* node, ast_list* list)
+{
     ast_list* list_ptr;
     list_ptr = (ast_list*) malloc(sizeof(ast_list));
     list_ptr->ast_node = node;
@@ -70,7 +90,8 @@ ast_list* ast_add_list_elem (ast_node* node, ast_list* list) {
 }
 
 /******************************************************************************/
-ast_node* ast_add_node ( ast_node* node, int type ) {
+ast_node* ast_add_node ( ast_node* node, int type )
+{
     if (node == 0) return (ast_node*)0;
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
@@ -82,7 +103,8 @@ ast_node* ast_add_node ( ast_node* node, int type ) {
 }
 
 /******************************************************************************/
-ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type ) {
+ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type )
+{
     ast_node* ptr;
     ast_list* con_list_ptr = (ast_list*)0;
     ptr = (ast_node*) malloc(sizeof(ast_node));
@@ -180,7 +202,8 @@ ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type ) {
 
 /******************************************************************************/
 ast_node* ast_add_port (ast_node* id, ast_node* int_id, ast_node* collection,
-        ast_node* mode, ast_node* coupling, int type) {
+        ast_node* mode, ast_node* coupling, int type)
+{
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
     __node_id++;
@@ -196,7 +219,8 @@ ast_node* ast_add_port (ast_node* id, ast_node* int_id, ast_node* collection,
 }
 
 /******************************************************************************/
-ast_node* ast_add_star () {
+ast_node* ast_add_star ()
+{
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
     __node_id++;
@@ -206,7 +230,8 @@ ast_node* ast_add_star () {
 }
 
 /******************************************************************************/
-ast_node* ast_add_wrap ( ast_node* id, ast_node* ports, ast_node* stmts ) {
+ast_node* ast_add_wrap ( ast_node* id, ast_node* ports, ast_node* stmts )
+{
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
     ptr->wrap.id = id;
@@ -219,7 +244,8 @@ ast_node* ast_add_wrap ( ast_node* id, ast_node* ports, ast_node* stmts ) {
 }
 
 /******************************************************************************/
-ast_list* con_add ( ast_node* node ) {
+ast_list* con_add ( ast_node* node )
+{
     ast_list* ptr;
     ptr = (ast_list*) malloc(sizeof(ast_list));
     ptr->ast_node = node;

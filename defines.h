@@ -39,10 +39,11 @@
 
 // scanner values (elements)
 #define VAL_BOX     1
-#define VAL_NET     2
+#define VAL_WRAPPER 2
 #define VAL_PORT    3
 #define VAL_SPORT   4
 #define VAL_COPY    5
+#define VAL_NET     6
 
 
 #define VAL_THIS    "this"
