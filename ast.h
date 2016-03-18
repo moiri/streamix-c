@@ -58,6 +58,8 @@ typedef enum {
     AST_MODE,
     AST_NET,
     AST_NET_DEF,
+    AST_NET_DECL,
+    AST_NET_PROT,
     AST_PARALLEL,
     AST_PORT,
     AST_PORTS,
@@ -212,6 +214,16 @@ ast_node* ast_add_list ( ast_list*, int );
  *      a pointer to the location where the data was stored
  * */
 ast_list* ast_add_list_elem (ast_node*, ast_list*);
+
+/**
+ * Add a net prototype to the AST.
+ *
+ * @param ast_node*:    pointer to an ast node of type AST_ID
+ * @param ast_node*:    pointer to the ports list AST node
+ * @return: ast_node*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_node* ast_add_net ( ast_node*, ast_node* );
 
 /**
  * Add a node to the AST.

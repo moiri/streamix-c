@@ -16,6 +16,8 @@ char* node_label[] =
     "mode",
     "net",
     "net def",
+    "net decl",
+    "net prototype",
     "parallel",
     "port decl",
     "ports",
@@ -93,6 +95,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
             break;
         // draw assignments
         case AST_NET_DEF:
+        case AST_NET_DECL:
             graph_add_node(graph, ptr->id, node_label[ptr->node_type],
                     STYLE_N_AST_NODE );
             // draw the id
@@ -157,6 +160,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
             }
             break;
         case AST_WRAP:
+        case AST_NET_PROT:
             graph_add_node( graph, ptr->id, node_label[ ptr->node_type ],
                     STYLE_N_AST_NODE );
             // id

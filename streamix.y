@@ -55,6 +55,9 @@
 %type <nval> stmt
 %type <nval> net
 %type <nval> def_net
+%type <nval> decl_net
+%type <nval> opt_decl_net
+%type <nval> proto_net
 %type <nval> decl_link
 %type <nval> decl_link_id
 %type <nval> decl_box
@@ -102,10 +105,12 @@ stmts:
 ;
 
 stmt:
-    def_net {}
+    def_net { $$ = $1; }
 |   net { $$ = ast_add_node( $1, AST_NET ); }
 |   decl_box { $$ = $1; }
 |   decl_wrap { $$ = $1; }
+|   proto_net { $$ = $1; }
+|   decl_net { $$ = $1; }
 |   decl_link { $$ = $1; }
 ;
 
@@ -275,6 +280,28 @@ opt_int_port_list:
 decl_int_port:
     IDENTIFIER {
         $$ = ast_add_id( $1, @1.last_line, ID_IPORT );
+    }
+;
+
+/* net declaration */
+proto_net:
+    NET IDENTIFIER '{' wrap_port_list '}' {
+        $$ = ast_add_net(
+            ast_add_id( $2, @2.last_line, ID_NET ),
+            ast_add_list( $4, AST_PORTS )
+        );
+    }
+;
+
+decl_net:
+    opt_decl_net proto_net {
+        $$ = ast_add_assign( $1, $2, AST_NET_DECL );
+    }
+;
+
+opt_decl_net:
+    IDENTIFIER '=' {
+        $$ = ast_add_id( $1, @1.last_line, ID_NET );
     }
 ;
 
