@@ -44,6 +44,7 @@ struct symrec_list {
 struct net_attr {
     bool            state;      // a box can be stateless or stateful
                                 // if no box declaration then false
+    char*           impl_name;  // implementation name
     symrec_list*    ports;      // pointer to the port list of the net
 };
 // attributes of ports (all kind of ports: box (sync) or net)

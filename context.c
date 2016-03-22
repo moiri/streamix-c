@@ -151,6 +151,11 @@ void* install_ids( symrec** symtab, UT_array* scope_stack, ast_node* ast,
             b_attr = ( net_attr* )malloc( sizeof( net_attr ) );
             b_attr->state = false;
             b_attr->ports = port_list;
+            // add internal name if available
+            b_attr->impl_name = ( char* )malloc( strlen(
+                        ast->box.impl->ast_node->ast_id.name ) + 1 );
+            strcpy( b_attr->impl_name,
+                    ast->box.impl->ast_node->ast_id.name );
             // install 'this' in the scope of the wrapper
             symrec_put( symtab, VAL_THIS,
                     *utarray_back( scope_stack ), VAL_WRAPPER, ( void* )b_attr,
