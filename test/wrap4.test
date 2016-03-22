@@ -1,8 +1,8 @@
-box L( out p1, in p2 )
+L = box L( out p1, in p2 )
 wrapper W { in p1, out p2 } {
-    link p1 { A }
-    link p2 { A }
-    box A ( in p1, out p2 )
+    link { this, A }
+    link { this, A }
+    A = box A ( in p1, out p2 )
     A
 }
 

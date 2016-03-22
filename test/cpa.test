@@ -1,12 +1,12 @@
-stateless box DS ( side out dist)
-stateless box B (in break_abs)
-box DC (
+DS = stateless box DS ( side out dist)
+B = stateless box B (in break_abs)
+DC = box DC (
     in abs,
     in cpa,
     side in dist,
     out dc
 )
-box CPA (
+CPA = box CPA (
     sync {
         decoupled side in dist,
         in dc
@@ -22,22 +22,18 @@ box CPA (
  * This is a comment to check wheter multiline comments work
  * Below the wrapper 'Car' is defined
  */
-wrapper Car { up in car_next (car_l_in), up out car_prev (car_l_out),
-        down in car_prev (car_r_in), down out car_next (car_r_out) } {
-    connect dist {ABS, DC, CPA}
-    link car_l_in { CPA }
-    link car_l_out { CPA }
-    link car_r_in { CPA }
-    link car_r_out { CPA }
+wrapper Car { up in car_next {car_l_in}, up out car_prev {car_l_out},
+        down in car_prev {car_r_in}, down out car_next {car_r_out} } {
+    link { ABS, DC, CPA }
+    link { this, CPA }
 
     // this is a single line comment
-    box MB (in block, out break_cmd)
+    MB = box MB (in block, out break_cmd)
 
     wrapper ABS { in dc, out abs, side out dist } {
-        link dc { ABS }
-        link abs { ABS }
-        link dist { Sensors }
-        box ABS (
+        link { this, ABS }
+        link { this, Sensors }
+        ABS = box ABS (
             in speed,
             in break_cmd,
             side in dc,
@@ -50,19 +46,18 @@ wrapper Car { up in car_next (car_l_in), up out car_prev (car_l_out),
     }
 
     wrapper Sensors { out speed, in block, out break_cmd, in break_abs, side out dist } {
-        link speed { RS }
-        link block { MB }
-        link break_cmd { MB }
-        link break_abs { B }
-        link dist { DS }
-        stateless box RS (out speed)
+        link { this, RS }
+        link { this, MB }
+        link { this, B }
+        link { this, DS }
+        RS = stateless box RS (out speed)
 
         RS|B|MB|DS
     }
 
     ABS.DC.CPA
 }
-box CarS( out car_next, in car_prev )
-box CarE( in car_next, out car_prev )
+CarS = box CarS( out car_next, in car_prev )
+CarE = box CarE( in car_next, out car_prev )
 
 CarS.Car.Car.Car.CarE

@@ -1,3 +1,0 @@
-box A( out a )
-box B( down in a )
-A.B.A

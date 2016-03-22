@@ -1,3 +1,4 @@
-A = box A( out a )
+A = box A( in a )
 B = box B( in a )
+
 A.B

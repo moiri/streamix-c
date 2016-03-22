@@ -1,6 +1,0 @@
-box A( side in a )
-box B( side in a )
-
-connect a { A, B }
-
-A|B
