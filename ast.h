@@ -180,6 +180,7 @@ ast_node* ast_add_attr ( int, int );
  * @param ast_node*:    pointer to an ast node of type AST_ID
  * @param ast_node*:    pointer to the ports list AST node
  * @param ast_node*:    pointer to the state AST node
+ * @param ast_node*:    pointer to the implementation name AST node
  * @return: ast_node*:
  *      a pointer to the location where the data was stored
  * */
