@@ -10,16 +10,19 @@
 #define AST_H
 
 #include <stdbool.h>
+#include <igraph.h>
 
 typedef struct ast_assign ast_assign;
 typedef struct ast_list ast_list;
 typedef struct ast_node ast_node;
 typedef struct ast_attr ast_attr;
 typedef struct ast_id ast_id;
+typedef struct ast_net ast_net;
 typedef struct op op;
 typedef struct box box;
 typedef struct wrap wrap;
 typedef struct port port;
+typedef struct net_con net_con;
 
 typedef enum {
     ID_NET,
@@ -80,7 +83,7 @@ struct ast_list {
     ast_list*   next;
 };
 
-// AST_NET_DEF
+// AST_NET_DEF, AST_NET_DECL
 struct ast_assign {
     ast_node*   id;
     ast_node*   op;
@@ -97,6 +100,18 @@ struct ast_id {
     char*   name;
     int     line;
     int     type;
+};
+
+// AST_NET
+struct ast_net {
+    ast_node*   net;
+    igraph_t*   g;
+    net_con*    con;
+};
+
+struct net_con {
+    igraph_vector_t* left;
+    igraph_vector_t* right;
 };
 
 // AST_SERIAL, AST_PARALLEL
@@ -118,8 +133,8 @@ struct box {
 // AST_WRAP
 struct wrap {
     ast_node*   id;
-    ast_node*   stmts;
     ast_node*   ports;
+    ast_node*   stmts;
 };
 
 // AST_PORT
@@ -138,13 +153,14 @@ struct ast_node {
     node_type   node_type;
     int         id;         // id of the node
     union {
-        // AST_NET, AST_MODE, AST_COUPLING, AST_STATE
+        // AST_MODE, AST_COUPLING, AST_STATE
         ast_node*       ast_node;
         // AST_STMTS, AST_LINKS, AST_PORTS, AST_SYNC, AST_COLLECT
         ast_list*       ast_list;
-        struct ast_assign ast_assign; // AST_NET_DEF
+        struct ast_assign ast_assign; // AST_NET_DEF, AST_NET_DECL
         struct ast_attr ast_attr;   // AST_ATTR
         struct ast_id   ast_id;     // AST_ID
+        struct ast_net  ast_net;    // AST_NET
         struct box      box;        // AST_BOX
         struct op       op;         // AST_SERIAL, AST_PARALLEL
         struct port     port;       // AST_PORT
