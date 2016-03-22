@@ -10,11 +10,11 @@
 /* Prologue */
     #include <stdio.h>
     #include <string.h>
-    #include "symtab.h"
+    #include "context.h"
     #include "ast.h"
     #include "defines.h"
 #ifdef DOT_AST
-    #include "graph.h"
+    #include "dot.h"
 #endif // DOT_AST
     extern int yylex();
     extern int yyparse();
@@ -253,7 +253,8 @@ decl_wrap_port:
     }
 |   '{' int_port_list '}' {
         $$ = ast_add_port(
-            ( ast_node* )0, // these internal ports are "turned off"
+            // these internal ports are "turned off"
+            ast_add_id( VAL_NULL, @2.last_line, ID_NPORT ),
             ast_add_list( $2, AST_INT_PORTS ),
             ( ast_node* )0, // no collection
             ( ast_node* )0, // no mode
@@ -392,7 +393,7 @@ int main( int argc, char **argv ) {
         yyparse();
     } while( !feof( yyin ) );
 
-    /* check_context( ast ); */
+    check_context( ast );
 
     /* fclose(con_graph); */
     if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );

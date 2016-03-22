@@ -3,12 +3,16 @@ PROJECT = streamix
 PARSER = parser
 
 SOURCES = symtab.c \
-		   ast.c \
-		   graph.c
+		  insttab.c \
+		  context.c \
+		  ast.c \
+		  dot.c
 
 INCLUDES = symtab.h \
+		   insttab.h \
+		   context.h \
 		   ast.h \
-		   graph.h \
+		   dot.h \
 		   defines.h
 
 INCLUDES_DIR = -Iuthash/include -I/usr/local/include/igraph
@@ -107,7 +111,8 @@ clean:
 	rm -f $(DOT_PATH)/*
 
 # generate '.pdf' files from the '.dot' files
-graph: $(DOT_AST_FILE).pdf $(DOT_N_CON_FILE).pdf $(DOT_P_CON_FILE).pdf
+# graph: $(DOT_AST_FILE).pdf $(DOT_N_CON_FILE).pdf $(DOT_P_CON_FILE).pdf
+graph: $(DOT_AST_FILE).pdf
 
 # used for debugging to save time
 run:
@@ -120,8 +125,8 @@ run_test:
 	@diff <(sed -r 's/-?[0-9]+\)/*)/g' $(INPUT:.$(TEST_IN)=.$(TEST_OUT))) $(INPUT:.$(TEST_IN)=.$(TEST_SOL))
 	$(MAKE) -s graph
 	cp $(DOT_AST_FILE).pdf $(INPUT:.$(TEST_IN)=_ast.pdf)
-	cp $(DOT_N_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gn.pdf)
-	cp $(DOT_P_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gp.pdf)
+	# cp $(DOT_N_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gn.pdf)
+	# cp $(DOT_P_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gp.pdf)
 
 run_test_all:
 	@printf "\n Testlog " | tee $(TEST_PATH)/test.log
@@ -133,6 +138,6 @@ run_test_all:
 		diff <(sed -r 's/-?[0-9]+\)/*)/g' $${file%.*}.$(TEST_OUT)) $${file%.*}.$(TEST_SOL) | tee -a $(TEST_PATH)/test.log; \
 		$(MAKE) -s graph; \
 		cp $(DOT_AST_FILE).pdf $${file%.*}_ast.pdf; \
-		cp $(DOT_N_CON_FILE).pdf $${file%.*}_gn.pdf; \
-		cp $(DOT_P_CON_FILE).pdf $${file%.*}_gp.pdf; \
+		# cp $(DOT_N_CON_FILE).pdf $${file%.*}_gn.pdf; \
+		# cp $(DOT_P_CON_FILE).pdf $${file%.*}_gp.pdf; \
 	done

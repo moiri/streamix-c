@@ -8,8 +8,8 @@
  *
  * */
 
-#ifndef GRAPH_H
-#define GRAPH_H
+#ifndef DOT_H
+#define DOT_H
 
 #include <stdio.h>
 #include "ast.h"
@@ -108,4 +108,4 @@ void graph_init ( FILE*, int );
  * */
 void graph_init_subgraph ( FILE*, char*, int, int );
 
-#endif /* GRAPH_H */
+#endif /* DOT_H */

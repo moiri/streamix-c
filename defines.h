@@ -38,15 +38,16 @@
 #define VAL_STATIC      8
 
 // scanner values (elements)
-#define VAL_BOX     1
-#define VAL_WRAPPER 2
-#define VAL_PORT    3
-#define VAL_SPORT   4
-#define VAL_COPY    5
-#define VAL_NET     6
-
+#define VAL_BOX         1
+#define VAL_WRAPPER     2
+#define VAL_PORT        3
+#define VAL_SPORT       4
+#define VAL_COPY        5
+#define VAL_NET         6
+#define VAL_SELF        7
 
 #define VAL_THIS    "this"
+#define VAL_NULL    "null"
 
 // drawing
 #define AST_DOT_PATH    "dot/ast_graph.dot"

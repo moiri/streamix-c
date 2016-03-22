@@ -28,6 +28,7 @@ typedef enum {
     ID_BOXIMPL,
     ID_PORT,
     ID_IPORT,
+    ID_NPORT,
     ID_CNET,
     ID_LNET,
     ID_CPORT,
