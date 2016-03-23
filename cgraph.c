@@ -31,6 +31,9 @@ void cgraph_init( ast_node* ast )
                 list = list->next;
             }
             break;
+        case AST_NET_DEF:
+            cgraph_init( ast->ast_assign.op );
+            break;
         case AST_WRAP:
             cgraph_init( ast->wrap.stmts );
             break;
