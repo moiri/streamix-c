@@ -10,4 +10,4 @@ wrapper W { in p1{a1, a2}, out p2{b} } {
     N1 = net N{in a{a1, a2}, out b}
 }
 
-N = L.W.R
+L.W.R

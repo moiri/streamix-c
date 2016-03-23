@@ -105,13 +105,13 @@ struct ast_id {
 // AST_NET
 struct ast_net {
     ast_node*   net;
-    igraph_t*   g;
+    igraph_t    g;
     net_con*    con;
 };
 
 struct net_con {
-    igraph_vector_t* left;
-    igraph_vector_t* right;
+    igraph_vector_t left;
+    igraph_vector_t right;
 };
 
 // AST_SERIAL, AST_PARALLEL

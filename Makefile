@@ -3,10 +3,12 @@ PROJECT = streamix
 PARSER = parser
 
 SOURCES = symtab.c \
+		  cgraph.c \
 		   ast.c \
 		   graph.c
 
 INCLUDES = symtab.h \
+		   cgraph.h \
 		   ast.h \
 		   graph.h \
 		   defines.h

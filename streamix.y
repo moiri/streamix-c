@@ -13,6 +13,7 @@
     #include "symtab.h"
     #include "ast.h"
     #include "defines.h"
+    #include "cgraph.h"
 #ifdef DOT_AST
     #include "graph.h"
 #endif // DOT_AST
@@ -393,6 +394,7 @@ int main( int argc, char **argv ) {
     } while( !feof( yyin ) );
 
     /* check_context( ast ); */
+    cgraph_init( ast );
 
     /* fclose(con_graph); */
     if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );
