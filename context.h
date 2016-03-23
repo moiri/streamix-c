@@ -11,7 +11,7 @@
 #define CONTEXT_H
 
 #include "ast.h"
-#include "symtab.h"
+#include "insttab.h"
 #include "utarray.h"
 
 /**
@@ -30,7 +30,8 @@ void check_context( ast_node* );
  * @param UT_array**:   pointer to the scope stack
  * @param ast_node*:    pointer to the root ast node
  * */
-void check_ids( symrec**, symrec**, UT_array*, ast_node* );
+void check_ids( symrec**, inst_net**, UT_array*, ast_node* );
+void check_ids_net( symrec**, inst_rec**, UT_array*, ast_node* );
 
 /**
  * put symbol names into the symbol table. this includes collision and scope

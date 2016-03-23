@@ -1,11 +1,10 @@
 #include "context.h"
 #include "defines.h"
-#include "insttab.h"
 
 /******************************************************************************/
 void check_context( ast_node* ast )
 {
-    symrec* insttab = NULL;       // hash table to store the instances
+    inst_net* nets = NULL;        // hash table to store the nets
     symrec* symtab = NULL;        // hash table to store the symbols
     UT_array* scope_stack = NULL; // stack to handle the scope
     int scope = 0;
@@ -15,9 +14,9 @@ void check_context( ast_node* ast )
     // install all symbols in the symtab
     install_ids( &symtab, scope_stack, ast, false );
     // check the context of all symbols and install instances in the insttab
-    instrec_put( &insttab, VAL_THIS, *utarray_back( scope_stack ),
-            VAL_SELF, -1, NULL );
-    check_ids( &symtab, &insttab, scope_stack, ast );
+    /* instrec_put( &insttab, VAL_THIS, *utarray_back( scope_stack ), */
+    /*         VAL_SELF, -1, NULL ); */
+    check_ids( &symtab, &nets, scope_stack, ast );
     /* // check the connections and count the connection of each port */
     /* check_instances( &insttab, ast ); */
     /* // check whether all ports are connected spawn synchronizers and draw the */
@@ -26,11 +25,12 @@ void check_context( ast_node* ast )
 }
 
 /******************************************************************************/
-void check_ids( symrec** symtab, symrec** insttab, UT_array* scope_stack,
+void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
         ast_node* ast )
 {
     ast_list* list = NULL;
-    symrec* rec = NULL;
+    /* symrec* rec = NULL; */
+    inst_rec* recs = NULL;
     static int _scope = 0;
 
     if( ast == NULL ) return;
@@ -40,7 +40,7 @@ void check_ids( symrec** symtab, symrec** insttab, UT_array* scope_stack,
         case AST_STMTS:
             list = ast->ast_list;
             while( list != NULL ) {
-                check_ids( symtab, insttab, scope_stack, list->ast_node );
+                check_ids( symtab, nets, scope_stack, list->ast_node );
                 list = list->next;
             }
             break;
@@ -51,23 +51,39 @@ void check_ids( symrec** symtab, symrec** insttab, UT_array* scope_stack,
             // in order to add the this instance to the instance table we need
             // to get the decalration of the net before we put another scope on
             // the stack
-            rec = symrec_get( symtab, scope_stack, ast->wrap.id->ast_id.name,
-                    ast->wrap.id->ast_id.line );
+            /* rec = symrec_get( symtab, scope_stack, ast->wrap.id->ast_id.name, */
+            /*         ast->wrap.id->ast_id.line ); */
             _scope++;
             utarray_push_back( scope_stack, &_scope );
             // add the symbol 'this' to the instance table referring to this net
-            instrec_put( insttab, VAL_THIS, *utarray_back( scope_stack ),
-                    VAL_SELF, ast->wrap.id->id, rec );
-            check_ids( symtab, insttab, scope_stack, ast->wrap.stmts );
+            /* instrec_put( insttab, VAL_THIS, *utarray_back( scope_stack ), */
+            /*         VAL_SELF, ast->wrap.id->id, rec ); */
+            check_ids( symtab, nets, scope_stack, ast->wrap.stmts );
             utarray_pop_back( scope_stack );
             break;
         case AST_NET:
-            check_ids( symtab, insttab, scope_stack, ast->ast_node );
+            check_ids_net( symtab, &recs, scope_stack, ast->ast_node );
+            inst_net_put( nets, *utarray_back( scope_stack ), &recs );
+            (*nets)->recs = &recs;
             break;
+        default:
+            ;
+    }
+}
+
+/******************************************************************************/
+void check_ids_net( symrec** symtab, inst_rec** recs, UT_array* scope_stack,
+        ast_node* ast )
+{
+    symrec* rec = NULL;
+
+    if( ast == NULL ) return;
+
+    switch( ast->node_type ) {
         case AST_PARALLEL:
         case AST_SERIAL:
-            check_ids( symtab, insttab, scope_stack, ast->op.left );
-            check_ids( symtab, insttab, scope_stack, ast->op.right );
+            check_ids_net( symtab, recs, scope_stack, ast->op.left );
+            check_ids_net( symtab, recs, scope_stack, ast->op.right );
             break;
         case AST_ID:
             // check the context of the symbol
@@ -75,9 +91,7 @@ void check_ids( symrec** symtab, symrec** insttab, UT_array* scope_stack,
                     ast->ast_id.line );
             // add a net symbol to the instance table
             if( ast->ast_id.type == ID_NET && rec != NULL ) {
-                instrec_put( insttab, ast->ast_id.name,
-                        *utarray_back( scope_stack ), rec->type, ast->id,
-                        rec );
+                inst_rec_put( recs, ast->ast_id.name, ast->id, rec );
             }
             break;
         default:

@@ -3,64 +3,85 @@
 #include <stdio.h>
 
 /******************************************************************************/
-symrec* instrec_get( symrec** insttab, char* name, int scope, int id )
+inst_net* inst_net_get( inst_net** nets, int scope )
 {
-    symrec* item = NULL;
-    char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
-
+    inst_net* res = NULL;
+    HASH_FIND_INT( *nets, &scope, res );
 #if defined(DEBUG) || defined(DEBUG_INST)
-    printf( "search instance '%s' with id %d in scope %d\n", name, id, scope );
+    if( res != NULL )
+        printf( "inst_net_get: found nets in scope %d\n", res->scope );
+    else
+        printf( "inst_net_get: no nets found in scope %d\n", scope );
 #endif // DEBUG
-
-    // generate key
-    sprintf( key, "%s%d", name, scope );
-    HASH_FIND_STR( *insttab, key, item );
-
-    if( id == -1 ) {
-        // if no id is available, collision handling must be done manually
-#if defined(DEBUG) || defined(DEBUG_INST)
-        if( item != NULL )
-            printf( "found instances of '%s'(%s) in scope %d\n", item->name,
-                    ( ( struct inst_attr*) item->attr )->net->name,
-                    item->scope );
-#endif // DEBUG
-        return item;
-    }
-
-    // find the instance with the matching id and handle key collisions
-    while( item != NULL ) {
-        if( strlen( item->name ) == strlen( name )
-            && memcmp( item->name, name, strlen( name ) ) == 0
-            && item->scope == scope
-            && ( ( struct inst_attr* )item->attr )->id == id ) {
-#if defined(DEBUG) || defined(DEBUG_INST)
-            printf( "found instance %s with id %d in scope %d\n", item->name,
-                    ( ( struct inst_attr* )item->attr)->id, item->scope );
-#endif // DEBUG
-            break; // found a match
-        }
-        item = item->next;
-    }
-    return item;
+    return res;
 }
 
 /******************************************************************************/
-symrec* instrec_put( symrec** insttab, char* name, int scope, int type, int id,
-        symrec* rec )
+inst_net* inst_net_put( inst_net** nets, int scope, inst_rec** recs )
 {
-    char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
-    inst_attr* attr = NULL;
+    inst_net* item = NULL;
+    inst_net* new_item = NULL;
+    inst_net* previous_item = NULL;
+
+    // ADD ITEM TO THE INSTANCE TABLE
+    // create new item structure
+    new_item = ( inst_net* )malloc( sizeof( inst_net ) );
+    new_item->scope = scope;
+    new_item->recs = recs;
+    // check wheter key already exists
+    HASH_FIND_INT( *nets, &scope, item );
+    if( item == NULL ) {
+        // the key is new
+        HASH_ADD_INT( *nets, scope, new_item );
+    }
+    else {
+        // multiple nets in the same scope
+        // -> add the new item to the end of the linked list
+        do {
+            previous_item = item; // remember the last item of the list
+            item = item->next;
+        }
+        while( item != NULL );
+
+        previous_item->next = new_item;
+    }
+#if defined(DEBUG) || defined(DEBUG_INST)
+    printf( "inst_net_put: add net in scope %d\n", new_item->scope );
+#endif // DEBUG
+    return new_item;
+}
+
+/******************************************************************************/
+inst_rec* inst_rec_get( inst_rec** recs, char* name )
+{
+    inst_rec* res = NULL;
+    HASH_FIND_STR( *recs, name, res );
+#if defined(DEBUG) || defined(DEBUG_INST)
+    if( res != NULL )
+        printf( "inst_rec_get: found instances of '%s'\n", res->name );
+    else
+        printf( "inst_rec_get: found no instances of '%s'\n", name );
+#endif // DEBUG
+    return res;
+}
+
+/******************************************************************************/
+inst_rec* inst_rec_put( inst_rec** recs, char* name, int id, symrec* rec )
+{
     symrec_list* inst_ports = NULL;
     symrec_list* sym_ports = NULL;
     symrec_list* port_list = NULL;
-    symrec* item = NULL;
-    symrec* new_item = NULL;
-    symrec* previous_item = NULL;
+    inst_rec* item = NULL;
+    inst_rec* new_item = NULL;
+    inst_rec* previous_item = NULL;
 
-    // PREPARE INSTREC ATTRIBUTES
-    attr = ( inst_attr* )malloc( sizeof( inst_attr ) );
-    attr->id = id;
-    attr->net = rec;
+    // ADD ITEM TO THE INSTANCE TABLE
+    // create new item structure
+    new_item = ( inst_rec* )malloc( sizeof( inst_rec ) );
+    new_item->id = id;
+    new_item->net = rec;
+    new_item->name = ( char* )malloc( strlen( name ) + 1 );
+    strcpy( new_item->name, name );
     // copy portlist from symtab to insttab
     if( rec != NULL )
         sym_ports = ( ( struct net_attr* )rec->attr )->ports;
@@ -73,26 +94,12 @@ symrec* instrec_put( symrec** insttab, char* name, int scope, int type, int id,
         port_list = inst_ports;
         sym_ports = sym_ports->next;
     }
-    attr->ports = port_list;
-
-    // ADD ITEM TO THE INSTANCE TABLE
-    // generate key
-    sprintf( key, "%s%d", name, scope );
-    // create new iten structure
-    new_item = ( symrec* )malloc( sizeof( symrec ) );
-    new_item->scope = scope;
-    new_item->type = type;
-    new_item->key = ( char* )malloc( strlen( key ) + 1 );
-    strcpy( new_item->key, key );
-    new_item->attr = attr;
-    new_item->name = ( char* )malloc( strlen( name ) + 1 );
-    strcpy( new_item->name, name );
-    new_item->attr = attr;
+    new_item->ports = port_list;
     // check wheter key already exists
-    HASH_FIND_STR( *insttab, key, item );
+    HASH_FIND_STR( *recs, name, item );
     if( item == NULL ) {
         // the key is new
-        HASH_ADD_KEYPTR( hh, *insttab, new_item->key, strlen( key ), new_item );
+        HASH_ADD_KEYPTR( hh, *recs, name, strlen( name ), new_item );
     }
     else {
         // a collision accured or multiple instances of a net have been spawned
@@ -106,8 +113,8 @@ symrec* instrec_put( symrec** insttab, char* name, int scope, int type, int id,
         previous_item->next = new_item;
     }
 #if defined(DEBUG) || defined(DEBUG_INST)
-    printf( "put net instance %s with id %d in scope %d\n", new_item->name,
-            ( ( struct inst_attr* )new_item->attr)->id, new_item->scope );
+    printf( "inst_rec_put: add net instance %s with id %d\n", new_item->name,
+            new_item->id );
 #endif // DEBUG
     return new_item;
 }
