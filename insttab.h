@@ -17,7 +17,8 @@ typedef struct inst_net inst_net;
 
 struct inst_net {
     int             scope;
-    inst_rec**      recs;   // hashtable of the instances in the net
+    inst_rec**      recs_id;   // hashtable of the instances in the net (id)
+    inst_rec**      recs_name; // hashtable of the instances in the net (name)
     inst_net*       next;
     UT_hash_handle  hh;     // makes this structure hashable
 };
@@ -32,7 +33,8 @@ struct inst_rec {
                                 // order to set the corresponding connection
                                 // flag
     inst_rec*       next;
-    UT_hash_handle  hh;         // makes this structure hashable
+    UT_hash_handle  hh1;        // makes this structure hashable (id)
+    UT_hash_handle  hh2;        // makes this structure hashable (name)
 };
 
 /**
@@ -43,7 +45,7 @@ inst_net* inst_net_get( inst_net**, int );
 /**
  *
  */
-inst_net* inst_net_put( inst_net**, int, inst_rec** );
+inst_net* inst_net_put( inst_net**, int, inst_rec**, inst_rec** );
 
 /**
  *
@@ -53,6 +55,6 @@ inst_rec* inst_rec_get( inst_rec**, char* );
 /**
  *
  */
-inst_rec* inst_rec_put( inst_rec**, char*, int, symrec* );
+inst_rec* inst_rec_put( inst_rec**, inst_rec**, char*, int, symrec* );
 
 #endif // INSTTAB_H

@@ -17,7 +17,8 @@ inst_net* inst_net_get( inst_net** nets, int scope )
 }
 
 /******************************************************************************/
-inst_net* inst_net_put( inst_net** nets, int scope, inst_rec** recs )
+inst_net* inst_net_put( inst_net** nets, int scope, inst_rec** recs_name,
+        inst_rec** recs_id )
 {
     inst_net* item = NULL;
     inst_net* new_item = NULL;
@@ -27,7 +28,8 @@ inst_net* inst_net_put( inst_net** nets, int scope, inst_rec** recs )
     // create new item structure
     new_item = ( inst_net* )malloc( sizeof( inst_net ) );
     new_item->scope = scope;
-    new_item->recs = recs;
+    new_item->recs_id = recs_id;
+    new_item->recs_name = recs_name;
     // check wheter key already exists
     HASH_FIND_INT( *nets, &scope, item );
     if( item == NULL ) {
@@ -52,10 +54,24 @@ inst_net* inst_net_put( inst_net** nets, int scope, inst_rec** recs )
 }
 
 /******************************************************************************/
-inst_rec* inst_rec_get( inst_rec** recs, char* name )
+inst_rec* inst_rec_get_id( inst_rec** recs, int id )
 {
     inst_rec* res = NULL;
-    HASH_FIND_STR( *recs, name, res );
+    HASH_FIND( hh1, *recs, &id, sizeof( int ), res );
+#if defined(DEBUG) || defined(DEBUG_INST)
+    if( res != NULL )
+        printf( "inst_rec_get: found instance '%s'(%d)\n", res->name, res->id );
+    else
+        printf( "inst_rec_get: found no instances with id '%d'\n", id );
+#endif // DEBUG
+    return res;
+}
+
+/******************************************************************************/
+inst_rec* inst_rec_get_name( inst_rec** recs, char* name )
+{
+    inst_rec* res = NULL;
+    HASH_FIND( hh2, *recs, name, strlen(name), res );
 #if defined(DEBUG) || defined(DEBUG_INST)
     if( res != NULL )
         printf( "inst_rec_get: found instances of '%s'\n", res->name );
@@ -66,7 +82,8 @@ inst_rec* inst_rec_get( inst_rec** recs, char* name )
 }
 
 /******************************************************************************/
-inst_rec* inst_rec_put( inst_rec** recs, char* name, int id, symrec* rec )
+inst_rec* inst_rec_put( inst_rec** recs_name, inst_rec** recs_id, char* name,
+        int id, symrec* rec )
 {
     symrec_list* inst_ports = NULL;
     symrec_list* sym_ports = NULL;
@@ -95,11 +112,17 @@ inst_rec* inst_rec_put( inst_rec** recs, char* name, int id, symrec* rec )
         sym_ports = sym_ports->next;
     }
     new_item->ports = port_list;
-    // check wheter key already exists
-    HASH_FIND_STR( *recs, name, item );
+    // check whether key already exists
+    HASH_FIND( hh1, *recs_id, &id, sizeof( int ), item );
+    if( item == NULL ) {
+        // id must be unique in the net
+        HASH_ADD( hh1, *recs_id, id, sizeof( int ), new_item );
+    }
+    item = NULL;
+    HASH_FIND( hh2, *recs_name, name, strlen( name ), item );
     if( item == NULL ) {
         // the key is new
-        HASH_ADD_KEYPTR( hh, *recs, name, strlen( name ), new_item );
+        HASH_ADD( hh2, *recs_name, name, strlen( name ), new_item );
     }
     else {
         // a collision accured or multiple instances of a net have been spawned
