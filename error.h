@@ -1,7 +1,7 @@
 /* 
- * Global variables and such
+ * Error message helper function
  *
- * @file    globals.h
+ * @file    error.h
  * @author  Simon Maurer
  *
  * */

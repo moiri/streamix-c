@@ -1,6 +1,10 @@
 #include "symtab.h"
-#include "error.h"
 #include <stdio.h>
+#ifdef TESTING
+#include "defines.h"
+#else
+#include "error.h"
+#endif
 
 /******************************************************************************/
 symrec* symrec_get( symrec** symtab, UT_array* scope_stack, char *name,
@@ -27,8 +31,13 @@ symrec* symrec_get( symrec** symtab, UT_array* scope_stack, char *name,
         if( item != NULL ) break; // found a match
     }
     if( item == NULL ) {
+#ifdef TESTING
+        printf( ERROR_UNDEF_ID, ERR_ERROR, name );
+        printf( "\n" );
+#else
         sprintf( __error_msg, ERROR_UNDEF_ID, ERR_ERROR, name );
         report_yyerror( __error_msg, line );
+#endif // TESTING
     }
 #if defined(DEBUG) || defined(DEBUG_SYMB)
     else {
@@ -108,8 +117,13 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
         free( new_item->name );
         free( new_item->key );
         free( new_item );
+#ifdef TESTING
+        printf( ERROR_DUPLICATE_ID, ERR_ERROR, name );
+        printf( "\n" );
+#else
         sprintf( __error_msg, ERROR_DUPLICATE_ID, ERR_ERROR, name );
         report_yyerror( __error_msg, line );
+#endif // TESTING
         item = NULL;
     }
 #if defined(DEBUG) || defined(DEBUG_SYMB)
