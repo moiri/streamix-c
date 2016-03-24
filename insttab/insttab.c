@@ -60,9 +60,10 @@ inst_rec* inst_rec_get_id( inst_rec** recs, int id )
     HASH_FIND( hh1, *recs, &id, sizeof( int ), res );
 #if defined(DEBUG) || defined(DEBUG_INST)
     if( res != NULL )
-        printf( "inst_rec_get: found instance '%s'(%d)\n", res->name, res->id );
+        printf( "inst_rec_get_id: found instance '%s'(%d)\n", res->name,
+                res->id );
     else
-        printf( "inst_rec_get: found no instances with id '%d'\n", id );
+        printf( "inst_rec_get_id: found no instances with id '%d'\n", id );
 #endif // DEBUG
     return res;
 }
@@ -71,12 +72,12 @@ inst_rec* inst_rec_get_id( inst_rec** recs, int id )
 inst_rec* inst_rec_get_name( inst_rec** recs, char* name )
 {
     inst_rec* res = NULL;
-    HASH_FIND( hh2, *recs, name, strlen(name), res );
+    HASH_FIND( hh2, *recs, name, strlen( name ), res );
 #if defined(DEBUG) || defined(DEBUG_INST)
     if( res != NULL )
-        printf( "inst_rec_get: found instances of '%s'\n", res->name );
+        printf( "inst_rec_get_name: found instances of '%s'\n", res->name );
     else
-        printf( "inst_rec_get: found no instances of '%s'\n", name );
+        printf( "inst_rec_get_name: found no instances of '%s'\n", name );
 #endif // DEBUG
     return res;
 }
@@ -122,7 +123,7 @@ inst_rec* inst_rec_put( inst_rec** recs_name, inst_rec** recs_id, char* name,
     HASH_FIND( hh2, *recs_name, name, strlen( name ), item );
     if( item == NULL ) {
         // the key is new
-        HASH_ADD( hh2, *recs_name, name, strlen( name ), new_item );
+        HASH_ADD_KEYPTR( hh2, *recs_name, name, strlen( name ), new_item );
     }
     else {
         // a collision accured or multiple instances of a net have been spawned
