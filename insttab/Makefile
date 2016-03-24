@@ -2,9 +2,13 @@ PROJECT = test
 OUT = test_insttab
 
 SOURCES = insttab.c
-
 INCLUDES = insttab.h
-INCLUDES_DIR = -I../uthash/include -I. -I..
+
+SYMTAB_DIR = ../symtab
+SYMTAB_OBJ = $(SYMTAB_DIR)/symtab.o
+SYMTAB_SRC = $(SYMTAB_DIR)/symtab.c $(SYMTAB_DIR)/symtab.h
+
+INCLUDES_DIR = -I../uthash/include -I. -I.. -I../symtab
 
 CFLAGS = -Wall
 DEBUG_FLAGS = -g -O0
@@ -17,10 +21,15 @@ debug: CFLAGS += $(DEBUG_FLAGS)
 debug: $(PROJECT)
 
 # compile project
-$(PROJECT): test.c $(SOURCES) $(INCLUDES)
+$(PROJECT): test.c $(SOURCES) $(INCLUDES) $(SYMTAB_OBJ)
 	$(CC) $(CFLAGS) $(SOURCES) $(PROJECT).c $(INCLUDES_DIR) -o $(OUT)
+
+# compile symtab libarary
+$(SYMTAB_OBJ): $(SYMTAB_SRC)
+	$(CC) $(CFLAGS) $< $(INCLUDES_DIR) -c -o $@
 
 .PHONY: clean
 
 clean:
 	rm -f $(PROJECT)
+	rm -f $(SYMTAB_OBJ)
