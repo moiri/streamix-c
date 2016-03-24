@@ -18,7 +18,6 @@ extern int yylineno;
 extern int yynerrs;
 char __error_msg[ CONST_ERROR_LEN ];
 
-void yyerror ( const char* );
 void report_yyerror( const char*, int );
 
 #endif // ERROR_H
