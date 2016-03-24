@@ -21,7 +21,7 @@ debug: CFLAGS += $(DEBUG_FLAGS)
 debug: $(PROJECT)
 
 # compile project
-$(PROJECT): test.c $(SOURCES) $(INCLUDES) $(SYMTAB_OBJ)
+$(PROJECT): $(PROJECT).c $(SOURCES) $(INCLUDES) $(SYMTAB_OBJ)
 	$(CC) $(CFLAGS) $(SOURCES) $(PROJECT).c $(INCLUDES_DIR) -o $(OUT)
 
 # compile symtab libarary
