@@ -1,5 +1,5 @@
 PROJECT = test
-OUT = test_symtab
+OUT = test
 
 SOURCES = symtab.c
 INCLUDES = symtab.h

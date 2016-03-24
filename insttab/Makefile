@@ -1,5 +1,5 @@
 PROJECT = test
-OUT = test_insttab
+OUT = test
 
 SOURCES = insttab.c
 INCLUDES = insttab.h
