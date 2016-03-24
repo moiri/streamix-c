@@ -1,5 +1,5 @@
 #include "defines.h"
-#include "graph.h"
+#include "dot.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

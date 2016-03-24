@@ -1,0 +1,6 @@
+link { A, B, C }
+A = box A( side out p1, out p2 )
+B = box B( side in p1, in p2, out p3 )
+C = box C( in p3 )
+
+A.B.C

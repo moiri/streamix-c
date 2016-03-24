@@ -1,5 +1,5 @@
-box A( out x )
-box B( in x )
-box C( in x )
+A = box A( out x )
+B = box B( in x )
+C = box C( in x )
 
 A.(B|C)

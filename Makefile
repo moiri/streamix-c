@@ -2,22 +2,40 @@ SHELL := /bin/bash
 PROJECT = streamix
 PARSER = parser
 
-SOURCES = symtab.c \
+SOURCES = context.c \
 		  cgraph.c \
-		   ast.c \
-		   graph.c
+		  ast.c \
+		  error.c \
+		  dot.c
 
-INCLUDES = symtab.h \
+INCLUDES = context.h \
 		   cgraph.h \
 		   ast.h \
-		   graph.h \
+		   error.h \
+		   dot.h \
 		   defines.h
 
-INCLUDES_DIR = -Iuthash/include -I/usr/local/include/igraph
-LINK_DIR = -L/usr/local/lib
-CFLAGS = -Wall -lfl -ligraph
+INSTTAB_DIR = insttab
+SYMTAB_DIR = symtab
+SYMTAB_OBJ = $(SYMTAB_DIR)/symtab.o
+SYMTAB_SRC = $(SYMTAB_DIR)/symtab.c $(SYMTAB_DIR)/symtab.h
+INSTTAB_OBJ = $(INSTTAB_DIR)/insttab.o
+INSTTAB_SRC = $(INSTTAB_DIR)/insttab.c $(INSTTAB_DIR)/insttab.h
+OBJECTS = $(SYMTAB_OBJ) $(INSTTAB_OBJ)
 
+INCLUDES_DIR = -Iuthash/include \
+			   -I/usr/local/include/igraph \
+			   -I$(INSTTAB_DIR) \
+			   -I$(SYMTAB_DIR) \
+			   -I.
+LINK_DIR = -L/usr/local/lib
+LINK_FILE = -lfl \
+			-ligraph
+
+CFLAGS = -Wall
 DEBUG_FLAGS = -g -O0
+
+CC = gcc
 
 DOT_PATH = dot
 DOT_AST_FILE = $(DOT_PATH)/ast_graph
@@ -68,8 +86,8 @@ test1: CFLAGS += $(DEBUG_FLAGS) $(DOT_FLAGS)
 test1: clean $(PARSER) run_test
 
 # compile project
-$(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(SOURCES) $(INCLUDES)
-	gcc $(SOURCES) $(INCLUDES_DIR) $(LINK_DIR) $(PROJECT).tab.c lex.yy.c -o $(PARSER) $(CFLAGS)
+$(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(SOURCES) $(INCLUDES) $(INSTTAB_OBJ)
+	$(CC) $(CFLAGS) $(SOURCES) $(PROJECT).tab.c lex.yy.c $(OBJECTS) $(INCLUDES_DIR) $(LINK_DIR) $(LINK_FILE) -o $(PARSER)
 
 # compile lexer (flex)
 lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
@@ -78,6 +96,17 @@ lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
 # compile parser (bison)
 $(PROJECT).tab.c $(PROJECT).tab.h: $(PROJECT).y
 	bison -d -Wall $(PROJECT).y
+
+# compile insttab libarary
+$(INSTTAB_OBJ): $(INSTTAB_SRC) $(SYMTAB_OBJ)
+	$(CC) $(CFLAGS) $< $(INCLUDES_DIR) -c -o $@
+
+# compile symtab libarary
+$(SYMTAB_OBJ): $(SYMTAB_SRC)
+	$(CC) $(CFLAGS) $< $(INCLUDES_DIR) -c -o $@
+
+# $(OBJECTS): $(OBJ_SRC)
+# 	$(CC) $(CFLAGS) $< $(INCLUDES_DIR) -c -o $@
 
 $(DOT_AST_FILE).pdf: $(DOT_AST_FILE).dot
 	# generate ast graph pdf file
@@ -107,9 +136,11 @@ clean:
 	rm -f $(PARSER)
 	rm -f lex.yy.c
 	rm -f $(DOT_PATH)/*
+	rm -f $(OBJECTS)
 
 # generate '.pdf' files from the '.dot' files
-graph: $(DOT_AST_FILE).pdf $(DOT_N_CON_FILE).pdf $(DOT_P_CON_FILE).pdf
+# graph: $(DOT_AST_FILE).pdf $(DOT_N_CON_FILE).pdf $(DOT_P_CON_FILE).pdf
+graph: $(DOT_AST_FILE).pdf
 
 # used for debugging to save time
 run:
@@ -122,8 +153,8 @@ run_test:
 	@diff <(sed -r 's/-?[0-9]+\)/*)/g' $(INPUT:.$(TEST_IN)=.$(TEST_OUT))) $(INPUT:.$(TEST_IN)=.$(TEST_SOL))
 	$(MAKE) -s graph
 	cp $(DOT_AST_FILE).pdf $(INPUT:.$(TEST_IN)=_ast.pdf)
-	cp $(DOT_N_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gn.pdf)
-	cp $(DOT_P_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gp.pdf)
+	# cp $(DOT_N_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gn.pdf)
+	# cp $(DOT_P_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gp.pdf)
 
 run_test_all:
 	@printf "\n Testlog " | tee $(TEST_PATH)/test.log
@@ -135,6 +166,6 @@ run_test_all:
 		diff <(sed -r 's/-?[0-9]+\)/*)/g' $${file%.*}.$(TEST_OUT)) $${file%.*}.$(TEST_SOL) | tee -a $(TEST_PATH)/test.log; \
 		$(MAKE) -s graph; \
 		cp $(DOT_AST_FILE).pdf $${file%.*}_ast.pdf; \
-		cp $(DOT_N_CON_FILE).pdf $${file%.*}_gn.pdf; \
-		cp $(DOT_P_CON_FILE).pdf $${file%.*}_gp.pdf; \
+		# cp $(DOT_N_CON_FILE).pdf $${file%.*}_gn.pdf; \
+		# cp $(DOT_P_CON_FILE).pdf $${file%.*}_gp.pdf; \
 	done

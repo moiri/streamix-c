@@ -1,7 +1,7 @@
-box A (out a)
-box B (out b)
-box C (in a, in b)
-box D (in a, in b)
+A = box A (out a)
+B = box B (out b)
+C = box C (in a, in b)
+D = box D (in a, in b)
 
 (A|B).(C|D)
 

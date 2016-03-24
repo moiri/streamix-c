@@ -1,6 +1,6 @@
-box A( in x )
-box B( in x )
-box C( out x )
-box D( out x )
+A = box A( in x )
+B = box B( in x )
+C = box C( out x )
+D = box D( out x )
 
 (A|B).(C|D)

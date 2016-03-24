@@ -1,12 +1,12 @@
-box A( out a )
-box B( in a, out p )
-wrapper W{ in p( p_int ) }{
-    link p_int { A }
-    box A( in p_int, out b )
-    box B( in b, out c )
-    wrapper W{ in c(w) } {
-        link w { W }
-        box W(in w)
+A = box A( out a )
+B = box B( in a, out p )
+wrapper W{ in p{ p_int } }{
+    link { this, A }
+    A = box A( in p_int, out b )
+    B = box B( in b, out c )
+    wrapper W{ in c{w} } {
+        link { this, W }
+        W = box W(in w)
         W|W
     }
     A.B.W
