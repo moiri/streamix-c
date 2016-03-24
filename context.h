@@ -31,7 +31,7 @@ void check_context( ast_node* );
  * @param ast_node*:    pointer to the root ast node
  * */
 void check_ids( symrec**, inst_net**, UT_array*, ast_node* );
-void check_ids_net( symrec**, inst_rec**, UT_array*, ast_node* );
+void check_ids_net( symrec**, inst_rec**, inst_rec**, UT_array*, ast_node* );
 
 /**
  * put symbol names into the symbol table. this includes collision and scope

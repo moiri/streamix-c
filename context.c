@@ -30,7 +30,8 @@ void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
 {
     ast_list* list = NULL;
     /* symrec* rec = NULL; */
-    inst_rec* recs = NULL;
+    inst_rec* recs_id = NULL;
+    inst_rec* recs_name = NULL;
     static int _scope = 0;
 
     if( ast == NULL ) return;
@@ -62,9 +63,12 @@ void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
             utarray_pop_back( scope_stack );
             break;
         case AST_NET:
-            check_ids_net( symtab, &recs, scope_stack, ast->ast_node );
-            inst_net_put( nets, *utarray_back( scope_stack ), &recs );
-            (*nets)->recs = &recs;
+            check_ids_net( symtab, &recs_name, &recs_id, scope_stack,
+                    ast->ast_node );
+            inst_net_put( nets, *utarray_back( scope_stack ), &recs_name,
+                    &recs_id );
+            (*nets)->recs_id = &recs_id;
+            (*nets)->recs_name = &recs_name;
             break;
         default:
             ;
@@ -72,8 +76,8 @@ void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
 }
 
 /******************************************************************************/
-void check_ids_net( symrec** symtab, inst_rec** recs, UT_array* scope_stack,
-        ast_node* ast )
+void check_ids_net( symrec** symtab, inst_rec** recs_name, inst_rec** recs_id,
+        UT_array* scope_stack, ast_node* ast )
 {
     symrec* rec = NULL;
 
@@ -82,8 +86,10 @@ void check_ids_net( symrec** symtab, inst_rec** recs, UT_array* scope_stack,
     switch( ast->node_type ) {
         case AST_PARALLEL:
         case AST_SERIAL:
-            check_ids_net( symtab, recs, scope_stack, ast->op.left );
-            check_ids_net( symtab, recs, scope_stack, ast->op.right );
+            check_ids_net( symtab, recs_name, recs_id, scope_stack,
+                    ast->op.left );
+            check_ids_net( symtab, recs_name, recs_id, scope_stack,
+                    ast->op.right );
             break;
         case AST_ID:
             // check the context of the symbol
@@ -91,7 +97,8 @@ void check_ids_net( symrec** symtab, inst_rec** recs, UT_array* scope_stack,
                     ast->ast_id.line );
             // add a net symbol to the instance table
             if( ast->ast_id.type == ID_NET && rec != NULL ) {
-                inst_rec_put( recs, ast->ast_id.name, ast->id, rec );
+                inst_rec_put( recs_name, recs_id, ast->ast_id.name, ast->id,
+                        rec );
             }
             break;
         default:
