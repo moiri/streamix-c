@@ -2,23 +2,33 @@ SHELL := /bin/bash
 PROJECT = streamix
 PARSER = parser
 
-SOURCES = symtab.c \
-		  context.c \
+SOURCES = context.c \
 		  ast.c \
+		  error.c \
 		  dot.c
 
-INCLUDES = symtab.h \
-		   context.h \
+INCLUDES = context.h \
 		   ast.h \
+		   error.h \
 		   dot.h \
 		   defines.h
 
-INCLUDES_DIR = -Iuthash/include -I/usr/local/include/igraph -I. -I$(INSTTAB_DIR)
-LINK_DIR = -L/usr/local/lib
-LINK_FILE = -lfl -ligraph
 INSTTAB_DIR = insttab
-OBJECTS = $(INSTTAB_DIR)/insttab.o
-OBJ_SRC = $(INSTTAB_DIR)/insttab.c $(INSTTAB_DIR)/insttab.h
+SYMTAB_DIR = symtab
+SYMTAB_OBJ = $(SYMTAB_DIR)/symtab.o
+SYMTAB_SRC = $(SYMTAB_DIR)/symtab.c $(SYMTAB_DIR)/symtab.h
+INSTTAB_OBJ = $(INSTTAB_DIR)/insttab.o
+INSTTAB_SRC = $(INSTTAB_DIR)/insttab.c $(INSTTAB_DIR)/insttab.h
+OBJECTS = $(SYMTAB_OBJ) $(INSTTAB_OBJ)
+
+INCLUDES_DIR = -Iuthash/include \
+			   -I/usr/local/include/igraph \
+			   -I$(INSTTAB_DIR) \
+			   -I$(SYMTAB_DIR) \
+			   -I.
+LINK_DIR = -L/usr/local/lib
+LINK_FILE = -lfl \
+			-ligraph
 
 CFLAGS = -Wall
 DEBUG_FLAGS = -g -O0
@@ -74,7 +84,7 @@ test1: CFLAGS += $(DEBUG_FLAGS) $(DOT_FLAGS)
 test1: clean $(PARSER) run_test
 
 # compile project
-$(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(SOURCES) $(INCLUDES) $(OBJECTS)
+$(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(SOURCES) $(INCLUDES) $(INSTTAB_OBJ)
 	$(CC) $(CFLAGS) $(SOURCES) $(PROJECT).tab.c lex.yy.c $(OBJECTS) $(INCLUDES_DIR) $(LINK_DIR) $(LINK_FILE) -o $(PARSER)
 
 # compile lexer (flex)
@@ -85,8 +95,16 @@ lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
 $(PROJECT).tab.c $(PROJECT).tab.h: $(PROJECT).y
 	bison -d -Wall $(PROJECT).y
 
-$(OBJECTS): $(OBJ_SRC)
+# compile insttab libarary
+$(INSTTAB_OBJ): $(INSTTAB_SRC) $(SYMTAB_OBJ)
 	$(CC) $(CFLAGS) $< $(INCLUDES_DIR) -c -o $@
+
+# compile symtab libarary
+$(SYMTAB_OBJ): $(SYMTAB_SRC)
+	$(CC) $(CFLAGS) $< $(INCLUDES_DIR) -c -o $@
+
+# $(OBJECTS): $(OBJ_SRC)
+# 	$(CC) $(CFLAGS) $< $(INCLUDES_DIR) -c -o $@
 
 $(DOT_AST_FILE).pdf: $(DOT_AST_FILE).dot
 	# generate ast graph pdf file

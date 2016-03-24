@@ -10,8 +10,10 @@
 #ifndef CONTEXT_H
 #define CONTEXT_H
 
+#include <stdbool.h>
 #include "ast.h"
 #include "insttab.h"
+#include "symtab.h"
 #include "utarray.h"
 
 /**

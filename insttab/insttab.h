@@ -10,6 +10,7 @@
 #define INSTTAB_H
 
 #include "symtab.h"
+#include "uthash.h"
 
 typedef struct inst_attr inst_attr;
 typedef struct inst_rec inst_rec;

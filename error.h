@@ -6,8 +6,8 @@
  *
  * */
 
-#ifndef GLOBALS_H
-#define GLOBALS_H
+#ifndef ERROR_H
+#define ERROR_H
 
 #include <stdio.h>
 #include "defines.h"
@@ -16,15 +16,10 @@
 extern void yyerror ( const char* );
 extern int yylineno;
 extern int yynerrs;
-extern int __node_id;
 char __error_msg[ CONST_ERROR_LEN ];
 
-void report_yyerror( const char* msg, int line )
-{
-    yylineno = line;
-    yynerrs++;
-    yyerror( msg );
-}
+void yyerror ( const char* );
+void report_yyerror( const char*, int );
 
-#endif // GLOBALS_H
+#endif // ERROR_H
 
