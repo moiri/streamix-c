@@ -3,6 +3,7 @@
 *.tab.h
 *.yy.c
 *.pyc
+*.o
 dot/
 parser
 test/*.res

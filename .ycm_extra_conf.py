@@ -70,6 +70,7 @@ flags = [
 '-I', '.',
 '-I', './uthash/include',
 '-I', '/usr/local/include/igraph',
+'-I', './insttab',
 ]
 
 

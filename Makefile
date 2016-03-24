@@ -3,23 +3,27 @@ PROJECT = streamix
 PARSER = parser
 
 SOURCES = symtab.c \
-		  insttab.c \
 		  context.c \
 		  ast.c \
 		  dot.c
 
 INCLUDES = symtab.h \
-		   insttab.h \
 		   context.h \
 		   ast.h \
 		   dot.h \
 		   defines.h
 
-INCLUDES_DIR = -Iuthash/include -I/usr/local/include/igraph
+INCLUDES_DIR = -Iuthash/include -I/usr/local/include/igraph -I. -I$(INSTTAB_DIR)
 LINK_DIR = -L/usr/local/lib
-CFLAGS = -Wall -lfl -ligraph
+LINK_FILE = -lfl -ligraph
+INSTTAB_DIR = insttab
+OBJECTS = $(INSTTAB_DIR)/insttab.o
+OBJ_SRC = $(INSTTAB_DIR)/insttab.c $(INSTTAB_DIR)/insttab.h
 
+CFLAGS = -Wall
 DEBUG_FLAGS = -g -O0
+
+CC = gcc
 
 DOT_PATH = dot
 DOT_AST_FILE = $(DOT_PATH)/ast_graph
@@ -70,8 +74,8 @@ test1: CFLAGS += $(DEBUG_FLAGS) $(DOT_FLAGS)
 test1: clean $(PARSER) run_test
 
 # compile project
-$(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(SOURCES) $(INCLUDES)
-	gcc $(SOURCES) $(INCLUDES_DIR) $(LINK_DIR) $(PROJECT).tab.c lex.yy.c -o $(PARSER) $(CFLAGS)
+$(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(SOURCES) $(INCLUDES) $(OBJECTS)
+	$(CC) $(CFLAGS) $(SOURCES) $(PROJECT).tab.c lex.yy.c $(OBJECTS) $(INCLUDES_DIR) $(LINK_DIR) $(LINK_FILE) -o $(PARSER)
 
 # compile lexer (flex)
 lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
@@ -80,6 +84,9 @@ lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
 # compile parser (bison)
 $(PROJECT).tab.c $(PROJECT).tab.h: $(PROJECT).y
 	bison -d -Wall $(PROJECT).y
+
+$(OBJECTS): $(OBJ_SRC)
+	$(CC) $(CFLAGS) $< $(INCLUDES_DIR) -c -o $@
 
 $(DOT_AST_FILE).pdf: $(DOT_AST_FILE).dot
 	# generate ast graph pdf file
@@ -109,6 +116,7 @@ clean:
 	rm -f $(PARSER)
 	rm -f lex.yy.c
 	rm -f $(DOT_PATH)/*
+	rm -f $(OBJECTS)
 
 # generate '.pdf' files from the '.dot' files
 # graph: $(DOT_AST_FILE).pdf $(DOT_N_CON_FILE).pdf $(DOT_P_CON_FILE).pdf

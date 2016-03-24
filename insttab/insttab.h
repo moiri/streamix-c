@@ -50,7 +50,8 @@ inst_net* inst_net_put( inst_net**, int, inst_rec**, inst_rec** );
 /**
  *
  */
-inst_rec* inst_rec_get( inst_rec**, char* );
+inst_rec* inst_rec_get_name( inst_rec**, char* );
+inst_rec* inst_rec_get_id( inst_rec**, int );
 
 /**
  *
