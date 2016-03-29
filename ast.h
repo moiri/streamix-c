@@ -12,19 +12,22 @@
 #include <stdbool.h>
 #include <igraph.h>
 
-typedef struct ast_assign ast_assign;
-typedef struct ast_list ast_list;
-typedef struct ast_node ast_node;
 typedef struct ast_attr ast_attr;
+typedef struct ast_box ast_box;
+typedef struct ast_def ast_def;
 typedef struct ast_id ast_id;
+typedef struct ast_list ast_list;
 typedef struct ast_net ast_net;
-typedef struct op op;
-typedef struct box box;
-typedef struct wrap wrap;
-typedef struct port port;
+typedef struct ast_node ast_node;
+typedef struct ast_op ast_op;
+typedef struct ast_port ast_port;
+typedef struct ast_prot ast_prot;
+typedef struct ast_wrap ast_wrap;
+
 typedef struct net_con net_con;
 
-typedef enum {
+typedef enum id_type
+{
     ID_NET,
     ID_WRAP,
     ID_BOX,
@@ -38,21 +41,24 @@ typedef enum {
     ID_LPORT,
     ID_CPSYNC
 } id_type;
-typedef enum {
+typedef enum attr_type
+{
     ATTR_MODE,
     ATTR_COLLECT,
     ATTR_COUPLING,
     ATTR_STATE,
     ATTR_STATIC
 } attr_type;
-typedef enum {
+typedef enum port_type
+{
     PORT_SYNC,
     PORT_NET,
     PORT_BOX
 } port_type;
 // ATTENTION: the order of this enum matches the order of node names
 // "node_label" in graph.c
-typedef enum {
+typedef enum node_type
+{
     AST_BOX,
     AST_BOX_IMPL,
     AST_COLLECT,
@@ -78,68 +84,64 @@ typedef enum {
     AST_ID
 } node_type;
 
-// linked list structure containing AST node pointers
-struct ast_list {
-    ast_node*   ast_node;
-    ast_list*   next;
-};
-
-// AST_NET_DEF, AST_NET_DECL
-struct ast_assign {
-    ast_node*   id;
-    ast_node*   op;
-};
-
 // AST_ATTR
-struct ast_attr {
+struct ast_attr
+{
     attr_type attr_type;
     int val;
 };
 
-// AST_ID
-struct ast_id {
-    char*   name;
-    int     line;
-    int     type;
-};
-
-// AST_NET
-struct ast_net {
-    ast_node*   net;
-    igraph_t    g;
-    net_con*    con;
-};
-
-struct net_con {
-    igraph_vector_t left;
-    igraph_vector_t right;
-};
-
-// AST_SERIAL, AST_PARALLEL
-struct op {
-    ast_node*   left;
-    ast_list*   con_left;
-    ast_node*   right;
-    ast_list*   con_right;
-};
-
 // AST_BOX
-struct box {
+struct ast_box
+{
     ast_node*   id;
     ast_node*   impl;
     ast_node*   ports;
     ast_node*   state;
 };
 
-// AST_WRAP
-struct wrap {
+// AST_NET_DEF, AST_NET_DECL
+struct ast_def
+{
     ast_node*   id;
-    ast_node*   ports;
-    ast_node*   stmts;
+    ast_node*   op;
+};
+
+// AST_ID
+struct ast_id
+{
+    char*   name;
+    int     line;
+    int     type;
+};
+
+// linked list structure containing AST node pointers
+struct ast_list
+{
+    ast_node*   ast_node;
+    ast_list*   next;
+};
+
+// AST_NET
+struct ast_net
+{
+    ast_node*   net;
+    igraph_t    g;
+    net_con*    con;
+};
+
+// AST_SERIAL, AST_PARALLEL
+struct ast_op
+{
+    ast_node*   left;
+    ast_list*   con_left;
+    ast_node*   right;
+    ast_list*   con_right;
 };
 
 // AST_PORT
-struct port {
+struct ast_port
+{
     port_type   port_type;
     ast_node*   id;
     ast_node*   int_id;
@@ -149,8 +151,24 @@ struct port {
     bool        is_connected;
 };
 
+// AST_PROT
+struct ast_prot
+{
+    ast_node*   id;
+    ast_node*   ports;
+};
+
+// AST_WRAP
+struct ast_wrap
+{
+    ast_node*   id;
+    ast_node*   ports;
+    ast_node*   stmts;
+};
+
 // the AST structure
-struct ast_node {
+struct ast_node
+{
     node_type   node_type;
     int         id;         // id of the node
     union {
@@ -158,15 +176,22 @@ struct ast_node {
         ast_node*       ast_node;
         // AST_STMTS, AST_LINKS, AST_PORTS, AST_SYNC, AST_COLLECT
         ast_list*       ast_list;
-        struct ast_assign ast_assign; // AST_NET_DEF, AST_NET_DECL
+        struct ast_def  ast_assign; // AST_NET_DEF, AST_NET_DECL
         struct ast_attr ast_attr;   // AST_ATTR
         struct ast_id   ast_id;     // AST_ID
         struct ast_net  ast_net;    // AST_NET
-        struct box      box;        // AST_BOX
-        struct op       op;         // AST_SERIAL, AST_PARALLEL
-        struct port     port;       // AST_PORT
-        struct wrap     wrap;       // AST_WRAP
+        struct ast_box  box;        // AST_BOX
+        struct ast_op   op;         // AST_SERIAL, AST_PARALLEL
+        struct ast_port port;       // AST_PORT
+        struct ast_wrap wrap;       // AST_WRAP
     };
+};
+
+// vectors to store the connection ids
+struct net_con
+{
+    igraph_vector_t left;
+    igraph_vector_t right;
 };
 
 /**
