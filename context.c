@@ -4,7 +4,7 @@
 /******************************************************************************/
 void check_context( ast_node* ast )
 {
-    inst_net* nets = NULL;        // hash table to store the nets
+    /* inst_net* nets = NULL;        // hash table to store the nets */
     symrec* symtab = NULL;        // hash table to store the symbols
     UT_array* scope_stack = NULL; // stack to handle the scope
     int scope = 0;
@@ -16,7 +16,7 @@ void check_context( ast_node* ast )
     // check the context of all symbols and install instances in the insttab
     /* instrec_put( &insttab, VAL_THIS, *utarray_back( scope_stack ), */
     /*         VAL_SELF, -1, NULL ); */
-    check_ids( &symtab, &nets, scope_stack, ast );
+    /* check_ids( &symtab, &nets, scope_stack, ast ); */
     /* // check the connections and count the connection of each port */
     /* check_instances( &insttab, ast ); */
     /* // check whether all ports are connected spawn synchronizers and draw the */
@@ -36,10 +36,10 @@ void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
 
     if( ast == NULL ) return;
 
-    switch( ast->node_type ) {
+    switch( ast->type ) {
         case AST_LINKS:
         case AST_STMTS:
-            list = ast->ast_list;
+            list = ast->list;
             while( list != NULL ) {
                 check_ids( symtab, nets, scope_stack, list->ast_node );
                 list = list->next;
@@ -64,7 +64,7 @@ void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
             break;
         case AST_NET:
             check_ids_net( symtab, &recs_name, &recs_id, scope_stack,
-                    ast->ast_node );
+                    ast->node );
             inst_net_put( nets, *utarray_back( scope_stack ), &recs_name,
                     &recs_id );
             (*nets)->recs_id = &recs_id;
@@ -83,7 +83,7 @@ void check_ids_net( symrec** symtab, inst_rec** recs_name, inst_rec** recs_id,
 
     if( ast == NULL ) return;
 
-    switch( ast->node_type ) {
+    switch( ast->type ) {
         case AST_PARALLEL:
         case AST_SERIAL:
             check_ids_net( symtab, recs_name, recs_id, scope_stack,
@@ -93,11 +93,11 @@ void check_ids_net( symrec** symtab, inst_rec** recs_name, inst_rec** recs_id,
             break;
         case AST_ID:
             // check the context of the symbol
-            rec = symrec_get( symtab, scope_stack, ast->ast_id.name,
-                    ast->ast_id.line );
+            rec = symrec_get( symtab, scope_stack, ast->symbol.name,
+                    ast->symbol.line );
             // add a net symbol to the instance table
-            if( ast->ast_id.type == ID_NET && rec != NULL ) {
-                inst_rec_put( recs_name, recs_id, ast->ast_id.name, ast->id,
+            if( ast->symbol.type == ID_NET && rec != NULL ) {
+                inst_rec_put( recs_name, recs_id, ast->symbol.name, ast->id,
                         rec );
             }
             break;
@@ -123,12 +123,28 @@ void* install_ids( symrec** symtab, UT_array* scope_stack, ast_node* ast,
 
     if( ast == NULL ) return NULL;
 
-    switch( ast->node_type ) {
+    switch( ast->type ) {
+        case AST_PROGRAM:
+        case AST_STMT:
+            install_ids( symtab, scope_stack, ast->node, set_sync );
+            break;
+        case AST_BOX_DEF:
+            // get the box attributes
+            _scope++;
+            utarray_push_back( scope_stack, &_scope );
+            b_attr = ( struct net_attr* )install_ids( symtab, scope_stack,
+                    ast->def.op, set_sync );
+            utarray_pop_back( scope_stack );
+            // install the box symbol
+            symrec_put( symtab, ast->def.id->symbol.name,
+                    *utarray_back( scope_stack ), VAL_BOX, ( void* )b_attr,
+                    ast->def.id->symbol.line );
+            break;
         case AST_SYNC:
             _sync_id++;
             set_sync = true;
         case AST_PORTS:
-            list = ast->ast_list;
+            list = ast->list;
             while (list != NULL) {
                 res = install_ids( symtab, scope_stack, list->ast_node,
                         set_sync );
@@ -142,30 +158,25 @@ void* install_ids( symrec** symtab, UT_array* scope_stack, ast_node* ast,
             res = ( void* )ptr;   // return pointer to the port list
             break;
         case AST_STMTS:
-            list = ast->ast_list;
+            list = ast->list;
             while (list != NULL) {
                 install_ids( symtab, scope_stack, list->ast_node, set_sync );
                 list = list->next;
             }
             break;
         case AST_BOX:
-            _scope++;
-            utarray_push_back( scope_stack, &_scope );
             port_list = ( struct symrec_list* )install_ids( symtab, scope_stack,
                     ast->box.ports, set_sync );
-            utarray_pop_back( scope_stack );
             // prepare symbol attributes and install symbol
             b_attr = ( net_attr* )malloc( sizeof( net_attr ) );
-            b_attr->state = ( ast->box.state == NULL ) ? true : false;
+            b_attr->state = ( ast->box.attr == NULL ) ? true : false;
             b_attr->ports = port_list;
             // add internal name if available
             b_attr->impl_name = ( char* )malloc( strlen(
-                        ast->box.impl->ast_node->ast_id.name ) + 1 );
+                        ast->box.impl->symbol.name ) + 1 );
             strcpy( b_attr->impl_name,
-                    ast->box.impl->ast_node->ast_id.name );
-            symrec_put( symtab, ast->box.id->ast_id.name,
-                    *utarray_back( scope_stack ), VAL_BOX, ( void* )b_attr,
-                    ast->box.id->ast_id.line );
+                    ast->box.impl->symbol.name );
+            res = ( void* )b_attr;
             break;
         case AST_WRAP:
             _scope++;
@@ -180,18 +191,18 @@ void* install_ids( symrec** symtab, UT_array* scope_stack, ast_node* ast,
             // install 'this' in the scope of the wrapper
             symrec_put( symtab, VAL_THIS,
                     *utarray_back( scope_stack ), VAL_WRAPPER, ( void* )b_attr,
-                    ast->wrap.id->ast_id.line );
+                    ast->wrap.id->symbol.line );
             utarray_pop_back( scope_stack );
             // install the wrapper symbol in the scope of its declaration
-            symrec_put( symtab, ast->wrap.id->ast_id.name,
+            symrec_put( symtab, ast->wrap.id->symbol.name,
                     *utarray_back( scope_stack ), VAL_WRAPPER, ( void* )b_attr,
-                    ast->wrap.id->ast_id.line );
+                    ast->wrap.id->symbol.line );
             break;
         case AST_PORT:
             // prepare symbol attributes
             p_attr = ( port_attr* )malloc( sizeof( port_attr ) );
             if( ast->port.mode != NULL )
-                p_attr->mode = ast->port.mode->ast_node->ast_attr.val;
+                p_attr->mode = ast->port.mode->attr.val;
             /* // add internal name if available */
             /* p_attr->int_name = NULL; */
             /* if( ast->port.int_id != NULL ) { */
@@ -213,12 +224,12 @@ void* install_ids( symrec** symtab, UT_array* scope_stack, ast_node* ast,
                 p_attr->collection = VAL_NONE;
             else {
                 p_attr->collection =
-                    ast->port.collection->ast_node->ast_attr.val;
+                    ast->port.collection->attr.val;
             }
             // install symbol and return pointer to the symbol record
-            res = ( void* )symrec_put( symtab, ast->port.id->ast_id.name,
+            res = ( void* )symrec_put( symtab, ast->port.id->symbol.name,
                     *utarray_back( scope_stack ), type, p_attr,
-                    ast->port.id->ast_id.line );
+                    ast->port.id->symbol.line );
             ptr = ( symrec_list* )malloc( sizeof( symrec_list ) );
             ptr->rec = ( struct symrec* )res;
             ptr->next = NULL;

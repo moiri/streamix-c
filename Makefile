@@ -3,13 +3,11 @@ PROJECT = streamix
 PARSER = parser
 
 SOURCES = context.c \
-		  cgraph.c \
 		  ast.c \
 		  error.c \
 		  dot.c
 
 INCLUDES = context.h \
-		   cgraph.h \
 		   ast.h \
 		   error.h \
 		   dot.h \
