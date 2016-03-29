@@ -39,16 +39,16 @@
     struct ast_list* lval;
 };
 /* keywods */
-%token SYNC CONNECT LINK
+%token SYNC LINK
 %token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC
 
 /* optional and variable keyword tokens */
-%type <ival> kw_opt_state
-%type <ival> kw_opt_static
-%type <ival> kw_opt_decoupled
-%type <ival> kw_port_class
-%type <ival> kw_opt_port_class
-%type <ival> kw_port_mode
+%type <nval> kw_opt_state
+%type <nval> kw_opt_static
+%type <nval> kw_opt_decoupled
+%type <nval> kw_port_class
+%type <nval> kw_opt_port_class
+%type <nval> kw_port_mode
 
 /* idenitifiers */
 %token <sval> IDENTIFIER
@@ -58,7 +58,6 @@
 %type <nval> stmt_wrap
 %type <nval> net
 %type <nval> def_net
-%type <nval> opt_def_net
 %type <nval> decl_net
 %type <nval> proto_net
 %type <nval> decl_net_port
@@ -109,18 +108,20 @@ stmts:
 
 stmt:
     def_net { $$ = $1; }
+|   decl_net { $$ = $1; }
 |   def_box { $$ = $1; }
 |   decl_wrap { $$ = $1; }
 ;
 
 /* net definition */
 def_net:
-    opt_def_net decl_net { $$ = ast_add_def( $1, $2, AST_NET_DEF ); }
-;
-
-opt_def_net:
-    %empty { $$ = ( ast_node* )0; }
-|   IDENTIFIER '=' { $$ = ast_add_symbol( $1, @1.last_line, ID_NET ); }
+    IDENTIFIER '=' decl_net {
+        $$ = ast_add_def(
+            ast_add_symbol( $1, @1.last_line, ID_NET ),
+            $3,
+            AST_NET_DEF
+        );
+    }
 ;
 
 /* net declaration */
@@ -164,8 +165,8 @@ decl_net_port:
         $$ = ast_add_port(
             ast_add_symbol( $3, @3.last_line, ID_PORT ),
             ast_add_list( $4, AST_INT_PORTS ),
-            ast_add_attr( $1, ATTR_PORT_CLASS ),
-            ast_add_attr( $2, ATTR_PORT_MODE ),
+            $1,
+            $2,
             ( ast_node* )0, // no coupling
             PORT_NET
         );
@@ -213,7 +214,7 @@ decl_box:
         $$ = ast_add_box(
             ast_add_symbol( $3, @3.last_line, ID_BOX_IMPL ),
             ast_add_list( $5, AST_PORTS ),
-            ast_add_attr( $1, ATTR_BOX_STATE )
+            $1
         );
     }
 ;
@@ -236,8 +237,8 @@ decl_box_port:
         $$ = ast_add_port(
             ast_add_symbol( $3, @3.last_line, ID_PORT ),
             ( ast_node* )0, // no internal id
-            ast_add_attr( $1, ATTR_PORT_CLASS ),
-            ast_add_attr( $2, ATTR_PORT_MODE ),
+            $1,
+            $2,
             ( ast_node* )0, // no coupling
             PORT_BOX
         );
@@ -265,9 +266,9 @@ decl_sync_port:
         $$ = ast_add_port(
             ast_add_symbol( $4, @4.last_line, ID_PORT ),
             (ast_node*)0, // no internal id
-            ast_add_attr( $2, ATTR_PORT_CLASS ),
+            $2,
             ast_add_attr( $3, ATTR_PORT_MODE ),
-            ast_add_attr( $1, ATTR_PORT_COUPLING ),
+            $1,
             PORT_SYNC
         );
     }
@@ -280,7 +281,7 @@ decl_wrap:
             ast_add_symbol( $3, @3.last_line, ID_WRAP ),
             ast_add_list( $5, AST_PORTS ),
             ast_add_list( $8, AST_STMTS ),
-            ast_add_attr( $1, ATTR_WRAP_STATIC )
+            $1
         );
     }
 ;
@@ -303,8 +304,8 @@ decl_wrap_port:
         $$ = ast_add_port(
             ast_add_symbol( $3, @3.last_line, ID_PORT ),
             ast_add_list( $4, AST_INT_PORTS ),
-            ast_add_attr( $1, ATTR_PORT_CLASS ),
-            ast_add_attr( $2, ATTR_PORT_MODE ),
+            $1,
+            $2,
             ( ast_node* )0, // no coupling
             PORT_WRAP
         );
@@ -372,33 +373,33 @@ decl_link_id:
 /* keywords */
 kw_opt_state:
     %empty { $$ = 0; }
-|   STATELESS { $$ = $1; }
+|   STATELESS { $$ = ast_add_attr( $1, ATTR_BOX_STATE ); }
 ;
 
 kw_opt_decoupled:
     %empty { $$ = 0; }
-|   DECOUPLED { $$ = $1; }
+|   DECOUPLED { $$ = ast_add_attr( $1, ATTR_PORT_COUPLING ); }
 ;
 
 kw_port_mode:
-    IN   { $$ = $1;}
-|   OUT  { $$ = $1;}
+    IN   { $$ = ast_add_attr( $1, ATTR_PORT_MODE );}
+|   OUT  { $$ = ast_add_attr( $1, ATTR_PORT_MODE );}
 ;
 
 kw_opt_port_class:
-    %empty { $$ = 0; }
+    %empty { $$ = ( ast_node* )0; }
 |   kw_port_class { $$ = $1; }
 ;
 
 kw_port_class:
-    UP   { $$ = $1; }
-|   DOWN { $$ = $1; }
-|   SIDE { $$ = $1; }
+    UP   { $$ = ast_add_attr( $1, ATTR_PORT_CLASS ); }
+|   DOWN { $$ = ast_add_attr( $1, ATTR_PORT_CLASS ); }
+|   SIDE { $$ = ast_add_attr( $1, ATTR_PORT_CLASS ); }
 ;
 
 kw_opt_static:
-    %empty { $$ = 0; }
-|   STATIC { $$ = $1; }
+    %empty { $$ = ( ast_node* )0; }
+|   STATIC { $$ = ast_add_attr( $1, ATTR_WRAP_STATIC ); }
 ;
 
 %%

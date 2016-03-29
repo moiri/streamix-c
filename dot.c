@@ -9,7 +9,7 @@ char* node_label[] =
 {
     "box decl",
     "box def",
-    "alt port",
+    "alt name",
     "link",
     "net",
     "net def",
@@ -20,7 +20,6 @@ char* node_label[] =
     "program",
     "serial",
     "state",
-    "stmt",
     "stmts",
     "sync",
     "wrapper decl"
@@ -115,6 +114,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
             break;
         // draw simple nodes
         case AST_STATE:
+        case AST_PROGRAM:
         case AST_NET:
             graph_add_node( graph, ptr->id, node_label[ptr->type],
                     STYLE_N_AST_NODE);

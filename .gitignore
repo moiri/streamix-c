@@ -4,6 +4,8 @@
 *.yy.c
 *.pyc
 *.output
+*.dot
+*.pdf
 dot/
 parser
 test/*.res

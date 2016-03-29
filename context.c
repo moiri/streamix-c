@@ -125,7 +125,6 @@ void* install_ids( symrec** symtab, UT_array* scope_stack, ast_node* ast,
 
     switch( ast->type ) {
         case AST_PROGRAM:
-        case AST_STMT:
             install_ids( symtab, scope_stack, ast->node, set_sync );
             break;
         case AST_BOX_DEF:

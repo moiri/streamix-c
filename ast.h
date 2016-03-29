@@ -74,7 +74,6 @@ typedef enum node_type
     AST_PROGRAM,
     AST_SERIAL,
     AST_STATE,
-    AST_STMT,
     AST_STMTS,
     AST_SYNC,
     AST_WRAP,

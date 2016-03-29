@@ -32,6 +32,8 @@ LINK_FILE = -lfl \
 
 CFLAGS = -Wall
 DEBUG_FLAGS = -g -O0
+BFLAGS = -d -Wall
+BDEBUG_FLAGS = --verbose
 
 CC = gcc
 
@@ -69,18 +71,22 @@ dot: $(PARSER)
 
 # compile with dot stuff and debug flags
 debug: CFLAGS += $(DEBUG_FLAGS)
+debug: BFLAGS += $(BDEBUG_FLAGS)
 debug: $(PARSER)
 
 # compile with dot stuff and debug flags, run, and generate graphs
 rdebug: CFLAGS += $(DEBUG_FLAGS) $(DOT_FLAGS)
+rdebug: BFLAGS += $(BDEBUG_FLAGS)
 rdebug: clean $(PARSER) run graph
 
 # run tests on all files in the test path
 test: CFLAGS += $(DEBUG_FLAGS) $(DOT_FLAGS)
+test: BFLAGS += $(BDEBUG_FLAGS)
 test: clean $(PARSER) run_test_all
 
 # run tests on one file in the input
 test1: CFLAGS += $(DEBUG_FLAGS) $(DOT_FLAGS)
+test1: BFLAGS += $(BDEBUG_FLAGS)
 test1: clean $(PARSER) run_test
 
 # compile project
@@ -93,7 +99,7 @@ lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
 
 # compile parser (bison)
 $(PROJECT).tab.c $(PROJECT).tab.h: $(PROJECT).y
-	bison -d -Wall $(PROJECT).y
+	bison $(BFLAGS) $(PROJECT).y
 
 # compile insttab libarary
 $(INSTTAB_OBJ): $(INSTTAB_SRC) $(SYMTAB_OBJ)
