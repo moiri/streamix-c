@@ -127,6 +127,12 @@ void* install_ids( symrec** symtab, UT_array* scope_stack, ast_node* ast,
         case AST_PROGRAM:
             install_ids( symtab, scope_stack, ast->node, set_sync );
             break;
+        case AST_NET_DEF:
+            // install the net symbol without attributes
+            symrec_put( symtab, ast->def.id->symbol.name,
+                    *utarray_back( scope_stack ), VAL_NET, NULL,
+                    ast->def.id->symbol.line );
+            break;
         case AST_BOX_DEF:
             // get the box attributes
             _scope++;
