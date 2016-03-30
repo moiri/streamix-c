@@ -4,25 +4,20 @@
 
 int main( ) {
     inst_net* nets = NULL;
-    inst_rec* recs_id = NULL;
-    inst_rec* recs_name = NULL;
     inst_net* res1;
     inst_rec* res2;
-    igraph_t g;
-    net_con* con = NULL;
     int error_cnt = 0;
     int scope = 5;
     int id = 10;
     char name[] = "test";
 
-    igraph_empty( &g, 0, false );
-    inst_net_put( &nets, scope, &recs_name, &recs_id, g, con );
-    inst_rec_put( &recs_name, &recs_id, name, id, NULL );
+    inst_net_put( &nets, scope );
 
     res1 = inst_net_get( &nets, scope );
     if( res1 == NULL ) {
         printf( "error: no nets in scope %d found\n", scope );
         error_cnt++;
+        return 0;
     }
     else if( res1->scope != scope ) {
         printf( "error: expected scope=%d but got scope=%d\n", scope,
@@ -30,7 +25,8 @@ int main( ) {
         error_cnt++;
     }
 
-    res2 = inst_rec_get_id( res1->recs_id, id );
+    inst_rec_put( &res1->recs_name, &res1->recs_id, name, id, NULL );
+    res2 = inst_rec_get_id( &res1->recs_id, id );
     if( res2 == NULL ) {
         printf( "error: no record found with id '%d'\n", id );
         error_cnt++;
@@ -46,7 +42,7 @@ int main( ) {
             error_cnt++;
         }
     }
-    res2 = inst_rec_get_name( res1->recs_name, name );
+    res2 = inst_rec_get_name( &res1->recs_name, name );
     if( res2 == NULL ) {
         printf( "error: no record found with name '%s'\n", name );
         error_cnt++;

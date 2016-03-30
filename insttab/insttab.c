@@ -17,20 +17,27 @@ inst_net* inst_net_get( inst_net** nets, int scope )
 }
 
 /******************************************************************************/
-inst_net* inst_net_put( inst_net** nets, int scope, inst_rec** recs_name,
-        inst_rec** recs_id, igraph_t g, net_con* con )
+inst_net* inst_net_put( inst_net** nets, int scope )
 {
     inst_net* item = NULL;
     inst_net* new_item = NULL;
     inst_net* previous_item = NULL;
+    net_con* con = NULL;
+    igraph_t g;
 
     // ADD ITEM TO THE INSTANCE TABLE
     // create new item structure
     new_item = ( inst_net* )malloc( sizeof( inst_net ) );
     new_item->scope = scope;
-    new_item->recs_id = recs_id;
-    new_item->recs_name = recs_name;
+    new_item->recs_id = NULL;
+    new_item->recs_name = NULL;
+    // create new graph
+    igraph_empty( &g, 0, true );
     new_item->g = g;
+    // initialize the connection vectors
+    con = ( net_con* )malloc( sizeof( net_con ) );
+    igraph_vector_init( &con->left, 0 );
+    igraph_vector_init( &con->right, 0 );
     new_item->con = con;
     // check wheter key already exists
     HASH_FIND_INT( *nets, &scope, item );
@@ -121,6 +128,7 @@ inst_rec* inst_rec_put( inst_rec** recs_name, inst_rec** recs_id, char* name,
         // id must be unique in the net
         HASH_ADD( hh1, *recs_id, id, sizeof( int ), new_item );
     }
+    /* else { printf( "ERROR: Something went wrong!" ); } */
     item = NULL;
     HASH_FIND( hh2, *recs_name, name, strlen( name ), item );
     if( item == NULL ) {

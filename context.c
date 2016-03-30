@@ -1,6 +1,65 @@
 #include "context.h"
 #include "defines.h"
 #include "cgraph.h"
+#include "error.h"
+
+/******************************************************************************/
+void check_connection( inst_rec* rec_l, inst_rec* rec_r ) {
+    port_attr* p_attr_l = NULL;
+    port_attr* p_attr_r = NULL;
+    symrec_list* ports_l = NULL;
+    symrec_list* ports_r = NULL;
+    bool is_connected = false;
+    ports_l = rec_l->ports;
+    while( ports_l != NULL ) {
+        ports_r = rec_r->ports;
+        p_attr_l = ports_l->rec->attr;
+        while( ports_r != NULL ) {
+            p_attr_r = ports_r->rec->attr;
+#if defined(DEBUG) || defined(DEBUG_SERIAL)
+            printf( "ceck_connection: %s(%d).%s and %s(%d).%s:", rec_l->name,
+                    rec_l->id, ports_l->rec->name, rec_r->name, rec_r->id,
+                    ports_r->rec->name );
+#endif // DEBUG_SERIAL
+            if( ( strcmp( ports_l->rec->name, ports_r->rec->name ) == 0 )
+                // the left port is in DS
+                && ( ( p_attr_l->collection == VAL_DOWN )
+                    || ( p_attr_l->collection == VAL_NONE ) )
+                // the right port is in US
+                && ( ( p_attr_r->collection == VAL_UP )
+                    || ( p_attr_r->collection == VAL_NONE ) )
+            ) {
+                if ( p_attr_l->mode != p_attr_r->mode ) {
+                    is_connected = true;
+#if defined(DEBUG) || defined(DEBUG_SERIAL)
+                    printf( " -> connection is valid\n" );
+#endif // DEBUG_SERIAL
+                }
+                else {
+                    sprintf( __error_msg, ERROR_BAD_MODE, ERR_ERROR,
+                            ports_l->rec->name, rec_l->name, rec_l->id,
+                            rec_r->name, rec_r->id, ports_l->rec->line );
+                    report_yyerror( __error_msg, ports_l->rec->line );
+                }
+            }
+            else {
+#if defined(DEBUG) || defined(DEBUG_SERIAL)
+                printf( " -> connection is invalid\n" );
+#endif // DEBUG_SERIAL
+            }
+            ports_r = ports_r->next;
+        }
+        ports_l = ports_l->next;
+    }
+
+    // perform further checks on port connections
+    if( !is_connected ) {
+        // ERROR: there is no connection between the two nets
+        sprintf( __error_msg, ERROR_NO_NET_CON, ERR_ERROR, rec_l->name,
+                rec_l->id, rec_r->name, rec_r->id );
+        report_yyerror( __error_msg, rec_l->net->line );
+    }
+}
 
 /******************************************************************************/
 void check_context( ast_node* ast )
@@ -16,7 +75,7 @@ void check_context( ast_node* ast )
     /* instrec_put( &insttab, VAL_THIS, *utarray_back( scope_stack ), */
     /*         VAL_SELF, -1, NULL ); */
     check_ids( &symtab, &nets, scope_stack, ast );
-    /* check_instances( &insttab, ast ); */
+    check_instances( &nets );
     /* // check whether all ports are connected spawn synchronizers and draw the */
     /* // nodes, synchroniyers and connections */
     /* check_port_all( &insttab, ast ); */
@@ -26,12 +85,9 @@ void check_context( ast_node* ast )
 void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
         ast_node* ast )
 {
+    inst_net* net = NULL;
     ast_list* list = NULL;
     /* symrec* rec = NULL; */
-    inst_rec* recs_id = NULL;
-    inst_rec* recs_name = NULL;
-    igraph_t g;
-    net_con* con = NULL;
     static int _scope = 0;
 
     if( ast == NULL ) return;
@@ -69,20 +125,13 @@ void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
             utarray_pop_back( scope_stack );
             break;
         case AST_NET:
-            // create new graph and store pointer in the net ast node
-            igraph_empty( &g, 0, false );
-            // initialize the connection vectors
-            con = ( net_con* )malloc( sizeof( net_con ) );
-            igraph_vector_init( &con->left, 0 );
-            igraph_vector_init( &con->right, 0 );
-            check_ids_net( symtab, &recs_name, &recs_id, scope_stack,
-                    ast->node, con, &g );
-            inst_net_put( nets, *utarray_back( scope_stack ), &recs_name,
-                    &recs_id, g, con );
-            (*nets)->recs_id = &recs_id;
-            (*nets)->recs_name = &recs_name;
-            (*nets)->g = g;
-            (*nets)->con = con;
+            net = inst_net_put( nets, *utarray_back( scope_stack ) );
+            check_ids_net( symtab, &net->recs_name, &net->recs_id,
+                    scope_stack, ast->node, net->con, &net->g );
+            /* (*nets)->recs_id = &recs_id; */
+            /* (*nets)->recs_name = &recs_name; */
+            /* (*nets)->g = g; */
+            /* (*nets)->con = con; */
 #if defined(DEBUG) || defined(DEBUG_NET_DOT)
             igraph_write_graph_dot( &(*nets)->g, stdout );
 #endif // DEBUG_NET_DOT
@@ -156,6 +205,45 @@ void check_ids_net( symrec** symtab, inst_rec** recs_name, inst_rec** recs_id,
             break;
         default:
             ;
+    }
+}
+
+/******************************************************************************/
+void check_instances( inst_net** nets ) {
+    inst_net* net;
+    inst_net* net_t;
+    inst_rec* rec;
+    inst_rec* rec_c;
+    igraph_vector_t vids;
+    int idx;
+    // iterate through all scopes
+    for( net = *nets; net != NULL; net=net->hh.next ) {
+        net_t = net;
+#if defined(DEBUG) || defined(DEBUG_SERIAL)
+        printf( "check_instances: scope %d\n", net->scope );
+#endif // DEBUG_SERIAL
+        // in each scope, iterate through all nets
+        do {
+            // in each net, iterate through all instance ids
+            for( rec = net_t->recs_id; rec != NULL; rec=rec->hh1.next ) {
+                igraph_vector_init( &vids, 0 );
+                // get all ids that connect to the right
+                igraph_neighbors( &net_t->g, &vids, rec->id, IGRAPH_OUT );
+                for( idx = 0; idx < igraph_vector_size( &vids ); idx++ ) {
+                    rec_c = inst_rec_get_id( &net_t->recs_id,
+                            ( int )VECTOR( vids )[ idx ] );
+#if defined(DEBUG) || defined(DEBUG_SERIAL)
+                    printf( "check_instances: connect instances %s(%d) and"
+                            " %s(%d)\n", rec->name, rec->id, rec_c->name,
+                            rec_c->id );
+#endif // DEBUG_SERIAL
+                    check_connection( rec, rec_c );
+                }
+                igraph_vector_destroy( &vids );
+            }
+            net_t = net_t->next;
+        }
+        while( net_t != NULL );
     }
 }
 

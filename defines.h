@@ -13,12 +13,12 @@
 /* #define DEBUG */
 /* #define DEBUG_INST */
 /* #define DEBUG_SYMB */
-#define DEBUG_NET_DOT
+/* #define DEBUG_NET_DOT */
+/* #define DEBUG_SERIAL */
 
 
 /* #define DEBUG_CONNECT */
 /* #define DEBUG_LINK */
-/* #define DEBUG_SERIAL */
 /* #define DEBUG_PORT */
 /* #define DEBUG_GRAPH */
 #endif

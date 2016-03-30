@@ -18,10 +18,11 @@ typedef struct inst_rec inst_rec;
 typedef struct inst_net inst_net;
 typedef struct net_con net_con;
 
-struct inst_net {
+struct inst_net
+{
     int             scope;
-    inst_rec**      recs_id;   // hashtable of the instances in the net (id)
-    inst_rec**      recs_name; // hashtable of the instances in the net (name)
+    inst_rec*       recs_id;   // hashtable of the instances in the net (id)
+    inst_rec*       recs_name; // hashtable of the instances in the net (name)
     igraph_t        g;
     net_con*        con;
     inst_net*       next;
@@ -35,7 +36,8 @@ struct net_con
     igraph_vector_t right;
 };
 
-struct inst_rec {
+struct inst_rec
+{
     char*           name;
     int             id;
     symrec*         net;        // pointer to its definition
@@ -57,8 +59,7 @@ inst_net* inst_net_get( inst_net**, int );
 /**
  *
  */
-inst_net* inst_net_put( inst_net**, int, inst_rec**, inst_rec**, igraph_t,
-        net_con* );
+inst_net* inst_net_put( inst_net**, int );
 
 /**
  *
