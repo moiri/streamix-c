@@ -18,7 +18,7 @@ inst_net* inst_net_get( inst_net** nets, int scope )
 
 /******************************************************************************/
 inst_net* inst_net_put( inst_net** nets, int scope, inst_rec** recs_name,
-        inst_rec** recs_id )
+        inst_rec** recs_id, igraph_t g, net_con* con )
 {
     inst_net* item = NULL;
     inst_net* new_item = NULL;
@@ -30,6 +30,8 @@ inst_net* inst_net_put( inst_net** nets, int scope, inst_rec** recs_name,
     new_item->scope = scope;
     new_item->recs_id = recs_id;
     new_item->recs_name = recs_name;
+    new_item->g = g;
+    new_item->con = con;
     // check wheter key already exists
     HASH_FIND_INT( *nets, &scope, item );
     if( item == NULL ) {

@@ -19,7 +19,6 @@ char* node_label[] =
     "ports",
     "program",
     "serial",
-    "state",
     "stmts",
     "sync",
     "wrapper decl"
@@ -71,7 +70,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
         case AST_STMTS:
         case AST_PORTS:
         case AST_INT_PORTS:
-        case AST_SYNC:
+        case AST_SYNCS:
             graph_add_node(graph, ptr->id, node_label[ptr->type],
                     STYLE_N_AST_NODE);
             // iterate through all elements of the list
@@ -113,7 +112,6 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
                     STYLE_E_DEFAULT );
             break;
         // draw simple nodes
-        case AST_STATE:
         case AST_PROGRAM:
         case AST_NET:
             graph_add_node( graph, ptr->id, node_label[ptr->type],

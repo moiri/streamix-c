@@ -126,7 +126,7 @@ def_net:
 
 /* net declaration */
 decl_net:
-    net { $$ = ast_add_net( $1 ); }
+    net { $$ = ast_add_node( $1, AST_NET ); }
 |   proto_net { $$ = $1; }
 ;
 
@@ -244,7 +244,7 @@ decl_box_port:
         );
     }
 |   SYNC '{' sync_port_list '}' {
-        $$ = ast_add_list( $3, AST_SYNC );
+        $$ = ast_add_list( $3, AST_SYNCS );
     }
 ;
 

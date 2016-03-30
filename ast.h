@@ -10,21 +10,17 @@
 #define AST_H
 
 #include <stdbool.h>
-#include <igraph.h>
 
 typedef struct ast_attr ast_attr;
 typedef struct ast_box ast_box;
 typedef struct ast_def ast_def;
 typedef struct ast_list ast_list;
-typedef struct ast_net ast_net;
 typedef struct ast_node ast_node;
 typedef struct ast_op ast_op;
 typedef struct ast_port ast_port;
 typedef struct ast_prot ast_prot;
 typedef struct ast_symb ast_symb;
 typedef struct ast_wrap ast_wrap;
-
-typedef struct net_con net_con;
 
 typedef enum id_type
 {
@@ -73,9 +69,8 @@ typedef enum node_type
     AST_PORTS,
     AST_PROGRAM,
     AST_SERIAL,
-    AST_STATE,
     AST_STMTS,
-    AST_SYNC,
+    AST_SYNCS,
     AST_WRAP,
     AST_ATTR,
     AST_ID
@@ -116,14 +111,6 @@ struct ast_list
 {
     ast_node*   ast_node;
     ast_list*   next;
-};
-
-// AST_NET
-struct ast_net
-{
-    ast_node*   net;
-    igraph_t    g;
-    net_con*    con;
 };
 
 // AST_SERIAL, AST_PARALLEL
@@ -172,24 +159,15 @@ struct ast_node
         struct ast_attr attr;       // AST_ATTR
         struct ast_box  box;        // AST_BOX
         struct ast_def  def;        // AST_NET_DEF, AST_NET_DECL
-        // AST_STMTS, AST_LINKS, AST_PORTS, AST_SYNC
+        // AST_STMTS, AST_LINKS, AST_PORTS, AST_SYNCS
         ast_list*       list;
-        struct ast_net  net;        // AST_NET
         struct ast_prot net_prot;   // AST_NET_PROT
-        // AST_STATE
-        ast_node*       node;
+        ast_node*       node;       // AST_NET, AST_PROGRAM
         struct ast_op   op;         // AST_SERIAL, AST_PARALLEL
         struct ast_port port;       // AST_PORT
         struct ast_symb symbol;     // AST_ID
         struct ast_wrap wrap;       // AST_WRAP
     };
-};
-
-// vectors to store the connection ids
-struct net_con
-{
-    igraph_vector_t left;
-    igraph_vector_t right;
 };
 
 /**
@@ -243,15 +221,6 @@ ast_node* ast_add_list ( ast_list*, int );
  *      a pointer to the location where the data was stored
  * */
 ast_list* ast_add_list_elem (ast_node*, ast_list*);
-
-/**
- * Add a net to the AST.
- *
- * @param ast_node*:    pointer to AST node
- * @return: ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_net ( ast_node* );
 
 /**
  * Add a net prototype to the AST.

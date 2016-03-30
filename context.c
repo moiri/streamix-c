@@ -12,16 +12,10 @@ void check_context( ast_node* ast )
 
     utarray_new( scope_stack, &ut_int_icd );
     utarray_push_back( scope_stack, &scope );
-    // install all symbols in the symtab
     install_ids( &symtab, scope_stack, ast, false );
-    // check
-    //  - the context of all symbols
-    //  - add instances to the insttab
-    //  - add instances to the connection graph
     /* instrec_put( &insttab, VAL_THIS, *utarray_back( scope_stack ), */
     /*         VAL_SELF, -1, NULL ); */
     check_ids( &symtab, &nets, scope_stack, ast );
-    /* // check the connections and count the connection of each port */
     /* check_instances( &insttab, ast ); */
     /* // check whether all ports are connected spawn synchronizers and draw the */
     /* // nodes, synchroniyers and connections */
@@ -36,6 +30,8 @@ void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
     /* symrec* rec = NULL; */
     inst_rec* recs_id = NULL;
     inst_rec* recs_name = NULL;
+    igraph_t g;
+    net_con* con = NULL;
     static int _scope = 0;
 
     if( ast == NULL ) return;
@@ -74,18 +70,22 @@ void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
             break;
         case AST_NET:
             // create new graph and store pointer in the net ast node
-            igraph_empty( &ast->net.g, 0, false );
+            igraph_empty( &g, 0, false );
             // initialize the connection vectors
-            ast->net.con = ( net_con* )malloc( sizeof( net_con ) );
-            igraph_vector_init( &ast->net.con->left, 0 );
-            igraph_vector_init( &ast->net.con->right, 0 );
+            con = ( net_con* )malloc( sizeof( net_con ) );
+            igraph_vector_init( &con->left, 0 );
+            igraph_vector_init( &con->right, 0 );
             check_ids_net( symtab, &recs_name, &recs_id, scope_stack,
-                    ast->net.net, ast->net.con, &ast->net.g );
+                    ast->node, con, &g );
             inst_net_put( nets, *utarray_back( scope_stack ), &recs_name,
-                    &recs_id );
+                    &recs_id, g, con );
             (*nets)->recs_id = &recs_id;
             (*nets)->recs_name = &recs_name;
-            igraph_write_graph_dot( &ast->net.g, stdout );
+            (*nets)->g = g;
+            (*nets)->con = con;
+#if defined(DEBUG) || defined(DEBUG_NET_DOT)
+            igraph_write_graph_dot( &(*nets)->g, stdout );
+#endif // DEBUG_NET_DOT
             break;
         default:
             ;
@@ -198,7 +198,7 @@ void* install_ids( symrec** symtab, UT_array* scope_stack, ast_node* ast,
                     *utarray_back( scope_stack ), VAL_BOX, ( void* )b_attr,
                     ast->def.id->symbol.line );
             break;
-        case AST_SYNC:
+        case AST_SYNCS:
             _sync_id++;
             set_sync = true;
         case AST_PORTS:

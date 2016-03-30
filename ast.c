@@ -72,19 +72,6 @@ ast_list* ast_add_list_elem (ast_node* node, ast_list* list)
 }
 
 /******************************************************************************/
-ast_node* ast_add_net ( ast_node* node )
-{
-    if (node == 0) return (ast_node*)0;
-    ast_node* ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->net.net = node;
-    __node_id++;
-    ptr->id = __node_id;
-    ptr->type = AST_NET;
-    return ptr;
-}
-
-/******************************************************************************/
 ast_node* ast_add_net_prot ( ast_node* id, ast_node* ports )
 {
     ast_node* ptr;

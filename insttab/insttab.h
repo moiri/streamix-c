@@ -9,19 +9,30 @@
 #ifndef INSTTAB_H
 #define INSTTAB_H
 
+#include <igraph.h>
 #include "symtab.h"
 #include "uthash.h"
 
 typedef struct inst_attr inst_attr;
 typedef struct inst_rec inst_rec;
 typedef struct inst_net inst_net;
+typedef struct net_con net_con;
 
 struct inst_net {
     int             scope;
     inst_rec**      recs_id;   // hashtable of the instances in the net (id)
     inst_rec**      recs_name; // hashtable of the instances in the net (name)
+    igraph_t        g;
+    net_con*        con;
     inst_net*       next;
     UT_hash_handle  hh;     // makes this structure hashable
+};
+
+// vectors to store the connection ids
+struct net_con
+{
+    igraph_vector_t left;
+    igraph_vector_t right;
 };
 
 struct inst_rec {
@@ -46,7 +57,8 @@ inst_net* inst_net_get( inst_net**, int );
 /**
  *
  */
-inst_net* inst_net_put( inst_net**, int, inst_rec**, inst_rec** );
+inst_net* inst_net_put( inst_net**, int, inst_rec**, inst_rec**, igraph_t,
+        net_con* );
 
 /**
  *
