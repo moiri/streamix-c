@@ -1,5 +1,6 @@
 /* 
- * Small library to create and access the connection graph
+ * Small library to handle the connection graph according to the semantics of
+ * streamix
  *
  * @file    cgraph.h
  * @author  Simon Maurer
@@ -12,7 +13,11 @@
 #include <igraph.h>
 
 /**
+ * adds edges to a graph according to the connection semantics of streamix
  *
+ * @param igraph_t*:        the graph where the edges are added
+ * @param igraph_vector_t*: vector of the left connecting nets
+ * @param igraph_vector_t*: vector of the right connecting nets
  */
 void cgraph_connect( igraph_t*, igraph_vector_t*, igraph_vector_t* );
 

@@ -14,7 +14,10 @@ void check_context( ast_node* ast )
     utarray_push_back( scope_stack, &scope );
     // install all symbols in the symtab
     install_ids( &symtab, scope_stack, ast, false );
-    // check the context of all symbols and install instances in the insttab
+    // check
+    //  - the context of all symbols
+    //  - add instances to the insttab
+    //  - add instances to the connection graph
     /* instrec_put( &insttab, VAL_THIS, *utarray_back( scope_stack ), */
     /*         VAL_SELF, -1, NULL ); */
     check_ids( &symtab, &nets, scope_stack, ast );
