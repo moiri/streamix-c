@@ -8,7 +8,14 @@ SYMTAB_DIR = ../symtab
 SYMTAB_OBJ = $(SYMTAB_DIR)/symtab.o
 SYMTAB_SRC = $(SYMTAB_DIR)/symtab.c $(SYMTAB_DIR)/symtab.h
 
-INCLUDES_DIR = -I../uthash/include -I. -I.. -I../symtab
+INCLUDES_DIR = -I../uthash/include \
+			   -I/usr/local/include/igraph \
+			   -I../symtab \
+			   -I.. \
+			   -I.
+
+LINK_DIR = -L/usr/local/lib
+LINK_FILE = -ligraph
 
 CFLAGS = -Wall
 DEBUG_FLAGS = -g -O0
@@ -22,7 +29,7 @@ debug: $(PROJECT)
 
 # compile project
 $(PROJECT): $(PROJECT).c $(SOURCES) $(INCLUDES) $(SYMTAB_OBJ)
-	$(CC) $(CFLAGS) $(SOURCES) $(PROJECT).c $(INCLUDES_DIR) -o $(OUT)
+	$(CC) $(CFLAGS) $(SOURCES) $(PROJECT).c $(INCLUDES_DIR) $(LINK_DIR) $(LINK_FILE) -o $(OUT)
 
 # compile symtab libarary
 $(SYMTAB_OBJ): $(SYMTAB_SRC)

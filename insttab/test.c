@@ -8,12 +8,15 @@ int main( ) {
     inst_rec* recs_name = NULL;
     inst_net* res1;
     inst_rec* res2;
+    igraph_t g;
+    net_con* con = NULL;
     int error_cnt = 0;
     int scope = 5;
     int id = 10;
     char name[] = "test";
 
-    inst_net_put( &nets, scope, &recs_name, &recs_id );
+    igraph_empty( &g, 0, false );
+    inst_net_put( &nets, scope, &recs_name, &recs_id, g, con );
     inst_rec_put( &recs_name, &recs_id, name, id, NULL );
 
     res1 = inst_net_get( &nets, scope );
