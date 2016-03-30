@@ -4,7 +4,7 @@
 /******************************************************************************/
 void check_context( ast_node* ast )
 {
-    /* inst_net* nets = NULL;        // hash table to store the nets */
+    inst_net* nets = NULL;        // hash table to store the nets
     symrec* symtab = NULL;        // hash table to store the symbols
     UT_array* scope_stack = NULL; // stack to handle the scope
     int scope = 0;
@@ -12,11 +12,11 @@ void check_context( ast_node* ast )
     utarray_new( scope_stack, &ut_int_icd );
     utarray_push_back( scope_stack, &scope );
     // install all symbols in the symtab
-    install_ids( &symtab, scope_stack, ast, false );
+    install_ids( &symtab, scope_stack, ast->node, false );
     // check the context of all symbols and install instances in the insttab
     /* instrec_put( &insttab, VAL_THIS, *utarray_back( scope_stack ), */
     /*         VAL_SELF, -1, NULL ); */
-    /* check_ids( &symtab, &nets, scope_stack, ast ); */
+    check_ids( &symtab, &nets, scope_stack, ast->node );
     /* // check the connections and count the connection of each port */
     /* check_instances( &insttab, ast ); */
     /* // check whether all ports are connected spawn synchronizers and draw the */
@@ -45,7 +45,10 @@ void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
                 list = list->next;
             }
             break;
-        case AST_BOX:
+        case AST_NET_DEF:
+            check_ids( symtab, nets, scope_stack, ast->def.op );
+            break;
+        case AST_BOX_DEF:
             _scope++;
             break;
         case AST_WRAP:
@@ -124,9 +127,6 @@ void* install_ids( symrec** symtab, UT_array* scope_stack, ast_node* ast,
     if( ast == NULL ) return NULL;
 
     switch( ast->type ) {
-        case AST_PROGRAM:
-            install_ids( symtab, scope_stack, ast->node, set_sync );
-            break;
         case AST_NET_DEF:
             // install the net symbol without attributes
             symrec_put( symtab, ast->def.id->symbol.name,
