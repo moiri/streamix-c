@@ -38,8 +38,8 @@ void check_connection( inst_rec* rec_l, inst_rec* rec_r ) {
                 else {
                     sprintf( __error_msg, ERROR_BAD_MODE, ERR_ERROR,
                             ports_l->rec->name, rec_l->name, rec_l->id,
-                            rec_r->name, rec_r->id, ports_l->rec->line );
-                    report_yyerror( __error_msg, ports_l->rec->line );
+                            rec_r->name, rec_r->id, ports_r->rec->line );
+                    report_yyerror( __error_msg, ports_r->rec->line );
                 }
             }
             else {
@@ -57,7 +57,7 @@ void check_connection( inst_rec* rec_l, inst_rec* rec_r ) {
         // ERROR: there is no connection between the two nets
         sprintf( __error_msg, ERROR_NO_NET_CON, ERR_ERROR, rec_l->name,
                 rec_l->id, rec_r->name, rec_r->id );
-        report_yyerror( __error_msg, rec_l->net->line );
+        report_yyerror( __error_msg, rec_l->line );
     }
 }
 
@@ -198,7 +198,7 @@ void check_ids_net( symrec** symtab, inst_rec** recs_name, inst_rec** recs_id,
                 igraph_vector_push_back( &con->left, igraph_vcount( g ) );
                 igraph_vector_push_back( &con->right, igraph_vcount( g ) );
                 inst_rec_put( recs_name, recs_id, ast->symbol.name,
-                        igraph_vcount( g ), rec );
+                        igraph_vcount( g ), ast->symbol.line, rec );
                 // add new vertex to graph
                 igraph_add_vertices( g, 1, NULL );
             }

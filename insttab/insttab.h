@@ -40,6 +40,7 @@ struct inst_rec
 {
     char*           name;
     int             id;
+    int             line;
     symrec*         net;        // pointer to its definition
     symrec_list*    ports;      // pointer to the port list of the instance
                                 // this list is also available through the
@@ -70,6 +71,6 @@ inst_rec* inst_rec_get_id( inst_rec**, int );
 /**
  *
  */
-inst_rec* inst_rec_put( inst_rec**, inst_rec**, char*, int, symrec* );
+inst_rec* inst_rec_put( inst_rec**, inst_rec**, char*, int, int, symrec* );
 
 #endif // INSTTAB_H

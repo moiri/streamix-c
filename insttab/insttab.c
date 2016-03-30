@@ -93,7 +93,7 @@ inst_rec* inst_rec_get_name( inst_rec** recs, char* name )
 
 /******************************************************************************/
 inst_rec* inst_rec_put( inst_rec** recs_name, inst_rec** recs_id, char* name,
-        int id, symrec* rec )
+        int id, int line, symrec* rec )
 {
     symrec_list* inst_ports = NULL;
     symrec_list* sym_ports = NULL;
@@ -106,6 +106,7 @@ inst_rec* inst_rec_put( inst_rec** recs_name, inst_rec** recs_id, char* name,
     // create new item structure
     new_item = ( inst_rec* )malloc( sizeof( inst_rec ) );
     new_item->id = id;
+    new_item->line = line;
     new_item->net = rec;
     new_item->name = ( char* )malloc( strlen( name ) + 1 );
     strcpy( new_item->name, name );
