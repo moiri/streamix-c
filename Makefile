@@ -34,6 +34,9 @@ CFLAGS = -Wall
 DEBUG_FLAGS = -g -O0
 BFLAGS = -d -Wall
 BDEBUG_FLAGS = --verbose
+# prevent test command from failing due to debug messages -> turn off debug mode
+# to debug use 'make rdebug'
+TEST_FLAGS = -DMAKE_TEST
 
 CC = gcc
 
@@ -80,12 +83,12 @@ rdebug: BFLAGS += $(BDEBUG_FLAGS)
 rdebug: clean $(PARSER) run graph
 
 # run tests on all files in the test path
-test: CFLAGS += $(DEBUG_FLAGS) $(DOT_FLAGS)
+test: CFLAGS += $(DEBUG_FLAGS) $(DOT_FLAGS) $(TEST_FLAGS)
 test: BFLAGS += $(BDEBUG_FLAGS)
 test: clean $(PARSER) run_test_all
 
 # run tests on one file in the input
-test1: CFLAGS += $(DEBUG_FLAGS) $(DOT_FLAGS)
+test1: CFLAGS += $(DEBUG_FLAGS) $(DOT_FLAGS) $(TEST_FLAGS)
 test1: BFLAGS += $(BDEBUG_FLAGS)
 test1: clean $(PARSER) run_test
 
@@ -113,7 +116,7 @@ $(SYMTAB_OBJ): $(SYMTAB_SRC)
 # 	$(CC) $(CFLAGS) $< $(INCLUDES_DIR) -c -o $@
 
 $(DOT_AST_FILE).pdf: $(DOT_AST_FILE).dot
-	# generate ast graph pdf file
+	@# generate ast graph pdf file
 	@dot $(DOT_AST_FILE).dot -Tpdf > $(DOT_AST_FILE).pdf
 
 # generate connection graph pdf file

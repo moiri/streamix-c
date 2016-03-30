@@ -9,6 +9,7 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+#ifndef MAKE_TEST
 /* #define DEBUG */
 /* #define DEBUG_INST */
 /* #define DEBUG_SYMB */
@@ -17,6 +18,7 @@
 /* #define DEBUG_SERIAL */
 /* #define DEBUG_PORT */
 /* #define DEBUG_GRAPH */
+#endif
 
 // constants
 #define CONST_ERROR_LEN 256
