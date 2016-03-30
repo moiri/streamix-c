@@ -1,6 +1,12 @@
-link { A, B, C }
-A = box A( side out p1, out p2 )
-B = box B( side in p1, in p2 )
-C = box C( side in p1 )
+wrapper W { in a } {
+    link { A, B }
+    link { A, this }
+    A = box A( in a, side out p1, out p2 )
+    B = box B( side in p1, in p2 )
+    C = box C( side in p1 )
 
-A.B|C
+    A.B|C
+}
+
+B = box BS( out a )
+B.W
