@@ -11,6 +11,7 @@
 #define CONTEXT_H
 
 #include <stdbool.h>
+#include <igraph.h>
 #include "ast.h"
 #include "insttab.h"
 #include "symtab.h"
@@ -33,7 +34,8 @@ void check_context( ast_node* );
  * @param ast_node*:    pointer to the root ast node
  * */
 void check_ids( symrec**, inst_net**, UT_array*, ast_node* );
-void check_ids_net( symrec**, inst_rec**, inst_rec**, UT_array*, ast_node* );
+void check_ids_net( symrec**, inst_rec**, inst_rec**, UT_array*, ast_node*,
+        net_con*, igraph_t* );
 
 /**
  * put symbol names into the symbol table. this includes collision and scope

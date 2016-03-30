@@ -1,5 +1,6 @@
 #include "context.h"
 #include "defines.h"
+#include "cgraph.h"
 
 /******************************************************************************/
 void check_context( ast_node* ast )
@@ -69,12 +70,19 @@ void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
             utarray_pop_back( scope_stack );
             break;
         case AST_NET:
+            // create new graph and store pointer in the net ast node
+            igraph_empty( &ast->net.g, 0, false );
+            // initialize the connection vectors
+            ast->net.con = ( net_con* )malloc( sizeof( net_con ) );
+            igraph_vector_init( &ast->net.con->left, 0 );
+            igraph_vector_init( &ast->net.con->right, 0 );
             check_ids_net( symtab, &recs_name, &recs_id, scope_stack,
-                    ast->node );
+                    ast->net.net, ast->net.con, &ast->net.g );
             inst_net_put( nets, *utarray_back( scope_stack ), &recs_name,
                     &recs_id );
             (*nets)->recs_id = &recs_id;
             (*nets)->recs_name = &recs_name;
+            igraph_write_graph_dot( &ast->net.g, stdout );
             break;
         default:
             ;
@@ -83,19 +91,50 @@ void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
 
 /******************************************************************************/
 void check_ids_net( symrec** symtab, inst_rec** recs_name, inst_rec** recs_id,
-        UT_array* scope_stack, ast_node* ast )
+        UT_array* scope_stack, ast_node* ast, net_con* con, igraph_t* g )
 {
     symrec* rec = NULL;
+    net_con* lcon = ( net_con* )0;
 
     if( ast == NULL ) return;
 
     switch( ast->type ) {
         case AST_PARALLEL:
         case AST_SERIAL:
+            lcon = ( net_con* )malloc( sizeof( net_con ) );
+            // traverse left side
             check_ids_net( symtab, recs_name, recs_id, scope_stack,
-                    ast->op.left );
+                    ast->op.left, con, g );
+            // save connection vectors in a temporary var
+            igraph_vector_copy( &lcon->left, &con->left );
+            igraph_vector_copy( &lcon->right, &con->right );
+            igraph_vector_clear( &con->left );
+            igraph_vector_clear( &con->right );
+            // traverse right side with again empty vectors
             check_ids_net( symtab, recs_name, recs_id, scope_stack,
-                    ast->op.right );
+                    ast->op.right, con, g );
+            // connect tcon->right (left.con->right) with con->left
+            // (right.con->left)
+            if( ast->type == AST_SERIAL ) {
+                cgraph_connect( g, &lcon->right, &con->left );
+            }
+            // update final connection vectors
+            if( ast->type == AST_PARALLEL ) {
+                // cleft = ( right.cleft, left.cleft )
+                igraph_vector_append( &con->left, &lcon->left );
+                // cright = ( right.cright, left.cright )
+                igraph_vector_append( &con->right, &lcon->right );
+            }
+            else if( ast->type == AST_SERIAL ) {
+                // cleft = ( left.cleft )
+                igraph_vector_update( &con->left, &lcon->left );
+                // cright = ( right.cright ) is already set in con->right
+            }
+
+            // free memory from temp connection var
+            igraph_vector_destroy( &lcon->left );
+            igraph_vector_destroy( &lcon->right );
+            free( lcon );
             break;
         case AST_ID:
             // check the context of the symbol
@@ -103,8 +142,13 @@ void check_ids_net( symrec** symtab, inst_rec** recs_name, inst_rec** recs_id,
                     ast->symbol.line );
             // add a net symbol to the instance table
             if( ast->symbol.type == ID_NET && rec != NULL ) {
-                inst_rec_put( recs_name, recs_id, ast->symbol.name, ast->id,
-                        rec );
+                // the vertice id is # of vertices before adding a new one
+                igraph_vector_push_back( &con->left, igraph_vcount( g ) );
+                igraph_vector_push_back( &con->right, igraph_vcount( g ) );
+                inst_rec_put( recs_name, recs_id, ast->symbol.name,
+                        igraph_vcount( g ), rec );
+                // add new vertex to graph
+                igraph_add_vertices( g, 1, NULL );
             }
             break;
         default:
