@@ -12,11 +12,11 @@ void check_context( ast_node* ast )
     utarray_new( scope_stack, &ut_int_icd );
     utarray_push_back( scope_stack, &scope );
     // install all symbols in the symtab
-    install_ids( &symtab, scope_stack, ast->node, false );
+    install_ids( &symtab, scope_stack, ast, false );
     // check the context of all symbols and install instances in the insttab
     /* instrec_put( &insttab, VAL_THIS, *utarray_back( scope_stack ), */
     /*         VAL_SELF, -1, NULL ); */
-    check_ids( &symtab, &nets, scope_stack, ast->node );
+    check_ids( &symtab, &nets, scope_stack, ast );
     /* // check the connections and count the connection of each port */
     /* check_instances( &insttab, ast ); */
     /* // check whether all ports are connected spawn synchronizers and draw the */
@@ -37,6 +37,9 @@ void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
     if( ast == NULL ) return;
 
     switch( ast->type ) {
+        case AST_PROGRAM:
+            check_ids( symtab, nets, scope_stack, ast->node );
+            break;
         case AST_LINKS:
         case AST_STMTS:
             list = ast->list;
@@ -127,6 +130,9 @@ void* install_ids( symrec** symtab, UT_array* scope_stack, ast_node* ast,
     if( ast == NULL ) return NULL;
 
     switch( ast->type ) {
+        case AST_PROGRAM:
+            install_ids( symtab, scope_stack, ast->node, set_sync );
+            break;
         case AST_NET_DEF:
             // install the net symbol without attributes
             symrec_put( symtab, ast->def.id->symbol.name,
