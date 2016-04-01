@@ -28,9 +28,9 @@ void check_context( ast_node* );
 
 /**
  * This function performs the following tasks:
- * - check whether the given identificator is in the symbol table
- * - add instances to the instance table
- * - add instances to the connection graph
+ * - check whether the given identificator in a net is in the symbol table
+ * - add net instances to the instance table
+ * - add net instances to the connection graph
  * This is a recursive function.
  *
  * @param symrec**:     pointer to the symbol table
@@ -38,10 +38,10 @@ void check_context( ast_node* );
  * @param UT_array**:   pointer to the scope stack
  * @param ast_node*:    pointer to the root ast node
  * */
-void check_ids( symrec**, inst_net**, UT_array*, ast_node* );
+void check_nets( symrec**, inst_net**, UT_array*, ast_node* );
 
 /**
- * This function performs the following tasks (callee of check_ids):
+ * This function performs the following tasks (callee of check_nets):
  * - check whether the given identificator is in the symbol table
  * - add instances to the instance table
  * - add instances to the connection graph
@@ -55,7 +55,7 @@ void check_ids( symrec**, inst_net**, UT_array*, ast_node* );
  *                      indicating the left and right connections of the net
  * @param igraph_t*:    pointer to the connection graph
  * */
-void check_ids_net( symrec**, inst_rec**, inst_rec**, UT_array*, ast_node*,
+void check_net( symrec**, inst_rec**, inst_rec**, UT_array*, ast_node*,
         net_con*, igraph_t* );
 
 /**

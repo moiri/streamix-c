@@ -4,7 +4,8 @@
 #include "error.h"
 
 /******************************************************************************/
-void check_connection( inst_rec* rec_l, inst_rec* rec_r ) {
+void check_connection( inst_rec* rec_l, inst_rec* rec_r )
+{
     port_attr* p_attr_l = NULL;
     port_attr* p_attr_r = NULL;
     symrec_list* ports_l = NULL;
@@ -16,18 +17,27 @@ void check_connection( inst_rec* rec_l, inst_rec* rec_r ) {
         p_attr_l = ports_l->rec->attr;
         while( ports_r != NULL ) {
             p_attr_r = ports_r->rec->attr;
-#if defined(DEBUG) || defined(DEBUG_SERIAL)
-            printf( "ceck_connection: %s(%d).%s and %s(%d).%s:", rec_l->name,
-                    rec_l->id, ports_l->rec->name, rec_r->name, rec_r->id,
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+            printf( "ceck_connection: " );
+            if( p_attr_l->mode == VAL_IN ) printf( "in " );
+            else if( p_attr_l->mode == VAL_OUT ) printf( "out " );
+            printf( "%s(%d).%s and ", rec_l->name, rec_l->id,
+                    ports_l->rec->name );
+            if( p_attr_r->mode == VAL_IN ) printf( "in " );
+            else if( p_attr_r->mode == VAL_OUT ) printf( "out " );
+            printf( "%s(%d).%s:", rec_r->name, rec_r->id,
                     ports_r->rec->name );
-#endif // DEBUG_SERIAL
-            if( ( strcmp( ports_l->rec->name, ports_r->rec->name ) == 0 )
-                // the left port is in DS
-                && ( ( p_attr_l->collection == VAL_DOWN )
-                    || ( p_attr_l->collection == VAL_NONE ) )
-                // the right port is in US
-                && ( ( p_attr_r->collection == VAL_UP )
-                    || ( p_attr_r->collection == VAL_NONE ) )
+#endif // DEBUG_CONNECT
+            if( // the port names match?
+                ( strcmp( ports_l->rec->name, ports_r->rec->name ) == 0 )
+                // AND the port classes are compatible?
+                && (// the left port is in DS or in no class?
+                    ( ( p_attr_l->collection == VAL_DOWN )
+                        || ( p_attr_l->collection == VAL_NONE ) )
+                    // AND the right port is in US or in no class?
+                    && ( ( p_attr_r->collection == VAL_UP )
+                        || ( p_attr_r->collection == VAL_NONE ) )
+                   )
             ) {
                 if ( p_attr_l->mode != p_attr_r->mode ) {
                     is_connected = true;
@@ -74,7 +84,7 @@ void check_context( ast_node* ast )
     install_ids( &symtab, scope_stack, ast, false );
     /* instrec_put( &insttab, VAL_THIS, *utarray_back( scope_stack ), */
     /*         VAL_SELF, -1, NULL ); */
-    check_ids( &symtab, &nets, scope_stack, ast );
+    check_nets( &symtab, &nets, scope_stack, ast );
     check_instances( &nets );
     /* // check whether all ports are connected spawn synchronizers and draw the */
     /* // nodes, synchroniyers and connections */
@@ -82,67 +92,7 @@ void check_context( ast_node* ast )
 }
 
 /******************************************************************************/
-void check_ids( symrec** symtab, inst_net** nets, UT_array* scope_stack,
-        ast_node* ast )
-{
-    inst_net* net = NULL;
-    ast_list* list = NULL;
-    /* symrec* rec = NULL; */
-    static int _scope = 0;
-
-    if( ast == NULL ) return;
-
-    switch( ast->type ) {
-        case AST_PROGRAM:
-            check_ids( symtab, nets, scope_stack, ast->node );
-            break;
-        case AST_LINKS:
-        case AST_STMTS:
-            list = ast->list;
-            while( list != NULL ) {
-                check_ids( symtab, nets, scope_stack, list->ast_node );
-                list = list->next;
-            }
-            break;
-        case AST_NET_DEF:
-            check_ids( symtab, nets, scope_stack, ast->def.op );
-            break;
-        case AST_BOX_DEF:
-            _scope++;
-            break;
-        case AST_WRAP:
-            // in order to add the this instance to the instance table we need
-            // to get the decalration of the net before we put another scope on
-            // the stack
-            /* rec = symrec_get( symtab, scope_stack, ast->wrap.id->ast_id.name, */
-            /*         ast->wrap.id->ast_id.line ); */
-            _scope++;
-            utarray_push_back( scope_stack, &_scope );
-            // add the symbol 'this' to the instance table referring to this net
-            /* instrec_put( insttab, VAL_THIS, *utarray_back( scope_stack ), */
-            /*         VAL_SELF, ast->wrap.id->id, rec ); */
-            check_ids( symtab, nets, scope_stack, ast->wrap.stmts );
-            utarray_pop_back( scope_stack );
-            break;
-        case AST_NET:
-            net = inst_net_put( nets, *utarray_back( scope_stack ) );
-            check_ids_net( symtab, &net->recs_name, &net->recs_id,
-                    scope_stack, ast->node, net->con, &net->g );
-            /* (*nets)->recs_id = &recs_id; */
-            /* (*nets)->recs_name = &recs_name; */
-            /* (*nets)->g = g; */
-            /* (*nets)->con = con; */
-#if defined(DEBUG) || defined(DEBUG_NET_DOT)
-            igraph_write_graph_dot( &(*nets)->g, stdout );
-#endif // DEBUG_NET_DOT
-            break;
-        default:
-            ;
-    }
-}
-
-/******************************************************************************/
-void check_ids_net( symrec** symtab, inst_rec** recs_name, inst_rec** recs_id,
+void check_net( symrec** symtab, inst_rec** recs_name, inst_rec** recs_id,
         UT_array* scope_stack, ast_node* ast, net_con* con, igraph_t* g )
 {
     symrec* rec = NULL;
@@ -155,16 +105,16 @@ void check_ids_net( symrec** symtab, inst_rec** recs_name, inst_rec** recs_id,
         case AST_SERIAL:
             lcon = ( net_con* )malloc( sizeof( net_con ) );
             // traverse left side
-            check_ids_net( symtab, recs_name, recs_id, scope_stack,
-                    ast->op.left, con, g );
+            check_net( symtab, recs_name, recs_id, scope_stack, ast->op.left,
+                    con, g );
             // save connection vectors in a temporary var
             igraph_vector_copy( &lcon->left, &con->left );
             igraph_vector_copy( &lcon->right, &con->right );
             igraph_vector_clear( &con->left );
             igraph_vector_clear( &con->right );
             // traverse right side with again empty vectors
-            check_ids_net( symtab, recs_name, recs_id, scope_stack,
-                    ast->op.right, con, g );
+            check_net( symtab, recs_name, recs_id, scope_stack, ast->op.right,
+                    con, g );
             // connect tcon->right (left.con->right) with con->left
             // (right.con->left)
             if( ast->type == AST_SERIAL ) {
@@ -193,7 +143,7 @@ void check_ids_net( symrec** symtab, inst_rec** recs_name, inst_rec** recs_id,
             rec = symrec_get( symtab, scope_stack, ast->symbol.name,
                     ast->symbol.line );
             // add a net symbol to the instance table
-            if( ast->symbol.type == ID_NET && rec != NULL ) {
+            if( rec != NULL ) {
                 // the vertice id is # of vertices before adding a new one
                 igraph_vector_push_back( &con->left, igraph_vcount( g ) );
                 igraph_vector_push_back( &con->right, igraph_vcount( g ) );
@@ -209,7 +159,54 @@ void check_ids_net( symrec** symtab, inst_rec** recs_name, inst_rec** recs_id,
 }
 
 /******************************************************************************/
-void check_instances( inst_net** nets ) {
+void check_nets( symrec** symtab, inst_net** nets, UT_array* scope_stack,
+        ast_node* ast )
+{
+    inst_net* net = NULL;
+    ast_list* list = NULL;
+    static int _scope = 0;
+
+    if( ast == NULL ) return;
+
+    switch( ast->type ) {
+        case AST_PROGRAM:
+            check_nets( symtab, nets, scope_stack, ast->node );
+            break;
+        case AST_STMTS:
+            list = ast->list;
+            while( list != NULL ) {
+                check_nets( symtab, nets, scope_stack, list->ast_node );
+                list = list->next;
+            }
+            break;
+        case AST_BOX_DEF:
+            _scope++;
+            break;
+        case AST_WRAP:
+            _scope++;
+            utarray_push_back( scope_stack, &_scope );
+            check_nets( symtab, nets, scope_stack, ast->wrap.stmts );
+            utarray_pop_back( scope_stack );
+            break;
+        case AST_NET_DEF:
+            check_nets( symtab, nets, scope_stack, ast->def.op );
+            break;
+        case AST_NET:
+            net = inst_net_put( nets, *utarray_back( scope_stack ) );
+            check_net( symtab, &net->recs_name, &net->recs_id, scope_stack,
+                    ast->node, net->con, &net->g );
+#if defined(DEBUG) || defined(DEBUG_NET_DOT)
+            igraph_write_graph_dot( &net->g, stdout );
+#endif // DEBUG_NET_DOT
+            break;
+        default:
+            ;
+    }
+}
+
+/******************************************************************************/
+void check_instances( inst_net** nets )
+{
     inst_net* net;
     inst_net* net_t;
     inst_rec* rec;
