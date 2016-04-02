@@ -37,10 +37,10 @@ wrapper Car{
     link { this, CPA }
     link { DS, DC, CPA }
 
-    DS | ( RS | B | MB ).ABS.DC.CPA
+    connect DS | ( RS | B | MB ).ABS.DC.CPA
 }
 
 CarS = box CarS( out car_next, in car_prev )
 CarE = box CarE( in car_next, out car_prev )
 
-CarS.Car.Car.Car.CarE
+connect CarS.Car.Car.Car.CarE

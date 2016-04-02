@@ -39,7 +39,7 @@
     struct ast_list* lval;
 };
 /* keywods */
-%token SYNC LINK
+%token SYNC LINK CONNECT
 %token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC
 
 /* optional and variable keyword tokens */
@@ -99,10 +99,10 @@ start:
 ;
 
 program:
-    net_decls net {
+    net_decls CONNECT net {
         $$ = ast_add_prog(
             ast_add_list( $1, AST_STMTS ),
-            ast_add_node( $2, AST_NET )
+            ast_add_node( $3, AST_NET )
         );
     }
 ;
@@ -277,7 +277,7 @@ wrap_decl:
         $$ = ast_add_wrap(
             ast_add_symbol( $3, @3.last_line, ID_WRAP ),
             ast_add_list( $5, AST_PORTS ),
-            ast_add_node( $8, AST_PROGRAM ),
+            $8,
             $1
         );
     }

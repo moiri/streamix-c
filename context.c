@@ -18,7 +18,7 @@ void check_connection( inst_rec* rec_l, inst_rec* rec_r )
         while( ports_r != NULL ) {
             p_attr_r = ports_r->rec->attr;
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-            printf( "ceck_connection: " );
+            printf( "check_connection: " );
             if( p_attr_l->mode == VAL_IN ) printf( "in " );
             else if( p_attr_l->mode == VAL_OUT ) printf( "out " );
             printf( "%s(%d).%s and ", rec_l->name, rec_l->id,
@@ -237,7 +237,6 @@ void check_instances( inst_net** nets )
             }
             igraph_vector_destroy( &vids );
         }
-        while( net_t != NULL );
     }
 }
 

@@ -43,6 +43,7 @@ box             {yylval.ival = VAL_BOX;return BOX;}
 wrapper         {yylval.ival = VAL_WRAPPER;return WRAPPER;}
 net             {yylval.ival = VAL_NET;return NET;}
 link            return LINK;
+connect         return CONNECT;
 stateless       {yylval.ival = VAL_STATELESS;return STATELESS;}
 decoupled       {yylval.ival = VAL_DECOUPLED;return DECOUPLED;}
 static          {yylval.ival = VAL_STATIC;return STATIC;}
