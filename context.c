@@ -170,7 +170,8 @@ void check_nets( symrec** symtab, inst_net** nets, UT_array* scope_stack,
 
     switch( ast->type ) {
         case AST_PROGRAM:
-            check_nets( symtab, nets, scope_stack, ast->node );
+            check_nets( symtab, nets, scope_stack, ast->program.stmts );
+            check_nets( symtab, nets, scope_stack, ast->program.net );
             break;
         case AST_STMTS:
             list = ast->list;
@@ -219,26 +220,22 @@ void check_instances( inst_net** nets )
 #if defined(DEBUG) || defined(DEBUG_SERIAL)
         printf( "check_instances: scope %d\n", net->scope );
 #endif // DEBUG_SERIAL
-        // in each scope, iterate through all nets
-        do {
-            // in each net, iterate through all instance ids
-            for( rec = net_t->recs_id; rec != NULL; rec=rec->hh1.next ) {
-                igraph_vector_init( &vids, 0 );
-                // get all ids that connect to the right
-                igraph_neighbors( &net_t->g, &vids, rec->id, IGRAPH_OUT );
-                for( idx = 0; idx < igraph_vector_size( &vids ); idx++ ) {
-                    rec_c = inst_rec_get_id( &net_t->recs_id,
-                            ( int )VECTOR( vids )[ idx ] );
+        // in each net, iterate through all instance ids
+        for( rec = net_t->recs_id; rec != NULL; rec=rec->hh1.next ) {
+            igraph_vector_init( &vids, 0 );
+            // get all ids that connect to the right
+            igraph_neighbors( &net_t->g, &vids, rec->id, IGRAPH_OUT );
+            for( idx = 0; idx < igraph_vector_size( &vids ); idx++ ) {
+                rec_c = inst_rec_get_id( &net_t->recs_id,
+                        ( int )VECTOR( vids )[ idx ] );
 #if defined(DEBUG) || defined(DEBUG_SERIAL)
-                    printf( "check_instances: connect instances %s(%d) and"
-                            " %s(%d)\n", rec->name, rec->id, rec_c->name,
-                            rec_c->id );
+                printf( "check_instances: connect instances %s(%d) and"
+                        " %s(%d)\n", rec->name, rec->id, rec_c->name,
+                        rec_c->id );
 #endif // DEBUG_SERIAL
-                    check_connection( rec, rec_c );
-                }
-                igraph_vector_destroy( &vids );
+                check_connection( rec, rec_c );
             }
-            net_t = net_t->next;
+            igraph_vector_destroy( &vids );
         }
         while( net_t != NULL );
     }
@@ -263,7 +260,8 @@ void* install_ids( symrec** symtab, UT_array* scope_stack, ast_node* ast,
 
     switch( ast->type ) {
         case AST_PROGRAM:
-            install_ids( symtab, scope_stack, ast->node, set_sync );
+            install_ids( symtab, scope_stack, ast->program.stmts, set_sync );
+            install_ids( symtab, scope_stack, ast->program.net, set_sync );
             break;
         case AST_NET_DEF:
             // install the net symbol without attributes

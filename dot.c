@@ -65,6 +65,16 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
         case AST_ID:
             graph_add_node(graph, ptr->id, ptr->symbol.name, STYLE_N_AST_ID);
             break;
+        case AST_PROGRAM:
+            graph_add_node( graph, ptr->id, node_label[ptr->type],
+                    STYLE_N_AST_NODE);
+            draw_ast_graph_step( graph, ptr->program.stmts );
+            graph_add_edge( graph, ptr->id, ptr->program.stmts->id, NULL,
+                    STYLE_E_DEFAULT );
+            draw_ast_graph_step( graph, ptr->program.net );
+            graph_add_edge( graph, ptr->id, ptr->program.net->id, NULL,
+                    STYLE_E_DEFAULT );
+            break;
         // draw a list-node with its children
         case AST_LINKS:
         case AST_STMTS:
@@ -112,7 +122,6 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
                     STYLE_E_DEFAULT );
             break;
         // draw simple nodes
-        case AST_PROGRAM:
         case AST_NET:
             graph_add_node( graph, ptr->id, node_label[ptr->type],
                     STYLE_N_AST_NODE);

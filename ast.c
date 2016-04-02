@@ -129,6 +129,19 @@ ast_node* ast_add_port (ast_node* id, ast_node* int_id, ast_node* collection,
 }
 
 /******************************************************************************/
+ast_node* ast_add_prog ( ast_node* net, ast_node* stmts )
+{
+    ast_node* ptr;
+    ptr = (ast_node*) malloc(sizeof(ast_node));
+    ptr->program.net = net;
+    ptr->program.stmts = stmts;
+    __node_id++;
+    ptr->id = __node_id;
+    ptr->type = AST_PROGRAM;
+    return ptr;
+}
+
+/******************************************************************************/
 ast_node* ast_add_symbol ( char* name, int line, int type )
 {
     if (name == 0) return (ast_node*)0;

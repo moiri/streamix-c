@@ -55,7 +55,7 @@
 
 /* declarations */
 %type <nval> stmt
-%type <nval> stmt_wrap
+%type <nval> program
 %type <nval> net
 %type <nval> def_net
 %type <nval> decl_net
@@ -73,7 +73,6 @@
 
 /* lists */
 %type <lval> stmts
-%type <lval> stmts_wrap
 %type <lval> link_list
 %type <lval> opt_link_list
 %type <lval> box_port_list
@@ -91,13 +90,22 @@
 
 %left '|'
 %left '.'
-%start program
+%start start
 
 %%
 /* Grammar rules */
 /* start of the grammer */
+start:
+    program { ast = $1; }
+;
+
 program:
-    stmts { ast = ast_add_node( ast_add_list( $1, AST_STMTS ), AST_PROGRAM ); }
+    stmts net {
+        $$ = ast_add_prog(
+            ast_add_list( $1, AST_STMTS ),
+            ast_add_node( $2, AST_NET )
+        );
+    }
 ;
 
 /* a list of statements describing the program */
@@ -108,9 +116,10 @@ stmts:
 
 stmt:
     def_net { $$ = $1; }
-|   decl_net { $$ = $1; }
+|   proto_net { $$ = $1; }
 |   def_box { $$ = $1; }
 |   decl_wrap { $$ = $1; }
+|   decl_link { $$ = $1; }
 ;
 
 /* net definition */
@@ -276,11 +285,11 @@ decl_sync_port:
 
 /* wrapper declaration */
 decl_wrap:
-    kw_opt_static WRAPPER IDENTIFIER '{' wrap_port_list '}' '{' stmts_wrap '}' {
+    kw_opt_static WRAPPER IDENTIFIER '{' wrap_port_list '}' '{' program '}' {
         $$ = ast_add_wrap(
             ast_add_symbol( $3, @3.last_line, ID_WRAP ),
             ast_add_list( $5, AST_PORTS ),
-            ast_add_list( $8, AST_STMTS ),
+            ast_add_node( $8, AST_PROGRAM ),
             $1
         );
     }
@@ -321,21 +330,6 @@ decl_wrap_port:
             PORT_WRAP_NULL
         );
     }
-;
-
-/* list of statements in a wrapper */
-stmts_wrap:
-    %empty {
-        $$ = ( ast_list* )0;
-    }
-|   stmt_wrap stmts_wrap {
-        $$ = ast_add_list_elem( $1, $2 );
-    }
-;
-
-stmt_wrap:
-    stmt { $$ = $1; }
-|   decl_link { $$ = $1; }
 ;
 
 /* an explicit declaration of a connection of sideports or ports to the */

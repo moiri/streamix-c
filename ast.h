@@ -18,6 +18,7 @@ typedef struct ast_list ast_list;
 typedef struct ast_node ast_node;
 typedef struct ast_op ast_op;
 typedef struct ast_port ast_port;
+typedef struct ast_prog ast_prog;
 typedef struct ast_prot ast_prot;
 typedef struct ast_symb ast_symb;
 typedef struct ast_wrap ast_wrap;
@@ -134,6 +135,12 @@ struct ast_port
     bool        is_connected;
 };
 
+// AST_PROGRAM
+struct ast_prog
+{
+    ast_node*   net;
+    ast_node*   stmts;
+};
 // AST_PROT
 struct ast_prot
 {
@@ -165,6 +172,7 @@ struct ast_node
         ast_node*       node;       // AST_NET, AST_PROGRAM
         struct ast_op   op;         // AST_SERIAL, AST_PARALLEL
         struct ast_port port;       // AST_PORT
+        struct ast_prog program;    // AST_PROG
         struct ast_symb symbol;     // AST_ID
         struct ast_wrap wrap;       // AST_WRAP
     };
@@ -267,6 +275,16 @@ ast_node* ast_add_op ( ast_node*, ast_node*, int );
  * */
 ast_node* ast_add_port (ast_node*, ast_node*, ast_node*, ast_node*, ast_node*,
         int);
+
+/**
+ * Add a program node to the AST.
+ *
+ * @param ast_node*:    pointer to a net
+ * @param ast_node*:    pointer to a AST_STMTS node
+ * @return: ast_node*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_node* ast_add_prog ( ast_node*, ast_node* );
 
 /**
  * Add a symbol to the AST.
