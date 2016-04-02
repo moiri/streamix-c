@@ -7,12 +7,11 @@
 #ifdef DOT_AST
 char* node_label[] =
 {
+    "assign",
     "box decl",
-    "box def",
     "alt name",
     "link",
     "net",
-    "net def",
     "net prototype",
     "parallel",
     "port decl",
@@ -94,8 +93,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
             while (ast_list_ptr != 0);
             break;
         // draw assignments
-        case AST_NET_DEF:
-        case AST_BOX_DEF:
+        case AST_ASSIGN:
             graph_add_node(graph, ptr->id, node_label[ptr->type],
                     STYLE_N_AST_NODE );
             // draw the id
@@ -151,7 +149,7 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
             }
             break;
         case AST_WRAP:
-        case AST_NET_PROT:
+        case AST_NET_PROTO:
             graph_add_node( graph, ptr->id, node_label[ ptr->type ],
                     STYLE_N_AST_NODE );
             // id

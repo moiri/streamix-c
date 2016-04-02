@@ -1,5 +1,5 @@
 /* 
- * The grammar of the coordination language xyz
+ * The grammar of the coordination language streamix
  *
  * @file    lang.y
  * @author  Simon Maurer
@@ -54,25 +54,24 @@
 %token <sval> IDENTIFIER
 
 /* declarations */
-%type <nval> stmt
+%type <nval> net_decl
 %type <nval> program
 %type <nval> net
-%type <nval> def_net
-%type <nval> decl_net
-%type <nval> proto_net
-%type <nval> decl_net_port
-%type <nval> decl_link
-%type <nval> decl_link_id
-%type <nval> def_box
-%type <nval> decl_box
-%type <nval> decl_box_port
-%type <nval> decl_sync_port
-%type <nval> decl_wrap
-%type <nval> decl_wrap_port
-%type <nval> decl_int_port
+%type <nval> net_assign
+%type <nval> net_def
+%type <nval> net_proto
+%type <nval> net_port_decl
+%type <nval> link_decl
+%type <nval> link_id_decl
+%type <nval> box_decl
+%type <nval> box_port_decl
+%type <nval> sync_port_decl
+%type <nval> wrap_decl
+%type <nval> wrap_port_decl
+%type <nval> int_port_decl
 
 /* lists */
-%type <lval> stmts
+%type <lval> net_decls
 %type <lval> link_list
 %type <lval> opt_link_list
 %type <lval> box_port_list
@@ -100,7 +99,7 @@ start:
 ;
 
 program:
-    stmts net {
+    net_decls net {
         $$ = ast_add_prog(
             ast_add_list( $1, AST_STMTS ),
             ast_add_node( $2, AST_NET )
@@ -109,34 +108,34 @@ program:
 ;
 
 /* a list of statements describing the program */
-stmts:
+net_decls:
     %empty { $$ = ( ast_list* )0; }
-|   stmt stmts { $$ = ast_add_list_elem( $1, $2 ); }
+|   net_decl net_decls { $$ = ast_add_list_elem( $1, $2 ); }
 ;
 
-stmt:
-    def_net { $$ = $1; }
-|   proto_net { $$ = $1; }
-|   def_box { $$ = $1; }
-|   decl_wrap { $$ = $1; }
-|   decl_link { $$ = $1; }
+net_decl:
+    net_assign { $$ = $1; }
+|   net_proto { $$ = $1; }
+|   wrap_decl { $$ = $1; }
+|   link_decl { $$ = $1; }
 ;
 
 /* net definition */
-def_net:
-    IDENTIFIER '=' decl_net {
+net_assign:
+    IDENTIFIER '=' net_def {
         $$ = ast_add_def(
             ast_add_symbol( $1, @1.last_line, ID_NET ),
             $3,
-            AST_NET_DEF
+            AST_ASSIGN
         );
     }
 ;
 
 /* net declaration */
-decl_net:
+net_def:
     net { $$ = ast_add_node( $1, AST_NET ); }
-|   proto_net { $$ = $1; }
+|   net_proto { $$ = $1; }
+|   box_decl { $$ = $1; }
 ;
 
 net:
@@ -147,9 +146,9 @@ net:
 ;
 
 /* net prototyping */
-proto_net:
+net_proto:
     NET IDENTIFIER '{' net_port_list '}' {
-        $$ = ast_add_net_prot(
+        $$ = ast_add_net_proto(
             ast_add_symbol( $2, @2.last_line, ID_NET ),
             ast_add_list( $4, AST_PORTS )
         );
@@ -157,19 +156,19 @@ proto_net:
 ;
 
 net_port_list:
-    decl_net_port opt_net_port_list {
+    net_port_decl opt_net_port_list {
         $$ = ast_add_list_elem( $1, $2 );
     }
 ;
 
 opt_net_port_list:
     %empty { $$ = ( ast_list* )0; }
-|   ',' decl_net_port opt_net_port_list {
+|   ',' net_port_decl opt_net_port_list {
         $$ = ast_add_list_elem( $2, $3 );
     }
 ;
 
-decl_net_port:
+net_port_decl:
     kw_port_class kw_port_mode IDENTIFIER opt_int_ports {
         $$ = ast_add_port(
             ast_add_symbol( $3, @3.last_line, ID_PORT ),
@@ -188,37 +187,26 @@ opt_int_ports:
 ;
 
 int_port_list:
-    decl_int_port opt_int_port_list {
+    int_port_decl opt_int_port_list {
         $$ = ast_add_list_elem( $1, $2 );
     }
 ;
 
 opt_int_port_list:
     %empty { $$ = ( ast_list* )0; }
-|   ',' decl_int_port opt_int_port_list {
+|   ',' int_port_decl opt_int_port_list {
         $$ = ast_add_list_elem( $2, $3 );
     }
 ;
 
-decl_int_port:
+int_port_decl:
     IDENTIFIER {
         $$ = ast_add_symbol( $1, @1.last_line, ID_IPORT );
     }
 ;
 
-/* box definition */
-def_box:
-    IDENTIFIER '=' decl_box {
-        $$ = ast_add_def(
-            ast_add_symbol( $1, @1.last_line, ID_BOX ),
-            $3,
-            AST_BOX_DEF
-        );
-    }
-;
-
 /* box declarartion */
-decl_box:
+box_decl:
     kw_opt_state BOX IDENTIFIER '(' box_port_list ')' {
         $$ = ast_add_box(
             ast_add_symbol( $3, @3.last_line, ID_BOX_IMPL ),
@@ -229,19 +217,19 @@ decl_box:
 ;
 
 box_port_list:
-    decl_box_port opt_box_port_list {
+    box_port_decl opt_box_port_list {
         $$ = ast_add_list_elem( $1, $2 );
     }
 ;
 
 opt_box_port_list:
     %empty { $$ = ( ast_list* )0; }
-|   ',' decl_box_port opt_box_port_list {
+|   ',' box_port_decl opt_box_port_list {
         $$ = ast_add_list_elem( $2, $3 );
     }
 ;
 
-decl_box_port:
+box_port_decl:
     kw_opt_port_class kw_port_mode IDENTIFIER {
         $$ = ast_add_port(
             ast_add_symbol( $3, @3.last_line, ID_PORT ),
@@ -258,19 +246,19 @@ decl_box_port:
 ;
 
 sync_port_list:
-    decl_sync_port opt_sync_port_list {
+    sync_port_decl opt_sync_port_list {
         $$ = ast_add_list_elem( $1, $2 );
     }
 ;
 
 opt_sync_port_list:
     %empty { $$ = ( ast_list* )0; }
-|   ',' decl_sync_port opt_sync_port_list {
+|   ',' sync_port_decl opt_sync_port_list {
         $$ = ast_add_list_elem( $2, $3 );
     }
 ;
 
-decl_sync_port:
+sync_port_decl:
     kw_opt_decoupled kw_opt_port_class IN IDENTIFIER {
         $$ = ast_add_port(
             ast_add_symbol( $4, @4.last_line, ID_PORT ),
@@ -284,7 +272,7 @@ decl_sync_port:
 ;
 
 /* wrapper declaration */
-decl_wrap:
+wrap_decl:
     kw_opt_static WRAPPER IDENTIFIER '{' wrap_port_list '}' '{' program '}' {
         $$ = ast_add_wrap(
             ast_add_symbol( $3, @3.last_line, ID_WRAP ),
@@ -296,19 +284,19 @@ decl_wrap:
 ;
 
 wrap_port_list:
-    decl_wrap_port opt_wrap_port_list {
+    wrap_port_decl opt_wrap_port_list {
         $$ = ast_add_list_elem( $1, $2 );
     }
 ;
 
 opt_wrap_port_list:
     %empty { $$ = ( ast_list* )0; }
-|   ',' decl_wrap_port opt_wrap_port_list {
+|   ',' wrap_port_decl opt_wrap_port_list {
         $$ = ast_add_list_elem( $2, $3 );
     }
 ;
 
-decl_wrap_port:
+wrap_port_decl:
     kw_opt_port_class kw_port_mode IDENTIFIER opt_int_ports {
         $$ = ast_add_port(
             ast_add_symbol( $3, @3.last_line, ID_PORT ),
@@ -334,14 +322,14 @@ decl_wrap_port:
 
 /* an explicit declaration of a connection of sideports or ports to the */
 /* wrapper interface */
-decl_link:
+link_decl:
     LINK '{' link_list '}' {
         $$ = ast_add_list( $3, AST_LINKS );
     }
 ;
 
 link_list:
-    decl_link_id ',' decl_link_id opt_link_list {
+    link_id_decl ',' link_id_decl opt_link_list {
         $$ = ast_add_list_elem(
             $1,
             ast_add_list_elem( $3, $4 )
@@ -353,12 +341,12 @@ opt_link_list:
     %empty {
         $$ = ( ast_list* )0;
     }
-|   ',' decl_link_id opt_link_list {
+|   ',' link_id_decl opt_link_list {
         $$ = ast_add_list_elem( $2, $3 );
     }
 ;
 
-decl_link_id:
+link_id_decl:
     IDENTIFIER {
         $$ = ast_add_symbol( $1, @1.last_line, ID_LNET );
     }

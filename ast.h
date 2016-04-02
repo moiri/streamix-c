@@ -58,13 +58,12 @@ typedef enum port_type
 // "node_label" in graph.c
 typedef enum node_type
 {
+    AST_ASSIGN,
     AST_BOX,
-    AST_BOX_DEF,
     AST_INT_PORTS,
     AST_LINKS,
     AST_NET,
-    AST_NET_DEF,
-    AST_NET_PROT,
+    AST_NET_PROTO,
     AST_PARALLEL,
     AST_PORT,
     AST_PORTS,
@@ -238,7 +237,7 @@ ast_list* ast_add_list_elem (ast_node*, ast_list*);
  * @return: ast_node*:
  *      a pointer to the location where the data was stored
  * */
-ast_node* ast_add_net_prot ( ast_node*, ast_node* );
+ast_node* ast_add_net_proto ( ast_node*, ast_node* );
 
 /**
  * Add a node to the AST.

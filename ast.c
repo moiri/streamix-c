@@ -72,7 +72,7 @@ ast_list* ast_add_list_elem (ast_node* node, ast_list* list)
 }
 
 /******************************************************************************/
-ast_node* ast_add_net_prot ( ast_node* id, ast_node* ports )
+ast_node* ast_add_net_proto ( ast_node* id, ast_node* ports )
 {
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
@@ -80,7 +80,7 @@ ast_node* ast_add_net_prot ( ast_node* id, ast_node* ports )
     ptr->net_prot.ports = ports;
     __node_id++;
     ptr->id = __node_id;
-    ptr->type = AST_NET_PROT;
+    ptr->type = AST_NET_PROTO;
     return ptr;
 }
 

@@ -88,7 +88,7 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
             if( strlen( item->name ) == strlen( name )
                 && memcmp( item->name, name, strlen( name ) ) == 0
                 && item->scope == scope
-                && ( ( item->type == VAL_BOX || item->type == VAL_WRAPPER )
+                && ( ( item->type == VAL_NET )
                     || ( ( type == VAL_PORT || type == VAL_SPORT )
                         /* && ( ( ( struct port_attr* )attr )->mode */
                         /*     == ( ( struct port_attr* )item->attr )->mode ) */
