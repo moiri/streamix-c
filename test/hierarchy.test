@@ -14,14 +14,13 @@ wrapper C { in a1 {ca1}, in a2 {ca2}, out b1 {cb1}, out b2 {cb2} } {
         CBA = box CBA ( in cba, out cbb )
         CBB = box CBB ( in cbb, out cbc )
 
-        CBA.CBB
+        connect CBA.CBB
     }
 
     CC = box CC ( in ca2, out cb_int2 )
     CD = box CD ( in cb_int2, out cb2 )
 
-    CA.CB
-    CC.CD
+    connect CA.CB | CC.CD
 
 }
-A.C.B
+connect A.C.B

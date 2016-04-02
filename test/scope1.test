@@ -4,6 +4,6 @@ wrapper W{ in p{p_int} }{
     link { this, A }
     A = box A( in p_int, out b )
     B = box B( in b )
-    A.B
+    connect A.B
 }
-A.B.W
+connect A.B.W

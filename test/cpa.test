@@ -42,7 +42,7 @@ wrapper Car { up in car_next {car_l_in}, up out car_prev {car_l_out},
             side out abs
         )
 
-        Sensors.ABS
+        connect Sensors.ABS
     }
 
     wrapper Sensors { out speed, in block, out break_cmd, in break_abs, side out dist } {
@@ -52,12 +52,12 @@ wrapper Car { up in car_next {car_l_in}, up out car_prev {car_l_out},
         link { this, DS }
         RS = stateless box RS (out speed)
 
-        RS|B|MB|DS
+        connect RS|B|MB|DS
     }
 
-    ABS.DC.CPA
+    connect ABS.DC.CPA
 }
 CarS = box CarS( out car_next, in car_prev )
 CarE = box CarE( in car_next, out car_prev )
 
-CarS.Car.Car.Car.CarE
+connect CarS.Car.Car.Car.CarE

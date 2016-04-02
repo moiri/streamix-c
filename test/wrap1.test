@@ -5,7 +5,7 @@ wrapper W { in p1, out p2 } {
     link { this, B }
     A = box A ( in p1, out p_int )
     B = box B ( in p_int, out p2 )
-    A.B
+    connect A.B
 }
 
-L.W.R
+connect L.W.R

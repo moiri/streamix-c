@@ -10,4 +10,4 @@ I = box I (in g)
 J = box J (in g, out j)
 K = box K (in j)
 
-(A . B . C . (D | (E | F) . G)) . (H | I | J . K)
+connect (A . B . C . (D | (E | F) . G)) . (H | I | J . K)

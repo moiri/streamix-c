@@ -8,6 +8,7 @@ wrapper W { in p1{a1, a2}, out p2{b} } {
     N = A.B
     net N{down in a1, down in a2, up out b}
     N1 = net N{down in a{a1, a2}, up out b}
+    connect N1
 }
 
-L.W.R
+connect L.W.R

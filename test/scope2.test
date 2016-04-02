@@ -5,6 +5,6 @@ wrapper W{ in p{ p_int } }{
     A = box A( in p_int, out b )
     B = box B( in b, out c )
     W = box W( in c )
-    A.B.W
+    connect A.B.W
 }
-A.B.W
+connect A.B.W

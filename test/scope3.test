@@ -7,8 +7,8 @@ wrapper W{ in p{ p_int } }{
     wrapper W{ in c{w} } {
         link { this, W }
         W = box W(in w)
-        W|W
+        connect W|W
     }
-    A.B.W
+    connect A.B.W
 }
-A.B.W
+connect A.B.W

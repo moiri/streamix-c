@@ -5,8 +5,8 @@ wrapper W { in a } {
     B = box B( in p2, out p3 )
     C = box C( in p3, side in p1 )
 
-    A.B.C
+    connect A.B.C
 }
 
 B = box BS( out a )
-B.W
+connect B.W

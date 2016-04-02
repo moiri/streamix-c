@@ -3,4 +3,4 @@ B = box B( out x )
 C = box C( in x )
 D = box D( in x )
 
-D.A.C.B
+connect D.A.C.B

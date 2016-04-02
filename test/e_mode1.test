@@ -1,4 +1,4 @@
 A = box A( in a )
 B = box B( in a )
 
-A.B
+connect A.B

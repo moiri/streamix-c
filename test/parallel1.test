@@ -2,4 +2,4 @@ A = box A(in a)
 B = box B(in b)
 C = box C(out a, out b)
 
-(A|B).C
+connect (A|B).C

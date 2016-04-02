@@ -3,7 +3,7 @@ wrapper W { in p1, out p2 } {
     link { this, A }
     link { this, A }
     A = box A ( in p1, out p2 )
-    A
+    connect A
 }
 
-L.W.L
+connect L.W.L
