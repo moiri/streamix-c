@@ -13,7 +13,7 @@
 
 typedef struct ast_attr ast_attr;
 typedef struct ast_box ast_box;
-typedef struct ast_def ast_def;
+typedef struct ast_assign ast_assign;
 typedef struct ast_list ast_list;
 typedef struct ast_node ast_node;
 typedef struct ast_op ast_op;
@@ -88,11 +88,11 @@ struct ast_box
 {
     ast_node*   impl;
     ast_node*   ports;
-    ast_node*   attr;
+    ast_node*   attr_pure;
 };
 
 // AST_NET_DEF, AST_NET_DECL
-struct ast_def
+struct ast_assign
 {
     ast_node*   id;
     ast_node*   op;
@@ -117,9 +117,7 @@ struct ast_list
 struct ast_op
 {
     ast_node*   left;
-    ast_list*   con_left;
     ast_node*   right;
-    ast_list*   con_right;
 };
 
 // AST_PORT
@@ -153,7 +151,7 @@ struct ast_wrap
     ast_node*   id;
     ast_node*   ports;
     ast_node*   stmts;
-    ast_node*   attr;
+    ast_node*   attr_static;
 };
 
 // the AST structure
@@ -162,20 +160,30 @@ struct ast_node
     node_type   type;
     int         id;         // id of the node
     union {
-        struct ast_attr attr;       // AST_ATTR
-        struct ast_box  box;        // AST_BOX
-        struct ast_def  def;        // AST_NET_DEF, AST_NET_DECL
+        struct ast_attr     attr;       // AST_ATTR
+        struct ast_box      box;        // AST_BOX
+        struct ast_assign   assign;     // AST_ASSIGN
         // AST_STMTS, AST_LINKS, AST_PORTS, AST_SYNCS
-        ast_list*       list;
-        struct ast_prot net_prot;   // AST_NET_PROT
-        ast_node*       node;       // AST_NET, AST_PROGRAM
-        struct ast_op   op;         // AST_SERIAL, AST_PARALLEL
-        struct ast_port port;       // AST_PORT
-        struct ast_prog program;    // AST_PROG
-        struct ast_symb symbol;     // AST_ID
-        struct ast_wrap wrap;       // AST_WRAP
+        ast_list*           list;
+        struct ast_prot     net_prot;   // AST_NET_PROT
+        ast_node*           node;       // AST_NET, AST_PROGRAM
+        struct ast_op       op;         // AST_SERIAL, AST_PARALLEL
+        struct ast_port     port;       // AST_PORT
+        struct ast_prog     program;    // AST_PROG
+        struct ast_symb     symbol;     // AST_ID
+        struct ast_wrap     wrap;       // AST_WRAP
     };
 };
+
+/**
+ * Add an assignment to the AST.
+ *
+ * @param ast_node*:    pointer to the identifier
+ * @param ast_node*:    pointer to the operand
+ * @return ast_node*:
+ *      a pointer to the location where the data was stored
+ * */
+ast_node* ast_add_assign ( ast_node*, ast_node* );
 
 /**
  * Add a leaf (end node) attribute to the AST.
@@ -197,17 +205,6 @@ ast_node* ast_add_attr ( int, int );
  *      a pointer to the location where the data was stored
  * */
 ast_node* ast_add_box ( ast_node*, ast_node*, ast_node* );
-
-/**
- * Add a a definition to the AST.
- *
- * @param ast_node*:    pointer to the identifier
- * @param ast_node*:    pointer to the operand
- * @param int:          AST_NET_DEF, AST_BOX_DEF
- * @return ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_def ( ast_node*, ast_node*, int );
 
 /**
  * Add a list as node to the AST.

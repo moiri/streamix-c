@@ -190,7 +190,7 @@ void check_nets( symrec** symtab, inst_net** nets, UT_array* scope_stack,
             utarray_pop_back( scope_stack );
             break;
         case AST_ASSIGN:
-            check_nets( symtab, nets, scope_stack, ast->def.op );
+            check_nets( symtab, nets, scope_stack, ast->assign.op );
             break;
         case AST_NET:
             net = inst_net_put( nets, *utarray_back( scope_stack ) );
@@ -265,11 +265,11 @@ void* install_ids( symrec** symtab, UT_array* scope_stack, ast_node* ast,
             break;
         case AST_ASSIGN:
             // get the box attributes
-            attr = install_ids( symtab, scope_stack, ast->def.op, set_sync );
+            attr = install_ids( symtab, scope_stack, ast->assign.op, set_sync );
             // install the box symbol
-            symrec_put( symtab, ast->def.id->symbol.name,
+            symrec_put( symtab, ast->assign.id->symbol.name,
                     *utarray_back( scope_stack ), VAL_NET, attr,
-                    ast->def.id->symbol.line );
+                    ast->assign.id->symbol.line );
             break;
         case AST_SYNCS:
             _sync_id++;
@@ -302,7 +302,8 @@ void* install_ids( symrec** symtab, UT_array* scope_stack, ast_node* ast,
                     ast->box.ports, set_sync );
             // prepare symbol attributes and install symbol
             b_attr = ( net_attr* )malloc( sizeof( net_attr ) );
-            b_attr->state = ( ast->box.attr == NULL ) ? true : false;
+            b_attr->attr_static = false;
+            b_attr->attr_pure = ( ast->box.attr_pure != NULL ) ? true : false;
             b_attr->ports = port_list;
             // add internal name if available
             b_attr->impl_name = ( char* )malloc( strlen(
@@ -320,7 +321,9 @@ void* install_ids( symrec** symtab, UT_array* scope_stack, ast_node* ast,
                     ast->wrap.ports, set_sync );
             // prepare symbol attributes and install symbol
             b_attr = ( net_attr* )malloc( sizeof( net_attr ) );
-            b_attr->state = false;
+            b_attr->attr_static =
+                ( ast->wrap.attr_static != NULL ) ? true : false;
+            b_attr->attr_pure = false;
             b_attr->ports = port_list;
             // install 'this' in the scope of the wrapper
             symrec_put( symtab, VAL_THIS,

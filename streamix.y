@@ -123,10 +123,9 @@ net_decl:
 /* net definition */
 net_assign:
     IDENTIFIER '=' net_def {
-        $$ = ast_add_def(
+        $$ = ast_add_assign(
             ast_add_symbol( $1, @1.last_line, ID_NET ),
-            $3,
-            AST_ASSIGN
+            $3
         );
     }
 ;

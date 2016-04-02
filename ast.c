@@ -9,6 +9,19 @@ ast_list* con_ptr = (ast_list*)0;
 ast_list* tmp_con_ptr = (ast_list*)0;
 
 /******************************************************************************/
+ast_node* ast_add_assign( ast_node* id, ast_node* op )
+{
+    ast_node* ptr;
+    ptr = (ast_node*) malloc(sizeof(ast_node));
+    ptr->assign.id = id;
+    ptr->assign.op = op;
+    ptr->type = AST_ASSIGN;
+    __node_id++;
+    ptr->id = __node_id;
+    return ptr;
+}
+
+/******************************************************************************/
 ast_node* ast_add_attr ( int val, int type )
 {
     ast_node *ptr;
@@ -28,23 +41,10 @@ ast_node* ast_add_box ( ast_node* id, ast_node* ports, ast_node* state )
     ptr = (ast_node*) malloc(sizeof(ast_node));
     ptr->box.impl = id;
     ptr->box.ports = ports;
-    ptr->box.attr = state;
+    ptr->box.attr_pure = state;
     __node_id++;
     ptr->id = __node_id;
     ptr->type = AST_BOX;
-    return ptr;
-}
-
-/******************************************************************************/
-ast_node* ast_add_def( ast_node* id, ast_node* op, int node_type )
-{
-    ast_node* ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->def.id = id;
-    ptr->def.op = op;
-    ptr->type = node_type;
-    __node_id++;
-    ptr->id = __node_id;
     return ptr;
 }
 
@@ -166,7 +166,7 @@ ast_node* ast_add_wrap ( ast_node* id, ast_node* ports, ast_node* stmts,
     ptr->wrap.id = id;
     ptr->wrap.ports = ports;
     ptr->wrap.stmts = stmts;
-    ptr->wrap.attr = attr;
+    ptr->wrap.attr_static = attr;
     __node_id++;
     ptr->id = __node_id;
     ptr->type = AST_WRAP;

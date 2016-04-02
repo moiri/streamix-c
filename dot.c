@@ -99,12 +99,12 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
             graph_add_node(graph, ptr->id, node_label[ptr->type],
                     STYLE_N_AST_NODE );
             // draw the id
-            draw_ast_graph_step( graph, ptr->def.id );
-            graph_add_edge( graph, ptr->id, ptr->def.id->id, NULL,
+            draw_ast_graph_step( graph, ptr->assign.id );
+            graph_add_edge( graph, ptr->id, ptr->assign.id->id, NULL,
                     STYLE_E_DEFAULT );
             // draw the step
-            draw_ast_graph_step( graph, ptr->def.op );
-            graph_add_edge( graph, ptr->id, ptr->def.op->id, NULL,
+            draw_ast_graph_step( graph, ptr->assign.op );
+            graph_add_edge( graph, ptr->id, ptr->assign.op->id, NULL,
                     STYLE_E_DEFAULT );
             break;
         // draw operators
@@ -144,9 +144,9 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
                         STYLE_E_DEFAULT );
             }
             // state
-            if (ptr->box.attr != 0) {
-                draw_ast_graph_step( graph, ptr->box.attr );
-                graph_add_edge( graph, ptr->id, ptr->box.attr->id, NULL,
+            if (ptr->box.attr_pure != 0) {
+                draw_ast_graph_step( graph, ptr->box.attr_pure );
+                graph_add_edge( graph, ptr->id, ptr->box.attr_pure->id, NULL,
                         STYLE_E_DEFAULT );
             }
             break;
@@ -171,9 +171,9 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
                         STYLE_E_DEFAULT );
             }
             // static
-            if (ptr->wrap.attr != 0) {
-                draw_ast_graph_step( graph, ptr->wrap.attr );
-                graph_add_edge( graph, ptr->id, ptr->wrap.attr->id, NULL,
+            if (ptr->wrap.attr_static != 0) {
+                draw_ast_graph_step( graph, ptr->wrap.attr_static );
+                graph_add_edge( graph, ptr->id, ptr->wrap.attr_static->id, NULL,
                         STYLE_E_DEFAULT );
             }
             break;
