@@ -6,6 +6,7 @@
 #include "error.h"
 #endif
 
+
 /******************************************************************************/
 symrec* symrec_get( symrec** symtab, UT_array* scope_stack, char *name,
         int line )
@@ -13,6 +14,7 @@ symrec* symrec_get( symrec** symtab, UT_array* scope_stack, char *name,
     int* p = NULL;
     symrec* item = NULL;
     char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
+    char error_msg[ CONST_ERROR_LEN ];
 
     /* check whether their scope matches with a scope on the stack */
     while( ( p = ( int* )utarray_prev( scope_stack, p ) ) != NULL ) {
@@ -35,8 +37,8 @@ symrec* symrec_get( symrec** symtab, UT_array* scope_stack, char *name,
         printf( ERROR_UNDEF_ID, ERR_ERROR, name );
         printf( "\n" );
 #else
-        sprintf( __error_msg, ERROR_UNDEF_ID, ERR_ERROR, name );
-        report_yyerror( __error_msg, line );
+        sprintf( error_msg, ERROR_UNDEF_ID, ERR_ERROR, name );
+        report_yyerror( error_msg, line );
 #endif // TESTING
     }
 #if defined(DEBUG) || defined(DEBUG_SYMB)
@@ -56,6 +58,7 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
     symrec* previous_item = NULL;
     bool is_identical = false;
     char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
+    char error_msg[ CONST_ERROR_LEN ];
 
     // generate key
     sprintf( key, "%s%d", name, scope );
@@ -121,8 +124,8 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
         printf( ERROR_DUPLICATE_ID, ERR_ERROR, name );
         printf( "\n" );
 #else
-        sprintf( __error_msg, ERROR_DUPLICATE_ID, ERR_ERROR, name );
-        report_yyerror( __error_msg, line );
+        sprintf( error_msg, ERROR_DUPLICATE_ID, ERR_ERROR, name );
+        report_yyerror( error_msg, line );
 #endif // TESTING
         item = NULL;
     }

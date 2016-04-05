@@ -12,11 +12,13 @@
 #include <stdio.h>
 #include "defines.h"
 
-/* handle errors with the bison error function */
-extern void yyerror ( const char* );
+extern char* yytext;
 extern int yylineno;
 extern int yynerrs;
-char __error_msg[ CONST_ERROR_LEN ];
+extern char* __src_file_name;
+
+/* handle errors with the bison error function */
+void yyerror ( void**, const char* );
 
 void report_yyerror( const char*, int );
 

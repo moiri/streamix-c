@@ -11,7 +11,7 @@
     #include "streamix.tab.h"  // to get the token types that we return
     #include "defines.h"
     #define YY_DECL extern int yylex()
-    extern int yyerror(const char *);
+    extern int yyerror(void*, const char *);
 %}
 %option noinput
 %option nounput
@@ -59,6 +59,6 @@ sync            return SYNC;
 [.|(){}:,*=]     return *yytext;
 
     /* anything else is an error */
-.               yyerror("invalid character");
+.               yyerror( NULL, "invalid character" );
 %%
 

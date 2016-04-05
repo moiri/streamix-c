@@ -2,7 +2,8 @@ SHELL := /bin/bash
 PROJECT = streamix
 PARSER = parser
 
-SOURCES = context.c \
+SOURCES = main.c \
+		  context.c \
 		  cgraph.c \
 		  ast.c \
 		  error.c \

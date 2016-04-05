@@ -8,27 +8,14 @@
 
 %{
 /* Prologue */
-    #include <stdio.h>
-    #include <string.h>
-    #include "context.h"
     #include "ast.h"
     #include "defines.h"
-    /* #include "cgraph.h" */
-#ifdef DOT_AST
-    #include "dot.h"
-#endif // DOT_AST
     extern int yylex();
-    extern int yyparse();
-    extern FILE *yyin;
-    extern int yylineno;
-    extern char* yytext;
-    void yyerror ( const char* );
-    ast_node* ast;
-    char* src_file_name;
-    /* FILE* con_graph; */
+    extern void yyerror ( void**, const char* );
 %}
 
 /* Bison declarations */
+%parse-param { void** ast }
 %define parse.error verbose
 %define parse.lac full
 %locations
@@ -95,7 +82,7 @@
 /* Grammar rules */
 /* start of the grammer */
 start:
-    program { ast = $1; }
+    program { *ast = $1; }
 ;
 
 program:
@@ -385,48 +372,3 @@ kw_opt_static:
 
 %%
 /* Epilogue */
-int main( int argc, char **argv ) {
-    // open a file handle to a particular file:
-    if( argc != 2 ) {
-        printf( "Missing argument!\n" );
-        return -1;
-    }
-    src_file_name = argv[ 1 ];
-    FILE *myfile = fopen( src_file_name, "r" );
-    // make sure it is valid:
-    if( !myfile ) {
-        printf( "Cannot open file '%s'!\n", src_file_name );
-        return -1;
-    }
-    // set flex to read from it instead of defaulting to STDIN    yyin = myfile;
-    yyin = myfile;
-
-    /* con_graph = fopen(CON_DOT_PATH, "w"); */
-    // parse through the input until there is no more:
-    do {
-        yyparse();
-    } while( !feof( yyin ) );
-
-    /* cgraph_init( ast ); */
-    check_context( ast );
-
-    /* fclose(con_graph); */
-    if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );
-#ifdef DOT_AST
-    draw_ast_graph( ast );
-#endif // DOT_AST
-
-    return 0;
-}
-
-/*
- * error function of bison
- *
- * @param: char* s:  error string
- * */
-void yyerror( const char* s ) {
-    if( strlen(yytext) == 0 )
-        printf( "%s: %d: %s\n", src_file_name, yylineno, s );
-    else
-        printf( "%s: %d: %s '%s'\n", src_file_name, yylineno, s, yytext );
-}

@@ -3,9 +3,11 @@
 #include "cgraph.h"
 #include "error.h"
 
+
 /******************************************************************************/
 void check_connection( inst_rec* rec_l, inst_rec* rec_r )
 {
+    char error_msg[ CONST_ERROR_LEN ];
     port_attr* p_attr_l = NULL;
     port_attr* p_attr_r = NULL;
     symrec_list* ports_l = NULL;
@@ -46,10 +48,10 @@ void check_connection( inst_rec* rec_l, inst_rec* rec_r )
 #endif // DEBUG_SERIAL
                 }
                 else {
-                    sprintf( __error_msg, ERROR_BAD_MODE, ERR_ERROR,
+                    sprintf( error_msg, ERROR_BAD_MODE, ERR_ERROR,
                             ports_l->rec->name, rec_l->name, rec_l->id,
                             rec_r->name, rec_r->id, ports_r->rec->line );
-                    report_yyerror( __error_msg, ports_r->rec->line );
+                    report_yyerror( error_msg, ports_r->rec->line );
                 }
             }
             else {
@@ -65,9 +67,9 @@ void check_connection( inst_rec* rec_l, inst_rec* rec_r )
     // perform further checks on port connections
     if( !is_connected ) {
         // ERROR: there is no connection between the two nets
-        sprintf( __error_msg, ERROR_NO_NET_CON, ERR_ERROR, rec_l->name,
+        sprintf( error_msg, ERROR_NO_NET_CON, ERR_ERROR, rec_l->name,
                 rec_l->id, rec_r->name, rec_r->id );
-        report_yyerror( __error_msg, rec_l->line );
+        report_yyerror( error_msg, rec_l->line );
     }
 }
 
