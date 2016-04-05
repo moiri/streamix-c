@@ -60,6 +60,7 @@ DOT_FLAGS += -DDOT_EDGE_LABEL
 DOT_FLAGS += -DDOT_SYNC_FIRST
 
 TEST_IN = test
+TEST_SUSPENDED = sus
 TEST_OUT = res
 TEST_SOL = sol
 TEST_PATH = test
@@ -178,3 +179,8 @@ run_test_all:
 		# cp $(DOT_N_CON_FILE).pdf $${file%.*}_gn.pdf; \
 		# cp $(DOT_P_CON_FILE).pdf $${file%.*}_gp.pdf; \
 	done
+	@printf "\nSuspended Tests:\n" | tee $(TEST_PATH)/test.log
+	@for file in $(TEST_PATH)/*.$(TEST_SUSPENDED); do \
+		echo $$file | tee -a $(TEST_PATH)/test.log;\
+	done
+
