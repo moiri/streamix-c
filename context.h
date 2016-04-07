@@ -38,7 +38,7 @@ void check_context( ast_node* );
  * @param UT_array**:   pointer to the scope stack
  * @param ast_node*:    pointer to the root ast node
  * */
-void check_nets( symrec**, inst_net**, UT_array*, ast_node* );
+void ___check_nets( symrec**, inst_net**, UT_array*, ast_node* );
 
 /**
  * This function performs the following tasks (callee of check_nets):
@@ -55,7 +55,7 @@ void check_nets( symrec**, inst_net**, UT_array*, ast_node* );
  *                      indicating the left and right connections of the net
  * @param igraph_t*:    pointer to the connection graph
  * */
-void check_net( symrec**, inst_rec**, inst_rec**, UT_array*, ast_node*,
+void install_nets( symrec**, inst_rec**, inst_rec**, UT_array*, ast_node*,
         net_con*, igraph_t* );
 
 /**
@@ -63,6 +63,7 @@ void check_net( symrec**, inst_rec**, inst_rec**, UT_array*, ast_node*,
  * @param inst_net**:   pointer to the net instance table
  */
 void check_instances( inst_net** );
+void check_nets( inst_rec**, igraph_t* g );
 
 /**
  * put symbol names into the symbol table. this includes collision and scope
@@ -77,5 +78,8 @@ void check_instances( inst_net** );
  *      ports belong to which net
  * */
 void* install_ids( symrec**, UT_array*, ast_node*, bool );
+void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node*, bool );
+
+symrec_list* get_port_list_net( inst_rec**, igraph_vector_t*, int, symrec_list* );
 
 #endif // CONTEXT_H

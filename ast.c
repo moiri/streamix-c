@@ -66,7 +66,7 @@ ast_list* ast_add_list_elem (ast_node* node, ast_list* list)
 {
     ast_list* list_ptr;
     list_ptr = (ast_list*) malloc(sizeof(ast_list));
-    list_ptr->ast_node = node;
+    list_ptr->node = node;
     list_ptr->next = list;
     return list_ptr;
 }

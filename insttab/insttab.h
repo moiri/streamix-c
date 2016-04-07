@@ -25,6 +25,7 @@ struct inst_net
     inst_rec*       recs_name; // hashtable of the instances in the net (name)
     igraph_t        g;
     net_con*        con;
+    inst_net*       next;
     UT_hash_handle  hh;     // makes this structure hashable
 };
 

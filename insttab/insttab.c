@@ -21,6 +21,7 @@ inst_net* inst_net_put( inst_net** nets, int scope )
 {
     inst_net* item = NULL;
     inst_net* new_item = NULL;
+    inst_net* previous_item = NULL;
     net_con* con = NULL;
     igraph_t g;
 
@@ -45,9 +46,15 @@ inst_net* inst_net_put( inst_net** nets, int scope )
         HASH_ADD_INT( *nets, scope, new_item );
     }
     else {
-        // only one net possible per scope
-        // TODO: should this be an error?
-        new_item = item;
+        // a collision accured or multiple instances of a net have been spawned
+        // -> add the new item to the end of the linked list
+        do {
+            previous_item = item; // remember the last item of the list
+            item = item->next;
+        }
+        while( item != NULL );
+
+        previous_item->next = new_item;
     }
 #if defined(DEBUG) || defined(DEBUG_INST)
     printf( "inst_net_put: add net in scope %d\n", new_item->scope );

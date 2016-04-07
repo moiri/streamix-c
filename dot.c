@@ -87,8 +87,8 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
             // iterate through all elements of the list
             ast_list_ptr = ptr->list;
             do {
-                draw_ast_graph_step( graph, ast_list_ptr->ast_node );
-                graph_add_edge( graph, ptr->id, ast_list_ptr->ast_node->id,
+                draw_ast_graph_step( graph, ast_list_ptr->node );
+                graph_add_edge( graph, ptr->id, ast_list_ptr->node->id,
                         NULL, STYLE_E_DEFAULT );
                 ast_list_ptr = ast_list_ptr->next;
             }

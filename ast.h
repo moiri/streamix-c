@@ -109,7 +109,7 @@ struct ast_symb
 // linked list structure containing AST node pointers
 struct ast_list
 {
-    ast_node*   ast_node;
+    ast_node*   node;
     ast_list*   next;
 };
 
