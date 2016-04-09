@@ -17,7 +17,8 @@
 #include "symtab.h"
 #include "utarray.h"
 
-void check_connection( inst_rec*, inst_rec* );
+void check_connection( inst_net*, virt_net*, virt_net* );
+void check_connection_cp( inst_net*, virt_net*, virt_net* );
 
 /**
  * Check the context of all identifiers in the program
@@ -55,8 +56,7 @@ void ___check_nets( symrec**, inst_net**, UT_array*, ast_node* );
  *                      indicating the left and right connections of the net
  * @param igraph_t*:    pointer to the connection graph
  * */
-void install_nets( symrec**, inst_rec**, inst_rec**, UT_array*, ast_node*,
-        net_con*, igraph_t* );
+virt_net* install_nets( symrec**, inst_net*, UT_array*, ast_node* );
 
 /**
  *
