@@ -1,4 +1,5 @@
 #include "symtab.h"
+#include "ast.h"
 #include <stdio.h>
 #ifdef TESTING
 #include "defines.h"
@@ -14,7 +15,9 @@ symrec* symrec_get( symrec** symtab, UT_array* scope_stack, char *name,
     int* p = NULL;
     symrec* item = NULL;
     char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
+#ifndef TESTING
     char error_msg[ CONST_ERROR_LEN ];
+#endif // TESTING
 
     /* check whether their scope matches with a scope on the stack */
     while( ( p = ( int* )utarray_prev( scope_stack, p ) ) != NULL ) {
@@ -58,7 +61,9 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
     symrec* previous_item = NULL;
     bool is_identical = false;
     char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
+#ifndef TESTING
     char error_msg[ CONST_ERROR_LEN ];
+#endif // TESTING
 
     // generate key
     sprintf( key, "%s%d", name, scope );
@@ -91,7 +96,9 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
             if( strlen( item->name ) == strlen( name )
                 && memcmp( item->name, name, strlen( name ) ) == 0
                 && item->scope == scope
-                && ( ( item->type == VAL_NET )
+                && ( ( ( item->type == AST_NET )
+                        || ( item->type == AST_NET_PROTO )
+                        || ( item->type == AST_BOX ) )
                     || ( ( type == VAL_PORT || type == VAL_SPORT )
                         /* && ( ( ( struct port_attr* )attr )->mode */
                         /*     == ( ( struct port_attr* )item->attr )->mode ) */

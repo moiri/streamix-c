@@ -18,36 +18,44 @@
 typedef struct symrec symrec;
 typedef struct symrec_key symrec_key;
 typedef struct symrec_list symrec_list;
-typedef struct net_attr net_attr;
+typedef struct box_attr box_attr;
+typedef struct wrap_attr wrap_attr;
 typedef struct port_attr port_attr;
 
 // this is the definition of a record in a hashtable (uthash)
-struct symrec {
+struct symrec
+{
     char*       key;
     char*       name;   // name of the symbol
     int         scope;  // scope of the record
-    int         type;   // VAL_NET, VAL_BOX, VAL_PORT, VAL_WRAPPER
+    int         type;   // AST_NET, AST_NET_PROTO, AST_BOX
     int         line;   // line position in the source file
     void*       attr;   // a struct of attributes
     symrec*     next;   // pointer to the next element (handle collisions)
     UT_hash_handle hh;  // makes this structure hashable
 };
 // linked list to associate ports to nets
-struct symrec_list {
+struct symrec_list
+{
     symrec*         rec;            // pointer to port in symbol table
-    symrec*         cp_sync;        // pointer to copy synchronizer in instance table
-    int             connect_cnt;    // counter to control the port connections
     symrec_list*    next;           // next element in the list
 };
-// attributes of a net (can also be a box)
-struct net_attr {
+// attributes of a box
+struct box_attr
+{
     bool            attr_pure;  // a box can be pure
-    bool            attr_static;// net attribute
     char*           impl_name;  // implementation name
     symrec_list*    ports;      // pointer to the port list of the net
 };
+// attributes of a wrapper
+struct wrap_attr
+{
+    bool            attr_static;
+    symrec_list*    ports;      // pointer to the port list of the net
+};
 // attributes of ports (all kind of ports: box (sync) or net)
-struct port_attr {
+struct port_attr
+{
     char*   int_name;       // internal name or NULL
     int     mode;           // input or output
     int     collection;     // VAL_UP, VAL_DOWN, VAL_SIDE
