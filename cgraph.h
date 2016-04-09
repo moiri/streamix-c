@@ -20,5 +20,7 @@
  * @param igraph_vector_t*: vector of the right connecting nets
  */
 void cgraph_connect( igraph_t*, igraph_vector_t*, igraph_vector_t* );
+void cgraph_connect_dir( igraph_t*, int, int, int, int );
+void cgraph_merge_vertices( igraph_t*, int, int );
 
 #endif // CGRAPH_H
