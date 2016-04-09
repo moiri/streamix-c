@@ -1,5 +1,5 @@
 /* 
- * A instance table table librabry
+ * A instance table librabry
  *
  * @file    insttab.h
  * @author  Simon Maurer
@@ -31,6 +31,18 @@ struct inst_net
     UT_hash_handle  hh;     // makes this structure hashable
 };
 
+struct inst_rec
+{
+    char*           name;
+    int             id;
+    int             line;
+    int             type;
+    symrec*         net;        // pointer to its declaration
+    inst_rec*       next;
+    UT_hash_handle  hh_id;      // makes this structure hashable (id)
+    UT_hash_handle  hh_name;    // makes this structure hashable (name)
+};
+
 // vectors to store the connection ids
 struct net_con
 {
@@ -56,17 +68,8 @@ struct virt_ports
     virt_ports* next;
 };
 
-struct inst_rec
-{
-    char*           name;
-    int             id;
-    int             line;
-    int             type;
-    symrec*         net;        // pointer to its declaration
-    inst_rec*       next;
-    UT_hash_handle  hh_id;      // makes this structure hashable (id)
-    UT_hash_handle  hh_name;    // makes this structure hashable (name)
-};
+/* FUNCTION PROTOTYPES                                                        */
+/******************************************************************************/
 
 /**
  * Get net from instance table
