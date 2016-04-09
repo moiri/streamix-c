@@ -244,7 +244,8 @@ void virt_net_alter_serial( virt_net* v_net1, virt_net* v_net2 )
         ports_last = ports;
         ports = ports->next;
     }
-    ports_last->next = v_net2->ports;
+    if( ports_last != NULL ) ports_last->next = v_net2->ports;
+    else v_net1->ports = v_net2->ports;
     ports = v_net2->ports;
     while( ports != NULL ) {
         ports->attr_class = VAL_DOWN;
