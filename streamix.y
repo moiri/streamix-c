@@ -296,7 +296,7 @@ wrap_port_decl:
 |   '{' int_port_list '}' {
         $$ = ast_add_port(
             // these internal ports are "turned off"
-            ast_add_symbol( VAL_NULL, @2.last_line, ID_NPORT ),
+            ast_add_symbol( TEXT_NULL, @2.last_line, ID_NPORT ),
             ast_add_list( $2, AST_INT_PORTS ),
             ( ast_node* )0, // no collection
             ( ast_node* )0, // no mode

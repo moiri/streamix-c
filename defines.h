@@ -10,7 +10,7 @@
 #define DEFINES_H
 
 #ifndef MAKE_TEST
-/* #define DEBUG */
+#define DEBUG
 /* #define DEBUG_INST */
 /* #define DEBUG_SYMB */
 /* #define DEBUG_CONNECT */
@@ -21,6 +21,7 @@
 // constants
 #define CONST_ERROR_LEN 256
 #define CONST_SCOPE_LEN 9
+#define CONST_ID_LEN 9
 
 // scanner values (attributes)
 #define VAL_NONE        0
@@ -30,6 +31,7 @@
 
 #define VAL_IN          4
 #define VAL_OUT         5
+#define VAL_BI          9
 
 #define VAL_DECOUPLED   6
 
@@ -45,9 +47,11 @@
 #define VAL_COPY        5
 #define VAL_NET         6
 #define VAL_SELF        7
+#define VAL_CP          8
 
-#define VAL_THIS    "this"
-#define VAL_NULL    "null"
+#define TEXT_THIS    "this"
+#define TEXT_CP      "*CP_SYNC"
+#define TEXT_NULL    "null"
 
 // drawing
 #define AST_DOT_PATH    "dot/ast_graph.dot"
