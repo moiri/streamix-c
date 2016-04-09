@@ -67,14 +67,14 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
         case AST_PROGRAM:
             graph_add_node( graph, ptr->id, node_label[ptr->type],
                     STYLE_N_AST_NODE);
-            draw_ast_graph_step( graph, ptr->program.net );
-            graph_add_edge( graph, ptr->id, ptr->program.net->id, NULL,
-                    STYLE_E_DEFAULT );
             if( ptr->program.stmts != NULL ) {
                 draw_ast_graph_step( graph, ptr->program.stmts );
                 graph_add_edge( graph, ptr->id, ptr->program.stmts->id, NULL,
                         STYLE_E_DEFAULT );
             }
+            draw_ast_graph_step( graph, ptr->program.net );
+            graph_add_edge( graph, ptr->id, ptr->program.net->id, NULL,
+                    STYLE_E_DEFAULT );
             break;
         // draw a list-node with its children
         case AST_LINKS:
