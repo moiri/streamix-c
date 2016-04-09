@@ -69,26 +69,62 @@ struct inst_rec
 };
 
 /**
+ * Get net from instance table
  *
+ * @param inst_net**    pointer to net instance table
+ * @param int           scope of the net
+ * @return inst_net     pointer to the net record
  */
 inst_net* inst_net_get( inst_net**, int );
 
 /**
+ * Put net into the instance table
  *
+ * @param inst_net**    pointer to net instance table
+ * @param int           scope of the net
+ * @return inst_net*    pointer to the net record
  */
 inst_net* inst_net_put( inst_net**, int );
 
 /**
+ * Get rec from instance table using a name as key
  *
+ * @param inst_rec**    pointer to rec instance table
+ * @param char*         name of the record
+ * @return inst_rec*    pointer to the record
  */
 inst_rec* inst_rec_get_name( inst_rec**, char* );
+
+/**
+ * Get rec from instance table using an id as key
+ *
+ * @param inst_rec**    pointer to rec instance table
+ * @param int           id of the record
+ * @return inst_rec*    pointer to the record
+ */
 inst_rec* inst_rec_get_id( inst_rec**, int );
 
 /**
+ * Put rec into instance table
  *
+ * @param inst_rec**    pointer to rec (name) instance table
+ * @param inst_rec**    pointer to rec (id) instance table
+ * @param char*         name of the record
+ * @param int           id of the record
+ * @param int           line of the record
+ * @param int           type of the record
+ * @param symrec*       pointer to the symbol record
+ * @return inst_rec*    pointer to the record
  */
 inst_rec* inst_rec_put( inst_rec**, inst_rec**, char*, int, int, int, symrec* );
 
+/**
+ * Delete record from the instance table
+ *
+ * @param inst_rec**    pointer to rec (name) instance table
+ * @param inst_rec**    pointer to rec (id) instance table
+ * @param inst_rec*     poiner to the record to be removed
+ */
 void inst_rec_del( inst_rec**, inst_rec**, inst_rec* );
 
 #endif // INSTTAB_H
