@@ -129,7 +129,7 @@ ast_node* ast_add_port (ast_node* id, ast_node* int_id, ast_node* collection,
 }
 
 /******************************************************************************/
-ast_node* ast_add_prog ( ast_node* net, ast_node* stmts )
+ast_node* ast_add_prog ( ast_node* stmts, ast_node* net )
 {
     ast_node* ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
