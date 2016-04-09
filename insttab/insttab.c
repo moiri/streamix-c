@@ -66,7 +66,7 @@ inst_net* inst_net_put( inst_net** nets, int scope )
 inst_rec* inst_rec_get_id( inst_rec** recs, int id )
 {
     inst_rec* res = NULL;
-    HASH_FIND( hh1, *recs, &id, sizeof( int ), res );
+    HASH_FIND( hh_id, *recs, &id, sizeof( int ), res );
 #if defined(DEBUG) || defined(DEBUG_INST)
     if( res != NULL )
         printf( "inst_rec_get_id: found instance '%s'(%d)\n", res->name,
@@ -81,7 +81,7 @@ inst_rec* inst_rec_get_id( inst_rec** recs, int id )
 inst_rec* inst_rec_get_name( inst_rec** recs, char* name )
 {
     inst_rec* res = NULL;
-    HASH_FIND( hh2, *recs, name, strlen( name ), res );
+    HASH_FIND( hh_name, *recs, name, strlen( name ), res );
 #if defined(DEBUG) || defined(DEBUG_INST)
     if( res != NULL )
         printf( "inst_rec_get_name: found instances of '%s'\n", res->name );
@@ -93,11 +93,8 @@ inst_rec* inst_rec_get_name( inst_rec** recs, char* name )
 
 /******************************************************************************/
 inst_rec* inst_rec_put( inst_rec** recs_name, inst_rec** recs_id, char* name,
-        int id, int line, symrec* rec )
+        int id, int line, int type, symrec* rec )
 {
-    symrec_list* inst_ports = NULL;
-    symrec_list* sym_ports = NULL;
-    symrec_list* port_list = NULL;
     inst_rec* item = NULL;
     inst_rec* new_item = NULL;
     inst_rec* previous_item = NULL;
@@ -107,34 +104,22 @@ inst_rec* inst_rec_put( inst_rec** recs_name, inst_rec** recs_id, char* name,
     new_item = ( inst_rec* )malloc( sizeof( inst_rec ) );
     new_item->id = id;
     new_item->line = line;
+    new_item->type = type;
     new_item->net = rec;
     new_item->name = ( char* )malloc( strlen( name ) + 1 );
     strcpy( new_item->name, name );
-    // copy portlist from symtab to insttab
-    if( rec != NULL )
-        sym_ports = ( ( struct net_attr* )rec->attr )->ports;
-    while( sym_ports != NULL  ) {
-        inst_ports = ( struct symrec_list* )malloc( sizeof( symrec_list ) );
-        inst_ports->rec = sym_ports->rec;
-        inst_ports->next = port_list;
-        inst_ports->connect_cnt = 0;
-        inst_ports->cp_sync = NULL;
-        port_list = inst_ports;
-        sym_ports = sym_ports->next;
-    }
-    new_item->ports = port_list;
     // check whether key already exists
-    HASH_FIND( hh1, *recs_id, &id, sizeof( int ), item );
+    HASH_FIND( hh_id, *recs_id, &id, sizeof( int ), item );
     if( item == NULL ) {
         // id must be unique in the net
-        HASH_ADD( hh1, *recs_id, id, sizeof( int ), new_item );
+        HASH_ADD( hh_id, *recs_id, id, sizeof( int ), new_item );
     }
     /* else { printf( "ERROR: Something went wrong!" ); } */
     item = NULL;
-    HASH_FIND( hh2, *recs_name, name, strlen( name ), item );
+    HASH_FIND( hh_name, *recs_name, name, strlen( name ), item );
     if( item == NULL ) {
         // the key is new
-        HASH_ADD_KEYPTR( hh2, *recs_name, name, strlen( name ), new_item );
+        HASH_ADD_KEYPTR( hh_name, *recs_name, name, strlen( name ), new_item );
     }
     else {
         // a collision accured or multiple instances of a net have been spawned
@@ -152,4 +137,16 @@ inst_rec* inst_rec_put( inst_rec** recs_name, inst_rec** recs_id, char* name,
             new_item->id );
 #endif // DEBUG
     return new_item;
+}
+
+/******************************************************************************/
+void inst_rec_del( inst_rec** recs_name, inst_rec** recs_id, inst_rec* rec )
+{
+    inst_rec* rec_name;
+    rec_name = inst_rec_get_name( recs_name, rec->name );
+    // delete name entry only if no other record with the same name exists
+    if( rec_name->next == NULL ) HASH_DELETE( hh_name, *recs_id, rec );
+    HASH_DELETE( hh_id, *recs_id, rec );
+    free( rec->name );
+    free( rec );
 }
