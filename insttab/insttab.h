@@ -120,6 +120,7 @@ inst_rec* inst_rec_get_id( inst_rec**, int );
  * @return inst_rec*    pointer to the record
  */
 inst_rec* inst_rec_put( inst_rec**, inst_rec**, char*, int, int, int, symrec* );
+void inst_rec_replace_id( inst_rec**, int, int );
 
 /**
  * Delete record from the instance table

@@ -141,6 +141,16 @@ inst_rec* inst_rec_put( inst_rec** recs_name, inst_rec** recs_id, char* name,
 }
 
 /******************************************************************************/
+void inst_rec_replace_id( inst_rec** recs, int id_old, int id_new )
+{
+    inst_rec* item = NULL;
+    HASH_FIND( hh_id, *recs, &id_old, sizeof( int ), item );
+    HASH_DELETE( hh_id, *recs, item );
+    item->id = id_new;
+    HASH_ADD( hh_id, *recs, id, sizeof( int ), item );
+}
+
+/******************************************************************************/
 void inst_rec_del( inst_rec** recs_name, inst_rec** recs_id, inst_rec* rec )
 {
     inst_rec* rec_name;

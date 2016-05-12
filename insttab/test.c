@@ -10,6 +10,7 @@ int main( ) {
     int scope = 5;
     int id = 10;
     int id_alt = 11;
+    int id_replace = 20;
     char name[] = "test";
 
     inst_net_put( &nets, scope );
@@ -148,6 +149,27 @@ int main( ) {
     if( error_cnt == 0 )
         printf( "success: get rec by name=%s (id=%d)\n", name, id );
 
+    // replace id with id_replace
+    inst_rec_replace_id( &res1->recs_id, id, id_replace );
+    res2 = inst_rec_get_id( &res1->recs_id, id );
+    if( res2 != NULL ) {
+        printf( "error: element name=%s, id=%d was not removed (replaced)\n",
+                res2->name, res2->id );
+        error_cnt++;
+    }
+    res2 = inst_rec_get_id( &res1->recs_id, id_replace );
+    if( res2 == NULL ) {
+        printf( "error: element id=%d was not added (replaced)\n", id_replace );
+        error_cnt++;
+    }
+    res2 = inst_rec_get_name( &res1->recs_name, name );
+    if( res2 == NULL ) {
+        printf( "error: no record found with name '%s'\n", name );
+        error_cnt++;
+    }
+    if( error_cnt == 0 )
+        printf( "success: alt rec of id=%d to id=%d (name=%s)\n", id,
+                res2->id, res2->name );
 
     return 0;
 }
