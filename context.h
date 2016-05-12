@@ -81,5 +81,6 @@ void* install_ids( symrec**, UT_array*, ast_node*, bool );
 void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node*, bool );
 
 symrec_list* get_port_list_net( inst_rec**, igraph_vector_t*, int, symrec_list* );
+inst_rec* merge_cp( inst_net*, virt_ports*, virt_ports* );
 
 #endif // CONTEXT_H

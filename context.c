@@ -3,6 +3,17 @@
 #include "cgraph.h"
 #include "error.h"
 
+inst_rec* merge_cp( inst_net* net, virt_ports* port1, virt_ports* port2 ) {
+    int net_id;
+    net_id = cgraph_merge_vertices( &net->g, port1->inst->id, port2->inst->id );
+    // delete one copy synchronizer from insttab
+    inst_rec_del( &net->recs_name, &net->recs_id, port2->inst );
+    // adjust all ids starting from the id of the deleted record
+    for( ; net_id < igraph_vcount( &net->g ); net_id++ )
+        inst_rec_replace_id( &net->recs_id, net_id, net_id - 1 );
+    return port1->inst;
+}
+
 /******************************************************************************/
 void check_connection_cp( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
 {
@@ -31,10 +42,7 @@ void check_connection_cp( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
                 if( ( port1->inst->type == VAL_CP )
                         && ( port2->inst->type == VAL_CP ) ) {
                     // merge copy synchronizers
-                    cgraph_merge_vertices( &net->g, port1->inst->id,
-                            port2->inst->id );
-                    inst_rec_del( &net->recs_name, &net->recs_id, port2->inst );
-                    cp_sync = port1->inst;
+                    cp_sync = merge_cp( net, port1, port2 );
                 }
                 else if( port1->inst->type == VAL_CP ) {
                     cp_sync = port1->inst;
@@ -129,12 +137,12 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
                 if( ( ports_l->inst->type == VAL_CP )
                         && ( ports_r->inst->type == VAL_CP ) ) {
                     // merge copy synchronizers
-                    cgraph_merge_vertices( &net->g, ports_l->inst->id,
-                            ports_r->inst->id );
-                    inst_rec_del( &net->recs_name, &net->recs_id,
-                            ports_r->inst );
+                    merge_cp( net, ports_l, ports_r );
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+                    printf( " -> connection is valid\n" );
+#endif // DEBUG_CONNECT
                 }
-                if( ( ports_l->attr_mode != ports_r->attr_mode )
+                else if( ( ports_l->attr_mode != ports_r->attr_mode )
                         || ( ports_l->attr_mode == VAL_BI )
                         || ( ports_r->attr_mode == VAL_BI )
                     ) {
@@ -354,19 +362,18 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
 
 }
 
-
+/******************************************************************************/
 void debug_print_ports( virt_net* v_net )
 {
     virt_ports* ports = NULL;
-    printf("-- v_net ports: ");
     if( v_net->ports != NULL )
         ports = v_net->ports;
     while( ports != NULL ) {
         printf( "%s, ", ports->rec->name );
         ports = ports->next;
     }
-    printf("\n");
 }
+
 /******************************************************************************/
 virt_net* install_nets( symrec** symtab, inst_net* net,
         UT_array* scope_stack, ast_node* ast )
@@ -380,22 +387,27 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
 
     switch( ast->type ) {
         case AST_PARALLEL:
-            printf("parallel operator:\n");
             v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
             check_connection_cp( net, v_net1, v_net2 );
             v_net1 = virt_net_alter_parallel( v_net1, v_net2 );
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+            printf( "Parallel combination, v_net: " );
+            debug_print_ports( v_net1 );
+            printf("\n");
+#endif // DEBUG_CONNECT
             break;
         case AST_SERIAL:
-            printf("serial operator:\n");
             v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
-            debug_print_ports( v_net1 );
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
-            debug_print_ports( v_net2 );
             check_connection( net, v_net1, v_net2 );
             check_connection_cp( net, v_net1, v_net2 );
             v_net1 = virt_net_alter_serial( v_net1, v_net2 );
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+            printf( "Serial combination, v_net: " );
             debug_print_ports( v_net1 );
+            printf("\n");
+#endif // DEBUG_CONNECT
             break;
         case AST_ID:
             // check the context of the symbol
