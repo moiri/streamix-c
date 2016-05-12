@@ -26,6 +26,7 @@ void check_connection_cp( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
     port1 = v_net1->ports;
     while( port1 != NULL ) {
         port2 = v_net2->ports;
+        port_last = NULL;
         while( port2 != NULL ) {
             port_next = port2->next;
             if( // the port names match?
