@@ -34,16 +34,20 @@ void cgraph_merge_vertices( igraph_t* g, int id1, int id2 )
 {
     igraph_vector_t v_new;
     int idx;
+    int id_new = 0;
     int id_low = id1;
     int id_high = id2;
     if( id2 < id1 ) {
         id_low = id2;
         id_high = id1;
     }
-    igraph_vector_init( &v_new, 0 );
+    igraph_vector_init( &v_new, igraph_vcount( g ) );
     for( idx=0; idx<igraph_vcount( g ); idx++ ) {
         if( idx == id_high ) VECTOR( v_new )[ idx ] = id_low;
-        else VECTOR( v_new )[ idx ] = idx;
+        else {
+            VECTOR( v_new )[ idx ] = id_new;
+            id_new++;
+        }
     }
     igraph_contract_vertices( g, &v_new, NULL );
 }
