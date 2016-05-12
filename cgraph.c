@@ -30,7 +30,7 @@ void cgraph_connect_dir( igraph_t* g, int id1, int id2, int mode1, int mode2 )
 }
 
 /******************************************************************************/
-void cgraph_merge_vertices( igraph_t* g, int id1, int id2 )
+int cgraph_merge_vertices( igraph_t* g, int id1, int id2 )
 {
     igraph_vector_t v_new;
     int idx;
@@ -50,4 +50,7 @@ void cgraph_merge_vertices( igraph_t* g, int id1, int id2 )
         }
     }
     igraph_contract_vertices( g, &v_new, NULL );
+
+    // elements starting from this id need to be altered in the insttab
+    return id_high + 1;
 }
