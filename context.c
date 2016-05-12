@@ -58,15 +58,22 @@ void check_connection_cp( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
                 }
                 // change left port to copy synchronizer port
                 port1->inst = cp_sync;
+                // set mode of port
+                /* if( port1->attr_mode != port2->attr_mode ) */
                 port1->attr_mode = VAL_BI;
-                // if possible, set mode to anything but VAL_NONE
-                if( port1->attr_mode == VAL_NONE )
-                    port1->attr_mode = port2->attr_mode;
+                // if possible, set port class to anything but VAL_NONE
+                if( port1->attr_class == VAL_NONE )
+                    port1->attr_class = port2->attr_class;
                 // remove right port from portlist
-                if( port_last != NULL ) port_last->next = port_next;
-                else v_net2->ports = port_next;
                 free( port2 );
-                port2 = port_last;
+                if( port_last != NULL ) {
+                    port_last->next = port_next;
+                    port2 = port_last;
+                }
+                else {
+                    v_net2->ports = port_next;
+                    break;
+                }
             }
             port_last = port2;
             port2 = port2->next;
@@ -344,7 +351,8 @@ void debug_print_ports( virt_net* v_net )
 {
     virt_ports* ports = NULL;
     printf("-- v_net ports: ");
-    ports = v_net->ports;
+    if( v_net->ports != NULL )
+        ports = v_net->ports;
     while( ports != NULL ) {
         printf( "%s, ", ports->rec->name );
         ports = ports->next;
@@ -364,12 +372,16 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
 
     switch( ast->type ) {
         case AST_PARALLEL:
+            printf("parallel operator:\n");
             v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
+            debug_print_ports( v_net1 );
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
+            debug_print_ports( v_net2 );
             check_connection_cp( net, v_net1, v_net2 );
             virt_net_alter_parallel( v_net1, v_net2 );
             break;
         case AST_SERIAL:
+            printf("serial operator:\n");
             v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
             debug_print_ports( v_net1 );
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );

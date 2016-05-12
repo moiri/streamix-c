@@ -50,7 +50,7 @@
 #define VAL_CP          8
 
 #define TEXT_THIS    "this"
-#define TEXT_CP      "*CP_SYNC"
+#define TEXT_CP      ".CP_SYNC"
 #define TEXT_NULL    "null"
 
 // drawing
