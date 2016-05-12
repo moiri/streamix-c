@@ -58,6 +58,17 @@ inst_net* inst_net_put( inst_net** nets, int scope )
 }
 
 /******************************************************************************/
+void inst_rec_cleanup( inst_net* net, inst_rec* inst, int id_start,
+        int id_end ) {
+    int id;
+    // delete one copy synchronizer from insttab
+    inst_rec_del( &net->recs_name, &net->recs_id, inst );
+    // adjust all ids starting from the id of the deleted record
+    for( id = id_start ; id < id_end; id++ )
+        inst_rec_replace_id( &net->recs_id, id, id - 1 );
+}
+
+/******************************************************************************/
 inst_rec* inst_rec_get_id( inst_rec** recs, int id )
 {
     inst_rec* res = NULL;

@@ -3,15 +3,26 @@
 #include "cgraph.h"
 #include "error.h"
 
-inst_rec* merge_cp( inst_net* net, virt_ports* port1, virt_ports* port2 ) {
-    int net_id;
-    net_id = cgraph_merge_vertices( &net->g, port1->inst->id, port2->inst->id );
-    // delete one copy synchronizer from insttab
-    inst_rec_del( &net->recs_name, &net->recs_id, port2->inst );
-    // adjust all ids starting from the id of the deleted record
-    for( ; net_id < igraph_vcount( &net->g ); net_id++ )
-        inst_rec_replace_id( &net->recs_id, net_id, net_id - 1 );
-    return port1->inst;
+
+/******************************************************************************/
+void update_con_graph( igraph_t* g, igraph_t* g_con, inst_rec* inst1,
+        inst_rec* inst2 )
+{
+    igraph_vector_t nvid_l;
+    igraph_vector_t nvid_r;
+    igraph_vector_init( &nvid_l, 0 );
+    igraph_vector_init( &nvid_r, 0 );
+    if( inst1->type == VAL_CP )
+        igraph_neighbors( g, &nvid_l, inst1->id, IGRAPH_ALL );
+    else
+        igraph_vector_push_back( &nvid_l, inst1->id );
+    if( inst2->type == VAL_CP )
+        igraph_neighbors( g, &nvid_r, inst2->id, IGRAPH_ALL );
+    else
+        igraph_vector_push_back( &nvid_r, inst2->id );
+    cgraph_disconnect( g_con, &nvid_l, &nvid_r );
+    igraph_vector_destroy( &nvid_l );
+    igraph_vector_destroy( &nvid_r );
 }
 
 /******************************************************************************/
@@ -22,6 +33,7 @@ void check_connection_cp( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
     virt_ports* port_last = NULL;
     virt_ports* port_next = NULL;
     inst_rec* cp_sync = NULL;
+    int net_id;
 
     port1 = v_net1->ports;
     while( port1 != NULL ) {
@@ -43,7 +55,11 @@ void check_connection_cp( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
                 if( ( port1->inst->type == VAL_CP )
                         && ( port2->inst->type == VAL_CP ) ) {
                     // merge copy synchronizers
-                    cp_sync = merge_cp( net, port1, port2 );
+                    net_id = cgraph_merge_vertices( &net->g, port1->inst->id,
+                            port2->inst->id );
+                    inst_rec_cleanup( net, port2->inst, net_id,
+                            igraph_vcount( &net->g ) );
+                    cp_sync = port1->inst;
                 }
                 else if( port1->inst->type == VAL_CP ) {
                     cp_sync = port1->inst;
@@ -106,6 +122,7 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
     virt_ports* ports_next_l = NULL;
     virt_ports* ports_last_r = NULL;
     virt_ports* ports_next_r = NULL;
+    int net_id;
 
     ports_l = v_net1->ports;
     while( ports_l != NULL ) {
@@ -138,8 +155,15 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
             ) {
                 if( ( ports_l->inst->type == VAL_CP )
                         && ( ports_r->inst->type == VAL_CP ) ) {
+                    update_con_graph( &net->g, g_con, ports_l->inst,
+                            ports_r->inst );
                     // merge copy synchronizers
-                    merge_cp( net, ports_l, ports_r );
+                    net_id = cgraph_merge_vertices( &net->g, ports_l->inst->id,
+                            ports_r->inst->id );
+                    cgraph_merge_vertices( g_con, ports_l->inst->id,
+                            ports_r->inst->id );
+                    inst_rec_cleanup( net, ports_r->inst, net_id,
+                            igraph_vcount( &net->g ) );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
                     printf( " -> connection is valid\n" );
 #endif // DEBUG_CONNECT
@@ -148,6 +172,8 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
                         || ( ports_l->attr_mode == VAL_BI )
                         || ( ports_r->attr_mode == VAL_BI )
                     ) {
+                    update_con_graph( &net->g, g_con, ports_l->inst,
+                            ports_r->inst );
                     cgraph_connect_dir( &net->g, ports_l->inst->id,
                             ports_r->inst->id, ports_l->attr_mode,
                             ports_r->attr_mode );
@@ -225,7 +251,6 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
     void* res = NULL;
     bool set_sync = false;
     int type;
-    igraph_t g_con;
     static int _scope = 0;
     static int _sync_id = 0; // used to assemble ports to sync groups
 
@@ -257,10 +282,8 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             break;
         case AST_NET:
             // install net instances
-            igraph_empty( &g_con, 0, true );
             net = inst_net_put( nets, *utarray_back( scope_stack ) );
-            net->v_net = install_nets( symtab, net, scope_stack, ast->node,
-                    &g_con );
+            net->v_net = install_nets( symtab, net, scope_stack, ast->node );
 #if defined(DEBUG) || defined(DEBUG_NET_DOT)
             igraph_write_graph_dot( &net->g, stdout );
 #endif // DEBUG_NET_DOT
@@ -379,19 +402,20 @@ void debug_print_ports( virt_net* v_net )
 
 /******************************************************************************/
 virt_net* install_nets( symrec** symtab, inst_net* net,
-        UT_array* scope_stack, ast_node* ast, igraph_t* g )
+        UT_array* scope_stack, ast_node* ast )
 {
     symrec* rec = NULL;
     virt_net* v_net1 = NULL;
     virt_net* v_net2 = NULL;
     inst_rec* inst = NULL;
+    igraph_t g;
 
     if( ast == NULL ) return NULL;
 
     switch( ast->type ) {
         case AST_PARALLEL:
-            v_net1 = install_nets( symtab, net, scope_stack, ast->op.left, g );
-            v_net2 = install_nets( symtab, net, scope_stack, ast->op.right, g );
+            v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
+            v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
             check_connection_cp( net, v_net1, v_net2 );
             v_net1 = virt_net_alter_parallel( v_net1, v_net2 );
             virt_net_destroy_struct( v_net2 );
@@ -402,13 +426,18 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
 #endif // DEBUG_CONNECT
             break;
         case AST_SERIAL:
-            v_net1 = install_nets( symtab, net, scope_stack, ast->op.left, g );
-            v_net2 = install_nets( symtab, net, scope_stack, ast->op.right, g );
-            cgraph_connect( g, &v_net1->con->right, &v_net2->con->left );
-            check_connection( net, v_net1, v_net2, g );
+            v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
+            v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
+            // create connection graph
+            igraph_empty( &g, igraph_vcount( &net->g ), IGRAPH_UNDIRECTED );
+            cgraph_connect( &g, &v_net1->con->right, &v_net2->con->left );
+            // check connections and update virtual net
+            check_connection( net, v_net1, v_net2, &g );
             check_connection_cp( net, v_net1, v_net2 );
             v_net1 = virt_net_alter_serial( v_net1, v_net2 );
+            // cleanup virt net and connection graph
             virt_net_destroy_struct( v_net2 );
+            igraph_destroy( &g );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "Serial combination, v_net: " );
             debug_print_ports( v_net1 );
@@ -426,7 +455,6 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
                         ast->symbol.line, VAL_NET, rec );
                 // add new vertex to graph
                 igraph_add_vertices( &net->g, 1, NULL );
-                igraph_add_vertices( g, 1, NULL );
                 v_net1 = virt_net_create( rec, inst );
             }
             break;

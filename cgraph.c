@@ -7,7 +7,6 @@ void cgraph_connect( igraph_t* g, igraph_vector_ptr_t* v1,
 {
     igraph_vector_t edges;
     int i, j;
-    igraph_vector_init( &edges, 0 );
     for( i=0; i<igraph_vector_ptr_size( v1 ); i++ ) {
         for( j=0; j<igraph_vector_ptr_size( v2 ); j++ ) {
             igraph_vector_push_back( &edges,
@@ -31,6 +30,25 @@ void cgraph_connect_dir( igraph_t* g, int id1, int id2, int mode1, int mode2 )
     }
     igraph_add_edge( g, id_from, id_to );
 }
+
+/******************************************************************************/
+void cgraph_disconnect( igraph_t* g, igraph_vector_t* v1, igraph_vector_t* v2 )
+{
+    igraph_vector_t edges;
+    igraph_es_t es;
+    igraph_es_vector( &es, &edges );
+    int i, j;
+    for( i=0; i<igraph_vector_size( v1 ); i++ ) {
+        for( j=0; j<igraph_vector_size( v2 ); j++ ) {
+            igraph_vector_push_back( &edges, ( int )igraph_vector_e( v1, i ) );
+            igraph_vector_push_back( &edges, ( int )igraph_vector_e( v2, j ) );
+        }
+    }
+    igraph_delete_edges( g, es );
+    igraph_es_destroy( &es );
+    igraph_vector_destroy( &edges );
+}
+
 
 /******************************************************************************/
 int cgraph_merge_vertices( igraph_t* g, int id1, int id2 )

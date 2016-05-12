@@ -21,6 +21,7 @@
  */
 void cgraph_connect( igraph_t*, igraph_vector_ptr_t*, igraph_vector_ptr_t* );
 void cgraph_connect_dir( igraph_t*, int, int, int, int );
+void cgraph_disconnect( igraph_t*, igraph_vector_t*, igraph_vector_t* );
 int cgraph_merge_vertices( igraph_t*, int, int );
 
 #endif // CGRAPH_H

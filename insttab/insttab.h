@@ -88,6 +88,7 @@ inst_net* inst_net_get( inst_net**, int );
  * @return inst_net*    pointer to the net record
  */
 inst_net* inst_net_put( inst_net**, int );
+void inst_rec_cleanup( inst_net*, inst_rec*, int, int );
 
 /**
  * Get rec from instance table using a name as key
