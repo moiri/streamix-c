@@ -26,7 +26,7 @@ struct inst_net
     inst_rec*       recs_id;   // hashtable of the instances in the net (id)
     inst_rec*       recs_name; // hashtable of the instances in the net (name)
     igraph_t        g;
-    net_con*        con;
+    virt_net*       v_net;
     inst_net*       next;
     UT_hash_handle  hh;     // makes this structure hashable
 };
@@ -46,8 +46,8 @@ struct inst_rec
 // vectors to store the connection ids
 struct net_con
 {
-    igraph_vector_t left;
-    igraph_vector_t right;
+    igraph_vector_ptr_t left;
+    igraph_vector_ptr_t right;
 };
 
 // a virtual net used as an intermediate interface to construct a net out of a

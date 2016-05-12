@@ -96,7 +96,8 @@ void check_connection_cp( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
 }
 
 /******************************************************************************/
-void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
+void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
+        igraph_t* g_con )
 {
     char error_msg[ CONST_ERROR_LEN ];
     virt_ports* ports_l = NULL;
@@ -217,7 +218,6 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
     box_attr* b_attr = NULL;
     wrap_attr* w_attr = NULL;
     port_attr* p_attr = NULL;
-    virt_net* v_net = NULL;
     void* attr = NULL;
     inst_net* net = NULL;
     symrec_list* ptr = NULL;
@@ -225,6 +225,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
     void* res = NULL;
     bool set_sync = false;
     int type;
+    igraph_t g_con;
     static int _scope = 0;
     static int _sync_id = 0; // used to assemble ports to sync groups
 
@@ -256,12 +257,13 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             break;
         case AST_NET:
             // install net instances
+            igraph_empty( &g_con, 0, true );
             net = inst_net_put( nets, *utarray_back( scope_stack ) );
-            v_net = install_nets( symtab, net, scope_stack, ast->node );
+            net->v_net = install_nets( symtab, net, scope_stack, ast->node,
+                    &g_con );
 #if defined(DEBUG) || defined(DEBUG_NET_DOT)
             igraph_write_graph_dot( &net->g, stdout );
 #endif // DEBUG_NET_DOT
-            res = ( void* )v_net;
             break;
         case AST_NET_PROTO:
             break;
@@ -377,7 +379,7 @@ void debug_print_ports( virt_net* v_net )
 
 /******************************************************************************/
 virt_net* install_nets( symrec** symtab, inst_net* net,
-        UT_array* scope_stack, ast_node* ast )
+        UT_array* scope_stack, ast_node* ast, igraph_t* g )
 {
     symrec* rec = NULL;
     virt_net* v_net1 = NULL;
@@ -388,10 +390,11 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
 
     switch( ast->type ) {
         case AST_PARALLEL:
-            v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
-            v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
+            v_net1 = install_nets( symtab, net, scope_stack, ast->op.left, g );
+            v_net2 = install_nets( symtab, net, scope_stack, ast->op.right, g );
             check_connection_cp( net, v_net1, v_net2 );
             v_net1 = virt_net_alter_parallel( v_net1, v_net2 );
+            virt_net_destroy_struct( v_net2 );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "Parallel combination, v_net: " );
             debug_print_ports( v_net1 );
@@ -399,11 +402,13 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
 #endif // DEBUG_CONNECT
             break;
         case AST_SERIAL:
-            v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
-            v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
-            check_connection( net, v_net1, v_net2 );
+            v_net1 = install_nets( symtab, net, scope_stack, ast->op.left, g );
+            v_net2 = install_nets( symtab, net, scope_stack, ast->op.right, g );
+            cgraph_connect( g, &v_net1->con->right, &v_net2->con->left );
+            check_connection( net, v_net1, v_net2, g );
             check_connection_cp( net, v_net1, v_net2 );
             v_net1 = virt_net_alter_serial( v_net1, v_net2 );
+            virt_net_destroy_struct( v_net2 );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "Serial combination, v_net: " );
             debug_print_ports( v_net1 );
@@ -421,6 +426,7 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
                         ast->symbol.line, VAL_NET, rec );
                 // add new vertex to graph
                 igraph_add_vertices( &net->g, 1, NULL );
+                igraph_add_vertices( g, 1, NULL );
                 v_net1 = virt_net_create( rec, inst );
             }
             break;

@@ -23,7 +23,6 @@ inst_net* inst_net_put( inst_net** nets, int scope )
     inst_net* item = NULL;
     inst_net* new_item = NULL;
     inst_net* previous_item = NULL;
-    net_con* con = NULL;
     igraph_t g;
 
     // ADD ITEM TO THE INSTANCE TABLE
@@ -35,11 +34,6 @@ inst_net* inst_net_put( inst_net** nets, int scope )
     // create new graph
     igraph_empty( &g, 0, true );
     new_item->g = g;
-    // initialize the connection vectors
-    con = ( net_con* )malloc( sizeof( net_con ) );
-    igraph_vector_init( &con->left, 0 );
-    igraph_vector_init( &con->right, 0 );
-    new_item->con = con;
     // check wheter key already exists
     HASH_FIND_INT( *nets, &scope, item );
     if( item == NULL ) {
@@ -189,9 +183,9 @@ virt_net* virt_net_create( symrec* rec, inst_rec* inst )
     v_net = malloc( sizeof( virt_net ) );
     v_net->ports = ports_last;
     v_net->con = malloc( sizeof( net_con ) );
-    igraph_vector_init( &v_net->con->left, 1 );
-    VECTOR( v_net->con->left )[ 0 ] = inst->id;
-    igraph_vector_copy( &v_net->con->right, &v_net->con->left );
+    igraph_vector_ptr_init( &v_net->con->left, 1 );
+    VECTOR( v_net->con->left )[ 0 ] = &inst->id;
+    igraph_vector_ptr_copy( &v_net->con->right, &v_net->con->left );
 
     return v_net;
 }
@@ -207,8 +201,14 @@ void virt_net_destroy( virt_net* v_net )
         free( ports );
     }
     // free connection vectors
-    igraph_vector_destroy( &v_net->con->left );
-    igraph_vector_destroy( &v_net->con->right );
+    igraph_vector_ptr_destroy( &v_net->con->left );
+    igraph_vector_ptr_destroy( &v_net->con->right );
+    virt_net_destroy_struct( v_net );
+}
+
+/******************************************************************************/
+void virt_net_destroy_struct( virt_net* v_net )
+{
     // free structures
     free( v_net->con );
     free( v_net );
@@ -229,16 +229,12 @@ virt_net* virt_net_alter_parallel( virt_net* v_net1, virt_net* v_net2 )
     ports_last->next = v_net2->ports;
 
     // alter connection lists
-    igraph_vector_append( &v_net1->con->left, &v_net2->con->left );
-    igraph_vector_append( &v_net1->con->right, &v_net2->con->right );
+    igraph_vector_ptr_append( &v_net1->con->left, &v_net2->con->left );
+    igraph_vector_ptr_append( &v_net1->con->right, &v_net2->con->right );
 
     // destroy obsolete connection vectors
-    igraph_vector_destroy( &v_net2->con->left );
-    igraph_vector_destroy( &v_net2->con->right );
-
-    // free unsused structures
-    free( v_net2->con );
-    free( v_net2 );
+    igraph_vector_ptr_destroy( &v_net2->con->left );
+    igraph_vector_ptr_destroy( &v_net2->con->right );
 
     return v_net1;
 }
@@ -265,15 +261,11 @@ virt_net* virt_net_alter_serial( virt_net* v_net1, virt_net* v_net2 )
     }
 
     // destroy obsolete connection vectors
-    igraph_vector_destroy( &v_net1->con->right );
-    igraph_vector_destroy( &v_net2->con->left );
+    igraph_vector_ptr_destroy( &v_net1->con->right );
+    igraph_vector_ptr_destroy( &v_net2->con->left );
 
     // alter connection vectors of virtual net
     v_net1->con->right = v_net2->con->right;
-
-    // free unsused structures
-    free( v_net2->con );
-    free( v_net2 );
 
     return v_net1;
 }
