@@ -132,6 +132,9 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
     virt_ports* ports_next_l = NULL;
     virt_ports* ports_last_r = NULL;
     virt_ports* ports_next_r = NULL;
+    int edge_id, v1_id, v2_id;
+    inst_rec* rec1 = NULL;
+    inst_rec* rec2 = NULL;
 
     ports_l = v_net1->ports;
     while( ports_l != NULL ) {
@@ -218,6 +221,17 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
         }
         ports_last_l = ports_l;
         ports_l = ports_next_l;
+    }
+
+    // perform further checks on port connections
+    for( edge_id = 0; edge_id < igraph_ecount( g_con ); edge_id++ ) {
+        igraph_edge( g_con, edge_id, &v1_id, &v2_id );
+        rec1 = inst_rec_get_id( &net->recs_id, v1_id );
+        rec2 = inst_rec_get_id( &net->recs_id, v2_id );
+        // ERROR: there is no connection between the two nets
+        sprintf( error_msg, ERROR_NO_NET_CON, ERR_ERROR, rec1->name, v1_id,
+                rec2->name, v2_id );
+        report_yyerror( error_msg, rec1->line );
     }
 }
 
@@ -438,17 +452,11 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             igraph_empty( &g, igraph_vcount( &net->g ), IGRAPH_UNDIRECTED );
             cgraph_connect( &g, &v_net1->con->right, &v_net2->con->left );
             // check connections and update virtual net
-#if defined(DEBUG) || defined(DEBUG_NET_DOT)
-            igraph_write_graph_dot( &g, stdout );
-#endif // DEBUG_NET_DOT
             check_connection( net, v_net1, v_net2, &g );
             check_connection_cp( net, v_net1, v_net2 );
             v_net1 = virt_net_alter_serial( v_net1, v_net2 );
             // cleanup virt net and connection graph
             virt_net_destroy_struct( v_net2 );
-#if defined(DEBUG) || defined(DEBUG_NET_DOT)
-            igraph_write_graph_dot( &g, stdout );
-#endif // DEBUG_NET_DOT
             igraph_destroy( &g );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "Serial combination, v_net: " );
