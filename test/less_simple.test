@@ -1,6 +1,6 @@
 A = box A (out a)
-B = box B (in a)
-C = box C (out a, out c)
+B = box B (in a, out b)
+C = box C (in b, out c)
 D = box D (in c, out g)
 E = box E (in c, out d)
 F = box F (in c, out f)
