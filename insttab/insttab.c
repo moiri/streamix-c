@@ -199,13 +199,13 @@ void virt_net_destroy( virt_net* v_net )
     // free connection vectors
     igraph_vector_destroy( &v_net->con->left );
     igraph_vector_destroy( &v_net->con->right );
+    // free structures
     free( v_net->con );
-    // free virt_net
     free( v_net );
 }
 
 /******************************************************************************/
-void virt_net_alter_parallel( virt_net* v_net1, virt_net* v_net2 )
+virt_net* virt_net_alter_parallel( virt_net* v_net1, virt_net* v_net2 )
 {
     virt_ports* ports = NULL;
     virt_ports* ports_last = NULL;
@@ -229,10 +229,12 @@ void virt_net_alter_parallel( virt_net* v_net1, virt_net* v_net2 )
     // free unsused structures
     free( v_net2->con );
     free( v_net2 );
+
+    return v_net1;
 }
 
 /******************************************************************************/
-void virt_net_alter_serial( virt_net* v_net1, virt_net* v_net2 )
+virt_net* virt_net_alter_serial( virt_net* v_net1, virt_net* v_net2 )
 {
     virt_ports* ports = NULL;
     virt_ports* ports_last = NULL;
@@ -262,4 +264,6 @@ void virt_net_alter_serial( virt_net* v_net1, virt_net* v_net2 )
     // free unsused structures
     free( v_net2->con );
     free( v_net2 );
+
+    return v_net1;
 }

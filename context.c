@@ -50,6 +50,10 @@ void check_connection_cp( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
                     cp_sync = inst_rec_put( &net->recs_name, &net->recs_id,
                             TEXT_CP, igraph_vcount( &net->g ), 0, VAL_CP,
                             NULL );
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+                    printf( "Create copy-synchronizer %s(%d)\n", cp_sync->name,
+                            cp_sync->id );
+#endif // DEBUG_CONNECT
                     igraph_add_vertices( &net->g, 1, NULL );
                     cgraph_connect_dir( &net->g, cp_sync->id, port1->inst->id,
                             VAL_BI, port1->attr_mode );
@@ -97,6 +101,7 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
     while( ports_l != NULL ) {
         ports_next_l = ports_l->next;
         ports_r = v_net2->ports;
+        ports_last_r = NULL;
         while( ports_r != NULL ) {
             ports_next_r = ports_r->next;
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
@@ -137,11 +142,14 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
                             ports_r->inst->id, ports_l->attr_mode,
                             ports_r->attr_mode );
 
-#if defined(DEBUG) || defined(DEBUG_SERIAL)
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
                     printf( " -> connection is valid\n" );
-#endif // DEBUG_SERIAL
+#endif // DEBUG_CONNECT
                 }
                 else {
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+                    printf( " -> connection is invalid\n" );
+#endif // DEBUG_CONNECT
                     sprintf( error_msg, ERROR_BAD_MODE, ERR_ERROR,
                             ports_l->rec->name, ports_l->inst->name,
                             ports_l->inst->id, ports_r->inst->name,
@@ -159,9 +167,9 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
                 break;
             }
             else {
-#if defined(DEBUG) || defined(DEBUG_SERIAL)
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
                 printf( " -> connection is invalid\n" );
-#endif // DEBUG_SERIAL
+#endif // DEBUG_CONNECT
             }
             ports_last_r = ports_r;
             ports_r = ports_next_r;
@@ -374,11 +382,9 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
         case AST_PARALLEL:
             printf("parallel operator:\n");
             v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
-            debug_print_ports( v_net1 );
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
-            debug_print_ports( v_net2 );
             check_connection_cp( net, v_net1, v_net2 );
-            virt_net_alter_parallel( v_net1, v_net2 );
+            v_net1 = virt_net_alter_parallel( v_net1, v_net2 );
             break;
         case AST_SERIAL:
             printf("serial operator:\n");
@@ -387,10 +393,9 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
             debug_print_ports( v_net2 );
             check_connection( net, v_net1, v_net2 );
-            debug_print_ports( v_net1 );
-            debug_print_ports( v_net2 );
             check_connection_cp( net, v_net1, v_net2 );
-            virt_net_alter_serial( v_net1, v_net2 );
+            v_net1 = virt_net_alter_serial( v_net1, v_net2 );
+            debug_print_ports( v_net1 );
             break;
         case AST_ID:
             // check the context of the symbol

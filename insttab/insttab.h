@@ -132,8 +132,9 @@ void inst_rec_del( inst_rec**, inst_rec**, inst_rec* );
 
 virt_net* virt_net_create( symrec*, inst_rec* );
 
-void virt_net_alter_parallel( virt_net* , virt_net* );
-void virt_net_alter_serial( virt_net* , virt_net* );
+virt_net* virt_net_alter_parallel( virt_net* , virt_net* );
+virt_net* virt_net_alter_serial( virt_net* , virt_net* );
 void virt_net_destroy( virt_net* );
+void virt_net_destroy_struct( virt_net* );
 
 #endif // INSTTAB_H
