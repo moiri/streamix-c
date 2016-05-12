@@ -30,6 +30,16 @@ wrapper Car { up in car_next {car_l_in}, up out car_prev {car_l_out},
     // this is a single line comment
     MB = box MB (in block, out break_cmd)
 
+    wrapper Sensors { out speed, in block, out break_cmd, in break_abs, side out dist } {
+        link { this, RS }
+        link { this, MB }
+        link { this, B }
+        link { this, DS }
+        RS = stateless box RS (out speed)
+
+        connect RS|B|MB|DS
+    }
+
     wrapper ABS { in dc, out abs, side out dist } {
         link { this, ABS }
         link { this, Sensors }
@@ -43,16 +53,6 @@ wrapper Car { up in car_next {car_l_in}, up out car_prev {car_l_out},
         )
 
         connect Sensors.ABS
-    }
-
-    wrapper Sensors { out speed, in block, out break_cmd, in break_abs, side out dist } {
-        link { this, RS }
-        link { this, MB }
-        link { this, B }
-        link { this, DS }
-        RS = stateless box RS (out speed)
-
-        connect RS|B|MB|DS
     }
 
     connect ABS.DC.CPA
