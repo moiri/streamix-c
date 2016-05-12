@@ -164,8 +164,8 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
             ) {
                 if( ( ports_l->inst->type == VAL_CP )
                         && ( ports_r->inst->type == VAL_CP ) ) {
-                    /* update_con_graph( &net->g, g_con, ports_l->inst, */
-                    /*         ports_r->inst ); */
+                    update_con_graph( &net->g, g_con, ports_l->inst,
+                            ports_r->inst );
                     // merge copy synchronizers
                     merge_cp( net, ports_l, ports_r );
                     cgraph_merge_vertices( g_con, ports_l->inst->id,
@@ -178,8 +178,8 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
                         || ( ports_l->attr_mode == VAL_BI )
                         || ( ports_r->attr_mode == VAL_BI )
                     ) {
-                    /* update_con_graph( &net->g, g_con, ports_l->inst, */
-                    /*         ports_r->inst ); */
+                    update_con_graph( &net->g, g_con, ports_l->inst,
+                            ports_r->inst );
                     cgraph_connect_dir( &net->g, ports_l->inst->id,
                             ports_r->inst->id, ports_l->attr_mode,
                             ports_r->attr_mode );
@@ -438,14 +438,17 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             igraph_empty( &g, igraph_vcount( &net->g ), IGRAPH_UNDIRECTED );
             cgraph_connect( &g, &v_net1->con->right, &v_net2->con->left );
             // check connections and update virtual net
+#if defined(DEBUG) || defined(DEBUG_NET_DOT)
+            igraph_write_graph_dot( &g, stdout );
+#endif // DEBUG_NET_DOT
             check_connection( net, v_net1, v_net2, &g );
             check_connection_cp( net, v_net1, v_net2 );
             v_net1 = virt_net_alter_serial( v_net1, v_net2 );
             // cleanup virt net and connection graph
             virt_net_destroy_struct( v_net2 );
-/* #if defined(DEBUG) || defined(DEBUG_NET_DOT) */
-/*             igraph_write_graph_dot( &g, stdout ); */
-/* #endif // DEBUG_NET_DOT */
+#if defined(DEBUG) || defined(DEBUG_NET_DOT)
+            igraph_write_graph_dot( &g, stdout );
+#endif // DEBUG_NET_DOT
             igraph_destroy( &g );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "Serial combination, v_net: " );
