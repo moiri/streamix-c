@@ -40,8 +40,21 @@ bool are_port_names_ok( virt_ports*, virt_ports*, bool, bool );
 bool are_port_modes_ok( virt_ports*, virt_ports* );
 
 /**
+ * Check the connection of two ports from virtual nets and connect them.
+ * The dependancy graph is updated.
+ *
+ * @param inst_net**:   pointer to the instance table of nets (scopes)
+ * @param virt_net*:    pointer to the port of a virtual net of the left operator
+ * @param virt_net*:    pointer to the port of a virtual net of the right operator
+ * @param igraph_t*:    pointer to a temporary graph indicating the required
+ *                      connections between nets
+ * @return bool:        true if connection was ok, false if no connection
+ */
+bool check_connection( inst_net*, virt_ports*, virt_ports*, igraph_t* );
+
+/**
  * Check the connection of two virtual nets and connect them. Connecting ports
- * are removed from the virtual nets. The dependancy graph is updated.
+ * are removed from the virtual nets.
  *
  * @param inst_net**:   pointer to the instance table of nets (scopes)
  * @param virt_net*:    pointer to the virtual net of the left operator
@@ -49,7 +62,17 @@ bool are_port_modes_ok( virt_ports*, virt_ports* );
  * @param igraph_t*:    pointer to a temporary graph indicating the required
  *                      connections between nets
  */
-void check_connection( inst_net*, virt_net*, virt_net*, igraph_t* );
+void check_connections( inst_net*, virt_net*, virt_net*, igraph_t* );
+
+/**
+ * Reports errors if two nets are not connected but should be according to
+ * Streamix operator semantics
+ *
+ * @param inst_net**:   pointer to the instance table of nets (scopes)
+ * @param igraph_t*:    pointer to a temporary graph indicating the required
+ *                      connections between nets
+ */
+void check_connection_missing( inst_net*, igraph_t* );
 
 /**
  * Check the context of all identifiers in the program

@@ -56,19 +56,70 @@ bool are_port_modes_ok( virt_ports* p1, virt_ports* p2 )
 }
 
 /******************************************************************************/
-void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
+bool check_connection( inst_net* net, virt_ports* ports_l,
+        virt_ports* ports_r, igraph_t* g_con )
+{
+    bool res = false;
+    char error_msg[ CONST_ERROR_LEN ];
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+    printf( "check_connection:\n " );
+    debug_print_port( ports_l );
+    printf( " and " );
+    debug_print_port( ports_r );
+#endif // DEBUG_CONNECT
+    if( are_port_names_ok( ports_l, ports_r, false, false ) ) {
+        if( ( ports_l->inst->type == VAL_CP )
+                && ( ports_r->inst->type == VAL_CP ) ) {
+            cgraph_update( g_con, ports_l->inst->id, ports_r->inst->id,
+                    ports_l->inst->type, ports_r->inst->type, &net->g);
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+            printf( "\n  => connection is valid\n" );
+#endif // DEBUG_CONNECT
+            // merge copy synchronizers
+            cpsync_merge( net, ports_l, ports_r );
+            dgraph_merge_vertice_1( g_con, ports_l->inst->id,
+                    ports_r->inst->id );
+            res = true;
+        }
+        else if( are_port_modes_ok( ports_l, ports_r ) ) {
+            cgraph_update( g_con, ports_l->inst->id, ports_r->inst->id,
+                    ports_l->inst->type, ports_r->inst->type, &net->g);
+            dgraph_connect_1( &net->g, ports_l->inst->id, ports_r->inst->id,
+                    ports_l->attr_mode, ports_r->attr_mode );
+
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+            printf( "\n  => connection is valid\n" );
+#endif // DEBUG_CONNECT
+            res = true;
+        }
+        else {
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+            printf( "\n  => connection is invalid (bad mode)\n" );
+#endif // DEBUG_CONNECT
+            sprintf( error_msg, ERROR_BAD_MODE, ERR_ERROR, ports_l->rec->name,
+                    ports_l->inst->name, ports_l->inst->id, ports_r->inst->name,
+                    ports_r->inst->id, ports_r->rec->line );
+            report_yyerror( error_msg, ports_r->rec->line );
+        }
+    }
+    else {
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+        printf( "\n  => connection is invalid (no match)\n" );
+#endif // DEBUG_CONNECT
+    }
+    return res;
+}
+
+/******************************************************************************/
+void check_connections( inst_net* net, virt_net* v_net1, virt_net* v_net2,
         igraph_t* g_con )
 {
-    char error_msg[ CONST_ERROR_LEN ];
     virt_ports* ports_l = NULL;
     virt_ports* ports_r = NULL;
     virt_ports* ports_last_l = NULL;
     virt_ports* ports_next_l = NULL;
     virt_ports* ports_last_r = NULL;
     virt_ports* ports_next_r = NULL;
-    int edge_id, v1_id, v2_id;
-    inst_rec* rec1 = NULL;
-    inst_rec* rec2 = NULL;
 
     ports_l = v_net1->ports;
     while( ports_l != NULL ) {
@@ -77,49 +128,8 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
         ports_last_r = NULL;
         while( ports_r != NULL ) {
             ports_next_r = ports_r->next;
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-            printf( "check_connection:\n " );
-            debug_print_port( ports_l );
-            printf( " and " );
-            debug_print_port( ports_r );
-#endif // DEBUG_CONNECT
-            if( are_port_names_ok( ports_l, ports_r, false, false ) ) {
-                if( ( ports_l->inst->type == VAL_CP )
-                        && ( ports_r->inst->type == VAL_CP ) ) {
-                    cgraph_update( g_con, ports_l->inst->id,
-                            ports_r->inst->id, ports_l->inst->type,
-                            ports_r->inst->type, &net->g);
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-                    printf( "\n  => connection is valid\n" );
-#endif // DEBUG_CONNECT
-                    // merge copy synchronizers
-                    cpsync_merge( net, ports_l, ports_r );
-                    dgraph_merge_vertice_1( g_con, ports_l->inst->id,
-                            ports_r->inst->id );
-                }
-                else if( are_port_modes_ok( ports_l, ports_r ) ) {
-                    cgraph_update( g_con, ports_l->inst->id,
-                            ports_r->inst->id, ports_l->inst->type,
-                            ports_r->inst->type, &net->g);
-                    dgraph_connect_1( &net->g, ports_l->inst->id,
-                            ports_r->inst->id, ports_l->attr_mode,
-                            ports_r->attr_mode );
-
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-                    printf( "\n  => connection is valid\n" );
-#endif // DEBUG_CONNECT
-                }
-                else {
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-                    printf( "\n  => connection is invalid (bad mode)\n" );
-#endif // DEBUG_CONNECT
-                    sprintf( error_msg, ERROR_BAD_MODE, ERR_ERROR,
-                            ports_l->rec->name, ports_l->inst->name,
-                            ports_l->inst->id, ports_r->inst->name,
-                            ports_r->inst->id, ports_r->rec->line );
-                    report_yyerror( error_msg, ports_r->rec->line );
-                }
-                // remove both ports
+            if( check_connection( net, ports_l, ports_r, g_con ) ) {
+                // remove both ports from their corresponding virtual nets
                 if( ports_last_l != NULL ) ports_last_l->next = ports_next_l;
                 else v_net1->ports = ports_next_l;
                 if( ports_last_r != NULL ) ports_last_r->next = ports_next_r;
@@ -129,19 +139,22 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
                 ports_l = ports_last_l;
                 break;
             }
-            else {
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-                printf( "\n  => connection is invalid (no match)\n" );
-#endif // DEBUG_CONNECT
-            }
             ports_last_r = ports_r;
             ports_r = ports_next_r;
         }
         ports_last_l = ports_l;
         ports_l = ports_next_l;
     }
+}
 
-    // perform further checks on port connections
+/******************************************************************************/
+void check_connection_missing( inst_net* net, igraph_t* g_con )
+{
+    char error_msg[ CONST_ERROR_LEN ];
+    int edge_id, v1_id, v2_id;
+    inst_rec* rec1 = NULL;
+    inst_rec* rec2 = NULL;
+
     for( edge_id = 0; edge_id < igraph_ecount( g_con ); edge_id++ ) {
         igraph_edge( g_con, edge_id, &v1_id, &v2_id );
         rec1 = inst_rec_get_id( &net->recs_id, v1_id );
@@ -480,7 +493,8 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             cgraph_connect_full_ptr( &g, &v_net1->con->right,
                     &v_net2->con->left );
             // check connections and update virtual net
-            check_connection( net, v_net1, v_net2, &g );
+            check_connections( net, v_net1, v_net2, &g );
+            check_connection_missing( net, &g );
             cpsync_connect( net, v_net1, v_net2, false );
             v_net1 = virt_net_alter_serial( v_net1, v_net2 );
             // cleanup virt net and connection graph
