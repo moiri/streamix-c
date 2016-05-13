@@ -1,6 +1,6 @@
-A = box A( out x )
+A = box A( up out x, down out x )
 B = box B( out x )
-C = box C( in x )
+C = box C( up in x, down in x )
 D = box D( in x )
 
 connect D.A.C.B
