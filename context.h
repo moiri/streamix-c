@@ -35,6 +35,19 @@ void check_connection( inst_net*, virt_net*, virt_net*, igraph_t* );
  * @param ast_node*:    pointer to the root ast node
  * */
 void check_context( ast_node* );
+
+/**
+ * Check the context of all identifiers in the program by iterating through the
+ * AST. This function is recursive.
+ *
+ * @param symrec**:     pointer to the symbol table
+ * @param inst_net**:   pointer to the instance table of nets (scopes)
+ * @param UT_array**:   pointer to the scope stack
+ * @param ast_node*:    pointer to the ast node
+ * @param bool:         flag to help identify synchronized ports
+ * @return void*:       a generic pointer to pass information down the
+ *                      recursive function
+ * */
 void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node*, bool );
 
 /**
@@ -47,9 +60,29 @@ void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node*, bool );
  * @param virt_net*:    pointer to the virtual net of the right operator
  */
 void cpsync_connect( inst_net*, virt_net*, virt_net* );
+
+/**
+ * Merge two copy sunchronizer
+ *
+ * @param inst_net**:   pointer to the instance table of nets (scopes)
+ * @param virt_net*:    pointer to the port of a virtual net
+ * @param virt_net*:    pointer to the port of a virtual net
+ * @return inst_rec*:   pointer to the merged copy synchronizer
+ */
 inst_rec* cpsync_merge( inst_net*, virt_ports*, virt_ports* );
 
+/**
+ * Print debug information of a port of a virtual net
+ *
+ * @param virt_net*:    pointer to the port of a virtual net
+ */
 void debug_print_port( virt_ports* );
+
+/**
+ * Print debug information of all ports in a virtual net
+ *
+ * @param virt_net*:    pointer to the virtual net
+ */
 void debug_print_ports( virt_net* );
 
 /**
