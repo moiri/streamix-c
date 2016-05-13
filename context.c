@@ -340,14 +340,53 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
 }
 
 /******************************************************************************/
-void cpsync_connect( inst_net* net, virt_net* v_net1, virt_net* v_net2,
+void cpsync_connect( inst_net* net, virt_ports* port1, virt_ports* port2 )
+{
+    inst_rec* cp_sync = NULL;
+    // create copy synchronizer instance
+    if( ( port1->inst->type == VAL_CP ) && ( port2->inst->type == VAL_CP ) ) {
+        // merge copy synchronizers
+        cp_sync = cpsync_merge( net, port1, port2 );
+    }
+    else if( port1->inst->type == VAL_CP ) {
+        cp_sync = port1->inst;
+        dgraph_connect_1( &net->g, cp_sync->id, port2->inst->id, VAL_BI,
+                port2->attr_mode );
+    }
+    else if( port2->inst->type == VAL_CP ) {
+        cp_sync = port2->inst;
+        dgraph_connect_1( &net->g, cp_sync->id, port1->inst->id, VAL_BI,
+                port1->attr_mode );
+    }
+    else {
+        cp_sync = inst_rec_put( &net->recs_name, &net->recs_id, TEXT_CP,
+                igraph_vcount( &net->g ), 0, VAL_CP, NULL );
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+        printf( "Create copy-synchronizer %s(%d)\n", cp_sync->name,
+                cp_sync->id );
+#endif // DEBUG_CONNECT
+        igraph_add_vertices( &net->g, 1, NULL );
+        dgraph_connect_1( &net->g, cp_sync->id, port1->inst->id, VAL_BI,
+                port1->attr_mode );
+        dgraph_connect_1( &net->g, cp_sync->id, port2->inst->id, VAL_BI,
+                port2->attr_mode );
+    }
+    // change left port to copy synchronizer port
+    port1->inst = cp_sync;
+    // set mode of port
+    port1->attr_mode = VAL_BI;
+    // if possible, set port class to anything but VAL_NONE
+    if( port1->attr_class == VAL_NONE ) port1->attr_class = port2->attr_class;
+}
+
+/******************************************************************************/
+void cpsync_connects( inst_net* net, virt_net* v_net1, virt_net* v_net2,
         bool parallel )
 {
     virt_ports* port1 = NULL;
     virt_ports* port2 = NULL;
     virt_ports* port_last = NULL;
     virt_ports* port_next = NULL;
-    inst_rec* cp_sync = NULL;
 
     port1 = v_net1->ports;
     while( port1 != NULL ) {
@@ -356,44 +395,7 @@ void cpsync_connect( inst_net* net, virt_net* v_net1, virt_net* v_net2,
         while( port2 != NULL ) {
             port_next = port2->next;
             if( are_port_names_ok( port1, port2, parallel, !parallel ) ) {
-                // create copy synchronizer instance
-                if( ( port1->inst->type == VAL_CP )
-                        && ( port2->inst->type == VAL_CP ) ) {
-                    // merge copy synchronizers
-                    cp_sync = cpsync_merge( net, port1, port2 );
-                }
-                else if( port1->inst->type == VAL_CP ) {
-                    cp_sync = port1->inst;
-                    dgraph_connect_1( &net->g, cp_sync->id, port2->inst->id,
-                            VAL_BI, port2->attr_mode );
-                }
-                else if( port2->inst->type == VAL_CP ) {
-                    cp_sync = port2->inst;
-                    dgraph_connect_1( &net->g, cp_sync->id, port1->inst->id,
-                            VAL_BI, port1->attr_mode );
-                }
-                else {
-                    cp_sync = inst_rec_put( &net->recs_name, &net->recs_id,
-                            TEXT_CP, igraph_vcount( &net->g ), 0, VAL_CP,
-                            NULL );
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-                    printf( "Create copy-synchronizer %s(%d)\n", cp_sync->name,
-                            cp_sync->id );
-#endif // DEBUG_CONNECT
-                    igraph_add_vertices( &net->g, 1, NULL );
-                    dgraph_connect_1( &net->g, cp_sync->id, port1->inst->id,
-                            VAL_BI, port1->attr_mode );
-                    dgraph_connect_1( &net->g, cp_sync->id, port2->inst->id,
-                            VAL_BI, port2->attr_mode );
-                }
-                // change left port to copy synchronizer port
-                port1->inst = cp_sync;
-                // set mode of port
-                /* if( port1->attr_mode != port2->attr_mode ) */
-                port1->attr_mode = VAL_BI;
-                // if possible, set port class to anything but VAL_NONE
-                if( port1->attr_class == VAL_NONE )
-                    port1->attr_class = port2->attr_class;
+                cpsync_connect( net, port1, port2 );
                 // remove right port from portlist
                 free( port2 );
                 if( port_last != NULL ) {
@@ -473,7 +475,7 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
 #endif // DEBUG_CONNECT
             v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
-            cpsync_connect( net, v_net1, v_net2, true );
+            cpsync_connects( net, v_net1, v_net2, true );
             v_net1 = virt_net_alter_parallel( v_net1, v_net2 );
             virt_net_destroy_struct( v_net2 );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
@@ -495,7 +497,7 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             // check connections and update virtual net
             check_connections( net, v_net1, v_net2, &g );
             check_connection_missing( net, &g );
-            cpsync_connect( net, v_net1, v_net2, false );
+            cpsync_connects( net, v_net1, v_net2, false );
             v_net1 = virt_net_alter_serial( v_net1, v_net2 );
             // cleanup virt net and connection graph
             virt_net_destroy_struct( v_net2 );

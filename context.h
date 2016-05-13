@@ -96,9 +96,19 @@ void check_context( ast_node* );
 void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node*, bool );
 
 /**
- * Establish copy synchronizer connections between two virtual nets. This
- * includes side ports as well as regular ports The dependancy graph is
+ * Establish copy synchronizer connections between two ports of two virtual nets.
+ * This includes side ports as well as regular ports. The dependancy graph is
  * updated.
+ *
+ * @param inst_net**:   pointer to the instance table of nets (scopes)
+ * @param virt_ports*:  pointer to the port of a virtual net of the left operator
+ * @param virt_ports*:  pointer to the port of a virtual net of the right operator
+ */
+void cpsync_connect( inst_net*, virt_ports*, virt_ports* );
+
+/**
+ * Establish copy synchronizer connections between two virtual nets. This
+ * includes side ports as well as regular ports.
  *
  * @param inst_net**:   pointer to the instance table of nets (scopes)
  * @param virt_net*:    pointer to the virtual net of the left operator
@@ -106,7 +116,7 @@ void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node*, bool );
  * @param bool:         flag to indicate wheter copy synchronizer connections
  *                      in parallel operators are checked
  */
-void cpsync_connect( inst_net*, virt_net*, virt_net*, bool );
+void cpsync_connects( inst_net*, virt_net*, virt_net*, bool );
 
 /**
  * Merge two copy sunchronizer
