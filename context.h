@@ -22,11 +22,13 @@
  *
  * @param virt_ports*:  pointer the a port of a virtual net
  * @param virt_ports*:  pointer the a port of a virtual net
- * @param bool:         flag to indicate wheter copy synchronizers connections
- *                      are checked
+ * @param bool:         flag to indicate wheter copy synchronizer connections
+ *                      in parallel operators are checked
+ * @param bool:         flag to indicate wheter copy synchronizer connections
+ *                      in serial operators are checked
  * @return bool:        true if ports can connect, false if not
  */
-bool are_port_names_ok( virt_ports*, virt_ports*, bool );
+bool are_port_names_ok( virt_ports*, virt_ports*, bool, bool );
 
 /**
  * Checkes whether port modes match
@@ -78,8 +80,10 @@ void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node*, bool );
  * @param inst_net**:   pointer to the instance table of nets (scopes)
  * @param virt_net*:    pointer to the virtual net of the left operator
  * @param virt_net*:    pointer to the virtual net of the right operator
+ * @param bool:         flag to indicate wheter copy synchronizer connections
+ *                      in parallel operators are checked
  */
-void cpsync_connect( inst_net*, virt_net*, virt_net* );
+void cpsync_connect( inst_net*, virt_net*, virt_net*, bool );
 
 /**
  * Merge two copy sunchronizer

@@ -14,7 +14,7 @@
 /* #define DEBUG_INST */
 /* #define DEBUG_SYMB */
 /* #define DEBUG_CONNECT */
-#define DEBUG_NET_DOT
+/* #define DEBUG_NET_DOT */
 /* #define DEBUG_LINK_DOT */
 #endif
 

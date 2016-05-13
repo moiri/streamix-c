@@ -4,21 +4,27 @@
 #include "error.h"
 
 /******************************************************************************/
-bool are_port_names_ok( virt_ports* p1, virt_ports* p2, bool cpsync )
+bool are_port_names_ok( virt_ports* p1, virt_ports* p2, bool cpp, bool cps )
 {
     // no, if port names do not match
     if( strcmp( p1->rec->name, p2->rec->name ) != 0 )
         return false;
     // are we checking copy synchronizer connections?
-    if( cpsync ) {
+    if( cps || cpp ) {
         // we are good if both ports have the same class
         if( p1->attr_class == p2->attr_class )
             return true;
-        // we are good if one port has no class and the other is not a side port
-        if( ( p1->attr_class != VAL_SIDE ) && ( p2->attr_class == VAL_NONE ) )
-            return true;
-        if( ( p1->attr_class == VAL_NONE ) && ( p2->attr_class != VAL_SIDE ) )
-            return true;
+        // are we checking parallel combinators?
+        if( cpp ) {
+            // we are good if one port has no class and the other is not a side
+            // port
+            if( ( p1->attr_class != VAL_SIDE )
+                    && ( p2->attr_class == VAL_NONE ) )
+                return true;
+            if( ( p1->attr_class == VAL_NONE )
+                    && ( p2->attr_class != VAL_SIDE ) )
+                return true;
+        }
         // we came through here so none of the conditions matched
         return false;
     }
@@ -77,7 +83,7 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
             printf( " and " );
             debug_print_port( ports_r );
 #endif // DEBUG_CONNECT
-            if( are_port_names_ok( ports_l, ports_r, false ) ) {
+            if( are_port_names_ok( ports_l, ports_r, false, false ) ) {
                 if( ( ports_l->inst->type == VAL_CP )
                         && ( ports_r->inst->type == VAL_CP ) ) {
                     cgraph_update( g_con, ports_l->inst->id,
@@ -105,7 +111,7 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
                 }
                 else {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-                    printf( "\n  => connection is invalid\n" );
+                    printf( "\n  => connection is invalid (bad mode)\n" );
 #endif // DEBUG_CONNECT
                     sprintf( error_msg, ERROR_BAD_MODE, ERR_ERROR,
                             ports_l->rec->name, ports_l->inst->name,
@@ -125,7 +131,7 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
             }
             else {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-                printf( "\n  => connection is invalid\n" );
+                printf( "\n  => connection is invalid (no match)\n" );
 #endif // DEBUG_CONNECT
             }
             ports_last_r = ports_r;
@@ -321,7 +327,8 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
 }
 
 /******************************************************************************/
-void cpsync_connect( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
+void cpsync_connect( inst_net* net, virt_net* v_net1, virt_net* v_net2,
+        bool parallel )
 {
     virt_ports* port1 = NULL;
     virt_ports* port2 = NULL;
@@ -335,7 +342,7 @@ void cpsync_connect( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
         port_last = NULL;
         while( port2 != NULL ) {
             port_next = port2->next;
-            if( are_port_names_ok( port1, port2, true ) ) {
+            if( are_port_names_ok( port1, port2, parallel, !parallel ) ) {
                 // create copy synchronizer instance
                 if( ( port1->inst->type == VAL_CP )
                         && ( port2->inst->type == VAL_CP ) ) {
@@ -412,7 +419,9 @@ inst_rec* cpsync_merge( inst_net* net, virt_ports* port1, virt_ports* port2 )
 /******************************************************************************/
 void debug_print_port( virt_ports* port )
 {
-    printf( "%s(%d).%s ", port->inst->name, port->inst->id, port->rec->name );
+    printf( "%s(%d).%s", port->inst->name, port->inst->id, port->rec->name );
+    if( port->attr_class == VAL_DOWN ) printf( "_" );
+    else if( port->attr_class == VAL_UP ) printf( "^" );
     if( port->attr_mode == VAL_IN ) printf( "<--" );
     else if( port->attr_mode == VAL_OUT ) printf( "-->" );
     else printf( "<->" );
@@ -446,17 +455,24 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
 
     switch( ast->type ) {
         case AST_PARALLEL:
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+            printf( "Parallel combination\n" );
+#endif // DEBUG_CONNECT
             v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
-            cpsync_connect( net, v_net1, v_net2 );
+            cpsync_connect( net, v_net1, v_net2, true );
             v_net1 = virt_net_alter_parallel( v_net1, v_net2 );
             virt_net_destroy_struct( v_net2 );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-            printf( "Parallel combination, v_net:\n " );
+            printf( " Parallel combination done, v_net:\n " );
             debug_print_ports( v_net1 );
+            printf( "\n" );
 #endif // DEBUG_CONNECT
             break;
         case AST_SERIAL:
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+            printf( "Serial combination\n" );
+#endif // DEBUG_CONNECT
             v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
             // create connection graph
@@ -465,14 +481,15 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
                     &v_net2->con->left );
             // check connections and update virtual net
             check_connection( net, v_net1, v_net2, &g );
-            cpsync_connect( net, v_net1, v_net2 );
+            cpsync_connect( net, v_net1, v_net2, false );
             v_net1 = virt_net_alter_serial( v_net1, v_net2 );
             // cleanup virt net and connection graph
             virt_net_destroy_struct( v_net2 );
             igraph_destroy( &g );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-            printf( "Serial combination, v_net:\n " );
+            printf( " Serial combination done, v_net:\n " );
             debug_print_ports( v_net1 );
+            printf( "\n" );
 #endif // DEBUG_CONNECT
             break;
         case AST_ID:
