@@ -1,6 +1,4 @@
 A = box A( side in a )
 B = box B( side in a )
 
-link { A, B }
-
-A|B
+connect A|B
