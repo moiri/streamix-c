@@ -153,12 +153,18 @@ void inst_rec_replace_id( inst_rec** recs, int id_old, int id_new )
     HASH_DELETE( hh_id, *recs, item );
     item->id = id_new;
     HASH_ADD( hh_id, *recs, id, sizeof( int ), item );
+#if defined(DEBUG) || defined(DEBUG_INST)
+    printf( "inst_rec_replace: replace inst id %d with %d\n", id_old, id_new );
+#endif // DEBUG
 }
 
 /******************************************************************************/
 void inst_rec_del( inst_rec** recs_name, inst_rec** recs_id, inst_rec* rec )
 {
     inst_rec* rec_name;
+#if defined(DEBUG) || defined(DEBUG_INST)
+    printf( "inst_rec_del: delete instance %s(%d)\n", rec->name, rec->id );
+#endif // DEBUG
     rec_name = inst_rec_get_name( recs_name, rec->name );
     // delete name entry only if no other record with the same name exists
     if( rec_name->next == NULL ) HASH_DELETE( hh_name, *recs_id, rec );
