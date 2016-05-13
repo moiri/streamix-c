@@ -2,7 +2,7 @@
 #include "defines.h"
 
 /******************************************************************************/
-void cgraph_connect( igraph_t* g, igraph_vector_ptr_t* v1,
+void cgraph_connect_full_ptr( igraph_t* g, igraph_vector_ptr_t* v1,
         igraph_vector_ptr_t* v2 )
 {
     igraph_vector_t edges;
@@ -21,7 +21,7 @@ void cgraph_connect( igraph_t* g, igraph_vector_ptr_t* v1,
 }
 
 /******************************************************************************/
-void cgraph_connect_dir( igraph_t* g, int id1, int id2, int mode1, int mode2 )
+void cgraph_connect_1( igraph_t* g, int id1, int id2, int mode1, int mode2 )
 {
     int id_from = id1;
     int id_to = id2;
@@ -33,7 +33,8 @@ void cgraph_connect_dir( igraph_t* g, int id1, int id2, int mode1, int mode2 )
 }
 
 /******************************************************************************/
-void cgraph_disconnect( igraph_t* g, igraph_vector_t* v1, igraph_vector_t* v2 )
+void cgraph_disconnect_full( igraph_t* g, igraph_vector_t* v1,
+        igraph_vector_t* v2 )
 {
     int i, j;
     int id;
@@ -47,7 +48,7 @@ void cgraph_disconnect( igraph_t* g, igraph_vector_t* v1, igraph_vector_t* v2 )
 }
 
 /******************************************************************************/
-int cgraph_merge_vertices( igraph_t* g, int id1, int id2 )
+int cgraph_merge_vertice_1( igraph_t* g, int id1, int id2 )
 {
     igraph_vector_t v_new;
     int idx;

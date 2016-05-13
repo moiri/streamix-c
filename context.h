@@ -17,8 +17,17 @@
 #include "symtab.h"
 #include "utarray.h"
 
+/**
+ * Check the connection of two virtual nets and connect them. Connecting ports
+ * are removed from the virtual nets. The dependancy graph is updated.
+ *
+ * @param inst_net**:   pointer to the instance table of nets (scopes)
+ * @param virt_net*:    pointer to the virtual net of the left operator
+ * @param virt_net*:    pointer to the virtual net of the right operator
+ * @param igraph_t*:    pointer to a temporary graph indicating the required
+ *                      connections between nets
+ */
 void check_connection( inst_net*, virt_net*, virt_net*, igraph_t* );
-void check_connection_cp( inst_net*, virt_net*, virt_net* );
 
 /**
  * Check the context of all identifiers in the program
@@ -26,48 +35,38 @@ void check_connection_cp( inst_net*, virt_net*, virt_net* );
  * @param ast_node*:    pointer to the root ast node
  * */
 void check_context( ast_node* );
+void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node*, bool );
 
 /**
- * This function performs the following tasks (callee of check_nets):
+ * Establish copy synchronizer connections between two virtual nets. This
+ * includes side ports as well as regular ports The dependancy graph is
+ * updated.
+ *
+ * @param inst_net**:   pointer to the instance table of nets (scopes)
+ * @param virt_net*:    pointer to the virtual net of the left operator
+ * @param virt_net*:    pointer to the virtual net of the right operator
+ */
+void cpsync_connect( inst_net*, virt_net*, virt_net* );
+inst_rec* cpsync_merge( inst_net*, virt_ports*, virt_ports* );
+
+void debug_print_port( virt_ports* );
+void debug_print_ports( virt_net* );
+
+/**
+ * This function performs the following tasks
  * - check whether the given identificator is in the symbol table
  * - add instances to the instance table
- * - add instances to the connection graph
+ * - add instances to the dependency graph
  * This is a recursive function.
  *
  * @param symrec**:     pointer to the symbol table
- * @param symrec**:     pointer to the instance table
- * @param UT_array**:   pointer to the scope stack
- * @param ast_node*:    pointer to the root ast node
- * @param net_con*:     pointer to the structure holding the two vectors
- *                      indicating the left and right connections of the net
- * @param igraph_t*:    pointer to the connection graph
- * */
-virt_net* install_nets( symrec**, inst_net*, UT_array*, ast_node* );
-
-/**
- *
- * @param inst_net**:   pointer to the net instance table
- */
-void check_instances( inst_net** );
-void check_nets( inst_rec**, igraph_t* g );
-
-/**
- * put symbol names into the symbol table. this includes collision and scope
- * handling. This is a recursive funtion.
- *
- * @param symrec**:     pointer to the symbol table
+ * @param inst_net**:   pointer to the instance table of nets (scopes)
  * @param UT_array**:   pointer to the scope stack
  * @param ast_node*:    pointer to the ast node
- * @param bool:         flag indicating wheter the ports are synchronized
- * @return void*:
- *      the return value is used to propagate back the information of which
- *      ports belong to which net
+ * @return virt_net*:   pointer to a virtual net with a port list
+ *                      and connection vectors
  * */
-void* install_ids( symrec**, UT_array*, ast_node*, bool );
-void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node*, bool );
-
-symrec_list* get_port_list_net( inst_rec**, igraph_vector_t*, int, symrec_list* );
-void update_con_graph( igraph_t*, igraph_t*, inst_rec*, inst_rec* );
-inst_rec* merge_cp( inst_net*, virt_ports*, virt_ports* );
+virt_net* install_nets( symrec**, inst_net*, UT_array*, ast_node* );
+void congraph_update( igraph_t*, igraph_t*, inst_rec*, inst_rec* );
 
 #endif // CONTEXT_H
