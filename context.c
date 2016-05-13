@@ -4,6 +4,52 @@
 #include "error.h"
 
 /******************************************************************************/
+bool are_port_names_ok( virt_ports* p1, virt_ports* p2, bool cpsync )
+{
+    // no, if port names do not match
+    if( strcmp( p1->rec->name, p2->rec->name ) != 0 )
+        return false;
+    // are we checking copy synchronizer connections?
+    if( cpsync ) {
+        // we are good if both ports have the same class
+        if( p1->attr_class == p2->attr_class )
+            return true;
+        // we are good if one port has no class and the other is not a side port
+        if( ( p1->attr_class != VAL_SIDE ) && ( p2->attr_class == VAL_NONE ) )
+            return true;
+        if( ( p1->attr_class == VAL_NONE ) && ( p2->attr_class != VAL_SIDE ) )
+            return true;
+        // we came through here so none of the conditions matched
+        return false;
+    }
+    // or normal connections?
+    else {
+        // no, if the left port is in another class than DS
+        if( ( p1->attr_class != VAL_DOWN ) && ( p1->attr_class != VAL_NONE ) )
+            return false;
+        // no, if the right port is in another class than US
+        if( ( p2->attr_class != VAL_UP ) && ( p2->attr_class != VAL_NONE ) )
+            return false;
+    }
+    // we came through here, so all is good, names match
+    return true;
+}
+
+/******************************************************************************/
+bool are_port_modes_ok( virt_ports* p1, virt_ports* p2 )
+{
+    // yes, if modes are different
+    if( p1->attr_mode != p2->attr_mode ) return true;
+    // yes, if the left port is a copy synchronizer port
+    if( p1->attr_mode == VAL_BI ) return true;
+    // yes, if the right port is a copy synchronizer port
+    if( p2->attr_mode == VAL_BI ) return true;
+
+    // we came through here, so port modes are not compatible
+    return false;
+}
+
+/******************************************************************************/
 void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
         igraph_t* g_con )
 {
@@ -31,17 +77,7 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
             printf( "and " );
             debug_print_port( ports_r );
 #endif // DEBUG_CONNECT
-            if( // the port names match?
-                ( strcmp( ports_l->rec->name, ports_r->rec->name ) == 0 )
-                // AND the port classes are compatible?
-                && (// the left port is in DS or in no class?
-                    ( ( ports_l->attr_class == VAL_DOWN )
-                        || ( ports_l->attr_class == VAL_NONE ) )
-                    // AND the right port is in US or in no class?
-                    && ( ( ports_r->attr_class == VAL_UP )
-                        || ( ports_r->attr_class == VAL_NONE ) )
-                   )
-            ) {
+            if( are_port_names_ok( ports_l, ports_r, false ) ) {
                 if( ( ports_l->inst->type == VAL_CP )
                         && ( ports_r->inst->type == VAL_CP ) ) {
                     cgraph_update( g_con, ports_l->inst->id,
@@ -55,10 +91,7 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
                     printf( " -> connection is valid\n" );
 #endif // DEBUG_CONNECT
                 }
-                else if( ( ports_l->attr_mode != ports_r->attr_mode )
-                        || ( ports_l->attr_mode == VAL_BI )
-                        || ( ports_r->attr_mode == VAL_BI )
-                    ) {
+                else if( are_port_modes_ok( ports_l, ports_r ) ) {
                     cgraph_update( g_con, ports_l->inst->id,
                             ports_r->inst->id, ports_l->inst->type,
                             ports_l->inst->type, &net->g);
@@ -302,16 +335,7 @@ void cpsync_connect( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
         port_last = NULL;
         while( port2 != NULL ) {
             port_next = port2->next;
-            if( // the port names match?
-                ( strcmp( port1->rec->name, port2->rec->name ) == 0 )
-                // AND the port classes are compatible?
-                && ( ( port1->attr_class == port2->attr_class )
-                    || ( ( port1->attr_class != VAL_SIDE )
-                        && ( port2->attr_class == VAL_NONE ) )
-                    || ( ( port1->attr_class == VAL_NONE )
-                        && ( port2->attr_class != VAL_SIDE ) )
-                   )
-            ) {
+            if( are_port_names_ok( port1, port2, true ) ) {
                 // create copy synchronizer instance
                 if( ( port1->inst->type == VAL_CP )
                         && ( port2->inst->type == VAL_CP ) ) {

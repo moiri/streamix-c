@@ -18,6 +18,26 @@
 #include "utarray.h"
 
 /**
+ * Checkes whether port names match, considering the classes they are in
+ *
+ * @param virt_ports*:  pointer the a port of a virtual net
+ * @param virt_ports*:  pointer the a port of a virtual net
+ * @param bool:         flag to indicate wheter copy synchronizers connections
+ *                      are checked
+ * @return bool:        true if ports can connect, false if not
+ */
+bool are_port_names_ok( virt_ports*, virt_ports*, bool );
+
+/**
+ * Checkes whether port modes match
+ *
+ * @param virt_ports*:  pointer the a port of a virtual net
+ * @param virt_ports*:  pointer the a port of a virtual net
+ * @return bool:        true if ports can connect, false if not
+ */
+bool are_port_modes_ok( virt_ports*, virt_ports* );
+
+/**
  * Check the connection of two virtual nets and connect them. Connecting ports
  * are removed from the virtual nets. The dependancy graph is updated.
  *
