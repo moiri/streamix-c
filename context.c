@@ -82,7 +82,7 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
                         && ( ports_r->inst->type == VAL_CP ) ) {
                     cgraph_update( g_con, ports_l->inst->id,
                             ports_r->inst->id, ports_l->inst->type,
-                            ports_l->inst->type, &net->g);
+                            ports_r->inst->type, &net->g);
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
                     printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
@@ -94,7 +94,7 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
                 else if( are_port_modes_ok( ports_l, ports_r ) ) {
                     cgraph_update( g_con, ports_l->inst->id,
                             ports_r->inst->id, ports_l->inst->type,
-                            ports_l->inst->type, &net->g);
+                            ports_r->inst->type, &net->g);
                     dgraph_connect_1( &net->g, ports_l->inst->id,
                             ports_r->inst->id, ports_l->attr_mode,
                             ports_r->attr_mode );
