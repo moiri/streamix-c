@@ -271,7 +271,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             utarray_pop_back( scope_stack );
             // install the wrapper symbol in the scope of its declaration
             symrec_put( symtab, ast->wrap.id->symbol.name,
-                    *utarray_back( scope_stack ), VAL_NET, ( void* )w_attr,
+                    *utarray_back( scope_stack ), ast->type, ( void* )w_attr,
                     ast->wrap.id->symbol.line );
             break;
         case AST_PORT:
