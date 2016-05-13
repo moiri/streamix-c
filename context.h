@@ -67,6 +67,5 @@ void debug_print_ports( virt_net* );
  *                      and connection vectors
  * */
 virt_net* install_nets( symrec**, inst_net*, UT_array*, ast_node* );
-void congraph_update( igraph_t*, igraph_t*, inst_rec*, inst_rec* );
 
 #endif // CONTEXT_H

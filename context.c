@@ -1,6 +1,6 @@
 #include "context.h"
 #include "defines.h"
-#include "cgraph.h"
+#include "ngraph.h"
 #include "error.h"
 
 /******************************************************************************/
@@ -44,11 +44,12 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
             ) {
                 if( ( ports_l->inst->type == VAL_CP )
                         && ( ports_r->inst->type == VAL_CP ) ) {
-                    congraph_update( &net->g, g_con, ports_l->inst,
-                            ports_r->inst );
+                    cgraph_update( g_con, ports_l->inst->id,
+                            ports_r->inst->id, ports_l->inst->type,
+                            ports_l->inst->type, &net->g);
                     // merge copy synchronizers
                     cpsync_merge( net, ports_l, ports_r );
-                    cgraph_merge_vertice_1( g_con, ports_l->inst->id,
+                    dgraph_merge_vertice_1( g_con, ports_l->inst->id,
                             ports_r->inst->id );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
                     printf( " -> connection is valid\n" );
@@ -58,9 +59,10 @@ void check_connection( inst_net* net, virt_net* v_net1, virt_net* v_net2,
                         || ( ports_l->attr_mode == VAL_BI )
                         || ( ports_r->attr_mode == VAL_BI )
                     ) {
-                    congraph_update( &net->g, g_con, ports_l->inst,
-                            ports_r->inst );
-                    cgraph_connect_1( &net->g, ports_l->inst->id,
+                    cgraph_update( g_con, ports_l->inst->id,
+                            ports_r->inst->id, ports_l->inst->type,
+                            ports_l->inst->type, &net->g);
+                    dgraph_connect_1( &net->g, ports_l->inst->id,
                             ports_r->inst->id, ports_l->attr_mode,
                             ports_r->attr_mode );
 
@@ -318,12 +320,12 @@ void cpsync_connect( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
                 }
                 else if( port1->inst->type == VAL_CP ) {
                     cp_sync = port1->inst;
-                    cgraph_connect_1( &net->g, cp_sync->id, port2->inst->id,
+                    dgraph_connect_1( &net->g, cp_sync->id, port2->inst->id,
                             VAL_BI, port2->attr_mode );
                 }
                 else if( port2->inst->type == VAL_CP ) {
                     cp_sync = port2->inst;
-                    cgraph_connect_1( &net->g, cp_sync->id, port1->inst->id,
+                    dgraph_connect_1( &net->g, cp_sync->id, port1->inst->id,
                             VAL_BI, port1->attr_mode );
                 }
                 else {
@@ -335,9 +337,9 @@ void cpsync_connect( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
                             cp_sync->id );
 #endif // DEBUG_CONNECT
                     igraph_add_vertices( &net->g, 1, NULL );
-                    cgraph_connect_1( &net->g, cp_sync->id, port1->inst->id,
+                    dgraph_connect_1( &net->g, cp_sync->id, port1->inst->id,
                             VAL_BI, port1->attr_mode );
-                    cgraph_connect_1( &net->g, cp_sync->id, port2->inst->id,
+                    dgraph_connect_1( &net->g, cp_sync->id, port2->inst->id,
                             VAL_BI, port2->attr_mode );
                 }
                 // change left port to copy synchronizer port
@@ -370,7 +372,7 @@ void cpsync_connect( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
 inst_rec* cpsync_merge( inst_net* net, virt_ports* port1, virt_ports* port2 )
 {
     int id, id_del;
-    id_del = cgraph_merge_vertice_1( &net->g, port1->inst->id,
+    id_del = dgraph_merge_vertice_1( &net->g, port1->inst->id,
             port2->inst->id );
     // delete one copy synchronizer from insttab
     id = port2->inst->id;
@@ -435,7 +437,7 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
             // create connection graph
             igraph_empty( &g, igraph_vcount( &net->g ), IGRAPH_UNDIRECTED );
-            cgraph_connect_full_ptr( &g, &v_net1->con->right,
+            dgraph_connect_full_ptr( &g, &v_net1->con->right,
                     &v_net2->con->left );
             // check connections and update virtual net
             check_connection( net, v_net1, v_net2, &g );
@@ -468,25 +470,4 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             ;
     }
     return v_net1;
-}
-
-/******************************************************************************/
-void congraph_update( igraph_t* g, igraph_t* g_con, inst_rec* inst1,
-        inst_rec* inst2 )
-{
-    igraph_vector_t nvid_l;
-    igraph_vector_t nvid_r;
-    igraph_vector_init( &nvid_l, 0 );
-    igraph_vector_init( &nvid_r, 0 );
-    if( inst1->type == VAL_CP )
-        igraph_neighbors( g, &nvid_l, inst1->id, IGRAPH_ALL );
-    else
-        igraph_vector_push_back( &nvid_l, inst1->id );
-    if( inst2->type == VAL_CP )
-        igraph_neighbors( g, &nvid_r, inst2->id, IGRAPH_ALL );
-    else
-        igraph_vector_push_back( &nvid_r, inst2->id );
-    cgraph_disconnect_full( g_con, &nvid_l, &nvid_r );
-    igraph_vector_destroy( &nvid_l );
-    igraph_vector_destroy( &nvid_r );
 }

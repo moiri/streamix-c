@@ -7,10 +7,12 @@
  *
  * */
 
-#ifndef CGRAPH_H
-#define CGRAPH_H
+#ifndef NGRAPH_H
+#define NGRAPH_H
 
 #include <igraph.h>
+
+void cgraph_update( igraph_t*, int, int, int, int, igraph_t* );
 
 /**
  * adds edges to a graph according to the connection semantics of streamix
@@ -19,10 +21,10 @@
  * @param igraph_vector_t*: vector of the left connecting nets
  * @param igraph_vector_t*: vector of the right connecting nets
  */
-void cgraph_connect_full_ptr( igraph_t*, igraph_vector_ptr_t*,
+void dgraph_connect_full_ptr( igraph_t*, igraph_vector_ptr_t*,
         igraph_vector_ptr_t* );
-void cgraph_connect_1( igraph_t*, int, int, int, int );
-void cgraph_disconnect_full( igraph_t*, igraph_vector_t*, igraph_vector_t* );
-int cgraph_merge_vertice_1( igraph_t*, int, int );
+void dgraph_connect_1( igraph_t*, int, int, int, int );
+void dgraph_disconnect_full( igraph_t*, igraph_vector_t*, igraph_vector_t* );
+int dgraph_merge_vertice_1( igraph_t*, int, int );
 
-#endif // CGRAPH_H
+#endif // NGRAPH_H
