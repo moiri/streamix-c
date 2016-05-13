@@ -437,7 +437,7 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
             // create connection graph
             igraph_empty( &g, igraph_vcount( &net->g ), IGRAPH_UNDIRECTED );
-            dgraph_connect_full_ptr( &g, &v_net1->con->right,
+            cgraph_connect_full_ptr( &g, &v_net1->con->right,
                     &v_net2->con->left );
             // check connections and update virtual net
             check_connection( net, v_net1, v_net2, &g );

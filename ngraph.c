@@ -2,28 +2,7 @@
 #include "defines.h"
 
 /******************************************************************************/
-void cgraph_update( igraph_t* g_con, int id1, int id2, int t1, int t2,
-        igraph_t* g)
-{
-    igraph_vector_t nvid_l;
-    igraph_vector_t nvid_r;
-    igraph_vector_init( &nvid_l, 0 );
-    igraph_vector_init( &nvid_r, 0 );
-    if( t1 == VAL_CP )
-        igraph_neighbors( g, &nvid_l, id1, IGRAPH_ALL );
-    else
-        igraph_vector_push_back( &nvid_l, id1 );
-    if( t2 == VAL_CP )
-        igraph_neighbors( g, &nvid_r, id2, IGRAPH_ALL );
-    else
-        igraph_vector_push_back( &nvid_r, id2 );
-    dgraph_disconnect_full( g_con, &nvid_l, &nvid_r );
-    igraph_vector_destroy( &nvid_l );
-    igraph_vector_destroy( &nvid_r );
-}
-
-/******************************************************************************/
-void dgraph_connect_full_ptr( igraph_t* g, igraph_vector_ptr_t* v1,
+void cgraph_connect_full_ptr( igraph_t* g, igraph_vector_ptr_t* v1,
         igraph_vector_ptr_t* v2 )
 {
     igraph_vector_t edges;
@@ -42,19 +21,7 @@ void dgraph_connect_full_ptr( igraph_t* g, igraph_vector_ptr_t* v1,
 }
 
 /******************************************************************************/
-void dgraph_connect_1( igraph_t* g, int id1, int id2, int mode1, int mode2 )
-{
-    int id_from = id1;
-    int id_to = id2;
-    if( ( mode2 == VAL_OUT ) || ( mode1 == VAL_IN ) ) {
-        id_to = id_from;
-        id_from = id2;
-    }
-    igraph_add_edge( g, id_from, id_to );
-}
-
-/******************************************************************************/
-void dgraph_disconnect_full( igraph_t* g, igraph_vector_t* v1,
+void cgraph_disconnect_full( igraph_t* g, igraph_vector_t* v1,
         igraph_vector_t* v2 )
 {
     int i, j;
@@ -66,6 +33,39 @@ void dgraph_disconnect_full( igraph_t* g, igraph_vector_t* v1,
             if( id >= 0 ) igraph_delete_edges( g, igraph_ess_1( id ) );
         }
     }
+}
+
+/******************************************************************************/
+void cgraph_update( igraph_t* g_con, int id1, int id2, int t1, int t2,
+        igraph_t* g)
+{
+    igraph_vector_t nvid_l;
+    igraph_vector_t nvid_r;
+    igraph_vector_init( &nvid_l, 0 );
+    igraph_vector_init( &nvid_r, 0 );
+    if( t1 == VAL_CP )
+        igraph_neighbors( g, &nvid_l, id1, IGRAPH_ALL );
+    else
+        igraph_vector_push_back( &nvid_l, id1 );
+    if( t2 == VAL_CP )
+        igraph_neighbors( g, &nvid_r, id2, IGRAPH_ALL );
+    else
+        igraph_vector_push_back( &nvid_r, id2 );
+    cgraph_disconnect_full( g_con, &nvid_l, &nvid_r );
+    igraph_vector_destroy( &nvid_l );
+    igraph_vector_destroy( &nvid_r );
+}
+
+/******************************************************************************/
+void dgraph_connect_1( igraph_t* g, int id1, int id2, int mode1, int mode2 )
+{
+    int id_from = id1;
+    int id_to = id2;
+    if( ( mode2 == VAL_OUT ) || ( mode1 == VAL_IN ) ) {
+        id_to = id_from;
+        id_from = id2;
+    }
+    igraph_add_edge( g, id_from, id_to );
 }
 
 /******************************************************************************/
@@ -90,6 +90,6 @@ int dgraph_merge_vertice_1( igraph_t* g, int id1, int id2 )
     }
     igraph_contract_vertices( g, &v_new, NULL );
 
-    // elements starting from this id need to be altered in the insttab
+    // id of deleted element
     return id_high;
 }
