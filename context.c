@@ -434,12 +434,13 @@ inst_rec* cpsync_merge( inst_net* net, virt_ports* port1, virt_ports* port2 )
 /******************************************************************************/
 void debug_print_port( virt_ports* port )
 {
-    printf( "%s(%d).%s", port->inst->name, port->inst->id, port->rec->name );
+    printf( "%s(%d)", port->inst->name, port->inst->id );
     if( port->attr_class == VAL_DOWN ) printf( "_" );
     else if( port->attr_class == VAL_UP ) printf( "^" );
     if( port->attr_mode == VAL_IN ) printf( "<--" );
     else if( port->attr_mode == VAL_OUT ) printf( "-->" );
     else printf( "<->" );
+    printf( "%s", port->rec->name );
 }
 
 /******************************************************************************/
@@ -470,24 +471,18 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
 
     switch( ast->type ) {
         case AST_PARALLEL:
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-            printf( "Parallel combination\n" );
-#endif // DEBUG_CONNECT
             v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
             cpsync_connects( net, v_net1, v_net2, true );
             v_net1 = virt_net_alter_parallel( v_net1, v_net2 );
             virt_net_destroy_struct( v_net2 );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-            printf( " Parallel combination done, v_net:\n " );
+            printf( "Parallel combination done, v_net:\n " );
             debug_print_ports( v_net1 );
             printf( "\n" );
 #endif // DEBUG_CONNECT
             break;
         case AST_SERIAL:
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-            printf( "Serial combination\n" );
-#endif // DEBUG_CONNECT
             v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
             // create connection graph
@@ -503,7 +498,7 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             virt_net_destroy_struct( v_net2 );
             igraph_destroy( &g );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-            printf( " Serial combination done, v_net:\n " );
+            printf( "Serial combination done, v_net:\n " );
             debug_print_ports( v_net1 );
             printf( "\n" );
 #endif // DEBUG_CONNECT
