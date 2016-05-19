@@ -424,8 +424,8 @@ inst_rec* cpsync_merge( inst_net* net, virt_ports* port1, virt_ports* port2 )
     if( id_del != id )
         inst_rec_replace_id( &net->recs_id, id_del, id );
     // adjust all ids starting from the id of the deleted record
-    for( id = id_del + 1; id < igraph_vcount( &net->g ); id++ )
-        inst_rec_replace_id( &net->recs_id, id, id - 1 );
+    for( id = id_del; id < igraph_vcount( &net->g ); id++ )
+        inst_rec_replace_id( &net->recs_id, id + 1, id );
     return port1->inst;
 }
 
