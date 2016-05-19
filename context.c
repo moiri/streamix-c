@@ -209,6 +209,8 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
 
     switch( ast->type ) {
         case AST_PROGRAM:
+            // install net instances
+            net = inst_net_put( nets, *utarray_back( scope_stack ) );
             check_context_ast( symtab, nets, scope_stack, ast->program.stmts,
                     false );
             check_context_ast( symtab, nets, scope_stack, ast->program.net,
@@ -232,8 +234,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
                     ast->assign.id->symbol.line );
             break;
         case AST_NET:
-            // install net instances
-            net = inst_net_put( nets, *utarray_back( scope_stack ) );
+            net = inst_net_get( nets, *utarray_back( scope_stack ) );
             res = ( void* )install_nets( symtab, net, scope_stack, ast->node );
 #if defined(DEBUG) || defined(DEBUG_NET_DOT)
             igraph_write_graph_dot( &net->g, stdout );
@@ -333,10 +334,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
         default:
             ;
     }
-    port_list = NULL;
-    ptr = NULL;
     return res;
-
 }
 
 /******************************************************************************/
@@ -472,7 +470,9 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
     switch( ast->type ) {
         case AST_PARALLEL:
             v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
+            if( v_net1 == NULL ) return NULL;
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
+            if( v_net2 == NULL ) return NULL;
             cpsync_connects( net, v_net1, v_net2, true );
             v_net1 = virt_net_alter_parallel( v_net1, v_net2 );
             virt_net_destroy_struct( v_net2 );
@@ -484,7 +484,9 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             break;
         case AST_SERIAL:
             v_net1 = install_nets( symtab, net, scope_stack, ast->op.left );
+            if( v_net1 == NULL ) return NULL;
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
+            if( v_net2 == NULL ) return NULL;
             // create connection graph
             igraph_empty( &g, igraph_vcount( &net->g ), IGRAPH_UNDIRECTED );
             cgraph_connect_full_ptr( &g, &v_net1->con->right,
@@ -507,19 +509,18 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             // check the context of the symbol
             rec = symrec_get( symtab, scope_stack, ast->symbol.name,
                     ast->symbol.line );
+            if( rec == NULL ) return NULL;
             // add a net symbol to the instance table
-            if( rec != NULL ) {
+            if( rec->type == AST_NET ) {
+                v_net1 = ( struct virt_net* )rec->attr;
+            }
+            else {
                 inst = inst_rec_put( &net->recs_name, &net->recs_id,
                         ast->symbol.name, igraph_vcount( &net->g ),
                         ast->symbol.line, VAL_NET, rec );
                 // update graph and virtual net
                 igraph_add_vertices( &net->g, 1, NULL );
-                if( rec->type == AST_NET ) {
-                    v_net1 = ( struct virt_net* )rec->attr;
-                }
-                else {
-                    v_net1 = virt_net_create( rec, inst );
-                }
+                v_net1 = virt_net_create( rec, inst );
             }
             break;
         default:
