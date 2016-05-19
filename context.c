@@ -223,10 +223,10 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             }
             break;
         case AST_ASSIGN:
-            // get the box attributes
+            // get the attributes
             attr = check_context_ast( symtab, nets, scope_stack, ast->assign.op,
                     false );
-            // install the box symbol
+            // install the symbol
             symrec_put( symtab, ast->assign.id->symbol.name,
                     *utarray_back( scope_stack ), ast->assign.op->type, attr,
                     ast->assign.id->symbol.line );
@@ -234,7 +234,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
         case AST_NET:
             // install net instances
             net = inst_net_put( nets, *utarray_back( scope_stack ) );
-            net->v_net = install_nets( symtab, net, scope_stack, ast->node );
+            res = ( void* )install_nets( symtab, net, scope_stack, ast->node );
 #if defined(DEBUG) || defined(DEBUG_NET_DOT)
             igraph_write_graph_dot( &net->g, stdout );
 #endif // DEBUG_NET_DOT
@@ -512,9 +512,14 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
                 inst = inst_rec_put( &net->recs_name, &net->recs_id,
                         ast->symbol.name, igraph_vcount( &net->g ),
                         ast->symbol.line, VAL_NET, rec );
-                // add new vertex to graph
+                // update graph and virtual net
                 igraph_add_vertices( &net->g, 1, NULL );
-                v_net1 = virt_net_create( rec, inst );
+                if( rec->type == AST_NET ) {
+                    v_net1 = ( struct virt_net* )rec->attr;
+                }
+                else {
+                    v_net1 = virt_net_create( rec, inst );
+                }
             }
             break;
         default:
