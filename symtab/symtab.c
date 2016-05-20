@@ -7,34 +7,49 @@
 #include "error.h"
 #endif
 
+/******************************************************************************/
+void symrec_del( symrec** symtab, symrec* rec )
+{
+    symrec* rec_temp;
+    HASH_FIND_STR( *symtab, rec->key, rec_temp );
+#if defined(DEBUG) || defined(DEBUG_SYMB)
+    printf( "symrec_del: delete record %s in scope %d\n", rec->name,
+            rec->scope );
+#endif // DEBUG
+    // delete name entry only if no other record with the same name exists
+    if( rec_temp->next == NULL ) HASH_DELETE( hh, *symtab, rec );
+    free( rec->name );
+    free( rec->key );
+    switch( rec->type ) {
+        case VAL_PORT:
+        case VAL_SPORT:
+            free( ( ( struct port_attr* )rec->attr )->int_name );
+            break;
+        case AST_BOX:
+            free( ( ( struct box_attr* )rec->attr )->impl_name );
+            free( ( ( struct box_attr* )rec->attr )->ports );
+            break;
+        case AST_WRAP:
+            free( ( ( struct wrap_attr* )rec->attr )->ports );
+            break;
+        default:
+            ;
+    }
+    free( rec->attr );
+    free( rec );
+}
 
 /******************************************************************************/
 symrec* symrec_get( symrec** symtab, UT_array* scope_stack, char *name,
         int line )
 {
-    int* p = NULL;
     symrec* item = NULL;
-    char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
 #ifndef TESTING
     char error_msg[ CONST_ERROR_LEN ];
 #endif // TESTING
 
     /* check whether their scope matches with a scope on the stack */
-    while( ( p = ( int* )utarray_prev( scope_stack, p ) ) != NULL ) {
-        // generate key
-        sprintf( key, "%s%d", name, *p );
-        HASH_FIND_STR( *symtab, key, item );
-        // iterate through all entries with the same key to handle collisions
-        while( item != NULL ) {
-            if( strlen( item->name ) == strlen( name )
-                && memcmp( item->name, name, strlen( name ) ) == 0
-                && item->scope == *p ) {
-                break; // found a match
-            }
-            item = item->next;
-        }
-        if( item != NULL ) break; // found a match
-    }
+    item = symrec_search( symtab, scope_stack, name );
     if( item == NULL ) {
 #ifdef TESTING
         printf( ERROR_UNDEF_ID, ERR_ERROR, name );
@@ -141,5 +156,29 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
         printf( "added symbol %s in scope %d\n", item->name, item->scope );
     }
 #endif // DEBUG
+    return item;
+}
+
+/******************************************************************************/
+symrec* symrec_search( symrec** symtab, UT_array* scope_stack, char *name )
+{
+    int* p = NULL;
+    symrec* item = NULL;
+    char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
+    while( ( p = ( int* )utarray_prev( scope_stack, p ) ) != NULL ) {
+        // generate key
+        sprintf( key, "%s%d", name, *p );
+        HASH_FIND_STR( *symtab, key, item );
+        // iterate through all entries with the same key to handle collisions
+        while( item != NULL ) {
+            if( strlen( item->name ) == strlen( name )
+                && memcmp( item->name, name, strlen( name ) ) == 0
+                && item->scope == *p ) {
+                break; // found a match
+            }
+            item = item->next;
+        }
+        if( item != NULL ) break; // found a match
+    }
     return item;
 }

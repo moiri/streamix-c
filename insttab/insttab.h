@@ -132,6 +132,7 @@ void inst_rec_replace_id( inst_rec**, int, int );
  */
 void inst_rec_del( inst_rec**, inst_rec**, inst_rec* );
 
+void virt_net_check( symrec_list*, virt_ports*, char* );
 virt_net* virt_net_create( symrec*, inst_rec* );
 
 virt_net* virt_net_alter_parallel( virt_net* , virt_net* );

@@ -136,5 +136,6 @@
 #define ERROR_NO_NET_CON    "%s: no port connection in serial combinition '%s(%d).%s(%d)'"
 #define ERROR_NO_PORT_CON   "%s: port '%s' in '%s'(%s, %d) is not connected"
 #define ERROR_UNDEF_PORT    "%s: use of undeclared port '%s' in '%s'(%d)"
+#define ERROR_TYPE_CONFLICT "%s: conflicting types for '%s'"
 
 #endif /* DEFINES_H */

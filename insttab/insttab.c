@@ -1,6 +1,9 @@
 #include "insttab.h"
 #include "defines.h"
 #include "ast.h"
+#ifndef TESTING
+#include "error.h"
+#endif
 #include <stdio.h>
 
 /******************************************************************************/
@@ -167,10 +170,77 @@ void inst_rec_del( inst_rec** recs_name, inst_rec** recs_id, inst_rec* rec )
 #endif // DEBUG
     rec_name = inst_rec_get_name( recs_name, rec->name );
     // delete name entry only if no other record with the same name exists
-    if( rec_name->next == NULL ) HASH_DELETE( hh_name, *recs_id, rec );
+    if( rec_name->next == NULL ) HASH_DELETE( hh_name, *recs_name, rec );
     HASH_DELETE( hh_id, *recs_id, rec );
     free( rec->name );
     free( rec );
+}
+
+/******************************************************************************/
+void virt_net_check( symrec_list* r_ports, virt_ports* v_ports, char *name )
+{
+    symrec_list* r_port_ptr = r_ports;
+    virt_ports* v_port_ptr = v_ports;
+    port_attr* r_port_attr = NULL;
+    int match = false;
+    int v_count = 0;
+    int r_count = 0;
+#ifndef TESTING
+    char error_msg[ CONST_ERROR_LEN ];
+#endif // TESTING
+
+    while( r_port_ptr != NULL  ) {
+        r_count++;
+        r_port_ptr = r_port_ptr->next;
+    }
+
+    while( v_port_ptr != NULL  ) {
+        v_count++;
+        v_port_ptr = v_port_ptr->next;
+    }
+
+    if( r_count != v_count ) {
+#ifdef TESTING
+        printf( ERROR_TYPE_CONFLICT, ERR_ERROR, name );
+        printf( "\n" );
+#else
+        sprintf( error_msg, ERROR_TYPE_CONFLICT, ERR_ERROR, name );
+        report_yyerror( error_msg, r_ports->rec->line );
+#endif // TESTING
+        return;
+    }
+
+    r_port_ptr = r_ports;
+    while( r_port_ptr != NULL  ) {
+        match = false;
+        v_port_ptr = v_ports;
+        r_port_attr = ( struct port_attr* )r_port_ptr->rec->attr;
+        while( v_port_ptr != NULL  ) {
+            if( strlen( r_port_ptr->rec->name )
+                    == strlen( v_port_ptr->rec->name )
+                && strcmp( r_port_ptr->rec->name, v_port_ptr->rec->name ) == 0
+                && r_port_attr->collection == v_port_ptr->attr_class
+                && ( r_port_attr->mode == v_port_ptr->attr_mode
+                    || v_port_ptr->attr_mode == VAL_BI )
+                ) {
+                match = true;
+                break;
+            }
+            v_port_ptr = v_port_ptr->next;
+        }
+        if( !match ) break;
+        r_port_ptr = r_port_ptr->next;
+    }
+
+    if( !match ) {
+#ifdef TESTING
+        printf( ERROR_TYPE_CONFLICT, ERR_ERROR, name );
+        printf( "\n" );
+#else
+        sprintf( error_msg, ERROR_TYPE_CONFLICT, ERR_ERROR, name );
+        report_yyerror( error_msg, r_ports->rec->line );
+#endif // TESTING
+    }
 }
 
 /******************************************************************************/

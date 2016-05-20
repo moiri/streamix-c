@@ -64,8 +64,11 @@ struct port_attr
     int     sync_id;
 };
 
+void symrec_del( symrec**, symrec* );
+
 /**
- * Get an identifier from the symbol table.
+ * Get an identifier from the symbol table and produce an error if it was not
+ * found
  *
  * @param symrec**:     pointer to the hashtable
  * @param UT_array**:   pointer to the scope stack
@@ -91,5 +94,17 @@ symrec* symrec_get( symrec**, UT_array*, char*, int );
  *      a null pointer if the element was not stored
  * */
 symrec* symrec_put( symrec**, char*, int, int, void*, int );
+
+/**
+ * Search an identifier in the symbol table and rturn it if found
+ *
+ * @param symrec**:     pointer to the hashtable
+ * @param UT_array**:   pointer to the scope stack
+ * @param char*:        name of the identifier
+ * @return symrec*:
+ *      a pointer to the location where the data is stored
+ *      a null pointer if the element was not found
+ * */
+symrec* symrec_search( symrec**, UT_array*, char* );
 
 #endif /* SYMTAB_H */

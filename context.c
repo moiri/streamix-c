@@ -197,6 +197,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
     port_attr* p_attr = NULL;
     void* attr = NULL;
     inst_net* net = NULL;
+    symrec* rec = NULL;
     symrec_list* ptr = NULL;
     symrec_list* port_list = NULL;
     void* res = NULL;
@@ -228,10 +229,31 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             // get the attributes
             attr = check_context_ast( symtab, nets, scope_stack, ast->assign.op,
                     false );
-            // install the symbol
-            symrec_put( symtab, ast->assign.id->symbol.name,
-                    *utarray_back( scope_stack ), ast->assign.op->type, attr,
-                    ast->assign.id->symbol.line );
+            // check prototype if available
+            rec = symrec_search( symtab, scope_stack,
+                    ast->assign.id->symbol.name );
+            if( rec == NULL ) {
+                // install the symbol
+                symrec_put( symtab, ast->assign.id->symbol.name,
+                        *utarray_back( scope_stack ), ast->assign.op->type,
+                        attr, ast->assign.id->symbol.line );
+            }
+            else {
+                // check whether types of prototype and definition match
+                port_list = ( struct symrec_list* )rec->attr;
+                virt_net_check( port_list,
+                        ( ( struct virt_net* )attr )->ports, rec->name );
+                // update record attributes to the real net
+                rec->type = ast->assign.op->type;
+                rec->attr = attr;
+                rec->line = ast->assign.id->symbol.line;
+                // free symtab ports
+                while( port_list == NULL ) {
+                    symrec_del( symtab, port_list->rec );
+                    port_list = port_list->next;
+                }
+                free( port_list );
+            }
             break;
         case AST_NET:
             net = inst_net_get( nets, *utarray_back( scope_stack ) );
@@ -241,6 +263,15 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
 #endif // DEBUG_NET_DOT
             break;
         case AST_NET_PROTO:
+            _scope++;
+            utarray_push_back( scope_stack, &_scope );
+            port_list = ( struct symrec_list* )check_context_ast( symtab, nets,
+                    scope_stack, ast->net_prot.ports, false );
+            utarray_pop_back( scope_stack );
+            // install the symbol (use port list as attributes)
+            symrec_put( symtab, ast->net_prot.id->symbol.name,
+                    *utarray_back( scope_stack ), ast->type, port_list,
+                    ast->net_prot.id->symbol.line );
             break;
         case AST_SYNCS:
             _sync_id++;
@@ -263,7 +294,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             _scope++;
             utarray_push_back( scope_stack, &_scope );
             port_list = ( struct symrec_list* )check_context_ast( symtab, nets,
-                    scope_stack, ast->box.ports, set_sync );
+                    scope_stack, ast->box.ports, false );
             // prepare symbol attributes and install symbol
             b_attr = ( box_attr* )malloc( sizeof( box_attr ) );
             b_attr->attr_pure = ( ast->box.attr_pure != NULL ) ? true : false;
