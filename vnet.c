@@ -6,17 +6,12 @@
 #endif
 
 /******************************************************************************/
-void virt_net_check( symrec_list* r_ports, virt_ports* v_ports, char *name )
+bool do_port_cnts_match( symrec_list* r_ports, virt_ports* v_ports )
 {
     symrec_list* r_port_ptr = r_ports;
     virt_ports* v_port_ptr = v_ports;
-    port_attr* r_port_attr = NULL;
-    int match = false;
     int v_count = 0;
     int r_count = 0;
-#ifndef TESTING
-    char error_msg[ CONST_ERROR_LEN ];
-#endif // TESTING
 
     while( r_port_ptr != NULL  ) {
         r_count++;
@@ -28,16 +23,16 @@ void virt_net_check( symrec_list* r_ports, virt_ports* v_ports, char *name )
         v_port_ptr = v_port_ptr->next;
     }
 
-    if( r_count != v_count ) {
-#ifdef TESTING
-        printf( ERROR_TYPE_CONFLICT, ERR_ERROR, name );
-        printf( "\n" );
-#else
-        sprintf( error_msg, ERROR_TYPE_CONFLICT, ERR_ERROR, name );
-        report_yyerror( error_msg, r_ports->rec->line );
-#endif // TESTING
-        return;
-    }
+    return (r_count == v_count);
+}
+
+/******************************************************************************/
+bool do_port_attrs_match( symrec_list* r_ports, virt_ports* v_ports )
+{
+    symrec_list* r_port_ptr = r_ports;
+    virt_ports* v_port_ptr = v_ports;
+    port_attr* r_port_attr = NULL;
+    bool match = false;
 
     r_port_ptr = r_ports;
     while( r_port_ptr != NULL  ) {
@@ -61,8 +56,19 @@ void virt_net_check( symrec_list* r_ports, virt_ports* v_ports, char *name )
         r_port_ptr = r_port_ptr->next;
     }
 
-    if( !match ) {
+    return match;
+}
+
+/******************************************************************************/
+void virt_net_check( symrec_list* r_ports, virt_ports* v_ports, char *name )
+{
 #ifdef TESTING
+    char error_msg[ CONST_ERROR_LEN ];
+#endif // TESTING
+
+    if( !do_port_cnts_match( r_ports, v_ports )
+        || !do_port_attrs_match( r_ports, v_ports ) ) {
+#ifndef TESTING
         printf( ERROR_TYPE_CONFLICT, ERR_ERROR, name );
         printf( "\n" );
 #else
@@ -131,7 +137,7 @@ void virt_net_destroy_struct( virt_net* v_net )
 }
 
 /******************************************************************************/
-virt_net* virt_net_alter_parallel( virt_net* v_net1, virt_net* v_net2 )
+virt_net* virt_net_merge_parallel( virt_net* v_net1, virt_net* v_net2 )
 {
     virt_ports* ports = NULL;
     virt_ports* ports_last = NULL;
@@ -152,11 +158,13 @@ virt_net* virt_net_alter_parallel( virt_net* v_net1, virt_net* v_net2 )
     igraph_vector_ptr_destroy( &v_net2->con->left );
     igraph_vector_ptr_destroy( &v_net2->con->right );
 
+    virt_net_destroy_struct( v_net2 );
+
     return v_net1;
 }
 
 /******************************************************************************/
-virt_net* virt_net_alter_serial( virt_net* v_net1, virt_net* v_net2 )
+virt_net* virt_net_merge_serial( virt_net* v_net1, virt_net* v_net2 )
 {
     virt_ports* ports = NULL;
     virt_ports* ports_last = NULL;
@@ -182,6 +190,8 @@ virt_net* virt_net_alter_serial( virt_net* v_net1, virt_net* v_net2 )
 
     // alter connection vectors of virtual net
     v_net1->con->right = v_net2->con->right;
+
+    virt_net_destroy_struct( v_net2 );
 
     return v_net1;
 }

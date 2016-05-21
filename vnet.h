@@ -46,12 +46,73 @@ struct virt_ports
 /* FUNCTION PROTOTYPES                                                        */
 /******************************************************************************/
 
+/**
+ * Check whether each list has the same number of elements
+ *
+ * @param symrec_list*  port list from a symbol record
+ * @param virt_ports*   port list from a net
+ * @return bool         true if port count matches, false if not
+ */
+bool do_port_cnts_match( symrec_list*, virt_ports* );
+
+/**
+ * Check whether each element on one list has a matching element in the
+ * other list
+ *
+ * @param symrec_list*  port list from a symbol record
+ * @param virt_ports*   port list from a net
+ * @return bool         true if port attributes match, false if not
+ */
+bool do_port_attrs_match( symrec_list*, virt_ports* );
+
+/**
+ * Check whether types of a prototype and a net match
+ *
+ * @param symrec_list*  port list from a symbol record
+ * @param virt_ports*   port list from a net
+ * @param char*         name of the symbol
+ */
 void virt_net_check( symrec_list*, virt_ports*, char* );
+
+/**
+ * Create a new virtual net
+ *
+ * @param symrec*       pointer to a record from the symbol table
+ * @param inst_rec*     pointer to a record of the instance table
+ * @return virt_net*    pointer to the newly created virtual net
+ */
 virt_net* virt_net_create( symrec*, inst_rec* );
 
-virt_net* virt_net_alter_parallel( virt_net* , virt_net* );
-virt_net* virt_net_alter_serial( virt_net* , virt_net* );
+/**
+ * Destroy a virtual net and its conent.
+ *
+ * @param virt_net*     pointer to th evirtual net
+ */
 void virt_net_destroy( virt_net* );
+
+/**
+ * Destroy a the structure of virtual net but not its content.
+ *
+ * @param virt_net*     pointer to th evirtual net
+ */
 void virt_net_destroy_struct( virt_net* );
+
+/**
+ * Change merge two virtual nets into one, following the
+ * parallel connection semantics
+ *
+ * @param virt_net*     pointer to virtual net of left operand
+ * @param virt_net*     pointer to virtual net of right operand
+ */
+virt_net* virt_net_merge_parallel( virt_net* , virt_net* );
+
+/**
+ * Change merge two virtual nets into one, following the
+ * serial connection semantics
+ *
+ * @param virt_net*     pointer to virtual net of left operand
+ * @param virt_net*     pointer to virtual net of right operand
+ */
+virt_net* virt_net_merge_serial( virt_net* , virt_net* );
 
 #endif // VNET_H

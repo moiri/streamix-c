@@ -505,8 +505,7 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
             if( v_net2 == NULL ) return NULL;
             cpsync_connects( net, v_net1, v_net2, true );
-            v_net1 = virt_net_alter_parallel( v_net1, v_net2 );
-            virt_net_destroy_struct( v_net2 );
+            v_net1 = virt_net_merge_parallel( v_net1, v_net2 );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "Parallel combination done, v_net:\n " );
             debug_print_ports( v_net1 );
@@ -526,9 +525,8 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             check_connections( net, v_net1, v_net2, &g );
             check_connection_missing( net, &g );
             cpsync_connects( net, v_net1, v_net2, false );
-            v_net1 = virt_net_alter_serial( v_net1, v_net2 );
-            // cleanup virt net and connection graph
-            virt_net_destroy_struct( v_net2 );
+            v_net1 = virt_net_merge_serial( v_net1, v_net2 );
+            // cleanup connection graph
             igraph_destroy( &g );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "Serial combination done, v_net:\n " );
