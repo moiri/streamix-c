@@ -63,9 +63,9 @@ bool check_connection( inst_net* net, virt_ports* ports_l,
     char error_msg[ CONST_ERROR_LEN ];
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
     printf( "check_connection:\n " );
-    debug_print_port( ports_l );
+    debug_print_vport( ports_l );
     printf( " and " );
-    debug_print_port( ports_r );
+    debug_print_vport( ports_r );
 #endif // DEBUG_CONNECT
     if( are_port_names_ok( ports_l, ports_r, false, false ) ) {
         if( ( ports_l->inst->type == VAL_CP )
@@ -241,8 +241,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             else {
                 // check whether types of prototype and definition match
                 port_list = ( struct symrec_list* )rec->attr;
-                virt_net_check( port_list, ( ( struct virt_net* )attr )->ports,
-                        rec->name );
+                check_prototype( port_list, attr, rec->name );
                 // update record attributes to the real net
                 rec->type = ast->assign.op->type;
                 rec->attr = attr;
@@ -369,6 +368,32 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
 }
 
 /******************************************************************************/
+void check_prototype( symrec_list* r_ports, virt_net* v_net, char *name )
+{
+#ifdef TESTING
+    char error_msg[ CONST_ERROR_LEN ];
+#endif // TESTING
+
+#if defined(DEBUG) || defined(DEBUG_PROTO)
+    printf("check_prototype:\n");
+    printf(" ports prot: ");
+    debug_print_rports( r_ports, name );
+    printf(" ports vnet: ");
+    debug_print_vports( v_net );
+#endif // DEBUG_PROTO
+    if( !do_port_cnts_match( r_ports, v_net->ports )
+        || !do_port_attrs_match( r_ports, v_net->ports ) ) {
+#ifndef TESTING
+        printf( ERROR_TYPE_CONFLICT, ERR_ERROR, name );
+        printf( "\n" );
+#else
+        sprintf( error_msg, ERROR_TYPE_CONFLICT, ERR_ERROR, name );
+        report_yyerror( error_msg, r_ports->rec->line );
+#endif // TESTING
+    }
+}
+
+/******************************************************************************/
 void cpsync_connect( inst_net* net, virt_ports* port1, virt_ports* port2 )
 {
     inst_rec* cp_sync = NULL;
@@ -461,11 +486,38 @@ inst_rec* cpsync_merge( inst_net* net, virt_ports* port1, virt_ports* port2 )
 }
 
 /******************************************************************************/
-void debug_print_port( virt_ports* port )
+void debug_print_rport( symrec* port, char* name )
+{
+    port_attr* p_attr = port->attr;
+    printf( "%s", name );
+    if( p_attr->collection == VAL_DOWN ) printf( "_" );
+    else if( p_attr->collection == VAL_UP ) printf( "^" );
+    else if( p_attr->collection == VAL_SIDE ) printf( "|" );
+    if( p_attr->mode == VAL_IN ) printf( "<--" );
+    else if( p_attr->mode == VAL_OUT ) printf( "-->" );
+    else printf( "<->" );
+    printf( "%s", port->name );
+}
+
+/******************************************************************************/
+void debug_print_rports( symrec_list* rports, char* name )
+{
+    symrec_list* ports = rports;
+    while( ports != NULL ) {
+        debug_print_rport( ports->rec, name );
+        printf(", ");
+        ports = ports->next;
+    }
+    printf("\n");
+}
+
+/******************************************************************************/
+void debug_print_vport( virt_ports* port )
 {
     printf( "%s(%d)", port->inst->name, port->inst->id );
     if( port->attr_class == VAL_DOWN ) printf( "_" );
     else if( port->attr_class == VAL_UP ) printf( "^" );
+    else if( port->attr_class == VAL_SIDE ) printf( "|" );
     if( port->attr_mode == VAL_IN ) printf( "<--" );
     else if( port->attr_mode == VAL_OUT ) printf( "-->" );
     else printf( "<->" );
@@ -473,17 +525,74 @@ void debug_print_port( virt_ports* port )
 }
 
 /******************************************************************************/
-void debug_print_ports( virt_net* v_net )
+void debug_print_vports( virt_net* v_net )
 {
     virt_ports* ports = NULL;
     if( v_net->ports != NULL )
         ports = v_net->ports;
     while( ports != NULL ) {
-        debug_print_port( ports );
+        debug_print_vport( ports );
         printf(", ");
         ports = ports->next;
     }
     printf("\n");
+}
+
+/******************************************************************************/
+bool do_port_cnts_match( symrec_list* r_ports, virt_ports* v_ports )
+{
+    symrec_list* r_port_ptr = r_ports;
+    virt_ports* v_port_ptr = v_ports;
+    int v_count = 0;
+    int r_count = 0;
+
+    while( r_port_ptr != NULL  ) {
+        r_count++;
+        r_port_ptr = r_port_ptr->next;
+    }
+
+    while( v_port_ptr != NULL  ) {
+        v_count++;
+        v_port_ptr = v_port_ptr->next;
+    }
+
+    return (r_count == v_count);
+}
+
+/******************************************************************************/
+bool do_port_attrs_match( symrec_list* r_ports, virt_ports* v_ports )
+{
+    symrec_list* r_port_ptr = r_ports;
+    virt_ports* v_port_ptr = v_ports;
+    port_attr* r_port_attr = NULL;
+    bool match = false;
+
+    r_port_ptr = r_ports;
+    while( r_port_ptr != NULL  ) {
+        match = false;
+        v_port_ptr = v_ports;
+        r_port_attr = ( struct port_attr* )r_port_ptr->rec->attr;
+        while( v_port_ptr != NULL  ) {
+            if( strlen( r_port_ptr->rec->name )
+                    == strlen( v_port_ptr->rec->name )
+                && strcmp( r_port_ptr->rec->name, v_port_ptr->rec->name ) == 0
+                && r_port_attr->collection == v_port_ptr->attr_class
+                && ( r_port_attr->mode == v_port_ptr->attr_mode
+                    || v_port_ptr->attr_mode == VAL_BI )
+                ) {
+                // use more specific mode from prototype
+                if( v_port_ptr->attr_mode == VAL_BI )
+                    v_port_ptr->attr_mode = r_port_attr->mode;
+                match = true;
+                break;
+            }
+            v_port_ptr = v_port_ptr->next;
+        }
+        if( !match ) break;
+        r_port_ptr = r_port_ptr->next;
+    }
+
+    return match;
 }
 
 /******************************************************************************/
@@ -508,7 +617,7 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             v_net1 = virt_net_merge_parallel( v_net1, v_net2 );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "Parallel combination done, v_net:\n " );
-            debug_print_ports( v_net1 );
+            debug_print_vports( v_net1 );
             printf( "\n" );
 #endif // DEBUG_CONNECT
             break;
@@ -530,7 +639,7 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             igraph_destroy( &g );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "Serial combination done, v_net:\n " );
-            debug_print_ports( v_net1 );
+            debug_print_vports( v_net1 );
             printf( "\n" );
 #endif // DEBUG_CONNECT
             break;

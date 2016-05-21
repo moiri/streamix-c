@@ -97,6 +97,15 @@ void check_context( ast_node* );
 void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node*, bool );
 
 /**
+ * Check whether types of a prototype and a net match
+ *
+ * @param symrec_list*  port list from a symbol record
+ * @param virt_ports*   port list from a net
+ * @param char*         name of the symbol
+ */
+void check_prototype( symrec_list*, virt_net*, char* );
+
+/**
  * Establish copy synchronizer connections between two ports of two virtual nets.
  * This includes side ports as well as regular ports. The dependancy graph is
  * updated.
@@ -130,18 +139,51 @@ void cpsync_connects( inst_net*, virt_net*, virt_net*, bool );
 inst_rec* cpsync_merge( inst_net*, virt_ports*, virt_ports* );
 
 /**
+ * Print debug information of a port of a port record list
+ *
+ * @param symrec*:    pointer to the port record
+ */
+void debug_print_rport( symrec*, char* );
+
+/**
+ * Print debug information of all ports in a port record list
+ *
+ * @param symrec_list*:    pointer to the port record list
+ */
+void debug_print_rports( symrec_list*, char* );
+
+/**
  * Print debug information of a port of a virtual net
  *
  * @param virt_net*:    pointer to the port of a virtual net
  */
-void debug_print_port( virt_ports* );
+void debug_print_vport( virt_ports* );
 
 /**
  * Print debug information of all ports in a virtual net
  *
  * @param virt_net*:    pointer to the virtual net
  */
-void debug_print_ports( virt_net* );
+void debug_print_vports( virt_net* );
+
+/**
+ * Check whether each list has the same number of elements
+ *
+ * @param symrec_list*  port list from a symbol record
+ * @param virt_ports*   port list from a net
+ * @return bool         true if port count matches, false if not
+ */
+bool do_port_cnts_match( symrec_list*, virt_ports* );
+
+/**
+ * Check whether each element on one list has a matching element in the
+ * other list
+ *
+ * @param symrec_list*  port list from a symbol record
+ * @param virt_ports*   port list from a net
+ * @return bool         true if port attributes match, false if not
+ */
+bool do_port_attrs_match( symrec_list*, virt_ports* );
 
 /**
  * This function performs the following tasks
