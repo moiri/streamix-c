@@ -71,6 +71,7 @@ flags = [
 '-I', '/usr/local/include/igraph',
 '-I', './insttab',
 '-I', './symtab',
+'-I', './include',
 ]
 
 

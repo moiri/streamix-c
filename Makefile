@@ -2,21 +2,13 @@ SHELL := /bin/bash
 PROJECT = streamix
 PARSER = parser
 
-SOURCES = main.c \
-		  context.c \
-		  ngraph.c \
-		  vnet.c \
-		  ast.c \
-		  error.c \
-		  dot.c
+LOC_INC_DIR = include
+LOC_SRC_DIR = src
 
-INCLUDES = context.h \
-		   ngraph.h \
-		   vnet.h \
-		   ast.h \
-		   error.h \
-		   dot.h \
-		   defines.h
+SOURCES = main.c \
+		  $(LOC_SRC_DIR)/*
+
+INCLUDES = $(LOC_INC_DIR)/*
 
 INSTTAB_DIR = insttab
 SYMTAB_DIR = symtab
@@ -30,6 +22,7 @@ INCLUDES_DIR = -Iuthash/include \
 			   -I/usr/local/include/igraph \
 			   -I$(INSTTAB_DIR) \
 			   -I$(SYMTAB_DIR) \
+			   -I$(LOC_INC_DIR) \
 			   -I.
 LINK_DIR = -L/usr/local/lib
 LINK_FILE = -lfl \
