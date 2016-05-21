@@ -120,7 +120,7 @@ net_assign:
 /* net declaration */
 net_def:
     net { $$ = ast_add_node( $1, AST_NET ); }
-|   net_proto { $$ = $1; }
+/* |   net_proto { $$ = $1; } */
 |   box_decl { $$ = $1; }
 ;
 
