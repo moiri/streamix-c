@@ -64,6 +64,12 @@ struct port_attr
     int     sync_id;
 };
 
+/**
+* Remove a record from the symbol table and free the allocated space
+*
+* @param symrec**:     pointer to the hashtable
+* @param symrec*:      pointer to the record to be removed
+* */
 void symrec_del( symrec**, symrec* );
 
 /**

@@ -232,7 +232,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             // check prototype if available
             rec = symrec_search( symtab, scope_stack,
                     ast->assign.id->symbol.name );
-            if( rec == NULL ) {
+            if( rec == NULL || rec->type != AST_NET_PROTO ) {
                 // install the symbol
                 symrec_put( symtab, ast->assign.id->symbol.name,
                         *utarray_back( scope_stack ), ast->assign.op->type,
