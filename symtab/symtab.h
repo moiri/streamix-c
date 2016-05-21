@@ -31,6 +31,10 @@ struct symrec
     int         type;   // AST_NET, AST_NET_PROTO, AST_BOX
     int         line;   // line position in the source file
     void*       attr;   // a struct of attributes
+                            // AST_BOX:         box_attr
+                            // AST_PORT:        port_attr
+                            // AST_NET_PROTO:   symrec_list
+                            // AST_NET:         virt_net
     symrec*     next;   // pointer to the next element (handle collisions)
     UT_hash_handle hh;  // makes this structure hashable
 };

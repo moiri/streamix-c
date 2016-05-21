@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <igraph.h>
 #include "ast.h"
+#include "vnet.h"
 #include "insttab.h"
 #include "symtab.h"
 #include "utarray.h"

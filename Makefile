@@ -5,12 +5,14 @@ PARSER = parser
 SOURCES = main.c \
 		  context.c \
 		  ngraph.c \
+		  vnet.c \
 		  ast.c \
 		  error.c \
 		  dot.c
 
 INCLUDES = context.h \
 		   ngraph.h \
+		   vnet.h \
 		   ast.h \
 		   error.h \
 		   dot.h \

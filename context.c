@@ -241,8 +241,8 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             else {
                 // check whether types of prototype and definition match
                 port_list = ( struct symrec_list* )rec->attr;
-                virt_net_check( port_list,
-                        ( ( struct virt_net* )attr )->ports, rec->name );
+                virt_net_check( port_list, ( ( struct virt_net* )attr )->ports,
+                        rec->name );
                 // update record attributes to the real net
                 rec->type = ast->assign.op->type;
                 rec->attr = attr;
