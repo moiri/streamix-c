@@ -370,9 +370,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
 /******************************************************************************/
 void check_prototype( symrec_list* r_ports, virt_net* v_net, char *name )
 {
-#ifdef TESTING
     char error_msg[ CONST_ERROR_LEN ];
-#endif // TESTING
 
 #if defined(DEBUG) || defined(DEBUG_PROTO)
     printf("check_prototype:\n");
@@ -383,13 +381,8 @@ void check_prototype( symrec_list* r_ports, virt_net* v_net, char *name )
 #endif // DEBUG_PROTO
     if( !do_port_cnts_match( r_ports, v_net->ports )
         || !do_port_attrs_match( r_ports, v_net->ports ) ) {
-#ifndef TESTING
-        printf( ERROR_TYPE_CONFLICT, ERR_ERROR, name );
-        printf( "\n" );
-#else
         sprintf( error_msg, ERROR_TYPE_CONFLICT, ERR_ERROR, name );
         report_yyerror( error_msg, r_ports->rec->line );
-#endif // TESTING
     }
 }
 
@@ -604,6 +597,7 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
     virt_net* v_net2 = NULL;
     inst_rec* inst = NULL;
     igraph_t g;
+    char error_msg[ CONST_ERROR_LEN ];
 
     if( ast == NULL ) return NULL;
 
@@ -651,6 +645,10 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             // add a net symbol to the instance table
             if( rec->type == AST_NET ) {
                 v_net1 = ( struct virt_net* )rec->attr;
+            }
+            else if( rec->type == AST_NET_PROTO ) {
+                sprintf( error_msg, ERROR_UNDEF_NET, ERR_ERROR, rec->name );
+                report_yyerror( error_msg, ast->symbol.line );
             }
             else {
                 inst = inst_rec_put( &net->recs_name, &net->recs_id,

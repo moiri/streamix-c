@@ -1,0 +1,5 @@
+X = box funcX(out a)
+Z = box funcY(in c)
+net Y{up in a, down out c}
+
+connect X.Y.Z
