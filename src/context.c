@@ -157,8 +157,8 @@ void check_connection_missing( inst_net* net, igraph_t* g_con )
 
     for( edge_id = 0; edge_id < igraph_ecount( g_con ); edge_id++ ) {
         igraph_edge( g_con, edge_id, &v1_id, &v2_id );
-        rec1 = inst_rec_get_id( &net->recs_id, v1_id );
-        rec2 = inst_rec_get_id( &net->recs_id, v2_id );
+        rec1 = inst_rec_get( &net->nodes, v1_id );
+        rec2 = inst_rec_get( &net->nodes, v2_id );
         // ERROR: there is no connection between the two nets
         sprintf( error_msg, ERROR_NO_NET_CON, ERR_ERROR, rec1->name, v1_id,
                 rec2->name, v2_id );
@@ -406,8 +406,8 @@ void cpsync_connect( inst_net* net, virt_ports* port1, virt_ports* port2 )
                 port1->attr_mode );
     }
     else {
-        cp_sync = inst_rec_put( &net->recs_name, &net->recs_id, TEXT_CP,
-                igraph_vcount( &net->g ), 0, VAL_CP, NULL );
+        cp_sync = inst_rec_put( &net->nodes, TEXT_CP, igraph_vcount( &net->g ),
+                0, VAL_CP, NULL );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
         printf( "Create copy-synchronizer %s(%d)\n", cp_sync->name,
                 cp_sync->id );
@@ -469,12 +469,12 @@ inst_rec* cpsync_merge( inst_net* net, virt_ports* port1, virt_ports* port2 )
             port2->inst->id );
     // delete one copy synchronizer from insttab
     id = port2->inst->id;
-    inst_rec_del( &net->recs_name, &net->recs_id, port2->inst );
+    inst_rec_del( &net->nodes, port2->inst );
     if( id_del != id )
-        inst_rec_replace_id( &net->recs_id, id_del, id );
+        inst_rec_replace_id( &net->nodes, id_del, id );
     // adjust all ids starting from the id of the deleted record
     for( id = id_del; id < igraph_vcount( &net->g ); id++ )
-        inst_rec_replace_id( &net->recs_id, id + 1, id );
+        inst_rec_replace_id( &net->nodes, id + 1, id );
     return port1->inst;
 }
 
@@ -651,9 +651,9 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
                 report_yyerror( error_msg, ast->symbol.line );
             }
             else {
-                inst = inst_rec_put( &net->recs_name, &net->recs_id,
-                        ast->symbol.name, igraph_vcount( &net->g ),
-                        ast->symbol.line, VAL_NET, rec );
+                inst = inst_rec_put( &net->nodes, ast->symbol.name,
+                        igraph_vcount( &net->g ), ast->symbol.line, VAL_NET,
+                        rec );
                 // update graph and virtual net
                 igraph_add_vertices( &net->g, 1, NULL );
                 v_net1 = virt_net_create( rec, inst );
