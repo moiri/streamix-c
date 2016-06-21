@@ -67,7 +67,7 @@ flags = [
 '-isystem', '/usr/target/include',
 '-isystem', '/usr/include',
 '-I', '.',
-'-I', './uthash/include',
+'-I', './uthash/src',
 '-I', '/usr/local/include/igraph',
 '-I', './insttab',
 '-I', './symtab',

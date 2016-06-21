@@ -1,5 +1,5 @@
 #include <string.h>
-#include "error.h"
+#include "smxerr.h"
 
 void report_yyerror( const char* msg, int line )
 {

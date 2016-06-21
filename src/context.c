@@ -1,7 +1,7 @@
 #include "context.h"
 #include "defines.h"
 #include "ngraph.h"
-#include "error.h"
+#include "smxerr.h"
 
 /******************************************************************************/
 bool are_port_names_ok( virt_ports* p1, virt_ports* p2, bool cpp, bool cps )

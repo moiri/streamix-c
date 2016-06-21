@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "streamix.tab.h"
 #include "context.h"
-#include "error.h"
+#include "smxerr.h"
 #ifdef DOT_AST
     #include "dot.h"
 #endif // DOT_AST

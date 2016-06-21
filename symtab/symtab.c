@@ -4,7 +4,7 @@
 #ifdef TESTING
 #include "defines.h"
 #else
-#include "error.h"
+#include "smxerr.h"
 #endif
 
 /******************************************************************************/

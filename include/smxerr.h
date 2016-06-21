@@ -1,7 +1,7 @@
 /* 
  * Error message helper function
  *
- * @file    error.h
+ * @file    smxerr.h
  * @author  Simon Maurer
  *
  * */

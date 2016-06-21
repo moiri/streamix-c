@@ -18,7 +18,7 @@ INSTTAB_OBJ = $(INSTTAB_DIR)/insttab.o
 INSTTAB_SRC = $(INSTTAB_DIR)/insttab.c $(INSTTAB_DIR)/insttab.h
 OBJECTS = $(SYMTAB_OBJ) $(INSTTAB_OBJ)
 
-INCLUDES_DIR = -Iuthash/include \
+INCLUDES_DIR = -Iuthash/src \
 			   -I/usr/local/include/igraph \
 			   -I$(INSTTAB_DIR) \
 			   -I$(SYMTAB_DIR) \
