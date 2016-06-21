@@ -3,7 +3,7 @@ OUT = test
 
 SOURCES = symtab.c
 INCLUDES = symtab.h
-INCLUDES_DIR = -I../uthash/include -I. -I..
+INCLUDES_DIR = -I../uthash/src -I. -I..
 
 CFLAGS = -Wall -DTESTING
 DEBUG_FLAGS = -g -O0
