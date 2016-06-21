@@ -1,7 +1,7 @@
 /* 
  * Checks the context of symbols and connections
  *
- * @file    symtab.h
+ * @file    context.h
  * @author  Simon Maurer
  *
  * */
