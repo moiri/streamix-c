@@ -60,17 +60,6 @@ inst_net* inst_net_get( inst_net**, int );
 inst_net* inst_net_put( inst_net**, int );
 
 /**
- * Remove a copy-synchronizer from the instance table and update the ids of
- * of in a specified range
- *
- * @param inst_net*     pointer to a net record
- * @param inst_rec*     pointer to the copy-synchronizer
- * @param int           start id of the id range
- * @param int           end id of the id range
- */
-void inst_rec_cleanup( inst_net*, inst_rec*, int, int );
-
-/**
  * Delete record from the instance table
  *
  * @param inst_rec**    pointer to rec (id) instance table

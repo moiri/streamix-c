@@ -57,17 +57,6 @@ inst_net* inst_net_put( inst_net** nets, int scope )
 }
 
 /******************************************************************************/
-void inst_rec_cleanup( inst_net* net, inst_rec* inst, int id_start,
-        int id_end ) {
-    int id;
-    // delete one copy synchronizer from insttab
-    inst_rec_del( &net->nodes, inst );
-    // adjust all ids starting from the id of the deleted record
-    for( id = id_start ; id < id_end; id++ )
-        inst_rec_replace_id( &net->nodes, id, id - 1 );
-}
-
-/******************************************************************************/
 void inst_rec_del( inst_rec** recs, inst_rec* rec )
 {
 #if defined(DEBUG) || defined(DEBUG_INST)
