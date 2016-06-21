@@ -8,8 +8,9 @@ SYMTAB_DIR = ../symtab
 SYMTAB_OBJ = $(SYMTAB_DIR)/symtab.o
 SYMTAB_SRC = $(SYMTAB_DIR)/symtab.c $(SYMTAB_DIR)/symtab.h
 
-INCLUDES_DIR = -I../uthash/include \
+INCLUDES_DIR = -I../uthash/src \
 			   -I/usr/local/include/igraph \
+			   -I../include \
 			   -I../symtab \
 			   -I.. \
 			   -I.

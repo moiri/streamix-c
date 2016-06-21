@@ -20,8 +20,8 @@ typedef struct inst_net inst_net;
 struct inst_net
 {
     int             scope;
-    inst_rec*       recs_id;   // hashtable of the instances in the net (id)
-    inst_rec*       recs_name; // hashtable of the instances in the net (name)
+    inst_rec*       nodes;   // hashtable of the node instances in the net
+    inst_rec*       edges;   // hashtable of the edge instances in the net
     igraph_t        g;
     inst_net*       next;
     UT_hash_handle  hh;     // makes this structure hashable
@@ -35,8 +35,7 @@ struct inst_rec
     int             type;
     symrec*         net;        // pointer to its declaration
     inst_rec*       next;
-    UT_hash_handle  hh_id;      // makes this structure hashable (id)
-    UT_hash_handle  hh_name;    // makes this structure hashable (name)
+    UT_hash_handle  hh;      // makes this structure hashable
 };
 
 /* FUNCTION PROTOTYPES                                                        */
@@ -74,11 +73,10 @@ void inst_rec_cleanup( inst_net*, inst_rec*, int, int );
 /**
  * Delete record from the instance table
  *
- * @param inst_rec**    pointer to rec (name) instance table
  * @param inst_rec**    pointer to rec (id) instance table
  * @param inst_rec*     poiner to the record to be removed
  */
-void inst_rec_del( inst_rec**, inst_rec**, inst_rec* );
+void inst_rec_del( inst_rec**, inst_rec* );
 
 /**
  * Get rec from instance table using an id as key
@@ -87,22 +85,12 @@ void inst_rec_del( inst_rec**, inst_rec**, inst_rec* );
  * @param int           id of the record
  * @return inst_rec*    pointer to the record
  */
-inst_rec* inst_rec_get_id( inst_rec**, int );
-
-/**
- * Get rec from instance table using a name as key
- *
- * @param inst_rec**    pointer to rec instance table
- * @param char*         name of the record
- * @return inst_rec*    pointer to the record
- */
-inst_rec* inst_rec_get_name( inst_rec**, char* );
+inst_rec* inst_rec_get( inst_rec**, int );
 
 /**
  * Put rec into instance table
  *
- * @param inst_rec**    pointer to rec (name) instance table
- * @param inst_rec**    pointer to rec (id) instance table
+ * @param inst_rec**    pointer to rec instance table
  * @param char*         name of the record
  * @param int           id of the record
  * @param int           line of the record
@@ -110,7 +98,7 @@ inst_rec* inst_rec_get_name( inst_rec**, char* );
  * @param symrec*       pointer to the symbol record
  * @return inst_rec*    pointer to the record
  */
-inst_rec* inst_rec_put( inst_rec**, inst_rec**, char*, int, int, int, symrec* );
+inst_rec* inst_rec_put( inst_rec**, char*, int, int, int, symrec* );
 
 /**
  * Replace the id of a record
