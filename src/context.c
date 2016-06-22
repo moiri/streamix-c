@@ -167,16 +167,15 @@ void check_connection_missing( inst_net* net, igraph_t* g_con )
 }
 
 /******************************************************************************/
-void check_context( ast_node* ast )
+void check_context( ast_node* ast, inst_net** nets )
 {
-    inst_net* nets = NULL;        // hash table to store the nets
     symrec* symtab = NULL;        // hash table to store the symbols
     UT_array* scope_stack = NULL; // stack to handle the scope
     int scope = 0;
 
     utarray_new( scope_stack, &ut_int_icd );
     utarray_push_back( scope_stack, &scope );
-    check_context_ast( &symtab, &nets, scope_stack, ast, false );
+    check_context_ast( &symtab, nets, scope_stack, ast, false );
     /* install_ids( &symtab, scope_stack, ast, false ); */
     /* instrec_put( &insttab, VAL_THIS, *utarray_back( scope_stack ), */
     /*         VAL_SELF, -1, NULL ); */

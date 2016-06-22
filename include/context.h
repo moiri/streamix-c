@@ -79,8 +79,9 @@ void check_connection_missing( inst_net*, igraph_t* );
  * Check the context of all identifiers in the program
  *
  * @param ast_node*:    pointer to the root ast node
+ * @param inst_net**:   pointer to the instance table of nets (scopes)
  * */
-void check_context( ast_node* );
+void check_context( ast_node*, inst_net** );
 
 /**
  * Check the context of all identifiers in the program by iterating through the

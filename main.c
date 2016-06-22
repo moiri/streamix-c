@@ -2,6 +2,7 @@
 #include "streamix.tab.h"
 #include "context.h"
 #include "smxerr.h"
+#include "smxgen.h"
 #ifdef DOT_AST
     #include "dot.h"
 #endif // DOT_AST
@@ -14,6 +15,7 @@ extern int yyparse( void** ) ;
 
 int main( int argc, char **argv ) {
     void* ast = NULL;
+    inst_net* nets = NULL;        // hash table to store the nets
     // open a file handle to a particular file:
     if( argc != 2 ) {
         printf( "Missing argument!\n" );
@@ -36,7 +38,8 @@ int main( int argc, char **argv ) {
     } while( !feof( yyin ) );
 
     /* cgraph_init( ast ); */
-    check_context( ast );
+    check_context( ast, &nets );
+    smxgen_network( &nets );
 
     /* fclose(con_graph); */
     if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );
