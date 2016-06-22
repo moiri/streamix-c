@@ -29,21 +29,28 @@ void smxgen_network( inst_net** nets )
     inst_rec* rec;
     igraph_es_t e_sel;
     igraph_eit_t e_it;
-    int e_id;
+    igraph_vector_t eids;
+    int eid, vid1, vid2;
+    // for all scopes in th program
     for( net=*nets; net != NULL; net=net->hh.next ) {
-        // generate boxes
+        // for all boxes in the scope
         for( rec=net->nodes; rec != NULL; rec=rec->hh.next ) {
-            smxgen_box( net->scope, rec->id, 2 );
+            // generate box creation code
+            igraph_vector_init( &eids, 0 );
+            igraph_incident( &net->g, &eids, rec->id, IGRAPH_ALL );
+            smxgen_box( net->scope, rec->id, igraph_vector_size( &eids ) );
         }
-        // generate channels and the connections to the boxes
+        // for all channels in the scope
         e_sel = igraph_ess_all( IGRAPH_EDGEORDER_ID );
         igraph_eit_create( &net->g, e_sel, &e_it );
         while( !IGRAPH_EIT_END( e_it ) ) {
-            e_id = IGRAPH_EIT_GET( e_it );
-            smxgen_channel( net->scope, e_id );
-            for( rec=net->nodes; rec != NULL; rec=rec->hh.next ) {
-                smxgen_connect( net->scope, e_id, rec->id );
-            }
+            // generate channel creation code
+            eid = IGRAPH_EIT_GET( e_it );
+            smxgen_channel( net->scope, eid );
+            // generate connection code for a channel and its connecting boxes
+            igraph_edge( &net->g, eid, &vid1, &vid2 );
+            smxgen_connect( net->scope, eid, vid1 );
+            smxgen_connect( net->scope, eid, vid2 );
             IGRAPH_EIT_NEXT( e_it );
         }
     }
