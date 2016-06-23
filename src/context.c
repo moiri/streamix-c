@@ -61,6 +61,7 @@ bool check_connection( inst_net* net, virt_ports* ports_l,
 {
     bool res = false;
     char error_msg[ CONST_ERROR_LEN ];
+    const char* port_name;
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
     printf( "check_connection:\n " );
     debug_print_vport( ports_l );
@@ -84,8 +85,10 @@ bool check_connection( inst_net* net, virt_ports* ports_l,
         else if( are_port_modes_ok( ports_l, ports_r ) ) {
             cgraph_update( g_con, ports_l->inst->id, ports_r->inst->id,
                     ports_l->inst->type, ports_r->inst->type, &net->g);
+            if( ports_l->rec != NULL ) port_name = ports_l->rec->name;
+            else port_name = ports_r->rec->name;
             dgraph_connect_1( &net->g, ports_l->inst->id, ports_r->inst->id,
-                    ports_l->attr_mode, ports_r->attr_mode );
+                    ports_l->attr_mode, ports_r->attr_mode, port_name );
 
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "\n  => connection is valid\n" );
@@ -397,12 +400,12 @@ void cpsync_connect( inst_net* net, virt_ports* port1, virt_ports* port2 )
     else if( port1->inst->type == VAL_CP ) {
         cp_sync = port1->inst;
         dgraph_connect_1( &net->g, cp_sync->id, port2->inst->id, VAL_BI,
-                port2->attr_mode );
+                port2->attr_mode, port2->rec->name );
     }
     else if( port2->inst->type == VAL_CP ) {
         cp_sync = port2->inst;
         dgraph_connect_1( &net->g, cp_sync->id, port1->inst->id, VAL_BI,
-                port1->attr_mode );
+                port1->attr_mode, port1->rec->name );
     }
     else {
         cp_sync = inst_rec_put( &net->nodes, TEXT_CP, igraph_vcount( &net->g ),
@@ -413,9 +416,9 @@ void cpsync_connect( inst_net* net, virt_ports* port1, virt_ports* port2 )
 #endif // DEBUG_CONNECT
         igraph_add_vertices( &net->g, 1, NULL );
         dgraph_connect_1( &net->g, cp_sync->id, port1->inst->id, VAL_BI,
-                port1->attr_mode );
+                port1->attr_mode, port1->rec->name );
         dgraph_connect_1( &net->g, cp_sync->id, port2->inst->id, VAL_BI,
-                port2->attr_mode );
+                port2->attr_mode, port2->rec->name );
     }
     // change left port to copy synchronizer port
     port1->inst = cp_sync;

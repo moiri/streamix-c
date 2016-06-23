@@ -54,8 +54,9 @@ void cgraph_update( igraph_t*, int, int, int, int, igraph_t* );
  * @param int:          id of the right operand
  * @param int:          mode of the left operand
  * @param int:          mode of the right operand
+ * @param const char*   name of the edge
  */
-void dgraph_connect_1( igraph_t*, int, int, int, int );
+void dgraph_connect_1( igraph_t*, int, int, int, int, const char* );
 
 /**
  * Merge to vertices into one

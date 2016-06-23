@@ -57,15 +57,19 @@ void cgraph_update( igraph_t* g_con, int id1, int id2, int t1, int t2,
 }
 
 /******************************************************************************/
-void dgraph_connect_1( igraph_t* g, int id1, int id2, int mode1, int mode2 )
+void dgraph_connect_1( igraph_t* g, int id1, int id2, int mode1, int mode2,
+        const char* name )
 {
     int id_from = id1;
     int id_to = id2;
+    int id_edge;
     if( ( mode2 == VAL_OUT ) || ( mode1 == VAL_IN ) ) {
         id_to = id_from;
         id_from = id2;
     }
     igraph_add_edge( g, id_from, id_to );
+    igraph_get_eid( g, &id_edge, id_from, id_to, IGRAPH_DIRECTED, 0 );
+    igraph_cattribute_EAS_set( g, "name", id_edge, name );
 }
 
 /******************************************************************************/

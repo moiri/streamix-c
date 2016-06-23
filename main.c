@@ -16,6 +16,7 @@ extern int yyparse( void** ) ;
 int main( int argc, char **argv ) {
     void* ast = NULL;
     inst_net* nets = NULL;        // hash table to store the nets
+    igraph_i_set_attribute_table( &igraph_cattribute_table );
     // open a file handle to a particular file:
     if( argc != 2 ) {
         printf( "Missing argument!\n" );

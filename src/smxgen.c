@@ -3,42 +3,41 @@
 #include <stdio.h>
 
 /******************************************************************************/
-void smxgen_box( int scope, int id, int port_cnt )
+void smxgen_box( int scope, int id, const char* name )
 {
-    printf( "smx_box_t* box_%d_%d = smx_box_create( %d );\n", id, scope,
-            port_cnt );
+    printf( "void* box_%d_%d = SMX_BOX_CREATE( %s );\n", id, scope,
+            name );
 }
 
 /******************************************************************************/
 void smxgen_channel( int scope, int id )
 {
-    printf( "smx_channel_t* ch_%d_%d = smx_channel_create();\n", id, scope );
+    printf( "smx_channel_t* ch_%d_%d = SMX_CHANNEL_CREATE();\n", id, scope );
 }
 
 /******************************************************************************/
-void smxgen_connect( int scope, int id_ch, int id_box )
+void smxgen_connect( int scope, int id_ch, int id_box, const char* box_name,
+        const char* ch_name )
 {
-    printf( "SMX_CONNECT( ch_%d_%d, box_%d_%d );\n", id_ch, scope, id_box,
-            scope );
+    printf( "SMX_CONNECT( box_%d_%d, ch_%d_%d, %s, %s );\n", id_box, scope,
+            id_ch, scope, box_name, ch_name );
 }
 
 /******************************************************************************/
 void smxgen_network( inst_net** nets )
 {
     inst_net* net;
-    inst_rec* rec;
+    inst_rec* rec1;
+    inst_rec* rec2;
     igraph_es_t e_sel;
     igraph_eit_t e_it;
-    igraph_vector_t eids;
     int eid, vid1, vid2;
     // for all scopes in th program
     for( net=*nets; net != NULL; net=net->hh.next ) {
         // for all boxes in the scope
-        for( rec=net->nodes; rec != NULL; rec=rec->hh.next ) {
+        for( rec1=net->nodes; rec1 != NULL; rec1=rec1->hh.next ) {
             // generate box creation code
-            igraph_vector_init( &eids, 0 );
-            igraph_incident( &net->g, &eids, rec->id, IGRAPH_ALL );
-            smxgen_box( net->scope, rec->id, igraph_vector_size( &eids ) );
+            smxgen_box( net->scope, rec1->id, rec1->name );
         }
         // for all channels in the scope
         e_sel = igraph_ess_all( IGRAPH_EDGEORDER_ID );
@@ -49,8 +48,12 @@ void smxgen_network( inst_net** nets )
             smxgen_channel( net->scope, eid );
             // generate connection code for a channel and its connecting boxes
             igraph_edge( &net->g, eid, &vid1, &vid2 );
-            smxgen_connect( net->scope, eid, vid1 );
-            smxgen_connect( net->scope, eid, vid2 );
+            rec1 = inst_rec_get( &net->nodes, vid1 );
+            smxgen_connect( net->scope, eid, vid1, rec1->name,
+                    igraph_cattribute_EAS( &net->g, "name", eid ) );
+            rec2 = inst_rec_get( &net->nodes, vid2 );
+            smxgen_connect( net->scope, eid, vid2, rec2->name,
+                    igraph_cattribute_EAS( &net->g, "name", eid ) );
             IGRAPH_EIT_NEXT( e_it );
         }
     }
