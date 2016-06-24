@@ -1,27 +1,6 @@
 #include "smxgen.h"
+#include "codegen.h"
 #include <igraph.h>
-#include <stdio.h>
-
-/******************************************************************************/
-void smxgen_box( int scope, int id, const char* name )
-{
-    printf( "void* box_%d_%d = SMX_BOX_CREATE( %s );\n", id, scope,
-            name );
-}
-
-/******************************************************************************/
-void smxgen_channel( int scope, int id )
-{
-    printf( "smx_channel_t* ch_%d_%d = SMX_CHANNEL_CREATE();\n", id, scope );
-}
-
-/******************************************************************************/
-void smxgen_connect( int scope, int id_ch, int id_box, const char* box_name,
-        const char* ch_name )
-{
-    printf( "SMX_CONNECT( box_%d_%d, ch_%d_%d, %s, %s );\n", id_box, scope,
-            id_ch, scope, box_name, ch_name );
-}
 
 /******************************************************************************/
 void smxgen_network( inst_net** nets )
