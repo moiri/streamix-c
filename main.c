@@ -2,7 +2,6 @@
 #include "streamix.tab.h"
 #include "context.h"
 #include "smxerr.h"
-#include "smxgen.h"
 #ifdef DOT_AST
     #include "dot.h"
 #endif // DOT_AST
