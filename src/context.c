@@ -413,6 +413,7 @@ void check_prototype( symrec_list* r_ports, virt_net* v_net, char *name )
 /******************************************************************************/
 void cpsync_connect( inst_net* net, virt_ports* port1, virt_ports* port2 )
 {
+    int node_id;
     inst_rec* cp_sync = NULL;
     // create copy synchronizer instance
     if( ( port1->inst->type == VAL_CP ) && ( port2->inst->type == VAL_CP ) ) {
@@ -436,7 +437,9 @@ void cpsync_connect( inst_net* net, virt_ports* port1, virt_ports* port2 )
         printf( "Create copy-synchronizer %s(%d)\n", cp_sync->name,
                 cp_sync->id );
 #endif // DEBUG_CONNECT
+        node_id = igraph_vcount( &net->g );
         igraph_add_vertices( &net->g, 1, NULL );
+        igraph_cattribute_VAS_set( &net->g, "label", node_id, "+" );
         dgraph_connect_1( &net->g, cp_sync->id, port1->inst->id, VAL_BI,
                 port1->attr_mode, port1->rec->name );
         dgraph_connect_1( &net->g, cp_sync->id, port2->inst->id, VAL_BI,
@@ -616,6 +619,7 @@ bool do_port_attrs_match( symrec_list* r_ports, virt_ports* v_ports )
 virt_net* install_nets( symrec** symtab, inst_net* net,
         UT_array* scope_stack, ast_node* ast )
 {
+    int node_id;
     symrec* rec = NULL;
     virt_net* v_net1 = NULL;
     virt_net* v_net2 = NULL;
@@ -668,11 +672,14 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
                 report_yyerror( error_msg, ast->symbol.line );
             }
             else {
+                node_id = igraph_vcount( &net->g );
                 inst = inst_rec_put( &net->nodes, ast->symbol.name,
-                        igraph_vcount( &net->g ), ast->symbol.line, VAL_NET,
+                        node_id, ast->symbol.line, VAL_NET,
                         rec );
                 // update graph and virtual net
                 igraph_add_vertices( &net->g, 1, NULL );
+                igraph_cattribute_VAS_set( &net->g, "label", node_id,
+                        rec->name );
                 v_net1 = virt_net_create( rec, inst );
             }
             break;

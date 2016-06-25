@@ -23,7 +23,7 @@ void dgraph_connect_1( igraph_t* g, int id1, int id2, int mode1, int mode2,
     }
     igraph_add_edge( g, id_from, id_to );
     igraph_get_eid( g, &id_edge, id_from, id_to, 0, 0 );
-    igraph_cattribute_EAS_set( g, "name", id_edge, name );
+    igraph_cattribute_EAS_set( g, "label", id_edge, name );
 }
 
 /******************************************************************************/

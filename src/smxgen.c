@@ -52,10 +52,10 @@ void smxgen_network_create( inst_net** nets, int ident )
             igraph_edge( &net->g, eid, &vid1, &vid2 );
             rec1 = inst_rec_get( &net->nodes, vid1 );
             cgen_connect( ident, net->scope, eid, vid1, rec1->name,
-                    igraph_cattribute_EAS( &net->g, "name", eid ) );
+                    igraph_cattribute_EAS( &net->g, "label", eid ) );
             rec2 = inst_rec_get( &net->nodes, vid2 );
             cgen_connect( ident, net->scope, eid, vid2, rec2->name,
-                    igraph_cattribute_EAS( &net->g, "name", eid ) );
+                    igraph_cattribute_EAS( &net->g, "label", eid ) );
             IGRAPH_EIT_NEXT( e_it );
         }
     }
