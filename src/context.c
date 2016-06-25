@@ -240,6 +240,9 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
                     false );
             check_context_ast( symtab, nets, scope_stack, ast->program.net,
                     false );
+#if defined(DEBUG) || defined(DEBUG_NET_GML)
+            igraph_write_graph_gml( &net->g, stdout, NULL, "StreamixC" );
+#endif // DEBUG_NET_GML
             break;
         case AST_STMTS:
             list = ast->list;
