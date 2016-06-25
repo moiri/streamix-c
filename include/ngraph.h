@@ -13,38 +13,14 @@
 #include <igraph.h>
 
 /**
- * Adds edges to a connection graph according to the connection semantics of
- * streamix
+ * Convert a vector pointing to integer values into a vector of integer values
  *
- * @param igraph_t*:             the graph where the edges are added
- * @param igraph_vector_ptr_t*:  vector of pointers to ids of the left operand
- * @param igraph_vector_ptr_t*:  vector of pointers to ids of the right operand
+ * @param igraph_vector_ptr_t*  vector to be converted
+ * @param igraph_vector_t*      pointer to an initialised vector of size 0.
+ *                              This vector will be resized and will hold the
+ *                              integer values pointed to by the from vector
  */
-void cgraph_connect_full_ptr( igraph_t*, igraph_vector_ptr_t*,
-        igraph_vector_ptr_t* );
-
-/**
- * Removes edges from a connection graph according to the connection semantics
- * of streamix
- *
- * @param igraph_t*:        the graph from which the edges are removed
- * @param igraph_vector_t*: vector of ids of the left operands
- * @param igraph_vector_t*: vector of ids of the right operands
- */
-void cgraph_disconnect_full( igraph_t*, igraph_vector_t*, igraph_vector_t* );
-
-/**
- * Update the connection graph by removing edges that have been added to the
- * dependancy graph
- *
- * @param igraph_t*:    pointer to the connection graph
- * @param int:          id of the left operand
- * @param int:          id of the right operand
- * @param int:          type of the left operand
- * @param int:          type of the right operand
- * @param igraph_t*:    pointer to the dependancy graph
- */
-void cgraph_update( igraph_t*, int, int, int, int, igraph_t* );
+void dgraph_vptr_to_v( igraph_vector_ptr_t*, igraph_vector_t* );
 
 /**
  * Adds a directed connection between to nets to the dependancy graph
@@ -59,7 +35,7 @@ void cgraph_update( igraph_t*, int, int, int, int, igraph_t* );
 void dgraph_connect_1( igraph_t*, int, int, int, int, const char* );
 
 /**
- * Merge to vertices into one
+ * Merge two vertices into one
  *
  * @param igraph_t*:    pointer to the dependancy graph
  * @param int:          id of a vertex

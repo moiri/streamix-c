@@ -1,5 +1,5 @@
 A = box funcA(out a)
-B = box funcA(in a, out b)
+B = box funcB(in a, out b)
 C = box funcC(in b)
 
 X = A|A

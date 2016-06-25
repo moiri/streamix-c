@@ -57,7 +57,7 @@ bool are_port_modes_ok( virt_ports* p1, virt_ports* p2 )
 
 /******************************************************************************/
 bool check_connection( inst_net* net, virt_ports* ports_l,
-        virt_ports* ports_r, igraph_t* g_con )
+        virt_ports* ports_r )
 {
     bool res = false;
     char error_msg[ CONST_ERROR_LEN ];
@@ -71,20 +71,14 @@ bool check_connection( inst_net* net, virt_ports* ports_l,
     if( are_port_names_ok( ports_l, ports_r, false, false ) ) {
         if( ( ports_l->inst->type == VAL_CP )
                 && ( ports_r->inst->type == VAL_CP ) ) {
-            cgraph_update( g_con, ports_l->inst->id, ports_r->inst->id,
-                    ports_l->inst->type, ports_r->inst->type, &net->g);
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
             // merge copy synchronizers
             cpsync_merge( net, ports_l, ports_r );
-            dgraph_merge_vertice_1( g_con, ports_l->inst->id,
-                    ports_r->inst->id );
             res = true;
         }
         else if( are_port_modes_ok( ports_l, ports_r ) ) {
-            cgraph_update( g_con, ports_l->inst->id, ports_r->inst->id,
-                    ports_l->inst->type, ports_r->inst->type, &net->g);
             if( ports_l->rec != NULL ) port_name = ports_l->rec->name;
             else port_name = ports_r->rec->name;
             dgraph_connect_1( &net->g, ports_l->inst->id, ports_r->inst->id,
@@ -114,8 +108,7 @@ bool check_connection( inst_net* net, virt_ports* ports_l,
 }
 
 /******************************************************************************/
-void check_connections( inst_net* net, virt_net* v_net1, virt_net* v_net2,
-        igraph_t* g_con )
+void check_connections( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
 {
     virt_ports* ports_l = NULL;
     virt_ports* ports_r = NULL;
@@ -131,7 +124,7 @@ void check_connections( inst_net* net, virt_net* v_net1, virt_net* v_net2,
         ports_last_r = NULL;
         while( ports_r != NULL ) {
             ports_next_r = ports_r->next;
-            if( check_connection( net, ports_l, ports_r, g_con ) ) {
+            if( check_connection( net, ports_l, ports_r ) ) {
                 // remove both ports from their corresponding virtual nets
                 if( ports_last_l != NULL ) ports_last_l->next = ports_next_l;
                 else v_net1->ports = ports_next_l;
@@ -151,22 +144,51 @@ void check_connections( inst_net* net, virt_net* v_net1, virt_net* v_net2,
 }
 
 /******************************************************************************/
-void check_connection_missing( inst_net* net, igraph_t* g_con )
+void check_connection_missing( inst_net* net, virt_net* v_net_l,
+        virt_net* v_net_r )
 {
     char error_msg[ CONST_ERROR_LEN ];
-    int edge_id, v1_id, v2_id;
+    int i, j;
+    igraph_vs_t vs1, vs2;
+    igraph_vector_t v1, v2;
+    igraph_matrix_t res1, res2;
     inst_rec* rec1 = NULL;
     inst_rec* rec2 = NULL;
 
-    for( edge_id = 0; edge_id < igraph_ecount( g_con ); edge_id++ ) {
-        igraph_edge( g_con, edge_id, &v1_id, &v2_id );
-        rec1 = inst_rec_get( &net->nodes, v1_id );
-        rec2 = inst_rec_get( &net->nodes, v2_id );
-        // ERROR: there is no connection between the two nets
-        sprintf( error_msg, ERROR_NO_NET_CON, ERR_ERROR, rec1->name, v1_id,
-                rec2->name, v2_id );
-        report_yyerror( error_msg, rec1->line );
+    igraph_vector_init( &v1, 0 );
+    igraph_vector_init( &v2, 0 );
+    dgraph_vptr_to_v( &v_net_l->con->right, &v1 );
+    dgraph_vptr_to_v( &v_net_r->con->left, &v2 );
+    igraph_matrix_init( &res1, igraph_vector_size( &v1 ),
+            igraph_vector_size( &v2 ) );
+    igraph_matrix_init( &res2, igraph_vector_size( &v1 ),
+            igraph_vector_size( &v2 ) );
+    igraph_vs_vector( &vs1, &v1 );
+    igraph_vs_vector( &vs2, &v2 );
+    igraph_shortest_paths( &net->g, &res1, vs1, vs2, IGRAPH_OUT );
+    igraph_shortest_paths( &net->g, &res2, vs1, vs2, IGRAPH_IN );
+
+    for( i=0; i<igraph_vector_size( &v1 ); i++ ) {
+        for( j=0; j<igraph_vector_size( &v2 ); j++ ) {
+            if( ( MATRIX( res1, i, j ) > 2 ) &&
+                ( MATRIX( res2, i, j ) > 2 ) ) {
+                rec1 = inst_rec_get( &net->nodes, VECTOR( v1 )[i] );
+                rec2 = inst_rec_get( &net->nodes, VECTOR( v2 )[j] );
+                // ERROR: there is no connection between the two nets
+                sprintf( error_msg, ERROR_NO_NET_CON, ERR_ERROR,
+                        rec1->name, ( int )VECTOR( v1 )[i],
+                        rec2->name, ( int )VECTOR( v2 )[j] );
+                report_yyerror( error_msg, rec1->line );
+            }
+        }
     }
+
+    igraph_vector_destroy( &v1 );
+    igraph_vector_destroy( &v2 );
+    igraph_matrix_destroy( &res1 );
+    igraph_matrix_destroy( &res2 );
+    igraph_vs_destroy( &vs1 );
+    igraph_vs_destroy( &vs1 );
 }
 
 /******************************************************************************/
@@ -598,7 +620,6 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
     virt_net* v_net1 = NULL;
     virt_net* v_net2 = NULL;
     inst_rec* inst = NULL;
-    igraph_t g;
     char error_msg[ CONST_ERROR_LEN ];
 
     if( ast == NULL ) return NULL;
@@ -622,17 +643,11 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             if( v_net1 == NULL ) return NULL;
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
             if( v_net2 == NULL ) return NULL;
-            // create connection graph
-            igraph_empty( &g, igraph_vcount( &net->g ), IGRAPH_UNDIRECTED );
-            cgraph_connect_full_ptr( &g, &v_net1->con->right,
-                    &v_net2->con->left );
             // check connections and update virtual net
-            check_connections( net, v_net1, v_net2, &g );
-            check_connection_missing( net, &g );
+            check_connections( net, v_net1, v_net2 );
+            check_connection_missing( net, v_net1, v_net2 );
             cpsync_connects( net, v_net1, v_net2, false );
             v_net1 = virt_net_merge_serial( v_net1, v_net2 );
-            // cleanup connection graph
-            igraph_destroy( &g );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "Serial combination done, v_net:\n " );
             debug_print_vports( v_net1 );

@@ -40,7 +40,7 @@ int main( int argc, char **argv ) {
 
     /* cgraph_init( ast ); */
     check_context( ast, &nets );
-    smxgen_main( &nets );
+    /* smxgen_main( &nets ); */
 
     /* fclose(con_graph); */
     if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );
