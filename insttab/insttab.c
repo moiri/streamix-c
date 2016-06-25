@@ -29,7 +29,6 @@ inst_net* inst_net_put( inst_net** nets, int scope )
     new_item = ( inst_net* )malloc( sizeof( inst_net ) );
     new_item->scope = scope;
     new_item->nodes = NULL;
-    new_item->edges = NULL;
     // create new graph
     igraph_empty( &g, 0, true );
     new_item->g = g;

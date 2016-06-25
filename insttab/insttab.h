@@ -21,7 +21,6 @@ struct inst_net
 {
     int             scope;
     inst_rec*       nodes;   // hashtable of the node instances in the net
-    inst_rec*       edges;   // hashtable of the edge instances in the net
     igraph_t        g;
     inst_net*       next;
     UT_hash_handle  hh;     // makes this structure hashable
