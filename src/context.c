@@ -439,7 +439,7 @@ void cpsync_connect( inst_net* net, virt_ports* port1, virt_ports* port2 )
 #endif // DEBUG_CONNECT
         node_id = igraph_vcount( &net->g );
         igraph_add_vertices( &net->g, 1, NULL );
-        igraph_cattribute_VAS_set( &net->g, "label", node_id, "+" );
+        igraph_cattribute_VAS_set( &net->g, "label", node_id, TEXT_CP );
         dgraph_connect_1( &net->g, cp_sync->id, port1->inst->id, VAL_BI,
                 port1->attr_mode, port1->rec->name );
         dgraph_connect_1( &net->g, cp_sync->id, port2->inst->id, VAL_BI,
