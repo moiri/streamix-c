@@ -15,6 +15,7 @@ extern int yyparse( void** ) ;
 int main( int argc, char **argv ) {
     void* ast = NULL;
     inst_net* nets = NULL;        // hash table to store the nets
+    inst_net* net;
     igraph_i_set_attribute_table( &igraph_cattribute_table );
     // open a file handle to a particular file:
     if( argc != 2 ) {
@@ -39,6 +40,8 @@ int main( int argc, char **argv ) {
 
     /* cgraph_init( ast ); */
     check_context( ast, &nets );
+    net = inst_net_get( &nets, 0 );
+    igraph_write_graph_gml( &net->g, stdout, NULL, "StreamixC" );
 
     /* fclose(con_graph); */
     if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );

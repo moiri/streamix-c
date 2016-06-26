@@ -683,6 +683,8 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
                 igraph_add_vertices( &net->g, 1, NULL );
                 igraph_cattribute_VAS_set( &net->g, "label", node_id,
                         rec->name );
+                igraph_cattribute_VAS_set( &net->g, "func", node_id,
+                        ( ( struct box_attr* )rec->attr )->impl_name );
                 v_net1 = virt_net_create( rec, inst );
             }
             break;
