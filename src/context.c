@@ -209,6 +209,9 @@ void check_context( ast_node* ast, inst_net** nets )
     /* // check whether all ports are connected spawn synchronizers and draw the */
     /* // nodes, synchroniyers and connections */
     /* check_port_all( &insttab, ast ); */
+
+    // cleanup
+    symrec_del_all( &symtab );
 }
 
 /******************************************************************************/
@@ -284,6 +287,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
         case AST_NET:
             net = inst_net_get( nets, *utarray_back( scope_stack ) );
             res = ( void* )install_nets( symtab, net, scope_stack, ast->node );
+            virt_net_destroy( res );
 #if defined(DEBUG) || defined(DEBUG_NET_DOT)
             igraph_write_graph_dot( &net->g, stdout );
 #endif // DEBUG_NET_DOT
@@ -354,10 +358,15 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
         case AST_PORT:
             // prepare symbol attributes
             p_attr = ( port_attr* )malloc( sizeof( port_attr ) );
+            p_attr->int_name = NULL;
+            p_attr->mode = VAL_BI;
+            p_attr->collection = VAL_NONE;
+            p_attr->decoupled = false;
+            p_attr->sync_id = -1;
+
             if( ast->port.mode != NULL )
                 p_attr->mode = ast->port.mode->attr.val;
             /* // add internal name if available */
-            /* p_attr->int_name = NULL; */
             /* if( ast->port.int_id != NULL ) { */
             /*     p_attr->int_name = ( char* )malloc( strlen( */
             /*                 ast->port.int_id->ast_node->ast_id.name ) + 1 ); */
@@ -368,16 +377,12 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             // add sync attributes if port is a sync port
             if( is_sync ) {
                 type = VAL_SPORT;
-                p_attr->decoupled =
-                    (ast->port.coupling == NULL) ? false : true;
+                if( ast->port.coupling != NULL ) p_attr->decoupled = true;
                 p_attr->sync_id = _sync_id;
             }
             // set collection
-            if( ast->port.collection == NULL )
-                p_attr->collection = VAL_NONE;
-            else {
-                p_attr->collection =
-                    ast->port.collection->attr.val;
+            if( ast->port.collection != NULL ) {
+                p_attr->collection = ast->port.collection->attr.val;
             }
             // install symbol and return pointer to the symbol record
             res = ( void* )symrec_put( symtab, ast->port.id->symbol.name,

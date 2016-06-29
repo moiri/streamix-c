@@ -16,6 +16,12 @@ void symrec_del( symrec** symtab, symrec* rec )
     printf( "symrec_del: delete record %s in scope %d\n", rec->name,
             rec->scope );
 #endif // DEBUG
+    if( rec_temp == NULL ) {
+#if defined(DEBUG) || defined(DEBUG_SYMB)
+        printf( "symrec_del: No such record to delete\n" );
+#endif // DEBUG
+        return;
+    }
     // delete name entry only if no other record with the same name exists
     if( rec_temp->next == NULL ) HASH_DELETE( hh, *symtab, rec );
     free( rec->name );
@@ -102,6 +108,7 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
     new_item->name = ( char* )malloc( strlen( name ) + 1 );
     strcpy( new_item->name, name );
     new_item->attr = attr;
+    new_item->next = NULL;
     // check wheter key already exists
     HASH_FIND_STR( *symtab, key, item );
     // the key is new

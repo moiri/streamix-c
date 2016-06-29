@@ -37,6 +37,7 @@ int main( int argc, char **argv ) {
     do {
         yyparse( &ast );
     } while( !feof( yyin ) );
+    fclose( myfile );
 
     /* cgraph_init( ast ); */
     check_context( ast, &nets );
