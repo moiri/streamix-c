@@ -229,7 +229,6 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
     symrec_list* port_list = NULL;
     void* res = NULL;
     bool set_sync = false;
-    int type;
     static int _scope = 0;
     static int _sync_id = 0; // used to assemble ports to sync groups
 
@@ -287,7 +286,6 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
         case AST_NET:
             net = inst_net_get( nets, *utarray_back( scope_stack ) );
             res = ( void* )install_nets( symtab, net, scope_stack, ast->node );
-            virt_net_destroy( res );
 #if defined(DEBUG) || defined(DEBUG_NET_DOT)
             igraph_write_graph_dot( &net->g, stdout );
 #endif // DEBUG_NET_DOT
@@ -373,10 +371,8 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             /*     strcpy( p_attr->int_name, */
             /*             ast->port.int_id->ast_node->ast_id.name ); */
             /* } */
-            type = VAL_PORT;
             // add sync attributes if port is a sync port
             if( is_sync ) {
-                type = VAL_SPORT;
                 if( ast->port.coupling != NULL ) p_attr->decoupled = true;
                 p_attr->sync_id = _sync_id;
             }
@@ -386,7 +382,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             }
             // install symbol and return pointer to the symbol record
             res = ( void* )symrec_put( symtab, ast->port.id->symbol.name,
-                    *utarray_back( scope_stack ), type, p_attr,
+                    *utarray_back( scope_stack ), ast->type, p_attr,
                     ast->port.id->symbol.line );
             ptr = ( symrec_list* )malloc( sizeof( symrec_list ) );
             ptr->rec = ( struct symrec* )res;
@@ -629,6 +625,7 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
 {
     int node_id;
     symrec* rec = NULL;
+    virt_net* v_net = NULL;
     virt_net* v_net1 = NULL;
     virt_net* v_net2 = NULL;
     inst_rec* inst = NULL;
@@ -643,10 +640,12 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             v_net2 = install_nets( symtab, net, scope_stack, ast->op.right );
             if( v_net2 == NULL ) return NULL;
             cpsync_connects( net, v_net1, v_net2, true );
-            v_net1 = virt_net_merge_parallel( v_net1, v_net2 );
+            v_net = virt_net_create_parallel( v_net1, v_net2 );
+            virt_net_destroy( v_net1 );
+            virt_net_destroy( v_net2 );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "Parallel combination done, v_net:\n " );
-            debug_print_vports( v_net1 );
+            debug_print_vports( v_net );
             printf( "\n" );
 #endif // DEBUG_CONNECT
             break;
@@ -659,10 +658,12 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             check_connections( net, v_net1, v_net2 );
             check_connection_missing( net, v_net1, v_net2 );
             cpsync_connects( net, v_net1, v_net2, false );
-            v_net1 = virt_net_merge_serial( v_net1, v_net2 );
+            v_net = virt_net_create_serial( v_net1, v_net2 );
+            virt_net_destroy( v_net1 );
+            virt_net_destroy( v_net2 );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "Serial combination done, v_net:\n " );
-            debug_print_vports( v_net1 );
+            debug_print_vports( v_net );
             printf( "\n" );
 #endif // DEBUG_CONNECT
             break;
@@ -673,7 +674,7 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             if( rec == NULL ) return NULL;
             // add a net symbol to the instance table
             if( rec->type == AST_NET ) {
-                v_net1 = ( struct virt_net* )rec->attr;
+                v_net = virt_net_copy( rec->attr );
             }
             else if( rec->type == AST_NET_PROTO ) {
                 sprintf( error_msg, ERROR_UNDEF_NET, ERR_ERROR, rec->name );
@@ -682,19 +683,18 @@ virt_net* install_nets( symrec** symtab, inst_net* net,
             else {
                 node_id = igraph_vcount( &net->g );
                 inst = inst_rec_put( &net->nodes, ast->symbol.name,
-                        node_id, ast->symbol.line, VAL_NET,
-                        rec );
+                        node_id, ast->symbol.line, VAL_NET, rec );
                 // update graph and virtual net
                 igraph_add_vertices( &net->g, 1, NULL );
                 igraph_cattribute_VAS_set( &net->g, "label", node_id,
                         rec->name );
                 igraph_cattribute_VAS_set( &net->g, "func", node_id,
                         ( ( struct box_attr* )rec->attr )->impl_name );
-                v_net1 = virt_net_create( rec, inst );
+                v_net = virt_net_create( rec, inst );
             }
             break;
         default:
             ;
     }
-    return v_net1;
+    return v_net;
 }

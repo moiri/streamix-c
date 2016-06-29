@@ -1,5 +1,6 @@
 #include "symtab.h"
 #include "ast.h"
+#include "vnet.h"
 #include <stdio.h>
 #ifdef TESTING
 #include "defines.h"
@@ -24,24 +25,28 @@ void symrec_del( symrec** symtab, symrec* rec )
     }
     // delete name entry only if no other record with the same name exists
     if( rec_temp->next == NULL ) HASH_DELETE( hh, *symtab, rec );
-    free( rec->name );
-    free( rec->key );
     switch( rec->type ) {
-        case VAL_PORT:
-        case VAL_SPORT:
+        case AST_PORT:
             free( ( ( struct port_attr* )rec->attr )->int_name );
+            free( rec->attr );
             break;
         case AST_BOX:
             free( ( ( struct box_attr* )rec->attr )->impl_name );
             free( ( ( struct box_attr* )rec->attr )->ports );
+            free( rec->attr );
+            break;
+        case AST_NET:
+            virt_net_destroy( rec->attr );
             break;
         case AST_WRAP:
             free( ( ( struct wrap_attr* )rec->attr )->ports );
+            free( rec->attr );
             break;
         default:
             ;
     }
-    free( rec->attr );
+    free( rec->name );
+    free( rec->key );
     free( rec );
 }
 

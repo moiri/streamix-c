@@ -119,3 +119,81 @@ virt_net* virt_net_merge_serial( virt_net* v_net1, virt_net* v_net2 )
 
     return v_net1;
 }
+
+/******************************************************************************/
+virt_net* virt_net_create_parallel( virt_net* v_net1, virt_net* v_net2 )
+{
+    virt_net* v_net = NULL;
+    virt_ports* ports1 = NULL;
+    virt_ports* ports2 = NULL;
+
+    // alter ports
+    ports1 = virt_net_copy_ports( v_net1->ports, NULL, -1 );
+    ports2 = virt_net_copy_ports( v_net2->ports, ports1, -1 );
+    v_net = malloc( sizeof( virt_net ) );
+    v_net->ports = ports2;
+    v_net->con = malloc( sizeof( net_con ) );
+    igraph_vector_ptr_copy( &v_net->con->left, &v_net1->con->left );
+    igraph_vector_ptr_append( &v_net->con->left, &v_net2->con->left );
+    igraph_vector_ptr_copy( &v_net->con->right, &v_net1->con->right );
+    igraph_vector_ptr_append( &v_net->con->right, &v_net2->con->right );
+
+    return v_net;
+}
+
+/******************************************************************************/
+virt_net* virt_net_create_serial( virt_net* v_net1, virt_net* v_net2 )
+{
+    virt_net* v_net = NULL;
+    virt_ports* ports1 = NULL;
+    virt_ports* ports2 = NULL;
+
+    // alter ports
+    ports1 = virt_net_copy_ports( v_net1->ports, NULL, VAL_UP );
+    ports2 = virt_net_copy_ports( v_net2->ports, ports1, VAL_DOWN );
+    v_net = malloc( sizeof( virt_net ) );
+    v_net->ports = ports2;
+    v_net->con = malloc( sizeof( net_con ) );
+    igraph_vector_ptr_copy( &v_net->con->left, &v_net1->con->left );
+    igraph_vector_ptr_copy( &v_net->con->right, &v_net2->con->right );
+
+    return v_net;
+}
+
+/******************************************************************************/
+virt_net* virt_net_copy( virt_net* v_net_old )
+{
+    virt_net* v_net = NULL;
+    virt_ports* ports = NULL;
+
+    // alter ports
+    ports = virt_net_copy_ports( v_net_old->ports, NULL, -1 );
+    v_net = malloc( sizeof( virt_net ) );
+    v_net->ports = ports;
+    v_net->con = malloc( sizeof( net_con ) );
+    igraph_vector_ptr_copy( &v_net->con->left, &v_net_old->con->left );
+    igraph_vector_ptr_copy( &v_net->con->right, &v_net_old->con->right );
+
+    return v_net;
+}
+
+/******************************************************************************/
+virt_ports* virt_net_copy_ports( virt_ports* old, virt_ports* last, int class )
+    {
+        virt_ports* new = NULL;
+
+        while( old != NULL ) {
+            new = malloc( sizeof( virt_ports ) );
+            new->rec = old->rec;
+            new->inst = old->inst;
+            new->next = last;
+            if( ( old->attr_class != VAL_SIDE ) && ( class >= 0 ) )
+                new->attr_class = class;
+            else new->attr_class = old->attr_class;
+            new->attr_mode = old->attr_mode;
+            last = new;
+            old = old->next;
+        }
+
+        return last;
+    }

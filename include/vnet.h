@@ -87,4 +87,8 @@ virt_net* virt_net_merge_parallel( virt_net* , virt_net* );
  */
 virt_net* virt_net_merge_serial( virt_net* , virt_net* );
 
+virt_net* virt_net_create_parallel( virt_net*, virt_net* );
+virt_net* virt_net_create_serial( virt_net*, virt_net* );
+virt_net* virt_net_copy( virt_net* );
+virt_ports* virt_net_copy_ports( virt_ports*, virt_ports*, int );
 #endif // VNET_H
