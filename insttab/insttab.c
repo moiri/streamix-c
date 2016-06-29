@@ -21,7 +21,6 @@ inst_net* inst_net_put( inst_net** nets, int scope )
 {
     inst_net* item = NULL;
     inst_net* new_item = NULL;
-    inst_net* previous_item = NULL;
     igraph_t g;
 
     // ADD ITEM TO THE INSTANCE TABLE
@@ -38,17 +37,7 @@ inst_net* inst_net_put( inst_net** nets, int scope )
         // the key is new
         HASH_ADD_INT( *nets, scope, new_item );
     }
-    else {
-        // a collision accured or multiple instances of a net have been spawned
-        // -> add the new item to the end of the linked list
-        do {
-            previous_item = item; // remember the last item of the list
-            item = item->next;
-        }
-        while( item != NULL );
-
-        previous_item->next = new_item;
-    }
+    else return NULL;
 #if defined(DEBUG) || defined(DEBUG_INST)
     printf( "inst_net_put: add net in scope %d\n", new_item->scope );
 #endif // DEBUG
