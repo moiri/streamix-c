@@ -92,7 +92,7 @@ inst_rec* inst_rec_put( inst_rec** recs, char* name, int id, int line, int type,
         // id must be unique in the net
         HASH_ADD( hh, *recs, id, sizeof( int ), new_item );
     }
-    /* else { printf( "ERROR: Something went wrong!" ); } */
+    else return NULL;
 #if defined(DEBUG) || defined(DEBUG_INST)
     printf( "inst_rec_put: add net instance %s with id %d\n", new_item->name,
             new_item->id );
