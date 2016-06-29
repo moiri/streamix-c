@@ -71,6 +71,9 @@ all: $(PARSER)
 dot: CFLAGS += $(DOT_FLAGS)
 dot: $(PARSER)
 
+ddot: CFLAGS += $(DOT_FLAGS) $(DEBUG_FLAGS)
+ddot: $(PARSER)
+
 # compile with dot stuff and debug flags
 debug: CFLAGS += $(DEBUG_FLAGS)
 debug: BFLAGS += $(BDEBUG_FLAGS)
