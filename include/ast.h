@@ -166,7 +166,7 @@ struct ast_node
         // AST_STMTS, AST_LINKS, AST_PORTS, AST_SYNCS
         ast_list*           list;
         struct ast_prot     net_prot;   // AST_NET_PROT
-        ast_node*           node;       // AST_NET, AST_PROGRAM
+        ast_node*           node;       // AST_NET
         struct ast_op       op;         // AST_SERIAL, AST_PARALLEL
         struct ast_port     port;       // AST_PORT
         struct ast_prog     program;    // AST_PROG
@@ -304,5 +304,13 @@ ast_node* ast_add_symbol ( char*, int, int );
  *      a pointer to the location where the data was stored
  * */
 ast_node* ast_add_wrap ( ast_node*, ast_node*, ast_node*, ast_node* );
+
+/**
+ * Destroy the complete ast structure including all subnodes and leaf
+ * nodes. This is a recursive function.
+ *
+ * @param ast_node*     pointer to the root node of the ast
+ */
+void ast_destroy( ast_node* );
 
 #endif /* AST_H */

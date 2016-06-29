@@ -49,5 +49,8 @@ int main( int argc, char **argv ) {
     draw_ast_graph( ast );
 #endif // DOT_AST
 
+    // cleanup
+    ast_destroy( ast );
+
     return 0;
 }

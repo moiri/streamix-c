@@ -172,3 +172,81 @@ ast_node* ast_add_wrap ( ast_node* id, ast_node* ports, ast_node* stmts,
     ptr->type = AST_WRAP;
     return ptr;
 }
+
+/******************************************************************************/
+void ast_destroy( ast_node* ast )
+{
+    ast_list* list_next = NULL;
+    ast_list* list_prev = NULL;
+    if( ast == NULL ) return;
+
+    switch( ast->type ) {
+        case AST_ASSIGN:
+            ast_destroy( ast->assign.id );
+            ast_destroy( ast->assign.op );
+            free( ast );
+            break;
+        case AST_ATTR:
+            free( ast );
+            break;
+        case AST_BOX:
+            ast_destroy( ast->box.impl );
+            ast_destroy( ast->box.ports );
+            ast_destroy( ast->box.attr_pure );
+            free( ast );
+            break;
+        case AST_ID:
+            free( ast->symbol.name );
+            free( ast );
+            break;
+        case AST_INT_PORTS:
+        case AST_LINKS:
+        case AST_PORTS:
+        case AST_STMTS:
+        case AST_SYNCS:
+            list_next = ast->list;
+            while( list_next != NULL ) {
+                ast_destroy( list_next->node );
+                list_prev = list_next;
+                list_next = list_next->next;
+                free( list_prev );
+            }
+            free( ast );
+            break;
+        case AST_NET:
+            ast_destroy( ast->node );
+            free( ast );
+            break;
+        case AST_NET_PROTO:
+            ast_destroy( ast->net_prot.id );
+            ast_destroy( ast->net_prot.ports );
+            free( ast );
+            break;
+        case AST_PORT:
+            ast_destroy( ast->port.id );
+            ast_destroy( ast->port.int_id );
+            ast_destroy( ast->port.collection );
+            ast_destroy( ast->port.mode );
+            ast_destroy( ast->port.coupling );
+            free( ast );
+            break;
+        case AST_PROGRAM:
+            ast_destroy( ast->program.net );
+            ast_destroy( ast->program.stmts );
+            free( ast );
+            break;
+        case AST_PARALLEL:
+        case AST_SERIAL:
+            ast_destroy( ast->op.right );
+            ast_destroy( ast->op.left );
+            free( ast );
+            break;
+        case AST_WRAP:
+            ast_destroy( ast->wrap.id );
+            ast_destroy( ast->wrap.ports );
+            ast_destroy( ast->wrap.stmts );
+            ast_destroy( ast->wrap.attr_static );
+            free( ast );
+            break;
+    }
+}
