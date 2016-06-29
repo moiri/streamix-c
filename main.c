@@ -51,6 +51,7 @@ int main( int argc, char **argv ) {
 
     // cleanup
     ast_destroy( ast );
+    inst_net_del_all( &nets );
 
     return 0;
 }
