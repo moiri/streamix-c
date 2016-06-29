@@ -87,11 +87,10 @@ void check_context( ast_node*, inst_net** );
  * @param inst_net**:   pointer to the instance table of nets (scopes)
  * @param UT_array**:   pointer to the scope stack
  * @param ast_node*:    pointer to the ast node
- * @param bool:         flag to help identify synchronized ports
  * @return void*:       a generic pointer to pass information down the
  *                      recursive function
  * */
-void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node*, bool );
+void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node* );
 
 /**
  * Check whether types of a prototype and a net match

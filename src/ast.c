@@ -125,6 +125,7 @@ ast_node* ast_add_port (ast_node* id, ast_node* int_id, ast_node* collection,
     ptr->port.mode = mode;
     ptr->port.collection = collection;
     ptr->port.coupling = coupling;
+    ptr->port.sync_id = -1;
     return ptr;
 }
 
@@ -248,5 +249,76 @@ void ast_destroy( ast_node* ast )
             ast_destroy( ast->wrap.attr_static );
             free( ast );
             break;
+        default:
+            ;
     }
+}
+
+/******************************************************************************/
+void* ast_flatten( ast_node* ast )
+{
+    ast_list* list = NULL;
+    ast_list* list_last = NULL;
+    void* res = NULL;
+    static int _sync_id = 0;
+    if( ast == NULL ) return NULL;
+
+    switch( ast->type ) {
+        case AST_ASSIGN:
+            ast_flatten( ast->assign.op );
+            break;
+        case AST_BOX:
+            ast_flatten( ast->box.ports );
+            break;
+        case AST_STMTS:
+            list = ast->list;
+            while( list != NULL ) {
+                ast_flatten( list->node );
+                list = list->next;
+            }
+        case AST_NET_PROTO:
+            ast_flatten( ast->net_prot.ports );
+            break;
+        case AST_PROGRAM:
+            ast_flatten( ast->program.stmts );
+            break;
+        case AST_WRAP:
+            ast_flatten( ast->wrap.ports );
+            break;
+        case AST_PORTS:
+            list = ast->list;
+            while( list != NULL ) {
+                res = ast_flatten( list->node );
+                if( res != NULL ) {
+                    // res is a sync list
+                    if( list_last == NULL ) ast->list = res;
+                    else list_last->next = res;
+                    // go to the last list element
+                    while( true ) {
+                        if( ( ( ast_list* )res )->next == NULL ) break;
+                        res = ( ( ast_list* )res )->next;
+                    }
+                    list_last = res;
+                    list_last->next = list->next;
+                    free( list );
+                    list = list_last;
+                }
+                list_last = list;
+                list = list->next;
+            }
+            break;
+        case AST_SYNCS:
+            _sync_id++;
+            list = ast->list;
+            while( list != NULL ) {
+                list->node->port.sync_id = _sync_id;
+                list = list->next;
+            }
+            res = ( void* )ast->list;
+            free( ast );
+            break;
+        default:
+            ;
+    }
+    return res;
 }

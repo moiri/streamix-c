@@ -42,7 +42,7 @@ int main( int argc, char **argv ) {
     fclose( src_smx );
 
     /* cgraph_init( ast ); */
-    /* ast_flatten( ast ); */
+    ast_flatten( ast );
     check_context( ast, &nets );
     net = inst_net_get( &nets, 0 );
     dest_gml = fopen( "streamix.gml", "w" );

@@ -200,7 +200,7 @@ void check_context( ast_node* ast, inst_net** nets )
 
     utarray_new( scope_stack, &ut_int_icd );
     utarray_push_back( scope_stack, &scope );
-    check_context_ast( &symtab, nets, scope_stack, ast, false );
+    check_context_ast( &symtab, nets, scope_stack, ast );
     /* install_ids( &symtab, scope_stack, ast, false ); */
     /* instrec_put( &insttab, VAL_THIS, *utarray_back( scope_stack ), */
     /*         VAL_SELF, -1, NULL ); */
@@ -216,7 +216,7 @@ void check_context( ast_node* ast, inst_net** nets )
 
 /******************************************************************************/
 void* check_context_ast( symrec** symtab, inst_net** nets,
-        UT_array* scope_stack, ast_node* ast, bool is_sync )
+        UT_array* scope_stack, ast_node* ast )
 {
     ast_list* list = NULL;
     box_attr* b_attr = NULL;
@@ -228,9 +228,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
     symrec_list* ptr = NULL;
     symrec_list* port_list = NULL;
     void* res = NULL;
-    bool set_sync = false;
     static int _scope = 0;
-    static int _sync_id = 0; // used to assemble ports to sync groups
 
     if( ast == NULL ) return NULL;
 
@@ -238,10 +236,8 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
         case AST_PROGRAM:
             // install net instances
             net = inst_net_put( nets, *utarray_back( scope_stack ) );
-            check_context_ast( symtab, nets, scope_stack, ast->program.stmts,
-                    false );
-            check_context_ast( symtab, nets, scope_stack, ast->program.net,
-                    false );
+            check_context_ast( symtab, nets, scope_stack, ast->program.stmts );
+            check_context_ast( symtab, nets, scope_stack, ast->program.net );
 #if defined(DEBUG) || defined(DEBUG_NET_GML)
             igraph_write_graph_gml( &net->g, stdout, NULL, "StreamixC" );
 #endif // DEBUG_NET_GML
@@ -249,15 +245,14 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
         case AST_STMTS:
             list = ast->list;
             while (list != NULL) {
-                check_context_ast( symtab, nets, scope_stack, list->node,
-                        false );
+                check_context_ast( symtab, nets, scope_stack, list->node );
                 list = list->next;
             }
             break;
         case AST_ASSIGN:
             // get the attributes
-            attr = check_context_ast( symtab, nets, scope_stack, ast->assign.op,
-                    false );
+            attr = check_context_ast( symtab, nets, scope_stack,
+                    ast->assign.op );
             // check prototype if available
             rec = symrec_search( symtab, scope_stack,
                     ast->assign.id->symbol.name );
@@ -294,35 +289,31 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             _scope++;
             utarray_push_back( scope_stack, &_scope );
             port_list = ( struct symrec_list* )check_context_ast( symtab, nets,
-                    scope_stack, ast->net_prot.ports, false );
+                    scope_stack, ast->net_prot.ports );
             utarray_pop_back( scope_stack );
             // install the symbol (use port list as attributes)
             symrec_put( symtab, ast->net_prot.id->symbol.name,
                     *utarray_back( scope_stack ), ast->type, port_list,
                     ast->net_prot.id->symbol.line );
             break;
-        case AST_SYNCS:
-            _sync_id++;
-            set_sync = true;
         case AST_PORTS:
             list = ast->list;
             while (list != NULL) {
-                res = check_context_ast( symtab, nets, scope_stack, list->node,
-                        set_sync );
-                ptr = ( struct symrec_list* )res;
-                while( ( ( struct symrec_list* ) res)->next != NULL )
-                    res = ( ( struct symrec_list* )res )->next;
-                ( ( struct symrec_list* )res )->next = port_list;
+                ptr = ( symrec_list* )malloc( sizeof( symrec_list ) );
+                res = check_context_ast( symtab, nets, scope_stack,
+                        list->node );
+                ptr->rec = ( struct symrec* )res;
+                ptr->next = port_list;
                 port_list = ptr;
                 list = list->next;
             }
-            res = ( void* )ptr;   // return pointer to the port list
+            res = ( void* )port_list;   // return pointer to the port list
             break;
         case AST_BOX:
             _scope++;
             utarray_push_back( scope_stack, &_scope );
             port_list = ( struct symrec_list* )check_context_ast( symtab, nets,
-                    scope_stack, ast->box.ports, false );
+                    scope_stack, ast->box.ports );
             // prepare symbol attributes and install symbol
             b_attr = ( box_attr* )malloc( sizeof( box_attr ) );
             b_attr->attr_pure = ( ast->box.attr_pure != NULL ) ? true : false;
@@ -338,10 +329,9 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
         case AST_WRAP:
             _scope++;
             utarray_push_back( scope_stack, &_scope );
-            check_context_ast( symtab, nets, scope_stack, ast->wrap.stmts,
-                    set_sync );
+            check_context_ast( symtab, nets, scope_stack, ast->wrap.stmts );
             port_list = ( struct symrec_list* )check_context_ast( symtab, nets,
-                    scope_stack, ast->wrap.ports, set_sync );
+                    scope_stack, ast->wrap.ports );
             // prepare symbol attributes and install symbol
             w_attr = ( wrap_attr* )malloc( sizeof( wrap_attr ) );
             w_attr->attr_static =
@@ -360,22 +350,12 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             p_attr->mode = VAL_BI;
             p_attr->collection = VAL_NONE;
             p_attr->decoupled = false;
-            p_attr->sync_id = -1;
+            p_attr->sync_id = ast->port.sync_id;
 
             if( ast->port.mode != NULL )
                 p_attr->mode = ast->port.mode->attr.val;
-            /* // add internal name if available */
-            /* if( ast->port.int_id != NULL ) { */
-            /*     p_attr->int_name = ( char* )malloc( strlen( */
-            /*                 ast->port.int_id->ast_node->ast_id.name ) + 1 ); */
-            /*     strcpy( p_attr->int_name, */
-            /*             ast->port.int_id->ast_node->ast_id.name ); */
-            /* } */
             // add sync attributes if port is a sync port
-            if( is_sync ) {
-                if( ast->port.coupling != NULL ) p_attr->decoupled = true;
-                p_attr->sync_id = _sync_id;
-            }
+            if( ast->port.coupling != NULL ) p_attr->decoupled = true;
             // set collection
             if( ast->port.collection != NULL ) {
                 p_attr->collection = ast->port.collection->attr.val;
@@ -384,10 +364,6 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             res = ( void* )symrec_put( symtab, ast->port.id->symbol.name,
                     *utarray_back( scope_stack ), ast->type, p_attr,
                     ast->port.id->symbol.line );
-            ptr = ( symrec_list* )malloc( sizeof( symrec_list ) );
-            ptr->rec = ( struct symrec* )res;
-            ptr->next = NULL;
-            res = ( void* )ptr;   // return pointer to the port list
             break;
         default:
             ;

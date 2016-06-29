@@ -129,7 +129,7 @@ struct ast_port
     ast_node*   collection;
     ast_node*   mode;
     ast_node*   coupling;
-    bool        is_connected;
+    int         sync_id;
 };
 
 // AST_PROGRAM
@@ -312,5 +312,7 @@ ast_node* ast_add_wrap ( ast_node*, ast_node*, ast_node*, ast_node* );
  * @param ast_node*     pointer to the root node of the ast
  */
 void ast_destroy( ast_node* );
+
+void* ast_flatten( ast_node* );
 
 #endif /* AST_H */

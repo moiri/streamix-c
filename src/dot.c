@@ -86,13 +86,12 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
                     STYLE_N_AST_NODE);
             // iterate through all elements of the list
             ast_list_ptr = ptr->list;
-            do {
+            while (ast_list_ptr != 0) {
                 draw_ast_graph_step( graph, ast_list_ptr->node );
                 graph_add_edge( graph, ptr->id, ast_list_ptr->node->id,
                         NULL, STYLE_E_DEFAULT );
                 ast_list_ptr = ast_list_ptr->next;
             }
-            while (ast_list_ptr != 0);
             break;
         // draw assignments
         case AST_ASSIGN:
