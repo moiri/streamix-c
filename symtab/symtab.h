@@ -75,6 +75,7 @@ struct port_attr
 * @param symrec*:      pointer to the record to be removed
 * */
 void symrec_del( symrec**, symrec* );
+void symrec_del_all( symrec** );
 
 /**
  * Get an identifier from the symbol table and produce an error if it was not

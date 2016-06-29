@@ -40,6 +40,15 @@ void symrec_del( symrec** symtab, symrec* rec )
 }
 
 /******************************************************************************/
+void symrec_del_all( symrec** recs )
+{
+    symrec *rec, *tmp;
+    HASH_ITER( hh, *recs, rec, tmp ) {
+        symrec_del( recs, rec );
+    }
+}
+
+/******************************************************************************/
 symrec* symrec_get( symrec** symtab, UT_array* scope_stack, char *name,
         int line )
 {
