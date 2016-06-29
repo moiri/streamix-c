@@ -22,7 +22,6 @@ struct inst_net
     int             scope;
     inst_rec*       nodes;   // hashtable of the node instances in the net
     igraph_t        g;
-    inst_net*       next;
     UT_hash_handle  hh;     // makes this structure hashable
 };
 
@@ -33,12 +32,13 @@ struct inst_rec
     int             line;
     int             type;
     symrec*         net;        // pointer to its declaration
-    inst_rec*       next;
     UT_hash_handle  hh;      // makes this structure hashable
 };
 
 /* FUNCTION PROTOTYPES                                                        */
 /******************************************************************************/
+
+void inst_net_del_all( inst_net** );
 
 /**
  * Get net from instance table
@@ -65,6 +65,7 @@ inst_net* inst_net_put( inst_net**, int );
  * @param inst_rec*     poiner to the record to be removed
  */
 void inst_rec_del( inst_rec**, inst_rec* );
+void inst_rec_del_all( inst_rec** );
 
 /**
  * Get rec from instance table using an id as key

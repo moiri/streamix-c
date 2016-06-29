@@ -3,6 +3,18 @@
 #include <stdio.h>
 
 /******************************************************************************/
+void inst_net_del_all( inst_net** nets )
+{
+    inst_net *net, *tmp;
+    HASH_ITER( hh, *nets, net, tmp ) {
+        HASH_DEL( *nets, net );  /* delete; users advances to next */
+        inst_rec_del_all( &net->nodes );
+        igraph_destroy( &net->g );
+        free( net );
+    }
+}
+
+/******************************************************************************/
 inst_net* inst_net_get( inst_net** nets, int scope )
 {
     inst_net* res = NULL;
@@ -50,9 +62,18 @@ void inst_rec_del( inst_rec** recs, inst_rec* rec )
 #if defined(DEBUG) || defined(DEBUG_INST)
     printf( "inst_rec_del: delete instance %s(%d)\n", rec->name, rec->id );
 #endif // DEBUG
-    HASH_DELETE( hh, *recs, rec );
+    HASH_DEL( *recs, rec );
     free( rec->name );
     free( rec );
+}
+
+/******************************************************************************/
+void inst_rec_del_all( inst_rec** recs )
+{
+    inst_rec *rec, *tmp;
+    HASH_ITER( hh, *recs, rec, tmp ) {
+        inst_rec_del( recs, rec );
+    }
 }
 
 /******************************************************************************/
