@@ -211,6 +211,7 @@ void check_context( ast_node* ast, inst_net** nets )
     /* check_port_all( &insttab, ast ); */
 
     // cleanup
+    utarray_free( scope_stack );
     symrec_del_all( &symtab );
 }
 
@@ -237,7 +238,9 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
             // install net instances
             net = inst_net_put( nets, *utarray_back( scope_stack ) );
             check_context_ast( symtab, nets, scope_stack, ast->program.stmts );
-            check_context_ast( symtab, nets, scope_stack, ast->program.net );
+            res = check_context_ast( symtab, nets, scope_stack,
+                    ast->program.net );
+            if( res != NULL ) virt_net_destroy( res );
 #if defined(DEBUG) || defined(DEBUG_NET_GML)
             igraph_write_graph_gml( &net->g, stdout, NULL, "StreamixC" );
 #endif // DEBUG_NET_GML
@@ -275,7 +278,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
                     symrec_del( symtab, port_list->rec );
                     port_list = port_list->next;
                 }
-                free( port_list );
+                symrec_list_del( port_list );
             }
             break;
         case AST_NET:

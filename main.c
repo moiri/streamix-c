@@ -9,7 +9,8 @@
 char* __src_file_name;
 extern FILE *yyin;
 extern FILE *yyout;
-extern int yyparse( void** ) ;
+extern int yyparse( void** );
+extern int yylex_destroy();
 
 
 int main( int argc, char **argv ) {
@@ -58,6 +59,7 @@ int main( int argc, char **argv ) {
     // cleanup
     ast_destroy( ast );
     inst_net_del_all( &nets );
+    yylex_destroy();
 
     return 0;
 }

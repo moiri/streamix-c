@@ -76,6 +76,7 @@ struct port_attr
 * */
 void symrec_del( symrec**, symrec* );
 void symrec_del_all( symrec** );
+void symrec_list_del( symrec_list* );
 
 /**
  * Get an identifier from the symbol table and produce an error if it was not

@@ -5,8 +5,6 @@
 #include "ast.h"
 
 int __node_id = 0;
-ast_list* con_ptr = (ast_list*)0;
-ast_list* tmp_con_ptr = (ast_list*)0;
 
 /******************************************************************************/
 ast_node* ast_add_assign( ast_node* id, ast_node* op )
@@ -148,8 +146,7 @@ ast_node* ast_add_symbol ( char* name, int line, int type )
     if (name == 0) return (ast_node*)0;
     ast_node *ptr;
     ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->symbol.name = (char*) malloc(strlen(name)+1);
-    strcpy (ptr->symbol.name, name);
+    ptr->symbol.name = name;
     ptr->symbol.type = type;
     ptr->symbol.line = line;
     ptr->type = AST_ID;

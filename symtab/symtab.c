@@ -9,6 +9,17 @@
 #endif
 
 /******************************************************************************/
+void symrec_list_del( symrec_list* list )
+{
+    symrec_list* list_tmp;
+    while( list != NULL ) {
+        list_tmp = list;
+        list = list->next;
+        free( list_tmp );
+    }
+}
+
+/******************************************************************************/
 void symrec_del( symrec** symtab, symrec* rec )
 {
     symrec* rec_temp;
@@ -32,8 +43,11 @@ void symrec_del( symrec** symtab, symrec* rec )
             break;
         case AST_BOX:
             free( ( ( struct box_attr* )rec->attr )->impl_name );
-            free( ( ( struct box_attr* )rec->attr )->ports );
+            symrec_list_del( ( ( struct box_attr* )rec->attr )->ports );
             free( rec->attr );
+            break;
+        case AST_NET_PROTO:
+            symrec_list_del( rec->attr );
             break;
         case AST_NET:
             virt_net_destroy( rec->attr );
@@ -49,6 +63,7 @@ void symrec_del( symrec** symtab, symrec* rec )
     free( rec->key );
     free( rec );
 }
+
 
 /******************************************************************************/
 void symrec_del_all( symrec** recs )
@@ -102,6 +117,8 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
 
     // generate key
     sprintf( key, "%s%d", name, scope );
+    printf( "strlen(key)=%lu, len=%lu\n", strlen(key),
+            strlen(name) +1 + CONST_SCOPE_LEN );
     // create new iten structure
     new_item = ( symrec* )malloc( sizeof( symrec ) );
     new_item->scope = scope;
