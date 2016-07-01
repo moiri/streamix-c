@@ -149,8 +149,21 @@ void draw_ast_graph_step( FILE* graph, ast_node_t* ptr )
                         STYLE_E_DEFAULT );
             }
             break;
-        case AST_WRAP:
         case AST_NET_PROTO:
+            graph_add_node( graph, ptr->id, node_label[ ptr->type ],
+                    STYLE_N_AST_NODE );
+            // id
+            draw_ast_graph_step( graph, ptr->proto->id );
+            graph_add_edge( graph, ptr->id, ptr->proto->id->id, NULL,
+                    STYLE_E_DEFAULT );
+            // port list
+            if( ptr->proto->ports != NULL ) {
+                draw_ast_graph_step( graph, ptr->proto->ports );
+                graph_add_edge( graph, ptr->id, ptr->proto->ports->id, NULL,
+                        STYLE_E_DEFAULT );
+            }
+            break;
+        case AST_WRAP:
             graph_add_node( graph, ptr->id, node_label[ ptr->type ],
                     STYLE_N_AST_NODE );
             // id
