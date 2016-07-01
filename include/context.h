@@ -31,7 +31,7 @@
  *              serial operators are checked
  * @return      true if ports can connect, false if not
  */
-bool are_port_names_ok( virt_ports*, virt_ports*, bool, bool );
+bool are_port_names_ok( virt_port_t*, virt_port_t*, bool, bool );
 
 /**
  * @brief    Checkes whether port modes match
@@ -40,7 +40,7 @@ bool are_port_names_ok( virt_ports*, virt_ports*, bool, bool );
  * @param p2    pointer the a port of a virtual net
  * @return      true if ports can connect, false if not
  */
-bool are_port_modes_ok( virt_ports*, virt_ports* );
+bool are_port_modes_ok( virt_port_t*, virt_port_t* );
 
 /**
  * @brief    check port connections of two ports
@@ -53,7 +53,7 @@ bool are_port_modes_ok( virt_ports*, virt_ports* );
  * @param ports_r   pointer to the port of a virtual net of the right operator
  * @return          true if connection was ok, false if no connection
  */
-bool check_connection( inst_net*, virt_ports*, virt_ports* );
+bool check_connection( inst_net*, virt_port_t*, virt_port_t* );
 
 /**
  * @brief    check port connections of two nets
@@ -65,7 +65,7 @@ bool check_connection( inst_net*, virt_ports*, virt_ports* );
  * @param v_net1    pointer to the virtual net of the left operator
  * @param v_net2    pointer to the virtual net of the right operator
  */
-void check_connections( inst_net*, virt_net*, virt_net* );
+void check_connections( inst_net*, virt_net_t*, virt_net_t* );
 
 /**
  * @brief    Report missing connections
@@ -77,7 +77,7 @@ void check_connections( inst_net*, virt_net*, virt_net* );
  * @param v_net_l   pointer to the virtual net of the left operand
  * @param v_net_r   pointer to the virtual net of the right operand
  */
-void check_connection_missing( inst_net*, virt_net*, virt_net* );
+void check_connection_missing( inst_net*, virt_net_t*, virt_net_t* );
 
 /**
  * @brief    Check the context of all identifiers in the program
@@ -108,7 +108,7 @@ void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node_t* );
  * @param v_net     a virtual net containing the port list from a net
  * @param name      name of the symbol
  */
-void check_prototype( symrec_list*, virt_net*, char* );
+void check_prototype( symrec_list*, virt_net_t*, char* );
 
 /**
  * @brief   Connect two ports of copy synchronizers
@@ -121,7 +121,7 @@ void check_prototype( symrec_list*, virt_net*, char* );
  * @param port1 pointer to the port of a virtual net of the left operator
  * @param port2 pointer to the port of a virtual net of the right operator
  */
-void cpsync_connect( inst_net*, virt_ports*, virt_ports* );
+void cpsync_connect( inst_net*, virt_port_t*, virt_port_t* );
 
 /**
  * @brief   Connect copy synchronizers of two nets
@@ -135,7 +135,7 @@ void cpsync_connect( inst_net*, virt_ports*, virt_ports* );
  * @param parallel  flag to indicate wheter copy synchronizer connections
  *                  in parallel operators are checked
  */
-void cpsync_connects( inst_net*, virt_net*, virt_net*, bool );
+void cpsync_connects( inst_net*, virt_net_t*, virt_net_t*, bool );
 
 /**
  * @brief   Merge two copy sunchronizer
@@ -145,7 +145,7 @@ void cpsync_connects( inst_net*, virt_net*, virt_net*, bool );
  * @param port2 pointer to the port of a virtual net
  * @return      pointer to the merged copy synchronizer
  */
-inst_rec* cpsync_merge( inst_net*, virt_ports*, virt_ports* );
+inst_rec* cpsync_merge( inst_net*, virt_port_t*, virt_port_t* );
 
 /**
  * @brief   Print debug information of a port of a port record list
@@ -168,14 +168,14 @@ void debug_print_rports( symrec_list*, char* );
  *
  * @param port  pointer to the port of a virtual net
  */
-void debug_print_vport( virt_ports* );
+void debug_print_vport( virt_port_t* );
 
 /**
  * @brief   Print debug information of all ports in a virtual net
  *
  * @param v_net pointer to the virtual net
  */
-void debug_print_vports( virt_net* );
+void debug_print_vports( virt_net_t* );
 
 /**
  * @brief   Check whether each list has the same number of elements
@@ -184,7 +184,7 @@ void debug_print_vports( virt_net* );
  * @param v_ports   port list from a virtual net
  * @return          true if port count matches, false if not
  */
-bool do_port_cnts_match( symrec_list*, virt_ports* );
+bool do_port_cnts_match( symrec_list*, virt_port_t* );
 
 /**
  * @brief   Check whether port attributes from two port lists match
@@ -196,7 +196,7 @@ bool do_port_cnts_match( symrec_list*, virt_ports* );
  * @param v_ports   port list from a net
  * @return          true if port attributes match, false if not
  */
-bool do_port_attrs_match( symrec_list*, virt_ports* );
+bool do_port_attrs_match( symrec_list*, virt_port_t* );
 
 /**
  * @brief   Install instances to the instance table and the graph
@@ -214,6 +214,6 @@ bool do_port_attrs_match( symrec_list*, virt_ports* );
  * @return              pointer to a virtual net with a port list and connection
  *                      vectors
  */
-virt_net* install_nets( symrec**, inst_net*, UT_array*, ast_node_t* );
+virt_net_t* install_nets( symrec**, inst_net*, UT_array*, ast_node_t* );
 
 #endif // CONTEXT_H

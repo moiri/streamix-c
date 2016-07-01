@@ -12,7 +12,7 @@
 #include "smxerr.h"
 
 /******************************************************************************/
-bool are_port_names_ok( virt_ports* p1, virt_ports* p2, bool cpp, bool cps )
+bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2, bool cpp, bool cps )
 {
     // no, if port names do not match
     if( strcmp( p1->rec->name, p2->rec->name ) != 0 )
@@ -50,7 +50,7 @@ bool are_port_names_ok( virt_ports* p1, virt_ports* p2, bool cpp, bool cps )
 }
 
 /******************************************************************************/
-bool are_port_modes_ok( virt_ports* p1, virt_ports* p2 )
+bool are_port_modes_ok( virt_port_t* p1, virt_port_t* p2 )
 {
     // yes, if modes are different
     if( p1->attr_mode != p2->attr_mode ) return true;
@@ -64,8 +64,8 @@ bool are_port_modes_ok( virt_ports* p1, virt_ports* p2 )
 }
 
 /******************************************************************************/
-bool check_connection( inst_net* net, virt_ports* ports_l,
-        virt_ports* ports_r )
+bool check_connection( inst_net* net, virt_port_t* ports_l,
+        virt_port_t* ports_r )
 {
     bool res = false;
     char error_msg[ CONST_ERROR_LEN ];
@@ -116,14 +116,14 @@ bool check_connection( inst_net* net, virt_ports* ports_l,
 }
 
 /******************************************************************************/
-void check_connections( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
+void check_connections( inst_net* net, virt_net_t* v_net1, virt_net_t* v_net2 )
 {
-    virt_ports* ports_l = NULL;
-    virt_ports* ports_r = NULL;
-    virt_ports* ports_last_l = NULL;
-    virt_ports* ports_next_l = NULL;
-    virt_ports* ports_last_r = NULL;
-    virt_ports* ports_next_r = NULL;
+    virt_port_t* ports_l = NULL;
+    virt_port_t* ports_r = NULL;
+    virt_port_t* ports_last_l = NULL;
+    virt_port_t* ports_next_l = NULL;
+    virt_port_t* ports_last_r = NULL;
+    virt_port_t* ports_next_r = NULL;
 
     ports_l = v_net1->ports;
     while( ports_l != NULL ) {
@@ -152,8 +152,8 @@ void check_connections( inst_net* net, virt_net* v_net1, virt_net* v_net2 )
 }
 
 /******************************************************************************/
-void check_connection_missing( inst_net* net, virt_net* v_net_l,
-        virt_net* v_net_r )
+void check_connection_missing( inst_net* net, virt_net_t* v_net_l,
+        virt_net_t* v_net_r )
 {
     char error_msg[ CONST_ERROR_LEN ];
     int i, j;
@@ -384,7 +384,7 @@ void* check_context_ast( symrec** symtab, inst_net** nets,
 }
 
 /******************************************************************************/
-void check_prototype( symrec_list* r_ports, virt_net* v_net, char *name )
+void check_prototype( symrec_list* r_ports, virt_net_t* v_net, char *name )
 {
     char error_msg[ CONST_ERROR_LEN ];
 
@@ -403,7 +403,7 @@ void check_prototype( symrec_list* r_ports, virt_net* v_net, char *name )
 }
 
 /******************************************************************************/
-void cpsync_connect( inst_net* net, virt_ports* port1, virt_ports* port2 )
+void cpsync_connect( inst_net* net, virt_port_t* port1, virt_port_t* port2 )
 {
     int node_id;
     inst_rec* cp_sync = NULL;
@@ -446,13 +446,13 @@ void cpsync_connect( inst_net* net, virt_ports* port1, virt_ports* port2 )
 }
 
 /******************************************************************************/
-void cpsync_connects( inst_net* net, virt_net* v_net1, virt_net* v_net2,
+void cpsync_connects( inst_net* net, virt_net_t* v_net1, virt_net_t* v_net2,
         bool parallel )
 {
-    virt_ports* port1 = NULL;
-    virt_ports* port2 = NULL;
-    virt_ports* port_last = NULL;
-    virt_ports* port_next = NULL;
+    virt_port_t* port1 = NULL;
+    virt_port_t* port2 = NULL;
+    virt_port_t* port_last = NULL;
+    virt_port_t* port_next = NULL;
 
     port1 = v_net1->ports;
     while( port1 != NULL ) {
@@ -481,7 +481,7 @@ void cpsync_connects( inst_net* net, virt_net* v_net1, virt_net* v_net2,
 }
 
 /******************************************************************************/
-inst_rec* cpsync_merge( inst_net* net, virt_ports* port1, virt_ports* port2 )
+inst_rec* cpsync_merge( inst_net* net, virt_port_t* port1, virt_port_t* port2 )
 {
     int id, id_del;
     id_del = dgraph_merge_vertice_1( &net->g, port1->inst->id,
@@ -524,7 +524,7 @@ void debug_print_rports( symrec_list* rports, char* name )
 }
 
 /******************************************************************************/
-void debug_print_vport( virt_ports* port )
+void debug_print_vport( virt_port_t* port )
 {
     printf( "%s(%d)", port->inst->name, port->inst->id );
     if( port->attr_class == VAL_DOWN ) printf( "_" );
@@ -537,9 +537,9 @@ void debug_print_vport( virt_ports* port )
 }
 
 /******************************************************************************/
-void debug_print_vports( virt_net* v_net )
+void debug_print_vports( virt_net_t* v_net )
 {
-    virt_ports* ports = NULL;
+    virt_port_t* ports = NULL;
     if( v_net->ports != NULL )
         ports = v_net->ports;
     while( ports != NULL ) {
@@ -551,10 +551,10 @@ void debug_print_vports( virt_net* v_net )
 }
 
 /******************************************************************************/
-bool do_port_cnts_match( symrec_list* r_ports, virt_ports* v_ports )
+bool do_port_cnts_match( symrec_list* r_ports, virt_port_t* v_ports )
 {
     symrec_list* r_port_ptr = r_ports;
-    virt_ports* v_port_ptr = v_ports;
+    virt_port_t* v_port_ptr = v_ports;
     int v_count = 0;
     int r_count = 0;
 
@@ -572,10 +572,10 @@ bool do_port_cnts_match( symrec_list* r_ports, virt_ports* v_ports )
 }
 
 /******************************************************************************/
-bool do_port_attrs_match( symrec_list* r_ports, virt_ports* v_ports )
+bool do_port_attrs_match( symrec_list* r_ports, virt_port_t* v_ports )
 {
     symrec_list* r_port_ptr = r_ports;
-    virt_ports* v_port_ptr = v_ports;
+    virt_port_t* v_port_ptr = v_ports;
     port_attr* r_port_attr = NULL;
     bool match = false;
 
@@ -608,14 +608,14 @@ bool do_port_attrs_match( symrec_list* r_ports, virt_ports* v_ports )
 }
 
 /******************************************************************************/
-virt_net* install_nets( symrec** symtab, inst_net* net, UT_array* scope_stack,
+virt_net_t* install_nets( symrec** symtab, inst_net* net, UT_array* scope_stack,
         ast_node_t* ast )
 {
     int node_id;
     symrec* rec = NULL;
-    virt_net* v_net = NULL;
-    virt_net* v_net1 = NULL;
-    virt_net* v_net2 = NULL;
+    virt_net_t* v_net = NULL;
+    virt_net_t* v_net1 = NULL;
+    virt_net_t* v_net2 = NULL;
     inst_rec* inst = NULL;
     char error_msg[ CONST_ERROR_LEN ];
 
