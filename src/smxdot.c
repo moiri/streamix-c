@@ -9,7 +9,7 @@
  */
 
 #include "defines.h"
-#include "dot.h"
+#include "smxdot.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

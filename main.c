@@ -3,7 +3,7 @@
 #include "context.h"
 #include "smxerr.h"
 #ifdef DOT_AST
-    #include "dot.h"
+    #include "smxdot.h"
 #endif // DOT_AST
 
 char* __src_file_name;

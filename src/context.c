@@ -8,7 +8,7 @@
 
 #include "context.h"
 #include "defines.h"
-#include "ngraph.h"
+#include "smxgraph.h"
 #include "smxerr.h"
 
 /******************************************************************************/
