@@ -19,182 +19,202 @@
 #include "utarray.h"
 
 /**
- * Checkes whether port names match, considering the classes they are in
+ * @brief   Checkes whether port names match
  *
- * @param virt_ports*:  pointer the a port of a virtual net
- * @param virt_ports*:  pointer the a port of a virtual net
- * @param bool:         flag to indicate wheter copy synchronizer connections
- *                      in parallel operators are checked
- * @param bool:         flag to indicate wheter copy synchronizer connections
- *                      in serial operators are checked
- * @return bool:        true if ports can connect, false if not
+ * The port classes (collections) are taken into account to check the name
+ * matching
+ *
+ * @param p1    pointer the a port of a virtual net
+ * @param p2    pointer the a port of a virtual net
+ * @param cpp   flag to indicate wheter copy synchronizer connections in
+ *              parallel operators are checked
+ * @param cps   flag to indicate wheter copy synchronizer connections in
+ *              serial operators are checked
+ * @return      true if ports can connect, false if not
  */
 bool are_port_names_ok( virt_ports*, virt_ports*, bool, bool );
 
 /**
- * Checkes whether port modes match
+ * @brief    Checkes whether port modes match
  *
- * @param virt_ports*:  pointer the a port of a virtual net
- * @param virt_ports*:  pointer the a port of a virtual net
- * @return bool:        true if ports can connect, false if not
+ * @param p1    pointer the a port of a virtual net
+ * @param p2    pointer the a port of a virtual net
+ * @return      true if ports can connect, false if not
  */
 bool are_port_modes_ok( virt_ports*, virt_ports* );
 
 /**
+ * @brief    check port connections of two ports
+ *
  * Check the connection of two ports from virtual nets and connect them.
  * The dependancy graph is updated.
  *
- * @param inst_net**:   pointer to the instance table of nets (scopes)
- * @param virt_net*:    pointer to the port of a virtual net of the left operator
- * @param virt_net*:    pointer to the port of a virtual net of the right operator
- * @return bool:        true if connection was ok, false if no connection
+ * @param net       pointer to the instance of a net
+ * @param ports_l   pointer to the port of a virtual net of the left operator
+ * @param ports_r   pointer to the port of a virtual net of the right operator
+ * @return          true if connection was ok, false if no connection
  */
 bool check_connection( inst_net*, virt_ports*, virt_ports* );
 
 /**
+ * @brief    check port connections of two nets
+ *
  * Check the connection of two virtual nets and connect them. Connecting ports
  * are removed from the virtual nets.
  *
- * @param inst_net**:   pointer to the instance table of nets (scopes)
- * @param virt_net*:    pointer to the virtual net of the left operator
- * @param virt_net*:    pointer to the virtual net of the right operator
+ * @param net       pointer to the instance of a net
+ * @param v_net1    pointer to the virtual net of the left operator
+ * @param v_net2    pointer to the virtual net of the right operator
  */
 void check_connections( inst_net*, virt_net*, virt_net* );
 
 /**
+ * @brief    Report missing connections
+ *
  * Reports errors if two nets are not connected but should be according to
  * Streamix operator semantics
  *
- * @param inst_net*:    pointer to the instance table of a net
- * @param virt_net*:    pointer to the virtual net of the left operand
- * @param virt_net*:    pointer to the virtual net of the right operand
+ * @param net       pointer to the instance table of a net
+ * @param v_net_l   pointer to the virtual net of the left operand
+ * @param v_net_r   pointer to the virtual net of the right operand
  */
 void check_connection_missing( inst_net*, virt_net*, virt_net* );
 
 /**
- * Check the context of all identifiers in the program
+ * @brief    Check the context of all identifiers in the program
  *
- * @param ast_node*:    pointer to the root ast node
- * @param inst_net**:   pointer to the instance table of nets (scopes)
+ * @param ast   pointer to the root ast node
+ * @param nets  pointer to the instance table of nets (scopes)
  * */
-void check_context( ast_node*, inst_net** );
+void check_context( ast_node_t*, inst_net** );
 
 /**
+ * @brief    Step wise context checker
+ *
  * Check the context of all identifiers in the program by iterating through the
  * AST. This function is recursive.
  *
- * @param symrec**:     pointer to the symbol table
- * @param inst_net**:   pointer to the instance table of nets (scopes)
- * @param UT_array**:   pointer to the scope stack
- * @param ast_node*:    pointer to the ast node
- * @return void*:       a generic pointer to pass information down the
- *                      recursive function
+ * @param symtab        pointer to the symbol table
+ * @param nets          pointer to the instance table of nets (scopes)
+ * @param scope_stack   pointer to the scope stack
+ * @param ast           pointer to the ast node
+ * @return              NULL
  * */
-void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node* );
+void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node_t* );
 
 /**
- * Check whether types of a prototype and a net match
+ * @brief   Check whether types of a prototype and a net match
  *
- * @param symrec_list*  port list from a symbol record
- * @param virt_ports*   port list from a net
- * @param char*         name of the symbol
+ * @param r_ports   port list from a symbol record
+ * @param v_net     a virtual net containing the port list from a net
+ * @param name      name of the symbol
  */
 void check_prototype( symrec_list*, virt_net*, char* );
 
 /**
+ * @brief   Connect two ports of copy synchronizers
+ *
  * Establish copy synchronizer connections between two ports of two virtual nets.
  * This includes side ports as well as regular ports. The dependancy graph is
  * updated.
  *
- * @param inst_net**:   pointer to the instance table of nets (scopes)
- * @param virt_ports*:  pointer to the port of a virtual net of the left operator
- * @param virt_ports*:  pointer to the port of a virtual net of the right operator
+ * @param net   pointer to the instance a of net
+ * @param port1 pointer to the port of a virtual net of the left operator
+ * @param port2 pointer to the port of a virtual net of the right operator
  */
 void cpsync_connect( inst_net*, virt_ports*, virt_ports* );
 
 /**
+ * @brief   Connect copy synchronizers of two nets
+ *
  * Establish copy synchronizer connections between two virtual nets. This
  * includes side ports as well as regular ports.
  *
- * @param inst_net**:   pointer to the instance table of nets (scopes)
- * @param virt_net*:    pointer to the virtual net of the left operator
- * @param virt_net*:    pointer to the virtual net of the right operator
- * @param bool:         flag to indicate wheter copy synchronizer connections
- *                      in parallel operators are checked
+ * @param net       pointer to the instance of a net
+ * @param v_net1    pointer to the virtual net of the left operator
+ * @param v_net2    pointer to the virtual net of the right operator
+ * @param parallel  flag to indicate wheter copy synchronizer connections
+ *                  in parallel operators are checked
  */
 void cpsync_connects( inst_net*, virt_net*, virt_net*, bool );
 
 /**
- * Merge two copy sunchronizer
+ * @brief   Merge two copy sunchronizer
  *
- * @param inst_net**:   pointer to the instance table of nets (scopes)
- * @param virt_net*:    pointer to the port of a virtual net
- * @param virt_net*:    pointer to the port of a virtual net
- * @return inst_rec*:   pointer to the merged copy synchronizer
+ * @param net   pointer to the instance of a net
+ * @param port1 pointer to the port of a virtual net
+ * @param port2 pointer to the port of a virtual net
+ * @return      pointer to the merged copy synchronizer
  */
 inst_rec* cpsync_merge( inst_net*, virt_ports*, virt_ports* );
 
 /**
- * Print debug information of a port of a port record list
+ * @brief   Print debug information of a port of a port record list
  *
- * @param symrec*:    pointer to the port record
+ * @param port  pointer to the port record
+ * @param name  name of the net instance to port belongs to
  */
 void debug_print_rport( symrec*, char* );
 
 /**
- * Print debug information of all ports in a port record list
+ * @brief   Print debug information of all ports in a port record list
  *
- * @param symrec_list*:    pointer to the port record list
+ * @param rports    pointer to the port record list
+ * @param name      name of the net instance to port belongs to
  */
 void debug_print_rports( symrec_list*, char* );
 
 /**
- * Print debug information of a port of a virtual net
+ * @brief   Print debug information of a port of a virtual net
  *
- * @param virt_net*:    pointer to the port of a virtual net
+ * @param port  pointer to the port of a virtual net
  */
 void debug_print_vport( virt_ports* );
 
 /**
- * Print debug information of all ports in a virtual net
+ * @brief   Print debug information of all ports in a virtual net
  *
- * @param virt_net*:    pointer to the virtual net
+ * @param v_net pointer to the virtual net
  */
 void debug_print_vports( virt_net* );
 
 /**
- * Check whether each list has the same number of elements
+ * @brief   Check whether each list has the same number of elements
  *
- * @param symrec_list*  port list from a symbol record
- * @param virt_ports*   port list from a net
- * @return bool         true if port count matches, false if not
+ * @param r_ports   port list from a symbol record
+ * @param v_ports   port list from a virtual net
+ * @return          true if port count matches, false if not
  */
 bool do_port_cnts_match( symrec_list*, virt_ports* );
 
 /**
+ * @brief   Check whether port attributes from two port lists match
+ *
  * Check whether each element on one list has a matching element in the
  * other list
  *
- * @param symrec_list*  port list from a symbol record
- * @param virt_ports*   port list from a net
- * @return bool         true if port attributes match, false if not
+ * @param r_ports   port list from a symbol record
+ * @param v_ports   port list from a net
+ * @return          true if port attributes match, false if not
  */
 bool do_port_attrs_match( symrec_list*, virt_ports* );
 
 /**
+ * @brief   Install instances to the instance table and the graph
+ *
  * This function performs the following tasks
  * - check whether the given identificator is in the symbol table
  * - add instances to the instance table
  * - add instances to the dependency graph
  * This is a recursive function.
  *
- * @param symrec**:     pointer to the symbol table
- * @param inst_net**:   pointer to the instance table of nets (scopes)
- * @param UT_array**:   pointer to the scope stack
- * @param ast_node*:    pointer to the ast node
- * @return virt_net*:   pointer to a virtual net with a port list
- *                      and connection vectors
+ * @param symtab        pointer to the symbol table
+ * @param net           pointer to the instance table of nets (scopes)
+ * @param scope_stack   pointer to the scope stack
+ * @param ast           pointer to the ast node
+ * @return              pointer to a virtual net with a port list and connection
+ *                      vectors
  * */
-virt_net* install_nets( symrec**, inst_net*, UT_array*, ast_node* );
+virt_net* install_nets( symrec**, inst_net*, UT_array*, ast_node_t* );
 
 #endif // CONTEXT_H
