@@ -258,7 +258,8 @@ void* ast_flatten( ast_node* ast )
     ast_list* list_last = NULL;
     void* res = NULL;
     static int _sync_id = 0;
-    if( ast == NULL ) return NULL;
+    if( ast == NULL )
+        return NULL;
 
     switch( ast->type ) {
         case AST_ASSIGN:
@@ -273,6 +274,7 @@ void* ast_flatten( ast_node* ast )
                 ast_flatten( list->node );
                 list = list->next;
             }
+            break;
         case AST_NET_PROTO:
             ast_flatten( ast->net_prot.ports );
             break;

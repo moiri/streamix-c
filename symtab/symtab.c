@@ -117,8 +117,6 @@ symrec* symrec_put( symrec** symtab, char *name, int scope, int type,
 
     // generate key
     sprintf( key, "%s%d", name, scope );
-    printf( "strlen(key)=%lu, len=%lu\n", strlen(key),
-            strlen(name) +1 + CONST_SCOPE_LEN );
     // create new iten structure
     new_item = ( symrec* )malloc( sizeof( symrec ) );
     new_item->scope = scope;

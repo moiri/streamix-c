@@ -47,6 +47,7 @@ int dgraph_merge_vertice_1( igraph_t* g, int id1, int id2 )
         }
     }
     igraph_contract_vertices( g, &v_new, NULL );
+    igraph_vector_destroy( &v_new );
 
     // id of deleted element
     return id_high;
