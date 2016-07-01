@@ -1,9 +1,9 @@
 /**
  * A plugin to draw dot graphs from the AST:
  *  - the AST itself
- *  - teh connection graph of the network
+ *  - the connection graph of the network
  *
- * @file    graph.h
+ * @file    smxdot.h
  * @author  Simon Maurer
  *
  */

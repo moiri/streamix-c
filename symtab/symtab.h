@@ -1,4 +1,4 @@
-/* 
+/**
  * A simple symbol table plugin
  *
  * @file    symtab.h
@@ -6,7 +6,7 @@
  * @author  Simon Maurer
  * @see     http://foja.dcs.fmph.uniba.sk/kompilatory/docs/compiler.pdf
  *
- * */
+ */
 
 #ifndef SYMTAB_H
 #define SYMTAB_H

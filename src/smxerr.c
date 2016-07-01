@@ -1,3 +1,11 @@
+/**
+ * Error message helper function
+ *
+ * @file    smxerr.c
+ * @author  Simon Maurer
+ *
+ */
+
 #include <string.h>
 #include "smxerr.h"
 

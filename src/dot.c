@@ -1,3 +1,13 @@
+/**
+ * A plugin to draw dot graphs from the AST:
+ *  - the AST itself
+ *  - the connection graph of the network
+ *
+ * @file    smxdot.c
+ * @author  Simon Maurer
+ *
+ */
+
 #include "defines.h"
 #include "dot.h"
 #include <string.h>

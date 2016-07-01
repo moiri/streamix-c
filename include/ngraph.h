@@ -1,11 +1,11 @@
-/* 
- * Small library to handle the connection graph according to the semantics of
+/**
+ * Small library to handle the dependancy graph according to the semantics of
  * streamix
  *
- * @file    cgraph.h
+ * @file    smxgraph.h
  * @author  Simon Maurer
  *
- * */
+ */
 
 #ifndef NGRAPH_H
 #define NGRAPH_H

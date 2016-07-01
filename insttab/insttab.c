@@ -1,3 +1,11 @@
+/**
+ * A instance table librabry
+ *
+ * @file    insttab.c
+ * @author  Simon Maurer
+ *
+ */
+
 #include "insttab.h"
 #include "defines.h"
 #include <stdio.h>

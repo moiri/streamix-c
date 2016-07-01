@@ -1,10 +1,10 @@
-/* 
+/**
  * Error message helper function
  *
  * @file    smxerr.h
  * @author  Simon Maurer
  *
- * */
+ */
 
 #ifndef ERROR_H
 #define ERROR_H

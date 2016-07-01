@@ -1,3 +1,11 @@
+/**
+ * A simple AST plugin
+ *
+ * @file    ast.c
+ * @author  Simon Maurer
+ *
+ */
+
 #include <stdlib.h> /* For malloc to add nodes to a linked list */
 #include <string.h> /* For strlen in ast_add_id */
 #include <stdio.h>

@@ -1,3 +1,12 @@
+/**
+ * Small library to handle the dependancy graph according to the semantics of
+ * streamix
+ *
+ * @file    smxgraph.c
+ * @author  Simon Maurer
+ *
+ */
+
 #include "ngraph.h"
 #include "defines.h"
 

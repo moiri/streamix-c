@@ -1,10 +1,10 @@
-/* 
+/**
  * Global definitions
  *
  * @file    defines.h
  * @author  Simon Maurer
  *
- * */
+ */
 
 #ifndef DEFINES_H
 #define DEFINES_H

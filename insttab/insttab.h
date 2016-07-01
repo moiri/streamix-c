@@ -1,10 +1,10 @@
-/* 
+/**
  * A instance table librabry
  *
  * @file    insttab.h
  * @author  Simon Maurer
  *
- * */
+ */
 
 #ifndef INSTTAB_H
 #define INSTTAB_H

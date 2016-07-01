@@ -1,3 +1,12 @@
+/**
+ * A library to handle virtual net interfaces, i.e. the interface
+ * of a resulting net of an operator
+ *
+ * @file    vnet.c
+ * @author  Simon Maurer
+ *
+ */
+
 #include "vnet.h"
 #include "defines.h"
 #include "ast.h"

@@ -1,3 +1,13 @@
+/**
+ * A simple symbol table plugin
+ *
+ * @file    symtab.c
+ * @author  Anthony A. Aaby
+ * @author  Simon Maurer
+ * @see     http://foja.dcs.fmph.uniba.sk/kompilatory/docs/compiler.pdf
+ *
+ */
+
 #include "symtab.h"
 #include "ast.h"
 #include "vnet.h"
