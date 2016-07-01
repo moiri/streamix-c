@@ -22,8 +22,8 @@
 %union {
     int ival;
     char *sval;
-    struct ast_node_t* nval;
-    struct ast_list_t* lval;
+    struct ast_node_s* nval;
+    struct ast_list_s* lval;
 };
 /* keywods */
 %token SYNC LINK CONNECT
