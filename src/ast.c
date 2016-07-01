@@ -4,8 +4,6 @@
 #include "defines.h"
 #include "ast.h"
 
-int __node_id = 0;
-
 /******************************************************************************/
 ast_node_t* ast_add_assign( ast_node_t* id, ast_node_t* op )
 {
@@ -70,10 +68,11 @@ ast_node_t* ast_add_net( ast_node_t* net )
 /******************************************************************************/
 ast_node_t* ast_add_node( node_type_t type )
 {
+    static int _node_id;
     ast_node_t* node;
     node = malloc( sizeof( ast_node_t ) );
-    __node_id++;
-    node->id = __node_id;
+    _node_id++;
+    node->id = _node_id;
     node->type = type;
     return node;
 }
