@@ -1,11 +1,10 @@
-/* 
+/**
  * Checks the context of symbols and connections
  *
  * @file    context.h
  * @author  Simon Maurer
  *
- * */
-
+ */
 
 #ifndef CONTEXT_H
 #define CONTEXT_H
@@ -85,7 +84,7 @@ void check_connection_missing( inst_net*, virt_net*, virt_net* );
  *
  * @param ast   pointer to the root ast node
  * @param nets  pointer to the instance table of nets (scopes)
- * */
+ */
 void check_context( ast_node_t*, inst_net** );
 
 /**
@@ -99,7 +98,7 @@ void check_context( ast_node_t*, inst_net** );
  * @param scope_stack   pointer to the scope stack
  * @param ast           pointer to the ast node
  * @return              NULL
- * */
+ */
 void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node_t* );
 
 /**
@@ -214,7 +213,7 @@ bool do_port_attrs_match( symrec_list*, virt_ports* );
  * @param ast           pointer to the ast node
  * @return              pointer to a virtual net with a port list and connection
  *                      vectors
- * */
+ */
 virt_net* install_nets( symrec**, inst_net*, UT_array*, ast_node_t* );
 
 #endif // CONTEXT_H

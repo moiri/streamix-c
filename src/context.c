@@ -1,3 +1,11 @@
+/**
+ * Checks the context of symbols and connections
+ *
+ * @file    context.c
+ * @author  Simon Maurer
+ *
+ */
+
 #include "context.h"
 #include "defines.h"
 #include "ngraph.h"
