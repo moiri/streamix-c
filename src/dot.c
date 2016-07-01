@@ -35,7 +35,7 @@ char* attr_label[] =
 };
 
 /******************************************************************************/
-void draw_ast_graph( ast_node* start )
+void draw_ast_graph( ast_node_t* start )
 {
     FILE* ast_graph = fopen( AST_DOT_PATH, "w" );
     graph_init( ast_graph, STYLE_G_DEFAULT );
@@ -45,35 +45,35 @@ void draw_ast_graph( ast_node* start )
 }
 
 /******************************************************************************/
-void draw_ast_graph_step (FILE* graph, ast_node* ptr)
+void draw_ast_graph_step( FILE* graph, ast_node_t* ptr )
 {
-    ast_list* ast_list_ptr;
+    ast_list_t* ast_list_ptr;
 
     if( ptr == NULL ) return;
 
-    switch (ptr->type) {
+    switch( ptr->type ) {
         // reached a leaf node of the AST -> add box or octagon to drawing
         case AST_ATTR:
             graph_add_node(
                     graph,
                     ptr->id,
-                    attr_label[ptr->attr.val],
+                    attr_label[ ptr->attr->val ],
                     STYLE_N_AST_ATTR
             );
             break;
         case AST_ID:
-            graph_add_node(graph, ptr->id, ptr->symbol.name, STYLE_N_AST_ID);
+            graph_add_node( graph, ptr->id, ptr->symbol->name, STYLE_N_AST_ID );
             break;
         case AST_PROGRAM:
-            graph_add_node( graph, ptr->id, node_label[ptr->type],
-                    STYLE_N_AST_NODE);
-            if( ptr->program.stmts != NULL ) {
-                draw_ast_graph_step( graph, ptr->program.stmts );
-                graph_add_edge( graph, ptr->id, ptr->program.stmts->id, NULL,
+            graph_add_node( graph, ptr->id, node_label[ ptr->type ],
+                    STYLE_N_AST_NODE );
+            if( ptr->program->stmts != NULL ) {
+                draw_ast_graph_step( graph, ptr->program->stmts );
+                graph_add_edge( graph, ptr->id, ptr->program->stmts->id, NULL,
                         STYLE_E_DEFAULT );
             }
-            draw_ast_graph_step( graph, ptr->program.net );
-            graph_add_edge( graph, ptr->id, ptr->program.net->id, NULL,
+            draw_ast_graph_step( graph, ptr->program->net );
+            graph_add_edge( graph, ptr->id, ptr->program->net->id, NULL,
                     STYLE_E_DEFAULT );
             break;
         // draw a list-node with its children
@@ -82,11 +82,11 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
         case AST_PORTS:
         case AST_INT_PORTS:
         case AST_SYNCS:
-            graph_add_node(graph, ptr->id, node_label[ptr->type],
-                    STYLE_N_AST_NODE);
+            graph_add_node( graph, ptr->id, node_label[ptr->type],
+                    STYLE_N_AST_NODE );
             // iterate through all elements of the list
             ast_list_ptr = ptr->list;
-            while (ast_list_ptr != 0) {
+            while( ast_list_ptr != 0 ) {
                 draw_ast_graph_step( graph, ast_list_ptr->node );
                 graph_add_edge( graph, ptr->id, ast_list_ptr->node->id,
                         NULL, STYLE_E_DEFAULT );
@@ -95,57 +95,57 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
             break;
         // draw assignments
         case AST_ASSIGN:
-            graph_add_node(graph, ptr->id, node_label[ptr->type],
+            graph_add_node( graph, ptr->id, node_label[ ptr->type ],
                     STYLE_N_AST_NODE );
             // draw the id
-            draw_ast_graph_step( graph, ptr->assign.id );
-            graph_add_edge( graph, ptr->id, ptr->assign.id->id, NULL,
+            draw_ast_graph_step( graph, ptr->assign->id );
+            graph_add_edge( graph, ptr->id, ptr->assign->id->id, NULL,
                     STYLE_E_DEFAULT );
             // draw the step
-            draw_ast_graph_step( graph, ptr->assign.op );
-            graph_add_edge( graph, ptr->id, ptr->assign.op->id, NULL,
+            draw_ast_graph_step( graph, ptr->assign->op );
+            graph_add_edge( graph, ptr->id, ptr->assign->op->id, NULL,
                     STYLE_E_DEFAULT );
             break;
         // draw operators
         case AST_SERIAL:
         case AST_PARALLEL:
-            graph_add_node(graph, ptr->id, node_label[ptr->type],
+            graph_add_node( graph, ptr->id, node_label[ ptr->type ],
                     STYLE_N_AST_NODE );
             // continue on the left branch
-            draw_ast_graph_step( graph, ptr->op.left );
-            graph_add_edge( graph, ptr->id, ptr->op.left->id, NULL,
+            draw_ast_graph_step( graph, ptr->op->left );
+            graph_add_edge( graph, ptr->id, ptr->op->left->id, NULL,
                     STYLE_E_DEFAULT );
             // continue on the right branch
-            draw_ast_graph_step( graph, ptr->op.right );
-            graph_add_edge( graph, ptr->id, ptr->op.right->id, NULL,
+            draw_ast_graph_step( graph, ptr->op->right );
+            graph_add_edge( graph, ptr->id, ptr->op->right->id, NULL,
                     STYLE_E_DEFAULT );
             break;
         // draw simple nodes
         case AST_NET:
-            graph_add_node( graph, ptr->id, node_label[ptr->type],
-                    STYLE_N_AST_NODE);
-            draw_ast_graph_step( graph, ptr->node );
-            graph_add_edge( graph, ptr->id, ptr->node->id, NULL,
+            graph_add_node( graph, ptr->id, node_label[ ptr->type ],
+                    STYLE_N_AST_NODE );
+            draw_ast_graph_step( graph, ptr->network->net );
+            graph_add_edge( graph, ptr->id, ptr->network->net->id, NULL,
                     STYLE_E_DEFAULT );
             break;
         // draw special nodes
         case AST_BOX:
-            graph_add_node(graph, ptr->id, node_label[ptr->type],
+            graph_add_node(graph, ptr->id, node_label[ ptr->type ],
                     STYLE_N_AST_NODE );
             // id implementation
-            draw_ast_graph_step( graph, ptr->box.impl );
-            graph_add_edge( graph, ptr->id, ptr->box.impl->id, NULL,
+            draw_ast_graph_step( graph, ptr->box->impl );
+            graph_add_edge( graph, ptr->id, ptr->box->impl->id, NULL,
                     STYLE_E_DEFAULT );
             // port list
-            if (ptr->box.ports != 0) {
-                draw_ast_graph_step( graph, ptr->box.ports );
-                graph_add_edge( graph, ptr->id, ptr->box.ports->id, NULL,
+            if( ptr->box->ports != NULL ) {
+                draw_ast_graph_step( graph, ptr->box->ports );
+                graph_add_edge( graph, ptr->id, ptr->box->ports->id, NULL,
                         STYLE_E_DEFAULT );
             }
             // state
-            if (ptr->box.attr_pure != 0) {
-                draw_ast_graph_step( graph, ptr->box.attr_pure );
-                graph_add_edge( graph, ptr->id, ptr->box.attr_pure->id, NULL,
+            if( ptr->box->attr_pure != NULL ) {
+                draw_ast_graph_step( graph, ptr->box->attr_pure );
+                graph_add_edge( graph, ptr->id, ptr->box->attr_pure->id, NULL,
                         STYLE_E_DEFAULT );
             }
             break;
@@ -154,59 +154,59 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
             graph_add_node( graph, ptr->id, node_label[ ptr->type ],
                     STYLE_N_AST_NODE );
             // id
-            draw_ast_graph_step( graph, ptr->wrap.id );
-            graph_add_edge( graph, ptr->id, ptr->wrap.id->id, NULL,
+            draw_ast_graph_step( graph, ptr->wrap->id );
+            graph_add_edge( graph, ptr->id, ptr->wrap->id->id, NULL,
                     STYLE_E_DEFAULT );
             // port list
-            if (ptr->wrap.ports != 0) {
-                draw_ast_graph_step( graph, ptr->wrap.ports );
-                graph_add_edge( graph, ptr->id, ptr->wrap.ports->id, NULL,
+            if( ptr->wrap->ports != NULL ) {
+                draw_ast_graph_step( graph, ptr->wrap->ports );
+                graph_add_edge( graph, ptr->id, ptr->wrap->ports->id, NULL,
                         STYLE_E_DEFAULT );
             }
             // stmt list
-            if (ptr->wrap.stmts != 0) {
-                draw_ast_graph_step( graph, ptr->wrap.stmts );
-                graph_add_edge( graph, ptr->id, ptr->wrap.stmts->id, NULL,
+            if( ptr->wrap->stmts != NULL ) {
+                draw_ast_graph_step( graph, ptr->wrap->stmts );
+                graph_add_edge( graph, ptr->id, ptr->wrap->stmts->id, NULL,
                         STYLE_E_DEFAULT );
             }
             // static
-            if (ptr->wrap.attr_static != 0) {
-                draw_ast_graph_step( graph, ptr->wrap.attr_static );
-                graph_add_edge( graph, ptr->id, ptr->wrap.attr_static->id, NULL,
-                        STYLE_E_DEFAULT );
+            if( ptr->wrap->attr_static != NULL ) {
+                draw_ast_graph_step( graph, ptr->wrap->attr_static );
+                graph_add_edge( graph, ptr->id, ptr->wrap->attr_static->id,
+                        NULL, STYLE_E_DEFAULT );
             }
             break;
         case AST_PORT:
-            graph_add_node( graph, ptr->id, node_label[ptr->type],
+            graph_add_node( graph, ptr->id, node_label[ ptr->type ],
                     STYLE_N_AST_NODE );
             // id
-            if (ptr->port.id != 0) {
-                draw_ast_graph_step( graph, ptr->port.id );
-                graph_add_edge( graph, ptr->id, ptr->port.id->id, NULL,
+            if( ptr->port->id != NULL ) {
+                draw_ast_graph_step( graph, ptr->port->id );
+                graph_add_edge( graph, ptr->id, ptr->port->id->id, NULL,
                         STYLE_E_DEFAULT );
             }
             // internal id
-            if (ptr->port.int_id != 0) {
-                draw_ast_graph_step( graph, ptr->port.int_id );
-                graph_add_edge( graph, ptr->id, ptr->port.int_id->id, NULL,
+            if( ptr->port->int_id != NULL ) {
+                draw_ast_graph_step( graph, ptr->port->int_id );
+                graph_add_edge( graph, ptr->id, ptr->port->int_id->id, NULL,
                         STYLE_E_DEFAULT );
             }
             // mode
-            if (ptr->port.mode != 0) {
-                draw_ast_graph_step( graph, ptr->port.mode );
-                graph_add_edge( graph, ptr->id, ptr->port.mode->id, NULL,
+            if( ptr->port->mode != NULL ) {
+                draw_ast_graph_step( graph, ptr->port->mode );
+                graph_add_edge( graph, ptr->id, ptr->port->mode->id, NULL,
                         STYLE_E_DEFAULT );
             }
             // collection
-            if (ptr->port.collection != 0) {
-                draw_ast_graph_step( graph, ptr->port.collection );
-                graph_add_edge( graph, ptr->id, ptr->port.collection->id, NULL,
+            if( ptr->port->collection != NULL ) {
+                draw_ast_graph_step( graph, ptr->port->collection );
+                graph_add_edge( graph, ptr->id, ptr->port->collection->id, NULL,
                         STYLE_E_DEFAULT );
             }
             // coupling
-            if (ptr->port.coupling != 0) {
-                draw_ast_graph_step( graph, ptr->port.coupling );
-                graph_add_edge( graph, ptr->id, ptr->port.coupling->id, NULL,
+            if( ptr->port->coupling != NULL ) {
+                draw_ast_graph_step( graph, ptr->port->coupling );
+                graph_add_edge( graph, ptr->id, ptr->port->coupling->id, NULL,
                         STYLE_E_DEFAULT );
             }
             break;
@@ -217,21 +217,20 @@ void draw_ast_graph_step (FILE* graph, ast_node* ptr)
 #endif // DOT_AST
 
 /******************************************************************************/
-void graph_add_divider ( FILE* graph, int scope, const char flag )
+void graph_add_divider( FILE* graph, int scope, const char flag )
 {
-    fprintf(graph, "%s%c%d\n", DOT_PATTERN, flag, scope );
+    fprintf( graph, "%s%c%d\n", DOT_PATTERN, flag, scope );
 }
 
 /******************************************************************************/
-void graph_add_edge ( FILE* graph, int start, int end, char* label,
-        int style )
+void graph_add_edge( FILE* graph, int start, int end, char* label, int style )
 {
     switch( style ) {
         case STYLE_E_DEFAULT:
-            fprintf(graph, "\tid%d->id%d", start, end);
+            fprintf (graph, "\tid%d->id%d", start, end );
             break;
         case STYLE_E_PORT:
-            fprintf(graph, "\tid%d->id%d", start, end);
+            fprintf( graph, "\tid%d->id%d", start, end );
 #ifdef DOT_EDGE_LABEL
             fprintf( graph, "[xlabel=\"%s\", fontsize=10]", label );
 #endif // DOT_EDGE_LABEL
@@ -257,7 +256,7 @@ void graph_add_edge ( FILE* graph, int start, int end, char* label,
             break;
         case STYLE_E_LPORT:
         case STYLE_E_LSPORT:
-            fprintf(graph, "\tid%d->id%d", start, end);
+            fprintf( graph, "\tid%d->id%d", start, end );
             if( style == STYLE_E_LPORT )
                 fprintf( graph, "[color=%s", COLOR_LINK );
             else if( style == STYLE_E_LSPORT )
@@ -275,7 +274,7 @@ void graph_add_edge ( FILE* graph, int start, int end, char* label,
 }
 
 /******************************************************************************/
-void graph_add_node ( FILE* graph, int id, char* name, int style )
+void graph_add_node( FILE* graph, int id, char* name, int style )
 {
     switch( style ) {
         case STYLE_N_DEFAULT:
@@ -333,15 +332,15 @@ void graph_add_rank( FILE* graph, int id1, int id2 )
 }
 
 /******************************************************************************/
-void graph_finish (FILE* graph)
+void graph_finish( FILE* graph )
 {
-    fprintf(graph, "}\n");
+    fprintf( graph, "}\n" );
 }
 
 /******************************************************************************/
-void graph_finish_subgraph (FILE* graph)
+void graph_finish_subgraph( FILE* graph )
 {
-    fprintf(graph, "\t}\n");
+    fprintf( graph, "\t}\n" );
 }
 
 #ifdef DOT_CON
@@ -485,22 +484,22 @@ void graph_fix_dot( char* t_path, char* r_path )
 /******************************************************************************/
 void graph_init( FILE* graph, int style )
 {
-    fprintf(graph, "digraph {\n");
-    switch (style) {
+    fprintf( graph, "digraph {\n" );
+    switch( style ) {
         case STYLE_G_DEFAULT:
             break;
         case STYLE_G_CON_NET:
-            fprintf(graph, "\trankdir=LR;\n");
-            fprintf(graph, "\tedge [dir=none];\n");
+            fprintf( graph, "\trankdir=LR;\n" );
+            fprintf( graph, "\tedge [dir=none];\n" );
             break;
         case STYLE_G_CON_PORT:
-            fprintf(graph, "\trankdir=LR;\n");
+            fprintf( graph, "\trankdir=LR;\n" );
 #ifdef DOT_EDGE_LABEL
-            fprintf(graph, "\tranksep=0.75;\n");
-            /* fprintf(graph, "\tnodesep=0.75;\n"); */
+            fprintf( graph, "\tranksep=0.75;\n" );
+            /* fprintf( graph, "\tnodesep=0.75;\n" ); */
 #endif // DOT_EDGE_LABEL
             // caused sideprts and copy synchrniyers to behave strange
-            /* fprintf(graph, "\tsplines=false;\n"); */
+            /* fprintf( graph, "\tsplines=false;\n" ); */
             break;
         default:
             ;
@@ -510,7 +509,7 @@ void graph_init( FILE* graph, int style )
 /******************************************************************************/
 void graph_init_subgraph( FILE* graph, char* name, int id, int style )
 {
-    switch (style) {
+    switch( style ) {
         case STYLE_SG_PARALLEL:
             fprintf( graph, "\tsubgraph clusterP%d {\n", id );
             fprintf( graph, "\tlabel=\"%s\";\n", name );

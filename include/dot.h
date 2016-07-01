@@ -1,4 +1,4 @@
-/* 
+/**
  * A plugin to draw dot graphs from the AST:
  *  - the AST itself
  *  - teh connection graph of the network
@@ -6,7 +6,7 @@
  * @file    graph.h
  * @author  Simon Maurer
  *
- * */
+ */
 
 #ifndef DOT_H
 #define DOT_H
@@ -16,96 +16,107 @@
 
 #ifdef DOT_AST
 /**
- * Draw a dot diagram of the AST
+ * @brief   Draw a dot diagram of the AST
  *
- * @param ast_node*:  pointer to the root node of the AST
- * */
-void draw_ast_graph ( ast_node* );
+ * @param start:  pointer to the root node of the AST
+ */
+void draw_ast_graph( ast_node_t* );
 
 /**
- * Recursive function to draw AST nodes
+ * @breif   Recursive function to draw AST nodes
  *
- * @param FILE*:        file pointer to the dot file
- * @param ast_node*:    pointer to the current ast node
- * */
-void draw_ast_graph_step ( FILE*, ast_node* );
+ * @param graph:    file pointer to the dot file
+ * @param ptr:      pointer to the current ast node
+ */
+void draw_ast_graph_step( FILE*, ast_node_t* );
 #endif // DOT_AST
 
 /**
  * Add a devider to the file. This is used to later construct the
  * correct dot file.
  *
- * @param FILE*: file pointer to the dot file
- * @param int:   actual scope
- * */
-void graph_add_divider ( FILE*, int, const char );
+ * @param graph:    file pointer to the dot file
+ * @param scope:    actual scope
+ * @param flag:     an indicator to tag the divider
+ */
+void graph_add_divider( FILE*, int, const char );
 
 /**
- * Add an edge to the graph
+ * @brief   Add an edge to the graph
  *
- * @param FILE*:    file pointer to the dot file
- * @param int:      id of the start node
- * @param int:      id of the end node
- * @param char*:    name of the edge
- * @param int:      style of the edge
- * */
-void graph_add_edge ( FILE*, int, int, char*, int );
+ * @param graph:    file pointer to the dot file
+ * @param start:    id of the start node
+ * @param end:      id of the end node
+ * @param label:    name of the edge
+ * @param style:    style of the edge
+ */
+void graph_add_edge( FILE*, int, int, char*, int );
 
 /**
- * Add a inode to the graph
+ * @brief   Add a node to the graph
  *
- * @param FILE*:    file pointer to the dot file
- * @param int:      id of the node
- * @param char*:    name of the node
- * @param int:      style of the node
- * */
+ * @param graph:    file pointer to the dot file
+ * @param id:       id of the node
+ * @param name:     name of the node
+ * @param style:    style of the node
+ */
 void graph_add_node( FILE*, int, char*, int );
+
+/**
+ * @brief   Create a rank of two nodes
+ *
+ * @param graph:    file pointer to the dot file
+ * @param id1:      id of a node
+ * @param id2:      id of a node
+ */
 void graph_add_rank( FILE*, int, int );
 
 /**
- * Adds final bracket to the dot file
+ * @brief   Adds final bracket to the dot file
  *
- * @param FILE*:        file pointer to the dot file
- * */
-void graph_finish ( FILE* );
+ * @param graph:    file pointer to the dot file
+ */
+void graph_finish( FILE* );
 
 /**
- * Closes the subgraph by adding closing brackets
+ * @brief   Closes the subgraph by adding closing brackets
  *
- * @param FILE*:        file pointer to the dot file
- * */
-void graph_finish_subgraph ( FILE* );
+ * @param graph:    file pointer to the dot file
+ */
+void graph_finish_subgraph( FILE* );
 
 #ifdef DOT_CON
 /**
+ * @brief   Use tagged dividers to create valid dot file
+ *
  * The dot instructions are put into a file following the ast structure.
  * Because of the nesting of wrappers the order of the instructions is not
  * correct. However, the insructions are prepended with labels that allow
  * to reorder the file in order to correctly compile. This functions performs
  * this reordering.
  *
- * @param char*:    path to a temporary file
- * @param char*:    path to the dot file to be reordered
- * */
+ * @param t_path:   path to a temporary file
+ * @param r_path:   path to the dot file to be reordered
+ */
 void graph_fix_dot( char*, char* );
 #endif // DOT_CON
 
 /**
- * Initializes the file with the dot header to draw a graph
+ * @brief   Initializes the file with the dot header to draw a graph
  *
- * @param FILE*:    file pointer to the dot file
- * @param int:      style of the graph (STYLE_DEFAULT, STYLE_CON_GRAPH)
- * */
-void graph_init ( FILE*, int );
+ * @param graph:    file pointer to the dot file
+ * @param style:    style of the graph (STYLE_DEFAULT, STYLE_CON_GRAPH)
+ */
+void graph_init( FILE*, int );
 
 /**
  * Initializes a subgraph with a lable composed out of a name and a scope
  *
- * @param FILE*:    file pointer to the dot file
- * @param char*:    name of the net that is represented as a subgraph
- * @param int:      id of the node
- * @param int:      scope of the net that is represented as a subgraph
- * */
-void graph_init_subgraph ( FILE*, char*, int, int );
+ * @param graph:    file pointer to the dot file
+ * @param name:     name of the net that is represented as a subgraph
+ * @param id:       id of the node
+ * @param style:    scope of the net that is represented as a subgraph
+ */
+void graph_init_subgraph( FILE*, char*, int, int );
 
 #endif /* DOT_H */
