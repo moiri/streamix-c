@@ -1,29 +1,52 @@
-/* 
+/**
  * A simple AST plugin
  *
  * @file    ast.h
  * @author  Simon Maurer
  *
- * */
+ */
 
 #ifndef AST_H
 #define AST_H
 
 #include <stdbool.h>
 
-typedef struct ast_attr ast_attr;
-typedef struct ast_box ast_box;
-typedef struct ast_assign ast_assign;
-typedef struct ast_list ast_list;
-typedef struct ast_node ast_node;
-typedef struct ast_op ast_op;
-typedef struct ast_port ast_port;
-typedef struct ast_prog ast_prog;
-typedef struct ast_prot ast_prot;
-typedef struct ast_symb ast_symb;
-typedef struct ast_wrap ast_wrap;
+// TYPEDEFS -------------------------------------------------------------------
+typedef struct ast_assign_s ast_assign_t;
+typedef struct ast_attr_s ast_attr_t;
+typedef struct ast_box_s ast_box_t;
+typedef struct ast_list_s ast_list_t;
+typedef struct ast_net_s ast_net_t;
+typedef struct ast_node_s ast_node_t;
+typedef struct ast_op_s ast_op_t;
+typedef struct ast_port_s ast_port_t;
+typedef struct ast_prog_s ast_prog_t;
+typedef struct ast_prot_s ast_prot_t;
+typedef struct ast_symb_s ast_symb_t;
+typedef struct ast_wrap_s ast_wrap_t;
 
-typedef enum id_type
+typedef enum attr_type_e attr_type_t;
+typedef enum id_type_e id_type_t;
+typedef enum node_type_e node_type_t;
+typedef enum port_type_e port_type_t;
+
+// ENUMS ----------------------------------------------------------------------
+/**
+ * @brief   all possible types of AST_ATTR
+ */
+enum attr_type_e
+{
+    ATTR_PORT_MODE,
+    ATTR_PORT_CLASS,
+    ATTR_PORT_COUPLING,
+    ATTR_BOX_STATE,
+    ATTR_WRAP_STATIC
+};
+
+/**
+ * @brief   all possible types of AST_ID
+ */
+enum id_type_e
 {
     ID_NET,
     ID_WRAP,
@@ -37,26 +60,14 @@ typedef enum id_type
     ID_CPORT,
     ID_LPORT,
     ID_CPSYNC
-} id_type;
-typedef enum attr_type
-{
-    ATTR_PORT_MODE,
-    ATTR_PORT_CLASS,
-    ATTR_PORT_COUPLING,
-    ATTR_BOX_STATE,
-    ATTR_WRAP_STATIC
-} attr_type;
-typedef enum port_type
-{
-    PORT_SYNC,
-    PORT_NET,
-    PORT_WRAP,
-    PORT_WRAP_NULL,
-    PORT_BOX
-} port_type;
-// ATTENTION: the order of this enum matches the order of node names
-// "node_label" in graph.c
-typedef enum node_type
+};
+
+/**
+ * @brief       all possible types of AST_NODE
+ * @attention   the order of this enum matches the order of node names
+ *              "node_label" in graph.c
+ */
+enum node_type_e
 {
     AST_ASSIGN,
     AST_BOX,
@@ -74,245 +85,292 @@ typedef enum node_type
     AST_WRAP,
     AST_ATTR,
     AST_ID
-} node_type;
-
-// AST_ATTR
-struct ast_attr
-{
-    attr_type   type;
-    int         val;
 };
 
-// AST_BOX
-struct ast_box
+/**
+ * @brief   all possible types of AST_PORT
+ */
+enum port_type_e
 {
-    ast_node*   impl;
-    ast_node*   ports;
-    ast_node*   attr_pure;
+    PORT_SYNC,
+    PORT_NET,
+    PORT_WRAP,
+    PORT_WRAP_NULL,
+    PORT_BOX
 };
 
-// AST_NET_DEF, AST_NET_DECL
-struct ast_assign
+// STRUCTS --------------------------------------------------------------------
+/**
+ * @brief   AST structure of node type AST_ASSIGN
+ */
+struct ast_assign_s
 {
-    ast_node*   id;
-    ast_node*   op;
+    ast_node_t*   id;   /**< ::ast_symb_t */
+    ast_node_t*   op;   /**< ::ast_box_t, ::ast_prot_t, ::ast_net_t */
 };
 
-// AST_ID
-struct ast_symb
+/**
+ * @brief   AST structure of node type AST_ATTR
+ */
+struct ast_attr_s
 {
-    char*   name;
-    int     line;
-    int     type;
+    attr_type_t type;   /**< #attr_type_e */
+    int         val;    /**< value of the attribute */
 };
 
-// linked list structure containing AST node pointers
-struct ast_list
+/**
+ * @brief   AST structure of node type AST_BOX
+ */
+struct ast_box_s
 {
-    ast_node*   node;
-    ast_list*   next;
+    ast_node_t*   impl;         /**< ::ast_symb_t */
+    ast_node_t*   ports;        /**< ::ast_list_t */
+    ast_node_t*   attr_pure;    /**< ::ast_attr_t */
 };
 
-// AST_SERIAL, AST_PARALLEL
-struct ast_op
+/**
+ * @brief   AST structure of linked list (AST_STMTS, AST_PORTS)
+ */
+struct ast_list_s
 {
-    ast_node*   left;
-    ast_node*   right;
+    ast_node_t* node;   /**< list data element (any type) */
+    ast_list_t* next;   /**< pointer to the next list structure */
 };
 
-// AST_PORT
-struct ast_port
+/**
+ * @brief   AST structure of node type AST_NET
+ */
+struct ast_net_s
 {
-    port_type   port_type;
-    ast_node*   id;
-    ast_node*   int_id;
-    ast_node*   collection;
-    ast_node*   mode;
-    ast_node*   coupling;
-    int         sync_id;
+    ast_node_t* net;    /**< ::ast_symb_t, ::ast_ap_t */
 };
 
-// AST_PROGRAM
-struct ast_prog
+/**
+ * @brief   AST structure of the node wrapper
+ */
+struct ast_node_s
 {
-    ast_node*   net;
-    ast_node*   stmts;
-};
-// AST_PROT
-struct ast_prot
-{
-    ast_node*   id;
-    ast_node*   ports;
-};
-
-// AST_WRAP
-struct ast_wrap
-{
-    ast_node*   id;
-    ast_node*   ports;
-    ast_node*   stmts;
-    ast_node*   attr_static;
-};
-
-// the AST structure
-struct ast_node
-{
-    node_type   type;
-    int         id;         // id of the node
+    node_type_t type;               /**< #node_type_e */
+    int         id;                 /**< id of the node */
     union {
-        struct ast_attr     attr;       // AST_ATTR
-        struct ast_box      box;        // AST_BOX
-        struct ast_assign   assign;     // AST_ASSIGN
-        // AST_STMTS, AST_LINKS, AST_PORTS, AST_SYNCS
-        ast_list*           list;
-        struct ast_prot     net_prot;   // AST_NET_PROT
-        ast_node*           node;       // AST_NET
-        struct ast_op       op;         // AST_SERIAL, AST_PARALLEL
-        struct ast_port     port;       // AST_PORT
-        struct ast_prog     program;    // AST_PROG
-        struct ast_symb     symbol;     // AST_ID
-        struct ast_wrap     wrap;       // AST_WRAP
+        ast_attr_t*     attr;       /**< AST_ATTR */
+        ast_box_t*      box;        /**< AST_BOX */
+        ast_assign_t*   assign;     /**< AST_ASSIGN */
+        ast_list_t*     list;       /**< AST_STMTS, AST_PORTS */
+        ast_prot_t*     proto;      /**< AST_NET_PROT */
+        ast_net_t*      network;    /**< AST_NET */
+        ast_op_t*       op;         /**< AST_SERIAL, AST_PARALLEL */
+        ast_port_t*     port;       /**< AST_PORT */
+        ast_prog_t*     program;    /**< AST_PROG */
+        ast_symb_t*     symbol;     /**< AST_ID */
+        ast_wrap_t*     wrap;       /**< AST_WRAP */
     };
 };
 
 /**
- * Add an assignment to the AST.
- *
- * @param ast_node*:    pointer to the identifier
- * @param ast_node*:    pointer to the operand
- * @return ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_assign ( ast_node*, ast_node* );
+ * @brief   AST structure of node type AST_ID
+ */
+struct ast_symb_s
+{
+    char*       name;   /**< the name of the id */
+    int         line;   /**< the line number of the occurence in the code */
+    id_type_t   type;   /**< #id_type_e */
+};
 
 /**
- * Add a leaf (end node) attribute to the AST.
- *
- * @param int:    value of the attribute
- * @param int:    type of the attribute
- * @return: ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_attr ( int, int );
+ * @brief   AST structure of node types AST_SERIAL and AST_PARALLEL
+ */
+struct ast_op_s
+{
+    ast_node_t*   left;     /**< ::ast_symb_t, ::ast_net_t, ::ast_op_t */
+    ast_node_t*   right;    /**< ::ast_symb_t, ::ast_net_t, ::ast_op_t */
+};
 
 /**
- * Add a box declaration to the AST.
- *
- * @param ast_node*:    pointer to an ast node of type AST_ID
- * @param ast_node*:    pointer to the ports list AST node
- * @param ast_node*:    pointer to the state AST node
- * @return: ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_box ( ast_node*, ast_node*, ast_node* );
+ * @brief   AST structure of node type AST_PORT
+ */
+struct ast_port_s
+{
+    port_type_t type;       /**< #port_type_e */
+    ast_node_t* id;         /**< ::ast_symb_t */
+    ast_node_t* int_id;     /**< tbd */
+    ast_node_t* collection; /**< ::ast_attr_t */
+    ast_node_t* mode;       /**< ::ast_attr_t */
+    ast_node_t* coupling;   /**< ::ast_attr_t */
+    int         sync_id;    /**< id used to group sync ports */
+};
 
 /**
- * Add a list as node to the AST.
- *
- * @param ast_list*:    pointer to the list
- * @param int type:     type of AST node
- * @return: ast_list*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_list ( ast_list*, int );
+ * @brief   AST structure of node type AST_PROGRAM
+ */
+struct ast_prog_s
+{
+    ast_node_t*   net;      /**< ::ast_net_t */
+    ast_node_t*   stmts;    /**< ::ast_list_t */
+};
 
 /**
- * Add a node to the a list.
- *
- * @param ast_node*:    pointer to the new node
- * @param ast_list*:    pointer to the list
- * @return: ast_list*:
- *      a pointer to the location where the data was stored
- * */
-ast_list* ast_add_list_elem (ast_node*, ast_list*);
+ * @brief   AST structure of node type AST_PROT
+ */
+struct ast_prot_s
+{
+    ast_node_t*   id;       /**< ::ast_symb_t */
+    ast_node_t*   ports;    /**< ::ast_list_t */
+};
 
 /**
- * Add a net prototype to the AST.
+ * @brief   AST structure of node type AST_WRAP
+ */
+struct ast_wrap_s
+{
+    ast_node_t*   id;           /**< ::ast_symb_t */
+    ast_node_t*   ports;        /**< ::ast_list_t */
+    ast_node_t*   stmts;        /**< ::ast_list_t */
+    ast_node_t*   attr_static;  /**< ::ast_attr_t */
+};
+
+// FUNCTIONS ------------------------------------------------------------------
+/**
+ * @brief   Add an assignment to the AST.
  *
- * @param ast_node*:    pointer to an ast node of type AST_ID
- * @param ast_node*:    pointer to the ports list AST node
- * @return: ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_net_proto ( ast_node*, ast_node* );
+ * @param id:   pointer to the identifier
+ * @param op:   pointer to the operand
+ * @return:     a pointer to the location where the data was stored
+ */
+ast_node_t* ast_add_assign( ast_node_t*, ast_node_t* );
 
 /**
- * Add a node to the AST.
+ * @brief   Add a leaf (end node) attribute to the AST.
  *
- * @param ast_node*:    pointer to AST node
- * @param int type:     type of AST node
- * @return: ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_node ( ast_node*, int );
+ * @param val:  value of the attribute
+ * @param type: type of the attribute
+ * @return:     a pointer to the location where the data was stored
+ */
+ast_node_t* ast_add_attr( int, attr_type_t );
 
 /**
- * Add a an operation to the AST.
+ * @brief   Add a box declaration to the AST.
  *
- * @param ast_node*:    pointer to the left operand
- * @param ast_node*:    pointer to the right operand
- * @param int:          AST_SERIAL, AST_PARALLEL
- * @return ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_op ( ast_node*, ast_node*, int );
+ * @param id:       pointer to an ast node of type AST_ID
+ * @param ports:    pointer to the ports list AST node
+ * @param state:    pointer to the state AST node
+ * @return:         a pointer to the location where the data was stored
+ */
+ast_node_t* ast_add_box( ast_node_t*, ast_node_t*, ast_node_t* );
 
 /**
- * Add a port to the AST.
+ * @brief   Add a list as node to the AST.
  *
- * @param ast_node*:    pointer to the port ID
- * @param ast_node*:    pointer to the internal port ID
- * @param ast_node*:    pointer to the collection node
- * @param ast_node*:    pointer to the mode node
- * @param ast_node*:    pointer to the coupling node
- * @param int:          PORT_BOX, PORT_NET, PORT_SYNC
- * @return ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_port (ast_node*, ast_node*, ast_node*, ast_node*, ast_node*,
-        int);
+ * @param list: pointer to the list
+ * @param type: type of AST node
+ * @return:     a pointer to the location where the data was stored
+ */
+ast_node_t* ast_add_list( ast_list_t*, node_type_t );
 
 /**
- * Add a program node to the AST.
+ * @brief   Add a node to the a list.
  *
- * @param ast_node*:    pointer to a net
- * @param ast_node*:    pointer to a AST_STMTS node
- * @return: ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_prog ( ast_node*, ast_node* );
+ * @param node: pointer to the new node
+ * @param list: pointer to the list
+ * @return:     a pointer to the location where the data was stored
+ */
+ast_list_t* ast_add_list_elem( ast_node_t*, ast_list_t* );
 
 /**
- * Add a symbol to the AST.
+ * @brief   Add a net to the AST.
  *
- * @param char*:    name of the symbol
- * @param int:      line number of occurrence of the symbol
- * @param int:      type of the symbol
- * @return: ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_symbol ( char*, int, int );
+ * @param node: pointer to net node
+ * @return:     a pointer to the location where the data was stored
+ */
+ast_node_t* ast_add_net( ast_node_t* );
 
 /**
- * Add a wrapper declaration to the AST.
+ * @brief   Add a node to the AST.
  *
- * @param ast_node*:    pointer to an ast node of type AST_ID
- * @param ast_node*:    pointer to the ports list AST node
- * @param ast_node*:    pointer to the stmts list AST node
- * @param ast_node*:    pointer to the attr AST node
- * @return: ast_node*:
- *      a pointer to the location where the data was stored
- * */
-ast_node* ast_add_wrap ( ast_node*, ast_node*, ast_node*, ast_node* );
+ * @param type: type of AST node
+ * @return:     a pointer to the location where the data was stored
+ */
+ast_node_t* ast_add_node( node_type_t );
 
 /**
+ * @brief   Add a an operation to the AST.
+ *
+ * @param left:  pointer to the left operand
+ * @param right: pointer to the right operand
+ * @param type:  AST_SERIAL, AST_PARALLEL
+ * @return:      a pointer to the location where the data was stored
+ */
+ast_node_t* ast_add_op( ast_node_t*, ast_node_t*, node_type_t );
+
+/**
+ * @brief   Add a port to the AST.
+ *
+ * @param id:           pointer to the port ID
+ * @param int_id:       pointer to the internal port ID
+ * @param collection:   pointer to the collection node
+ * @param mode:         pointer to the mode node
+ * @param coupling:     pointer to the coupling node
+ * @param type:         PORT_BOX, PORT_NET, PORT_SYNC
+ * @return:             a pointer to the location where the data was stored
+ */
+ast_node_t* ast_add_port( ast_node_t*, ast_node_t*, ast_node_t*, ast_node_t*,
+        ast_node_t*, port_type_t );
+
+/**
+ * @brief   Add a program node to the AST.
+ *
+ * @param stmts:    pointer to a statements node
+ * @param net:      pointer to a net node
+ * @return:         a pointer to the location where the data was stored
+ */
+ast_node_t* ast_add_prog( ast_node_t*, ast_node_t* );
+
+/**
+ * @brief   Add a net prototype to the AST.
+ *
+ * @param id:       pointer to an ast node of type AST_ID
+ * @param ports:    pointer to the ports list AST node
+ * @return:         a pointer to the location where the data was stored
+ */
+ast_node_t* ast_add_proto( ast_node_t*, ast_node_t* );
+
+/**
+ * @brief   Add a symbol to the AST.
+ *
+ * @param name: name of the symbol
+ * @param line: line number of occurrence of the symbol
+ * @param type: type of the symbol
+ * @return:     a pointer to the location where the data was stored
+ */
+ast_node_t* ast_add_symbol( char*, int, id_type_t );
+
+/**
+ * @brief   Add a wrapper declaration to the AST.
+ *
+ * @param id:       pointer to an ast node of type AST_ID
+ * @param ports:    pointer to the ports list AST node
+ * @param stmts:    pointer to the stmts list AST node
+ * @param attr:     pointer to the attr AST node
+ * @return:         a pointer to the location where the data was stored
+ */
+ast_node_t* ast_add_wrap( ast_node_t*, ast_node_t*, ast_node_t*, ast_node_t* );
+
+/**
+ * @brief   Destroy the AST
+ *
  * Destroy the complete ast structure including all subnodes and leaf
  * nodes. This is a recursive function.
  *
- * @param ast_node*     pointer to the root node of the ast
+ * @param ast:  pointer to the root node of the ast
  */
-void ast_destroy( ast_node* );
+void ast_destroy( ast_node_t* );
 
-void* ast_flatten( ast_node* );
+/**
+ * @brief   Flatten the AST
+ *
+ * @param ast:  pointer to the root node of the ast
+ * @return:     NULL
+ */
+void* ast_flatten( ast_node_t* );
 
 #endif /* AST_H */

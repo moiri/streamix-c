@@ -7,194 +7,178 @@
 int __node_id = 0;
 
 /******************************************************************************/
-ast_node* ast_add_assign( ast_node* id, ast_node* op )
+ast_node_t* ast_add_assign( ast_node_t* id, ast_node_t* op )
 {
-    ast_node* ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->assign.id = id;
-    ptr->assign.op = op;
-    ptr->type = AST_ASSIGN;
-    __node_id++;
-    ptr->id = __node_id;
-    return ptr;
+    ast_node_t* node = ast_add_node( AST_ASSIGN );
+    node->assign = malloc( sizeof( ast_assign_t ) );
+    node->assign->id = id;
+    node->assign->op = op;
+    return node;
 }
 
 /******************************************************************************/
-ast_node* ast_add_attr ( int val, int type )
+ast_node_t* ast_add_attr( int val, attr_type_t type )
 {
-    ast_node *ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->type = AST_ATTR;
-    __node_id++;
-    ptr->id = __node_id;
-    ptr->attr.type = type;
-    ptr->attr.val = val;
-    return ptr;
+    ast_node_t *node = ast_add_node( AST_ATTR );
+    node->attr = malloc( sizeof( ast_attr_t ) );
+    node->attr->type = type;
+    node->attr->val = val;
+    return node;
 }
 
 /******************************************************************************/
-ast_node* ast_add_box ( ast_node* id, ast_node* ports, ast_node* state )
+ast_node_t* ast_add_box( ast_node_t* id, ast_node_t* ports, ast_node_t* state )
 {
-    ast_node* ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->box.impl = id;
-    ptr->box.ports = ports;
-    ptr->box.attr_pure = state;
-    __node_id++;
-    ptr->id = __node_id;
-    ptr->type = AST_BOX;
-    return ptr;
+    ast_node_t *node = ast_add_node( AST_BOX );
+    node->box = malloc( sizeof( ast_box_t ) );
+    node->box->impl = id;
+    node->box->ports = ports;
+    node->box->attr_pure = state;
+    return node;
 }
 
 /******************************************************************************/
-ast_node* ast_add_list (ast_list* list, int type)
+ast_node_t* ast_add_list( ast_list_t* list, node_type_t type )
 {
-    if (list == 0) return (ast_node*)0;
-    ast_node* ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->list = list;
-    __node_id++;
-    ptr->id = __node_id;
-    ptr->type = type;
-    return ptr;
+    if( list == NULL ) return NULL;
+    ast_node_t *node = ast_add_node( type );
+    node->list = malloc( sizeof( ast_list_t ) );
+    node->list = list;
+    return node;
 }
 
 /******************************************************************************/
-ast_list* ast_add_list_elem (ast_node* node, ast_list* list)
+ast_list_t* ast_add_list_elem( ast_node_t* node, ast_list_t* list )
 {
-    ast_list* list_ptr;
-    list_ptr = (ast_list*) malloc(sizeof(ast_list));
+    ast_list_t* list_ptr;
+    list_ptr = malloc( sizeof( ast_list_t ) );
     list_ptr->node = node;
     list_ptr->next = list;
     return list_ptr;
 }
 
 /******************************************************************************/
-ast_node* ast_add_net_proto ( ast_node* id, ast_node* ports )
+ast_node_t* ast_add_net( ast_node_t* net )
 {
-    ast_node* ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->net_prot.id = id;
-    ptr->net_prot.ports = ports;
-    __node_id++;
-    ptr->id = __node_id;
-    ptr->type = AST_NET_PROTO;
-    return ptr;
+    if( net == NULL ) return NULL;
+    ast_node_t *node = ast_add_node( AST_NET );
+    node->network = malloc( sizeof( ast_net_t ) );
+    node->network->net = net;
+    return node;
 }
 
 /******************************************************************************/
-ast_node* ast_add_node ( ast_node* node, int type )
+ast_node_t* ast_add_node( node_type_t type )
 {
-    if (node == 0) return (ast_node*)0;
-    ast_node* ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->node = node;
+    ast_node_t* node;
+    node = malloc( sizeof( ast_node_t ) );
     __node_id++;
-    ptr->id = __node_id;
-    ptr->type = type;
-    return ptr;
+    node->id = __node_id;
+    node->type = type;
+    return node;
 }
 
 /******************************************************************************/
-ast_node* ast_add_op ( ast_node* left, ast_node* right, int node_type )
+ast_node_t* ast_add_op( ast_node_t* left, ast_node_t* right,
+        node_type_t type )
 {
-    ast_node* ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->op.left = left;
-    ptr->op.right = right;
-    ptr->type = node_type;
-    __node_id++;
-    ptr->id = __node_id;
-    return ptr;
+    ast_node_t *node = ast_add_node( type );
+    node->op = malloc( sizeof( ast_op_t ) );
+    node->op->left = left;
+    node->op->right = right;
+    return node;
 }
 
 /******************************************************************************/
-ast_node* ast_add_port (ast_node* id, ast_node* int_id, ast_node* collection,
-        ast_node* mode, ast_node* coupling, int type)
+ast_node_t* ast_add_port( ast_node_t* id, ast_node_t* int_id,
+        ast_node_t* collection, ast_node_t* mode, ast_node_t* coupling,
+        port_type_t type )
 {
-    ast_node* ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    __node_id++;
-    ptr->id = __node_id;
-    ptr->type = AST_PORT;
-    ptr->port.id = id;
-    ptr->port.int_id = int_id;
-    ptr->port.port_type = type;
-    ptr->port.mode = mode;
-    ptr->port.collection = collection;
-    ptr->port.coupling = coupling;
-    ptr->port.sync_id = -1;
-    return ptr;
+    ast_node_t *node = ast_add_node( AST_PORT );
+    node->port = malloc( sizeof( ast_port_t ) );
+    node->port->id = id;
+    node->port->int_id = int_id;
+    node->port->type = type;
+    node->port->mode = mode;
+    node->port->collection = collection;
+    node->port->coupling = coupling;
+    node->port->sync_id = -1;
+    return node;
 }
 
 /******************************************************************************/
-ast_node* ast_add_prog ( ast_node* stmts, ast_node* net )
+ast_node_t* ast_add_prog( ast_node_t* stmts, ast_node_t* net )
 {
-    ast_node* ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->program.net = net;
-    ptr->program.stmts = stmts;
-    __node_id++;
-    ptr->id = __node_id;
-    ptr->type = AST_PROGRAM;
-    return ptr;
+    ast_node_t *node = ast_add_node( AST_PROGRAM );
+    node->program = malloc( sizeof( ast_prog_t ) );
+    node->program->net = net;
+    node->program->stmts = stmts;
+    return node;
 }
 
 /******************************************************************************/
-ast_node* ast_add_symbol ( char* name, int line, int type )
+ast_node_t* ast_add_proto( ast_node_t* id, ast_node_t* ports )
 {
-    if (name == 0) return (ast_node*)0;
-    ast_node *ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->symbol.name = name;
-    ptr->symbol.type = type;
-    ptr->symbol.line = line;
-    ptr->type = AST_ID;
-    __node_id++;
-    ptr->id = __node_id;
-    return ptr;
+    ast_node_t *node = ast_add_node( AST_NET_PROTO );
+    node->proto = malloc( sizeof( ast_prot_t ) );
+    node->proto->id = id;
+    node->proto->ports = ports;
+    return node;
 }
 
 /******************************************************************************/
-ast_node* ast_add_wrap ( ast_node* id, ast_node* ports, ast_node* stmts,
-        ast_node* attr )
+ast_node_t* ast_add_symbol( char* name, int line, id_type_t type )
 {
-    ast_node* ptr;
-    ptr = (ast_node*) malloc(sizeof(ast_node));
-    ptr->wrap.id = id;
-    ptr->wrap.ports = ports;
-    ptr->wrap.stmts = stmts;
-    ptr->wrap.attr_static = attr;
-    __node_id++;
-    ptr->id = __node_id;
-    ptr->type = AST_WRAP;
-    return ptr;
+    if( name == NULL ) return NULL;
+    ast_node_t *node = ast_add_node( AST_ID );
+    node->symbol = malloc( sizeof( ast_prog_t ) );
+    node->symbol->name = name;
+    node->symbol->type = type;
+    node->symbol->line = line;
+    return node;
 }
 
 /******************************************************************************/
-void ast_destroy( ast_node* ast )
+ast_node_t* ast_add_wrap( ast_node_t* id, ast_node_t* ports, ast_node_t* stmts,
+        ast_node_t* attr )
 {
-    ast_list* list_next = NULL;
-    ast_list* list_prev = NULL;
+    ast_node_t *node = ast_add_node( AST_WRAP );
+    node->wrap = malloc( sizeof( ast_wrap_t ) );
+    node->wrap->id = id;
+    node->wrap->ports = ports;
+    node->wrap->stmts = stmts;
+    node->wrap->attr_static = attr;
+    return node;
+}
+
+/******************************************************************************/
+void ast_destroy( ast_node_t* ast )
+{
+    ast_list_t* list_next = NULL;
+    ast_list_t* list_prev = NULL;
     if( ast == NULL ) return;
 
     switch( ast->type ) {
         case AST_ASSIGN:
-            ast_destroy( ast->assign.id );
-            ast_destroy( ast->assign.op );
+            ast_destroy( ast->assign->id );
+            ast_destroy( ast->assign->op );
+            free( ast->assign );
             free( ast );
             break;
         case AST_ATTR:
+            free( ast->attr );
             free( ast );
             break;
         case AST_BOX:
-            ast_destroy( ast->box.impl );
-            ast_destroy( ast->box.ports );
-            ast_destroy( ast->box.attr_pure );
+            ast_destroy( ast->box->impl );
+            ast_destroy( ast->box->ports );
+            ast_destroy( ast->box->attr_pure );
+            free( ast->box );
             free( ast );
             break;
         case AST_ID:
-            free( ast->symbol.name );
+            free( ast->symbol->name );
+            free( ast->symbol );
             free( ast );
             break;
         case AST_INT_PORTS:
@@ -212,38 +196,44 @@ void ast_destroy( ast_node* ast )
             free( ast );
             break;
         case AST_NET:
-            ast_destroy( ast->node );
+            ast_destroy( ast->network->net );
+            free( ast->network );
             free( ast );
             break;
         case AST_NET_PROTO:
-            ast_destroy( ast->net_prot.id );
-            ast_destroy( ast->net_prot.ports );
+            ast_destroy( ast->proto->id );
+            ast_destroy( ast->proto->ports );
+            free( ast->proto );
             free( ast );
             break;
         case AST_PORT:
-            ast_destroy( ast->port.id );
-            ast_destroy( ast->port.int_id );
-            ast_destroy( ast->port.collection );
-            ast_destroy( ast->port.mode );
-            ast_destroy( ast->port.coupling );
+            ast_destroy( ast->port->id );
+            ast_destroy( ast->port->int_id );
+            ast_destroy( ast->port->collection );
+            ast_destroy( ast->port->mode );
+            ast_destroy( ast->port->coupling );
+            free( ast->port );
             free( ast );
             break;
         case AST_PROGRAM:
-            ast_destroy( ast->program.net );
-            ast_destroy( ast->program.stmts );
+            ast_destroy( ast->program->net );
+            ast_destroy( ast->program->stmts );
+            free( ast->program );
             free( ast );
             break;
         case AST_PARALLEL:
         case AST_SERIAL:
-            ast_destroy( ast->op.right );
-            ast_destroy( ast->op.left );
+            ast_destroy( ast->op->right );
+            ast_destroy( ast->op->left );
+            free( ast->op );
             free( ast );
             break;
         case AST_WRAP:
-            ast_destroy( ast->wrap.id );
-            ast_destroy( ast->wrap.ports );
-            ast_destroy( ast->wrap.stmts );
-            ast_destroy( ast->wrap.attr_static );
+            ast_destroy( ast->wrap->id );
+            ast_destroy( ast->wrap->ports );
+            ast_destroy( ast->wrap->stmts );
+            ast_destroy( ast->wrap->attr_static );
+            free( ast->wrap );
             free( ast );
             break;
         default:
@@ -252,10 +242,10 @@ void ast_destroy( ast_node* ast )
 }
 
 /******************************************************************************/
-void* ast_flatten( ast_node* ast )
+void* ast_flatten( ast_node_t* ast )
 {
-    ast_list* list = NULL;
-    ast_list* list_last = NULL;
+    ast_list_t* list = NULL;
+    ast_list_t* list_last = NULL;
     void* res = NULL;
     static int _sync_id = 0;
     if( ast == NULL )
@@ -263,10 +253,10 @@ void* ast_flatten( ast_node* ast )
 
     switch( ast->type ) {
         case AST_ASSIGN:
-            ast_flatten( ast->assign.op );
+            ast_flatten( ast->assign->op );
             break;
         case AST_BOX:
-            ast_flatten( ast->box.ports );
+            ast_flatten( ast->box->ports );
             break;
         case AST_STMTS:
             list = ast->list;
@@ -276,13 +266,13 @@ void* ast_flatten( ast_node* ast )
             }
             break;
         case AST_NET_PROTO:
-            ast_flatten( ast->net_prot.ports );
+            ast_flatten( ast->proto->ports );
             break;
         case AST_PROGRAM:
-            ast_flatten( ast->program.stmts );
+            ast_flatten( ast->program->stmts );
             break;
         case AST_WRAP:
-            ast_flatten( ast->wrap.ports );
+            ast_flatten( ast->wrap->ports );
             break;
         case AST_PORTS:
             list = ast->list;
@@ -294,8 +284,8 @@ void* ast_flatten( ast_node* ast )
                     else list_last->next = res;
                     // go to the last list element
                     while( true ) {
-                        if( ( ( ast_list* )res )->next == NULL ) break;
-                        res = ( ( ast_list* )res )->next;
+                        if( ( ( ast_list_t* )res )->next == NULL ) break;
+                        res = ( ( ast_list_t* )res )->next;
                     }
                     list_last = res;
                     list_last->next = list->next;
@@ -310,7 +300,7 @@ void* ast_flatten( ast_node* ast )
             _sync_id++;
             list = ast->list;
             while( list != NULL ) {
-                list->node->port.sync_id = _sync_id;
+                list->node->port->sync_id = _sync_id;
                 list = list->next;
             }
             res = ( void* )ast->list;
