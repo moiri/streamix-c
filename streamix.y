@@ -44,8 +44,8 @@
 %type <nval> net_decl
 %type <nval> program
 %type <nval> net
+%type <nval> box_assign
 %type <nval> net_assign
-%type <nval> net_def
 %type <nval> net_proto
 %type <nval> net_port_decl
 %type <nval> link_decl
@@ -101,27 +101,33 @@ net_decls:
 ;
 
 net_decl:
-    net_assign { $$ = $1; }
+    box_assign { $$ = $1; }
+|   net_assign { $$ = $1; }
 |   net_proto { $$ = $1; }
 |   wrap_decl { $$ = $1; }
 |   link_decl { $$ = $1; }
 ;
 
-/* net definition */
-net_assign:
-    IDENTIFIER '=' net_def {
+/* box definition */
+box_assign:
+    IDENTIFIER '=' box_decl {
         $$ = ast_add_assign(
-            ast_add_symbol( $1, @1.last_line, ID_NET ),
-            $3
+            ast_add_symbol( $1, @1.last_line, ID_BOX ),
+            $3,
+            AST_BOX
         );
     }
 ;
 
-/* net declaration */
-net_def:
-    net { $$ = ast_add_net( $1 ); }
-/* |   net_proto { $$ = $1; } */
-|   box_decl { $$ = $1; }
+/* net definition */
+net_assign:
+    IDENTIFIER '=' net {
+        $$ = ast_add_assign(
+            ast_add_symbol( $1, @1.last_line, ID_NET ),
+            ast_add_net( $3 ),
+            AST_NET
+        );
+    }
 ;
 
 net:

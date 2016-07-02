@@ -46,7 +46,7 @@ struct virt_net_s
  */
 struct virt_port_s
 {
-    symrec*         rec;        /**< pointer to port symbol (if declared) */
+    symrec_t*       rec;        /**< pointer to port symbol (if declared) */
     inst_rec*       inst;       /**< pointer to net or cp-sync instance */
     int             attr_class; /**< updated class (VAL_NONE can be changed) */
     int             attr_mode;  /**< updated mode for cp-sync (VAL_BI) */
@@ -62,7 +62,7 @@ struct virt_port_s
  * @param inst  pointer to a record of the instance table
  * @return      pointer to the newly created virtual net
  */
-virt_net_t* virt_net_create( symrec*, inst_rec* );
+virt_net_t* virt_net_create( symrec_t*, inst_rec* );
 
 /**
  * @brief   Create a virtual net from two operands op1|op2

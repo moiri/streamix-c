@@ -99,7 +99,7 @@ void check_context( ast_node_t*, inst_net** );
  * @param ast           pointer to the ast node
  * @return              NULL
  */
-void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node_t* );
+void* check_context_ast( symrec_t**, inst_net**, UT_array*, ast_node_t* );
 
 /**
  * @brief   Check whether types of a prototype and a net match
@@ -108,7 +108,7 @@ void* check_context_ast( symrec**, inst_net**, UT_array*, ast_node_t* );
  * @param v_net     a virtual net containing the port list from a net
  * @param name      name of the symbol
  */
-void check_prototype( symrec_list*, virt_net_t*, char* );
+void check_prototype( symrec_list_t*, virt_net_t*, char* );
 
 /**
  * @brief   Connect two ports of copy synchronizers
@@ -153,7 +153,7 @@ inst_rec* cpsync_merge( inst_net*, virt_port_t*, virt_port_t* );
  * @param port  pointer to the port record
  * @param name  name of the net instance to port belongs to
  */
-void debug_print_rport( symrec*, char* );
+void debug_print_rport( symrec_t*, char* );
 
 /**
  * @brief   Print debug information of all ports in a port record list
@@ -161,7 +161,7 @@ void debug_print_rport( symrec*, char* );
  * @param rports    pointer to the port record list
  * @param name      name of the net instance to port belongs to
  */
-void debug_print_rports( symrec_list*, char* );
+void debug_print_rports( symrec_list_t*, char* );
 
 /**
  * @brief   Print debug information of a port of a virtual net
@@ -184,7 +184,7 @@ void debug_print_vports( virt_net_t* );
  * @param v_ports   port list from a virtual net
  * @return          true if port count matches, false if not
  */
-bool do_port_cnts_match( symrec_list*, virt_port_t* );
+bool do_port_cnts_match( symrec_list_t*, virt_port_t* );
 
 /**
  * @brief   Check whether port attributes from two port lists match
@@ -196,7 +196,7 @@ bool do_port_cnts_match( symrec_list*, virt_port_t* );
  * @param v_ports   port list from a net
  * @return          true if port attributes match, false if not
  */
-bool do_port_attrs_match( symrec_list*, virt_port_t* );
+bool do_port_attrs_match( symrec_list_t*, virt_port_t* );
 
 /**
  * @brief   Install instances to the instance table and the graph
@@ -214,6 +214,6 @@ bool do_port_attrs_match( symrec_list*, virt_port_t* );
  * @return              pointer to a virtual net with a port list and connection
  *                      vectors
  */
-virt_net_t* install_nets( symrec**, inst_net*, UT_array*, ast_node_t* );
+virt_net_t* install_nets( symrec_t**, inst_net*, UT_array*, ast_node_t* );
 
 #endif // CONTEXT_H

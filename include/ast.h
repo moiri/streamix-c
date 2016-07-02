@@ -107,6 +107,7 @@ struct ast_assign_s
 {
     ast_node_t*   id;   /**< ::ast_symb_t */
     ast_node_t*   op;   /**< ::ast_box_t, ::ast_prot_t, ::ast_net_t */
+    node_type_t   type; /**< #node_tpe_e */
 };
 
 /**
@@ -235,9 +236,10 @@ struct ast_wrap_s
  *
  * @param id    pointer to the identifier
  * @param op    pointer to the operand
+ * @param type  node type of operand
  * @return      a pointer to the location where the data was stored
  */
-ast_node_t* ast_add_assign( ast_node_t*, ast_node_t* );
+ast_node_t* ast_add_assign( ast_node_t*, ast_node_t*, node_type_t );
 
 /**
  * @brief   Add a leaf (end node) attribute to the AST.

@@ -31,7 +31,7 @@ struct inst_rec
     int             id;
     int             line;
     int             type;
-    symrec*         net;        // pointer to its declaration
+    symrec_t*       net;        // pointer to its declaration
     UT_hash_handle  hh;      // makes this structure hashable
 };
 
@@ -87,7 +87,7 @@ inst_rec* inst_rec_get( inst_rec**, int );
  * @param symrec*       pointer to the symbol record
  * @return inst_rec*    pointer to the record
  */
-inst_rec* inst_rec_put( inst_rec**, char*, int, int, int, symrec* );
+inst_rec* inst_rec_put( inst_rec**, char*, int, int, int, symrec_t* );
 
 /**
  * Replace the id of a record

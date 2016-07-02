@@ -12,25 +12,25 @@
 #include "ast.h"
 
 /******************************************************************************/
-virt_net_t* virt_net_create( symrec* rec, inst_rec* inst )
+virt_net_t* virt_net_create( symrec_t* rec, inst_rec* inst )
 {
-    symrec_list* ports_ptr = NULL;
+    symrec_list_t* ports_ptr = NULL;
     virt_net_t* v_net = NULL;
     virt_port_t* ports = NULL;
     virt_port_t* ports_last = NULL;
 
-    if( rec->type == AST_BOX )
-        ports_ptr = ( ( struct box_attr* )rec->attr )->ports;
-    else if( rec->type == AST_WRAP )
-        ports_ptr = ( ( struct wrap_attr* )rec->attr )->ports;
+    if( rec->type == SYMREC_BOX )
+        ports_ptr = rec->attr_box->ports;
+    else if( rec->type == SYMREC_WRAP )
+        ports_ptr = rec->attr_wrap->ports;
     while( ports_ptr != NULL  ) {
         ports = malloc( sizeof( virt_port_t ) );
         ports->rec = ports_ptr->rec;
         ports->next = ports_last;
         ports->attr_class =
-            ( ( struct port_attr* )ports_ptr->rec->attr )->collection;
+            ports_ptr->rec->attr_port->collection;
         ports->attr_mode =
-            ( ( struct port_attr* )ports_ptr ->rec->attr )->mode;
+            ports_ptr ->rec->attr_port->mode;
         ports->inst = inst;
         ports_last = ports;
         ports_ptr = ports_ptr->next;

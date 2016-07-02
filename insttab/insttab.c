@@ -101,7 +101,7 @@ inst_rec* inst_rec_get( inst_rec** recs, int id )
 
 /******************************************************************************/
 inst_rec* inst_rec_put( inst_rec** recs, char* name, int id, int line, int type,
-        symrec* rec )
+        struct symrec_s* rec )
 {
     inst_rec* item = NULL;
     inst_rec* new_item = NULL;

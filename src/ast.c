@@ -13,12 +13,13 @@
 #include "ast.h"
 
 /******************************************************************************/
-ast_node_t* ast_add_assign( ast_node_t* id, ast_node_t* op )
+ast_node_t* ast_add_assign( ast_node_t* id, ast_node_t* op, node_type_t type )
 {
     ast_node_t* node = ast_add_node( AST_ASSIGN );
     node->assign = malloc( sizeof( ast_assign_t ) );
     node->assign->id = id;
     node->assign->op = op;
+    node->assign->type = type;
     return node;
 }
 
