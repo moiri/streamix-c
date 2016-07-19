@@ -3,9 +3,9 @@
 #include <stdio.h>
 
 int main( ) {
-    inst_net* nets = NULL;
-    inst_net* res1;
-    inst_rec* res2;
+    inst_net_t* nets = NULL;
+    inst_net_t* res1;
+    inst_rec_t* res2;
     int error_cnt = 0;
     int scope = 5;
     int id = 10;
@@ -28,7 +28,7 @@ int main( ) {
     else printf( "success: add net\n" );
 
     // add rec and check if we can get it back
-    inst_rec_put( &res1->nodes, name, id, 0, 0, NULL );
+    inst_rec_put( &res1->nodes, name, id, 0, INSTREC_NET, NULL );
     res2 = inst_rec_get( &res1->nodes, id );
     if( res2 == NULL ) {
         printf( "error: no record found with id '%d'\n", id );
@@ -53,7 +53,7 @@ int main( ) {
 
     // add another rec with the same name as the previous record and check if we
     // can get it back
-    inst_rec_put( &res1->nodes, name, id_alt, 0, 0, NULL );
+    inst_rec_put( &res1->nodes, name, id_alt, 0, INSTREC_NET, NULL );
     res2 = inst_rec_get( &res1->nodes, id_alt );
     if( res2 == NULL ) {
         printf( "error: no record found with id '%d'\n", id_alt );

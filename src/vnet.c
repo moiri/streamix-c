@@ -12,7 +12,7 @@
 #include "ast.h"
 
 /******************************************************************************/
-virt_net_t* virt_net_create( symrec_t* rec, inst_rec* inst )
+virt_net_t* virt_net_create( symrec_t* rec, inst_rec_t* inst )
 {
     symrec_list_t* ports_ptr = NULL;
     virt_net_t* v_net = NULL;

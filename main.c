@@ -15,8 +15,8 @@ extern int yylex_destroy();
 
 int main( int argc, char **argv ) {
     void* ast = NULL;
-    inst_net* nets = NULL;        // hash table to store the nets
-    inst_net* net;
+    inst_net_t* nets = NULL;        // hash table to store the nets
+    inst_net_t* net;
     FILE* src_smx;
     FILE* dest_gml;
     igraph_i_set_attribute_table( &igraph_cattribute_table );

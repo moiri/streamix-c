@@ -53,7 +53,7 @@ bool are_port_modes_ok( virt_port_t*, virt_port_t* );
  * @param ports_r   pointer to the port of a virtual net of the right operator
  * @return          true if connection was ok, false if no connection
  */
-bool check_connection( inst_net*, virt_port_t*, virt_port_t* );
+bool check_connection( inst_net_t*, virt_port_t*, virt_port_t* );
 
 /**
  * @brief    check port connections of two nets
@@ -65,7 +65,7 @@ bool check_connection( inst_net*, virt_port_t*, virt_port_t* );
  * @param v_net1    pointer to the virtual net of the left operator
  * @param v_net2    pointer to the virtual net of the right operator
  */
-void check_connections( inst_net*, virt_net_t*, virt_net_t* );
+void check_connections( inst_net_t*, virt_net_t*, virt_net_t* );
 
 /**
  * @brief    Report missing connections
@@ -77,7 +77,7 @@ void check_connections( inst_net*, virt_net_t*, virt_net_t* );
  * @param v_net_l   pointer to the virtual net of the left operand
  * @param v_net_r   pointer to the virtual net of the right operand
  */
-void check_connection_missing( inst_net*, virt_net_t*, virt_net_t* );
+void check_connection_missing( inst_net_t*, virt_net_t*, virt_net_t* );
 
 /**
  * @brief    Check the context of all identifiers in the program
@@ -85,7 +85,7 @@ void check_connection_missing( inst_net*, virt_net_t*, virt_net_t* );
  * @param ast   pointer to the root ast node
  * @param nets  pointer to the instance table of nets (scopes)
  */
-void check_context( ast_node_t*, inst_net** );
+void check_context( ast_node_t*, inst_net_t** );
 
 /**
  * @brief    Step wise context checker
@@ -99,7 +99,7 @@ void check_context( ast_node_t*, inst_net** );
  * @param ast           pointer to the ast node
  * @return              NULL
  */
-void* check_context_ast( symrec_t**, inst_net**, UT_array*, ast_node_t* );
+void* check_context_ast( symrec_t**, inst_net_t**, UT_array*, ast_node_t* );
 
 /**
  * @brief   Check whether types of a prototype and a net match
@@ -123,7 +123,7 @@ bool check_prototype( symrec_list_t*, virt_net_t*, char* );
  * @param port1 pointer to the port of a virtual net of the left operator
  * @param port2 pointer to the port of a virtual net of the right operator
  */
-void cpsync_connect( inst_net*, virt_port_t*, virt_port_t* );
+void cpsync_connect( inst_net_t*, virt_port_t*, virt_port_t* );
 
 /**
  * @brief   Connect copy synchronizers of two nets
@@ -137,7 +137,7 @@ void cpsync_connect( inst_net*, virt_port_t*, virt_port_t* );
  * @param parallel  flag to indicate wheter copy synchronizer connections
  *                  in parallel operators are checked
  */
-void cpsync_connects( inst_net*, virt_net_t*, virt_net_t*, bool );
+void cpsync_connects( inst_net_t*, virt_net_t*, virt_net_t*, bool );
 
 /**
  * @brief   Merge two copy sunchronizer
@@ -147,7 +147,7 @@ void cpsync_connects( inst_net*, virt_net_t*, virt_net_t*, bool );
  * @param port2 pointer to the port of a virtual net
  * @return      pointer to the merged copy synchronizer
  */
-inst_rec* cpsync_merge( inst_net*, virt_port_t*, virt_port_t* );
+inst_rec_t* cpsync_merge( inst_net_t*, virt_port_t*, virt_port_t* );
 
 /**
  * @brief   Print debug information of a port of a port record list
@@ -216,6 +216,6 @@ bool do_port_attrs_match( symrec_list_t*, virt_port_t* );
  * @return              pointer to a virtual net with a port list and connection
  *                      vectors
  */
-virt_net_t* install_nets( symrec_t**, inst_net*, UT_array*, ast_node_t* );
+virt_net_t* install_nets( symrec_t**, inst_net_t*, UT_array*, ast_node_t* );
 
 #endif // CONTEXT_H

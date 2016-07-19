@@ -9,93 +9,123 @@
 #ifndef INSTTAB_H
 #define INSTTAB_H
 
-typedef struct inst_attr inst_attr;
-typedef struct inst_rec inst_rec;
-typedef struct inst_net inst_net;
+// TYPEDEFS -------------------------------------------------------------------
+typedef struct inst_attr_s inst_attr_t;
+typedef struct inst_rec_s inst_rec_t;
+typedef struct inst_net_s inst_net_t;
+typedef enum inst_rec_type_e inst_rec_type_t;
 
+// INCLUDES -------------------------------------------------------------------
 #include <igraph.h>
 #include "symtab.h"
 #include "uthash.h"
 
-struct inst_net
+// ENUMS ----------------------------------------------------------------------
+/**
+ * @brief   Type of a instance table record
+ */
+enum inst_rec_type_e
 {
-    int             scope;
-    inst_rec*       nodes;   // hashtable of the node instances in the net
-    igraph_t        g;
-    UT_hash_handle  hh;     // makes this structure hashable
+    INSTREC_NET,
+    INSTREC_SYNC
 };
 
-struct inst_rec
+// STRUCTURES------------------------------------------------------------------
+/**
+ * @brief   Definition of a net gaph in the hash table
+ */
+struct inst_net_s
 {
-    char*           name;
-    int             id;
-    int             line;
-    int             type;
-    symrec_t*       net;        // pointer to its declaration
-    UT_hash_handle  hh;      // makes this structure hashable
+    int             scope;  /**< scope of the graph */
+    inst_rec_t*     nodes;  /**< hashtable of the node instances in the net */
+    igraph_t        g;      /**< graph describing the dependecies of the net */
+    UT_hash_handle  hh;     /**< makes this structure hashable */
 };
 
-/* FUNCTION PROTOTYPES                                                        */
-/******************************************************************************/
+/**
+ * @brief   Definition of a node of a net graph in the hash table
+ */
+struct inst_rec_s
+{
+    char*           name;   /**< name of the instance symbol */
+    int             id;     /**< id of the instance symbol */
+    int             line;   /**< line number in the source code of the symbol */
+    inst_rec_type_t type;   /**< type of the symbol */
+    symrec_t*       net;    /**< pointer to the declaration in the symtab */
+    UT_hash_handle  hh;     /**< makes this structure hashable */
+};
 
-void inst_net_del_all( inst_net** );
+// FUNCTIONS ------------------------------------------------------------------
+/**
+ * @brief   Delete all nets and its records in the instance table
+ *
+ * @param nets  pointer to the net instance table
+ */
+void inst_net_del_all( inst_net_t** );
 
 /**
- * Get net from instance table
+ * @brief   Get net from instance table
  *
- * @param inst_net**    pointer to net instance table
- * @param int           scope of the net
- * @return inst_net     pointer to the net record
+ * @param nets      pointer to net instance table
+ * @param scope     scope of the net
+ * @return          pointer to the net record
  */
-inst_net* inst_net_get( inst_net**, int );
+inst_net_t* inst_net_get( inst_net_t**, int );
 
 /**
- * Put net into the instance table
+ * @brief   Put net into the instance table
  *
- * @param inst_net**    pointer to net instance table
- * @param int           scope of the net
- * @return inst_net*    pointer to the net record
+ * @param nets      pointer to net instance table
+ * @param scope     scope of the net
+ * @return          pointer to the net record
  */
-inst_net* inst_net_put( inst_net**, int );
+inst_net_t* inst_net_put( inst_net_t**, int );
 
 /**
- * Delete record from the instance table
+ * @brief   Delete a record from the instance table
  *
- * @param inst_rec**    pointer to rec (id) instance table
- * @param inst_rec*     poiner to the record to be removed
+ * @param recs  pointer to rec instance table
+ * @param rec   poiner to the record to be removed
  */
-void inst_rec_del( inst_rec**, inst_rec* );
-void inst_rec_del_all( inst_rec** );
+void inst_rec_del( inst_rec_t**, inst_rec_t* );
 
 /**
- * Get rec from instance table using an id as key
+ * @brief   Delete all records from the instance table
  *
- * @param inst_rec**    pointer to rec instance table
- * @param int           id of the record
- * @return inst_rec*    pointer to the record
+ * @param recs  pointer to rec instance table
  */
-inst_rec* inst_rec_get( inst_rec**, int );
+void inst_rec_del_all( inst_rec_t** );
 
 /**
- * Put rec into instance table
+ * @brief   Get rec from instance table using an id as key
  *
- * @param inst_rec**    pointer to rec instance table
- * @param char*         name of the record
- * @param int           id of the record
- * @param int           line of the record
- * @param int           type of the record
- * @param symrec*       pointer to the symbol record
- * @return inst_rec*    pointer to the record
+ * @param recs  pointer to rec instance table
+ * @param id    id of the record
+ * @return      pointer to the record
  */
-inst_rec* inst_rec_put( inst_rec**, char*, int, int, int, symrec_t* );
+inst_rec_t* inst_rec_get( inst_rec_t**, int );
 
 /**
- * Replace the id of a record
+ * @brief   Put rec into instance table
  *
- * @param inst_rec**    pointer to the record hashtable
- * @param int           old id
- * @param int           new id
+ * @param recs  pointer to rec instance table
+ * @param name  name of the record
+ * @param id    id of the record
+ * @param line  line of the record
+ * @param type  type of the record
+ * @param rec   pointer to the symbol record
+ * @return      pointer to the record
  */
-void inst_rec_replace_id( inst_rec**, int, int );
+inst_rec_t* inst_rec_put( inst_rec_t**, char*, int, int, inst_rec_type_t,
+        symrec_t* );
+
+/**
+ * @brief   Replace the id of a record
+ *
+ * @param recs      pointer to the record hashtable
+ * @param old_id    id to be replaced
+ * @param new_id    new id to replace the old one with
+ */
+void inst_rec_replace_id( inst_rec_t**, int, int );
 
 #endif // INSTTAB_H
