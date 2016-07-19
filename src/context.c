@@ -251,7 +251,8 @@ void* check_context_ast( symrec_t** symtab, inst_net** nets,
             check_context_ast( symtab, nets, scope_stack, ast->program->stmts );
             res = check_context_ast( symtab, nets, scope_stack,
                     ast->program->net );
-            if( res != NULL ) virt_net_destroy( ( ( attr_net_t* )res )->v_net );
+            if( ( res != NULL ) && ( ( ( attr_net_t* )res )->v_net ) )
+                virt_net_destroy( ( ( attr_net_t* )res )->v_net );
 #if defined(DEBUG) || defined(DEBUG_NET_GML)
             igraph_write_graph_gml( &net->g, stdout, NULL, "StreamixC" );
 #endif // DEBUG_NET_GML
