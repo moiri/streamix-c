@@ -251,7 +251,7 @@ void* check_context_ast( symrec_t** symtab, inst_net** nets,
             check_context_ast( symtab, nets, scope_stack, ast->program->stmts );
             res = check_context_ast( symtab, nets, scope_stack,
                     ast->program->net );
-            if( res != NULL ) virt_net_destroy( res );
+            if( res != NULL ) virt_net_destroy( ( ( attr_net_t* )res )->v_net );
 #if defined(DEBUG) || defined(DEBUG_NET_GML)
             igraph_write_graph_gml( &net->g, stdout, NULL, "StreamixC" );
 #endif // DEBUG_NET_GML
@@ -276,18 +276,16 @@ void* check_context_ast( symrec_t** symtab, inst_net** nets,
                     rec = symrec_create_net( ast->assign->id->symbol->name,
                         *utarray_back( scope_stack ),
                         ast->assign->id->symbol->line, attr );
-                    res = ( void* )symrec_put( symtab, rec );
+                    symrec_put( symtab, rec );
                 }
-                else {
-                    // check whether types of prototype and definition match
-                    check_prototype( rec->attr_proto->ports,
-                            ( ( attr_net_t* )attr )->v_net, rec->name );
-                    // update record attributes to the real net
+                // check whether types of prototype and definition match
+                else if( check_prototype( rec->attr_proto->ports,
+                            ( ( attr_net_t* )attr )->v_net, rec->name ) ) {
+                    // match -> update record attributes to the real net
                     rec->type = SYMREC_NET;
                     symrec_attr_destroy_proto( rec->attr_proto );
                     rec->attr_net = attr;
                     rec->line = ast->assign->id->symbol->line;
-                    res = ( void* )rec;
                 }
             }
             if( ast->assign->type == AST_BOX ) {
@@ -295,7 +293,7 @@ void* check_context_ast( symrec_t** symtab, inst_net** nets,
                         *utarray_back( scope_stack ),
                         ast->assign->id->symbol->line, attr );
                 // install the symbol
-                res = ( void* )symrec_put( symtab, rec );
+                symrec_put( symtab, rec );
             }
             break;
         case AST_NET:
@@ -387,9 +385,10 @@ void* check_context_ast( symrec_t** symtab, inst_net** nets,
 }
 
 /******************************************************************************/
-void check_prototype( symrec_list_t* r_ports, virt_net_t* v_net, char *name )
+bool check_prototype( symrec_list_t* r_ports, virt_net_t* v_net, char *name )
 {
     char error_msg[ CONST_ERROR_LEN ];
+    bool res = true;
 
 #if defined(DEBUG) || defined(DEBUG_PROTO)
     printf( "check_prototype:\n" );
@@ -402,7 +401,10 @@ void check_prototype( symrec_list_t* r_ports, virt_net_t* v_net, char *name )
         || !do_port_attrs_match( r_ports, v_net->ports ) ) {
         sprintf( error_msg, ERROR_TYPE_CONFLICT, ERR_ERROR, name );
         report_yyerror( error_msg, r_ports->rec->line );
+        res = false;
     }
+
+    return res;
 }
 
 /******************************************************************************/
@@ -662,15 +664,19 @@ virt_net_t* install_nets( symrec_t** symtab, inst_net* net,
             rec = symrec_get( symtab, scope_stack, ast->symbol->name,
                     ast->symbol->line );
             if( rec == NULL ) return NULL;
-            // add a net symbol to the instance table
+
+            // check type of the record
             if( rec->type == SYMREC_NET ) {
+                // net -> copy the virtual net
                 v_net = virt_net_copy( rec->attr_net->v_net );
             }
             else if( rec->type == SYMREC_NET_PROTO ) {
+                // prototype -> net definition is missing
                 sprintf( error_msg, ERROR_UNDEF_NET, ERR_ERROR, rec->name );
                 report_yyerror( error_msg, ast->symbol->line );
             }
             else {
+                // symbol -> add net symbol to the instance table
                 node_id = igraph_vcount( &net->g );
                 inst = inst_rec_put( &net->nodes, ast->symbol->name,
                         node_id, ast->symbol->line, VAL_NET, rec );

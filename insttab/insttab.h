@@ -9,13 +9,13 @@
 #ifndef INSTTAB_H
 #define INSTTAB_H
 
-#include <igraph.h>
-#include "symtab.h"
-#include "uthash.h"
-
 typedef struct inst_attr inst_attr;
 typedef struct inst_rec inst_rec;
 typedef struct inst_net inst_net;
+
+#include <igraph.h>
+#include "symtab.h"
+#include "uthash.h"
 
 struct inst_net
 {

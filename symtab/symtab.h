@@ -11,11 +11,6 @@
 #ifndef SYMTAB_H
 #define SYMTAB_H
 
-#include <stdbool.h>
-#include "uthash.h"
-#include "utarray.h"
-#include "vnet.h"
-
 // TYPEDEFS -------------------------------------------------------------------
 typedef struct symrec_s symrec_t;
 typedef struct symrec_list_s symrec_list_t;
@@ -25,6 +20,12 @@ typedef struct attr_port_s attr_port_t;
 typedef struct attr_prot_s attr_prot_t;
 typedef struct attr_wrap_s attr_wrap_t;
 typedef enum symrec_type_e symrec_type_t;
+
+// INCLUDES -------------------------------------------------------------------
+#include <stdbool.h>
+#include "uthash.h"
+#include "utarray.h"
+#include "vnet.h"
 
 // ENUMS ----------------------------------------------------------------------
 /**

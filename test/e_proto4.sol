@@ -1,2 +1,3 @@
 test/e_proto4.test: 6: error: conflicting types for 'Y'
- Error count: 1
+test/e_proto4.test: 8: error: undefined reference to net 'Y'
+ Error count: 2

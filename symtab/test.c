@@ -14,13 +14,13 @@ int main( ) {
     int error_cnt = 0;
     char name_box[] = "test_box";
     char name_box_func[] = "func_box";
-    char name_net[] = "test_net";
+    /* char name_net[] = "test_net"; */
     char name_port1[] = "test_port1";
     char name_port2[] = "test_port2";
-    char name_proto[] = "test_proto";
-    char name_wrap[] = "test_wrap";
+    /* char name_proto[] = "test_proto"; */
+    /* char name_wrap[] = "test_wrap"; */
     int scope = 4;
-    int type = 1;
+    int type = SYMREC_BOX;
     int line = 122;
     bool attr_pure = false;
 

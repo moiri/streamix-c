@@ -1,7 +1,8 @@
 PROJECT = test
 OUT = test
 
-SOURCES = symtab.c
+SOURCES = symtab.c \
+		  ../src/vnet.c
 INCLUDES = symtab.h
 INCLUDES_DIR = -I../uthash/src -I. -I.. -I../include \
 			   -I../insttab \

@@ -135,10 +135,10 @@ void virt_net_destroy( virt_net_t* v_net )
         free( ports );
     }
     // free connection vectors
-    igraph_vector_ptr_destroy( &v_net->con->left );
-    igraph_vector_ptr_destroy( &v_net->con->right );
-
-    // free structures
-    free( v_net->con );
+    if( v_net->con != NULL ) {
+        igraph_vector_ptr_destroy( &v_net->con->left );
+        igraph_vector_ptr_destroy( &v_net->con->right );
+        free( v_net->con );
+    }
     free( v_net );
 }

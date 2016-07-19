@@ -10,14 +10,14 @@
 #ifndef VNET_H
 #define VNET_H
 
-#include <igraph.h>
-#include "symtab.h"
-#include "insttab.h"
-
 // TYPEDEFS -------------------------------------------------------------------
 typedef struct net_con_s net_con_t;
 typedef struct virt_net_s virt_net_t;
 typedef struct virt_port_s virt_port_t;
+
+#include <igraph.h>
+#include "symtab.h"
+#include "insttab.h"
 
 // STRUCTS --------------------------------------------------------------------
 /**

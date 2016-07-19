@@ -107,8 +107,10 @@ void* check_context_ast( symrec_t**, inst_net**, UT_array*, ast_node_t* );
  * @param r_ports   port list from a symbol record
  * @param v_net     a virtual net containing the port list from a net
  * @param name      name of the symbol
+ * @return          true if prototype matches with net definition
+ *                  false if there is no match
  */
-void check_prototype( symrec_list_t*, virt_net_t*, char* );
+bool check_prototype( symrec_list_t*, virt_net_t*, char* );
 
 /**
  * @brief   Connect two ports of copy synchronizers
