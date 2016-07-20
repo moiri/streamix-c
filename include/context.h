@@ -51,9 +51,10 @@ bool are_port_modes_ok( virt_port_t*, virt_port_t* );
  * @param net       pointer to the instance of a net
  * @param ports_l   pointer to the port of a virtual net of the left operator
  * @param ports_r   pointer to the port of a virtual net of the right operator
+ * @param g         pointer to a initialized igraph object
  * @return          true if connection was ok, false if no connection
  */
-bool check_connection( inst_net_t*, virt_port_t*, virt_port_t* );
+bool check_connection( inst_net_t*, virt_port_t*, virt_port_t*, igraph_t* g );
 
 /**
  * @brief    check port connections of two nets
@@ -64,8 +65,9 @@ bool check_connection( inst_net_t*, virt_port_t*, virt_port_t* );
  * @param net       pointer to the instance of a net
  * @param v_net1    pointer to the virtual net of the left operator
  * @param v_net2    pointer to the virtual net of the right operator
+ * @param g         pointer to a initialized igraph object
  */
-void check_connections( inst_net_t*, virt_net_t*, virt_net_t* );
+void check_connections( inst_net_t*, virt_net_t*, virt_net_t*, igraph_t* );
 
 /**
  * @brief    Report missing connections
@@ -76,16 +78,19 @@ void check_connections( inst_net_t*, virt_net_t*, virt_net_t* );
  * @param net       pointer to the instance table of a net
  * @param v_net_l   pointer to the virtual net of the left operand
  * @param v_net_r   pointer to the virtual net of the right operand
+ * @param g         pointer to a initialized igraph object
  */
-void check_connection_missing( inst_net_t*, virt_net_t*, virt_net_t* );
+void check_connection_missing( inst_net_t*, virt_net_t*, virt_net_t*,
+        igraph_t* );
 
 /**
  * @brief    Check the context of all identifiers in the program
  *
  * @param ast   pointer to the root ast node
  * @param nets  pointer to the instance table of nets (scopes)
+ * @param g     pointer to a initialized igraph object
  */
-void check_context( ast_node_t*, inst_net_t** );
+void check_context( ast_node_t*, inst_net_t**, igraph_t* );
 
 /**
  * @brief    Step wise context checker
@@ -97,9 +102,11 @@ void check_context( ast_node_t*, inst_net_t** );
  * @param nets          pointer to the instance table of nets (scopes)
  * @param scope_stack   pointer to the scope stack
  * @param ast           pointer to the ast node
+ * @param g             pointer to a initialized igraph object
  * @return              pointer to a symrec net attribute (cast to void*)
  */
-void* check_context_ast( symrec_t**, inst_net_t**, UT_array*, ast_node_t* );
+void* check_context_ast( symrec_t**, inst_net_t**, UT_array*, ast_node_t*,
+        igraph_t* );
 
 /**
  * @brief   Check whether types of a prototype and a net match
@@ -122,8 +129,9 @@ bool check_prototype( symrec_list_t*, virt_net_t*, char* );
  * @param net   pointer to the instance a of net
  * @param port1 pointer to the port of a virtual net of the left operator
  * @param port2 pointer to the port of a virtual net of the right operator
+ * @param g     pointer to a initialized igraph object
  */
-void cpsync_connect( inst_net_t*, virt_port_t*, virt_port_t* );
+void cpsync_connect( inst_net_t*, virt_port_t*, virt_port_t*, igraph_t* );
 
 /**
  * @brief   Connect copy synchronizers of two nets
@@ -136,8 +144,9 @@ void cpsync_connect( inst_net_t*, virt_port_t*, virt_port_t* );
  * @param v_net2    pointer to the virtual net of the right operator
  * @param parallel  flag to indicate wheter copy synchronizer connections
  *                  in parallel operators are checked
+ * @param g         pointer to a initialized igraph object
  */
-void cpsync_connects( inst_net_t*, virt_net_t*, virt_net_t*, bool );
+void cpsync_connects( inst_net_t*, virt_net_t*, virt_net_t*, bool, igraph_t* );
 
 /**
  * @brief   Merge two copy sunchronizer
@@ -145,9 +154,10 @@ void cpsync_connects( inst_net_t*, virt_net_t*, virt_net_t*, bool );
  * @param net   pointer to the instance of a net
  * @param port1 pointer to the port of a virtual net
  * @param port2 pointer to the port of a virtual net
+ * @param g     pointer to a initialized igraph object
  * @return      pointer to the merged copy synchronizer
  */
-inst_rec_t* cpsync_merge( inst_net_t*, virt_port_t*, virt_port_t* );
+inst_rec_t* cpsync_merge( inst_net_t*, virt_port_t*, virt_port_t*, igraph_t* );
 
 /**
  * @brief   Print debug information of a port of a port record list
@@ -213,9 +223,11 @@ bool do_port_attrs_match( symrec_list_t*, virt_port_t* );
  * @param net           pointer to the instance table of nets (scopes)
  * @param scope_stack   pointer to the scope stack
  * @param ast           pointer to the ast node
+ * @param g             pointer to a initialized igraph object
  * @return              pointer to a virtual net with a port list and connection
  *                      vectors
  */
-virt_net_t* install_nets( symrec_t**, inst_net_t*, UT_array*, ast_node_t* );
+virt_net_t* install_nets( symrec_t**, inst_net_t*, UT_array*, ast_node_t*,
+        igraph_t* );
 
 #endif // CONTEXT_H

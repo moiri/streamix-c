@@ -16,10 +16,10 @@ extern int yylex_destroy();
 int main( int argc, char **argv ) {
     void* ast = NULL;
     inst_net_t* nets = NULL;        // hash table to store the nets
-    inst_net_t* net;
     FILE* src_smx;
     FILE* dest_gml;
     igraph_i_set_attribute_table( &igraph_cattribute_table );
+    igraph_t g;
     // open a file handle to a particular file:
     if( argc != 2 ) {
         printf( "Missing argument!\n" );
@@ -44,10 +44,10 @@ int main( int argc, char **argv ) {
 
     /* cgraph_init( ast ); */
     ast_flatten( ast );
-    check_context( ast, &nets );
-    net = inst_net_get( &nets, 0 );
+    igraph_empty( &g, 0, true );
+    check_context( ast, &nets, &g );
     dest_gml = fopen( "streamix.gml", "w" );
-    igraph_write_graph_gml( &net->g, dest_gml, NULL, "StreamixC" );
+    igraph_write_graph_gml( &g, dest_gml, NULL, "StreamixC" );
     fclose( dest_gml );
 
     /* fclose(con_graph); */
@@ -57,6 +57,7 @@ int main( int argc, char **argv ) {
 #endif // DOT_AST
 
     // cleanup
+    igraph_destroy( &g );
     ast_destroy( ast );
     inst_net_del_all( &nets );
     yylex_destroy();

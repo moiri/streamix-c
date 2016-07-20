@@ -120,6 +120,7 @@ struct attr_wrap_s
 {
     bool            attr_static;/**< wrapper does no proliferation */
     symrec_list_t*  ports;      /**< pointer to the port list of the net */
+    virt_net_t*     v_net;      /**< pointer to a virtual net */
 };
 
 // FUNCTIONS ------------------------------------------------------------------
@@ -137,7 +138,7 @@ attr_box_t* symrec_attr_create_box( bool, char*, symrec_list_t* );
  * @brief   Create a net attribute structure
  *
  * @param v_net pointer to a virtual net
- * @return          pointer to the new structure
+ * @return      pointer to the new structure
  */
 attr_net_t* symrec_attr_create_net( virt_net_t* );
 
@@ -167,9 +168,10 @@ attr_prot_t* symrec_attr_create_proto( symrec_list_t* );
  *
  * @param attr_static   flag incdicating whether a wrapper is static
  * @param ports         pointer to a port list
+ * @param v_net         pointer to a virtual net
  * @return              pointer to the new structure
  */
-attr_wrap_t* symrec_attr_create_wrap( bool, symrec_list_t* );
+attr_wrap_t* symrec_attr_create_wrap( bool, symrec_list_t*, virt_net_t* );
 
 /**
  * @brief   Destroy attributes of a symbol table record

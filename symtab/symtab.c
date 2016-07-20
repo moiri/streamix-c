@@ -58,11 +58,13 @@ attr_prot_t* symrec_attr_create_proto( symrec_list_t* ports )
 }
 
 /******************************************************************************/
-attr_wrap_t* symrec_attr_create_wrap( bool attr_static, symrec_list_t* ports )
+attr_wrap_t* symrec_attr_create_wrap( bool attr_static, symrec_list_t* ports,
+        virt_net_t* v_net )
 {
     attr_wrap_t* new_attr = malloc( sizeof( attr_wrap_t ) );
     new_attr->attr_static = attr_static;
     new_attr->ports = ports;
+    new_attr->v_net = v_net;
     return new_attr;
 }
 
@@ -99,6 +101,7 @@ void symrec_attr_destroy_proto( attr_prot_t* attr )
 void symrec_attr_destroy_wrap( attr_wrap_t* attr )
 {
     symrec_list_del( attr->ports );
+    if( attr->v_net != NULL ) virt_net_destroy( attr->v_net );
     free( attr );
 }
 

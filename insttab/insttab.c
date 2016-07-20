@@ -17,7 +17,6 @@ void inst_net_del_all( inst_net_t** nets )
     HASH_ITER( hh, *nets, net, tmp ) {
         HASH_DEL( *nets, net );  /* delete; users advances to next */
         inst_rec_del_all( &net->nodes );
-        igraph_destroy( &net->g );
         free( net );
     }
 }
@@ -41,16 +40,12 @@ inst_net_t* inst_net_put( inst_net_t** nets, int scope )
 {
     inst_net_t* item = NULL;
     inst_net_t* new_item = NULL;
-    igraph_t g;
 
     // ADD ITEM TO THE INSTANCE TABLE
     // create new item structure
     new_item = ( inst_net_t* )malloc( sizeof( inst_net_t ) );
     new_item->scope = scope;
     new_item->nodes = NULL;
-    // create new graph
-    igraph_empty( &g, 0, true );
-    new_item->g = g;
     // check wheter key already exists
     HASH_FIND_INT( *nets, &scope, item );
     if( item == NULL ) {

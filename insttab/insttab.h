@@ -38,7 +38,6 @@ struct inst_net_s
 {
     int             scope;  /**< scope of the graph */
     inst_rec_t*     nodes;  /**< hashtable of the node instances in the net */
-    igraph_t        g;      /**< graph describing the dependecies of the net */
     UT_hash_handle  hh;     /**< makes this structure hashable */
 };
 
