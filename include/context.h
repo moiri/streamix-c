@@ -97,7 +97,7 @@ void check_context( ast_node_t*, inst_net_t** );
  * @param nets          pointer to the instance table of nets (scopes)
  * @param scope_stack   pointer to the scope stack
  * @param ast           pointer to the ast node
- * @return              NULL
+ * @return              pointer to a symrec net attribute (cast to void*)
  */
 void* check_context_ast( symrec_t**, inst_net_t**, UT_array*, ast_node_t* );
 

@@ -206,11 +206,13 @@ void check_context( ast_node_t* ast, inst_net_t** nets )
 {
     symrec_t* symtab = NULL;        // hash table to store the symbols
     UT_array* scope_stack = NULL; // stack to handle the scope
+    attr_net_t* n_attr = NULL;
     int scope = 0;
 
     utarray_new( scope_stack, &ut_int_icd );
     utarray_push_back( scope_stack, &scope );
-    check_context_ast( &symtab, nets, scope_stack, ast );
+    n_attr = check_context_ast( &symtab, nets, scope_stack, ast );
+    if( n_attr != NULL ) symrec_attr_destroy_net( n_attr );
     /* install_ids( &symtab, scope_stack, ast, false ); */
     /* instrec_put( &insttab, VAL_THIS, *utarray_back( scope_stack ), */
     /*         VAL_SELF, -1, NULL ); */
@@ -253,10 +255,6 @@ void* check_context_ast( symrec_t** symtab, inst_net_t** nets,
             check_context_ast( symtab, nets, scope_stack, ast->program->stmts );
             res = check_context_ast( symtab, nets, scope_stack,
                     ast->program->net );
-            if( res != NULL ) symrec_attr_destroy_net( res );
-#if defined(DEBUG) || defined(DEBUG_NET_GML)
-            igraph_write_graph_gml( &net->g, stdout, NULL, "StreamixC" );
-#endif // DEBUG_NET_GML
             break;
         case AST_STMTS:
             list = ast->list;
@@ -358,7 +356,9 @@ void* check_context_ast( symrec_t** symtab, inst_net_t** nets,
         case AST_WRAP:
             _scope++;
             utarray_push_back( scope_stack, &_scope );
-            check_context_ast( symtab, nets, scope_stack, ast->wrap->stmts );
+            n_attr = check_context_ast( symtab, nets, scope_stack,
+                    ast->wrap->stmts );
+            if( n_attr != NULL ) symrec_attr_destroy_net( n_attr );
             port_list = ( symrec_list_t* )check_context_ast( symtab, nets,
                     scope_stack, ast->wrap->ports );
             utarray_pop_back( scope_stack );
