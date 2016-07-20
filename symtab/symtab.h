@@ -11,6 +11,8 @@
 #ifndef SYMTAB_H
 #define SYMTAB_H
 
+#include "defines.h"
+
 // TYPEDEFS -------------------------------------------------------------------
 typedef struct symrec_s symrec_t;
 typedef struct symrec_list_s symrec_list_t;
@@ -20,6 +22,8 @@ typedef struct attr_port_s attr_port_t;
 typedef struct attr_prot_s attr_prot_t;
 typedef struct attr_wrap_s attr_wrap_t;
 typedef enum symrec_type_e symrec_type_t;
+typedef enum port_mode_e port_mode_t;
+typedef enum port_class_e port_class_t;
 
 // INCLUDES -------------------------------------------------------------------
 #include <stdbool.h>
@@ -94,11 +98,11 @@ struct attr_net_s
  */
 struct attr_port_s
 {
-    char*   int_name;       /**< internal name or NULL */
-    int     mode;           /**< input or output */
-    int     collection;     /**< VAL_UP, VAL_DOWN, VAL_SIDE, VAL_NONE */
-    bool    decoupled;      /**< port is non-triggering **/
-    int     sync_id;        /**< number to group sync ports together */
+    char*           int_name;       /**< internal name or NULL */
+    port_mode_t     mode;           /**< input or output */
+    port_class_t    collection;     /**< VAL_UP, VAL_DOWN, VAL_SIDE, VAL_NONE */
+    bool            decoupled;      /**< port is non-triggering **/
+    int             sync_id;        /**< number to group sync ports together */
 };
 
 /**
@@ -119,17 +123,6 @@ struct attr_wrap_s
 };
 
 // FUNCTIONS ------------------------------------------------------------------
-/**
- * @brief   checks whether two symtab entries are identical
- *
- * @param rec1  pointer to a symbol table record
- * @param rec2  pointer to a symbol table record
- * @param type  type of the records to compare
- *
- * @return      true if records are identical, false if not
- */
-bool is_symrec_identical( symrec_t*, symrec_t*, symrec_type_t );
-
 /**
  * @brief   Create a box attribute structure
  *
@@ -158,7 +151,8 @@ attr_net_t* symrec_attr_create_net( virt_net_t* );
  * @param sync_id       number to group synchronized ports together
  * @return              pointer to the new structure
  */
-attr_port_t* symrec_attr_create_port( char*, int, int, bool, int );
+attr_port_t* symrec_attr_create_port( char*, port_mode_t, port_class_t, bool,
+        int );
 
 /**
  * @brief   Create a net prototype attribute structure
@@ -180,13 +174,13 @@ attr_wrap_t* symrec_attr_create_wrap( bool, symrec_list_t* );
 /**
  * @brief   Destroy attributes of a symbol table record
  *
- * @param rec   pointer to the symbol table record
+ * @param attr  pointer to the attribute
  */
-void symrec_attr_destroy_box( symrec_t* );
-void symrec_attr_destroy_net( symrec_t* );
-void symrec_attr_destroy_port( symrec_t* );
+void symrec_attr_destroy_box( attr_box_t* );
+void symrec_attr_destroy_net( attr_net_t* );
+void symrec_attr_destroy_port( attr_port_t* );
 void symrec_attr_destroy_proto( attr_prot_t* );
-void symrec_attr_destroy_wrap( symrec_t* );
+void symrec_attr_destroy_wrap( attr_wrap_t* );
 
 /**
  * @brief   Create a symbol table record.
@@ -198,9 +192,10 @@ void symrec_attr_destroy_wrap( symrec_t* );
  * @param name      name of the record
  * @param scope     scope of the record
  * @param line      position (line number) of the identifier
+ * @param attr_key  a number derived from the attributes to create a unique key
  * @return          a pointer to the new record structure
  */
-symrec_t* symrec_create( char*, int, symrec_type_t, int );
+symrec_t* symrec_create( char*, int, symrec_type_t, int, int );
 
 
 /**
@@ -257,10 +252,13 @@ void symrec_list_del( symrec_list_t* );
  * @param scope_stack   pointer to the scope stack
  * @param name          name of the identifier
  * @param line          position (line number) of the identifier
+ * @param attr_key      a number derived from attributes to create a unique key
+ *                          if a port: port_class + 1
+ *                          if not a port: 0
  * @return              a pointer to the location where the data is stored
  *                      a null pointer if the element was not found
  */
-symrec_t* symrec_get( symrec_t**, UT_array*, char*, int );
+symrec_t* symrec_get( symrec_t**, UT_array*, char*, int, int );
 
 /**
  * @brief   Add a record to the symbol table
@@ -280,13 +278,15 @@ symrec_t* symrec_put( symrec_t**, symrec_t* );
 /**
  * Search an identifier in the symbol table and rturn it if found
  *
- * @param symrec**:     pointer to the hashtable
- * @param UT_array**:   pointer to the scope stack
- * @param char*:        name of the identifier
- * @return symrec*:
- *      a pointer to the location where the data is stored
- *      a null pointer if the element was not found
+ * @param symtab        pointer to the hashtable
+ * @param scope_stack   pointer to the scope stack
+ * @param name          name of the identifier
+ * @param attr_key      a number derived from attributes to create a unique key:
+ *                          if a port: port_class + 1
+ *                          if not a port: 0
+ * @return              a pointer to the location where the data is stored
+ *                      a null pointer if the element was not found
  * */
-symrec_t* symrec_search( symrec_t**, UT_array*, char* );
+symrec_t* symrec_search( symrec_t**, UT_array*, char*, int );
 
 #endif /* SYMTAB_H */

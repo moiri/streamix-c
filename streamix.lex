@@ -34,19 +34,19 @@
 "//".*          { /* DO NOTHING */ }
 
     /* keywords */
-up              {yylval.ival = VAL_UP;return UP;}
-down            {yylval.ival = VAL_DOWN;return DOWN;}
-side            {yylval.ival = VAL_SIDE;return SIDE;}
-in              {yylval.ival = VAL_IN;return IN;}
-out             {yylval.ival = VAL_OUT;return OUT;}
-box             {yylval.ival = VAL_BOX;return BOX;}
-wrapper         {yylval.ival = VAL_WRAPPER;return WRAPPER;}
-net             {yylval.ival = VAL_NET;return NET;}
+up              {yylval.ival = PORT_CLASS_UP;return UP;}
+down            {yylval.ival = PORT_CLASS_DOWN;return DOWN;}
+side            {yylval.ival = PORT_CLASS_SIDE;return SIDE;}
+in              {yylval.ival = PORT_MODE_IN;return IN;}
+out             {yylval.ival = PORT_MODE_OUT;return OUT;}
+box             {yylval.ival = PARSE_ATTR_BOX;return BOX;}
+wrapper         {yylval.ival = PARSE_ATTR_WRAP;return WRAPPER;}
+net             {yylval.ival = PARSE_ATTR_NET;return NET;}
 link            return LINK;
 connect         return CONNECT;
-stateless       {yylval.ival = VAL_STATELESS;return STATELESS;}
-decoupled       {yylval.ival = VAL_DECOUPLED;return DECOUPLED;}
-static          {yylval.ival = VAL_STATIC;return STATIC;}
+stateless       {yylval.ival = PARSE_ATTR_STATELESS;return STATELESS;}
+decoupled       {yylval.ival = PARSE_ATTR_DECOUPLED;return DECOUPLED;}
+static          {yylval.ival = PARSE_ATTR_STATIC;return STATIC;}
 sync            return SYNC;
 
     /* identifiers */

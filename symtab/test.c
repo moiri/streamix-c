@@ -27,11 +27,11 @@ int main( ) {
     utarray_new( scope_stack, &ut_int_icd );
     utarray_push_back( scope_stack, &scope );
 
-    attr_port = symrec_attr_create_port( "int", VAL_IN, VAL_DOWN, false, -1 );
+    attr_port = symrec_attr_create_port( "int", PORT_MODE_IN, PORT_CLASS_DOWN, false, -1 );
     rec = symrec_create_port( name_port1, scope, line, attr_port );
     ports = malloc( sizeof( symrec_list_t ) );
     ports->rec = rec;
-    attr_port = symrec_attr_create_port( "int", VAL_IN, VAL_DOWN, false, -1 );
+    attr_port = symrec_attr_create_port( "int", PORT_MODE_IN, PORT_CLASS_DOWN, false, -1 );
     rec = symrec_create_port( name_port2, scope, line, attr_port );
     ports->next = malloc( sizeof( symrec_list_t ) );
     ports->next->rec = rec;
@@ -39,7 +39,7 @@ int main( ) {
     attr_box = symrec_attr_create_box( attr_pure, name_box_func, ports );
     rec = symrec_create_box( name_box, scope, line, attr_box );
     symrec_put( &symbols, rec );
-    res = symrec_get( &symbols, scope_stack, name_box, line );
+    res = symrec_get( &symbols, scope_stack, name_box, line, 0 );
 
     if( res == NULL ) {
         printf( "error: record '%s' in scope %d found\n", name_box, scope );

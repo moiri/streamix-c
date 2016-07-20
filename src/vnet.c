@@ -74,8 +74,8 @@ virt_net_t* virt_net_create_serial( virt_net_t* v_net1, virt_net_t* v_net2 )
     virt_port_t* ports2 = NULL;
 
     // alter ports
-    ports1 = virt_net_copy_ports( v_net1->ports, NULL, VAL_UP );
-    ports2 = virt_net_copy_ports( v_net2->ports, ports1, VAL_DOWN );
+    ports1 = virt_net_copy_ports( v_net1->ports, NULL, PORT_CLASS_UP );
+    ports2 = virt_net_copy_ports( v_net2->ports, ports1, PORT_CLASS_DOWN );
     v_net = malloc( sizeof( virt_net_t ) );
     v_net->ports = ports2;
     v_net->con = malloc( sizeof( net_con_t ) );
@@ -113,7 +113,7 @@ virt_port_t* virt_net_copy_ports( virt_port_t* old, virt_port_t* last,
         new->rec = old->rec;
         new->inst = old->inst;
         new->next = last;
-        if( ( old->attr_class != VAL_SIDE ) && ( class >= 0 ) )
+        if( ( old->attr_class != PORT_CLASS_SIDE ) && ( class >= 0 ) )
             new->attr_class = class;
         else new->attr_class = old->attr_class;
         new->attr_mode = old->attr_mode;

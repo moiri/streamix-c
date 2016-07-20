@@ -12,32 +12,9 @@
 #include "symtab.h"
 #include "ast.h"
 #ifdef TESTING
-#include "defines.h"
 #else
 #include "smxerr.h"
 #endif
-
-/******************************************************************************/
-bool is_symrec_identical( symrec_t* rec1, symrec_t* rec2, symrec_type_t type )
-{
-    if( ( rec1->type != rec2->type )
-            || ( rec1->type != type ) || ( rec2->type != type ) )
-        return false; // types do not match
-
-    if( ( strlen( rec1->name ) != strlen( rec2->name ) )
-            || ( memcmp( rec1->name, rec2->name, strlen( rec1->name ) ) == 0 ) )
-        return false; // name does not match
-
-    if( rec1->scope != rec2->scope )
-        return false; // scope does not match
-
-    if( ( type == SYMREC_PORT )
-            && ( rec1->attr_port->collection != rec2->attr_port->collection ) )
-        return false; // port collections do not match
-
-    // if we came through here, the record is identical
-    return true;
-}
 
 /******************************************************************************/
 attr_box_t* symrec_attr_create_box( bool attr_pure, char* impl_name,
@@ -60,8 +37,8 @@ attr_net_t* symrec_attr_create_net( virt_net_t* v_net )
 }
 
 /******************************************************************************/
-attr_port_t* symrec_attr_create_port( char* int_name, int mode, int collection,
-        bool decoupled, int sync_id )
+attr_port_t* symrec_attr_create_port( char* int_name, port_mode_t mode,
+        port_class_t collection, bool decoupled, int sync_id )
 {
     attr_port_t* new_attr = malloc( sizeof( attr_port_t ) );
     new_attr->int_name = int_name;
@@ -90,25 +67,25 @@ attr_wrap_t* symrec_attr_create_wrap( bool attr_static, symrec_list_t* ports )
 }
 
 /******************************************************************************/
-void symrec_attr_destroy_box( symrec_t* rec )
+void symrec_attr_destroy_box( attr_box_t* attr )
 {
-    free( rec->attr_box->impl_name );
-    symrec_list_del( rec->attr_box->ports );
-    free( rec->attr_box );
+    free( attr->impl_name );
+    symrec_list_del( attr->ports );
+    free( attr );
 }
 
 /******************************************************************************/
-void symrec_attr_destroy_net( symrec_t* rec )
+void symrec_attr_destroy_net( attr_net_t* attr )
 {
-    virt_net_destroy( rec->attr_net->v_net );
-    free( rec->attr_net );
+    if( attr->v_net != NULL ) virt_net_destroy( attr->v_net );
+    free( attr );
 }
 
 /******************************************************************************/
-void symrec_attr_destroy_port( symrec_t* rec ) 
+void symrec_attr_destroy_port( attr_port_t* attr ) 
 {
-    free( rec->attr_port->int_name );
-    free( rec->attr_port );
+    free( attr->int_name );
+    free( attr );
 }
 
 /******************************************************************************/
@@ -119,20 +96,21 @@ void symrec_attr_destroy_proto( attr_prot_t* attr )
 }
 
 /******************************************************************************/
-void symrec_attr_destroy_wrap( symrec_t* rec )
+void symrec_attr_destroy_wrap( attr_wrap_t* attr )
 {
-    symrec_list_del( rec->attr_wrap->ports );
-    free( rec->attr_wrap );
+    symrec_list_del( attr->ports );
+    free( attr );
 }
 
 /******************************************************************************/
-symrec_t* symrec_create( char* name, int scope, symrec_type_t type, int line )
+symrec_t* symrec_create( char* name, int scope, symrec_type_t type, int line,
+        int attr_key )
 {
-    char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
+    char key[ strlen( name ) + 1 + CONST_SCOPE_LEN + 1 ];
     symrec_t* new_item = NULL;
 
     // generate key
-    sprintf( key, "%s%d", name, scope );
+    sprintf( key, "%s%d%d", name, scope, attr_key );
     // create new item structure
     new_item = malloc( sizeof( symrec_t ) );
     new_item->scope = scope;
@@ -148,37 +126,83 @@ symrec_t* symrec_create( char* name, int scope, symrec_type_t type, int line )
 }
 
 /******************************************************************************/
+symrec_t* symrec_create_box( char* name, int scope, int line, attr_box_t* attr )
+{
+    symrec_t* item = symrec_create( name, scope, SYMREC_BOX, line, 0 );
+    item->attr_box = attr;
+    return item;
+}
+
+/******************************************************************************/
+symrec_t* symrec_create_net( char* name, int scope, int line, attr_net_t* attr )
+{
+    symrec_t* item = symrec_create( name, scope, SYMREC_NET, line, 0 );
+    item->attr_net = attr;
+    return item;
+}
+
+/******************************************************************************/
+symrec_t* symrec_create_port( char* name, int scope, int line,
+        attr_port_t* attr )
+{
+    symrec_t* item = symrec_create( name, scope, SYMREC_PORT, line,
+            attr->collection + 1 );
+    item->attr_port = attr;
+    return item;
+}
+
+/******************************************************************************/
+symrec_t* symrec_create_proto( char* name, int scope, int line,
+        attr_prot_t* attr )
+{
+    symrec_t* item = symrec_create( name, scope, SYMREC_NET_PROTO, line, 0 );
+    item->attr_proto = attr;
+    return item;
+}
+
+/******************************************************************************/
+symrec_t* symrec_create_wrap( char* name, int scope, int line,
+        attr_wrap_t* attr )
+{
+    symrec_t* item = symrec_create( name, scope, SYMREC_WRAP, line, 0 );
+    item->attr_wrap = attr;
+    return item;
+}
+
+/******************************************************************************/
 void symrec_del( symrec_t** symtab, symrec_t* rec )
 {
     symrec_t* rec_temp;
     HASH_FIND_STR( *symtab, rec->key, rec_temp );
-#if defined(DEBUG) || defined(DEBUG_SYMB)
-    printf( "symrec_del: delete record %s in scope %d\n", rec->name,
-            rec->scope );
-#endif // DEBUG
     if( rec_temp == NULL ) {
 #if defined(DEBUG) || defined(DEBUG_SYMB)
-        printf( "symrec_del: No such record to delete\n" );
+        printf( "symrec_del: No record %s in scope %d to delete\n", rec->name,
+                rec->scope );
 #endif // DEBUG
         return;
     }
+#if defined(DEBUG) || defined(DEBUG_SYMB)
+    printf( "symrec_del: delete record %s in scope %d\n", rec_temp->name,
+            rec_temp->scope );
+#endif // DEBUG
     // delete name entry only if no other record with the same name exists
-    if( rec_temp->next == NULL ) HASH_DELETE( hh, *symtab, rec );
-    switch( rec->type ) {
+    if( rec_temp->next == NULL )
+        HASH_DELETE( hh, *symtab, rec_temp );
+    switch( rec_temp->type ) {
         case SYMREC_BOX:
-            symrec_attr_destroy_box( rec );
+            symrec_attr_destroy_box( rec->attr_box );
             break;
         case SYMREC_NET:
-            symrec_attr_destroy_net( rec );
+            symrec_attr_destroy_net( rec->attr_net );
             break;
         case SYMREC_NET_PROTO:
             symrec_attr_destroy_proto( rec->attr_proto );
             break;
         case SYMREC_PORT:
-            symrec_attr_destroy_port( rec );
+            symrec_attr_destroy_port( rec->attr_port );
             break;
         case SYMREC_WRAP:
-            symrec_attr_destroy_wrap( rec );
+            symrec_attr_destroy_wrap( rec->attr_wrap );
             break;
         default:
             ;
@@ -205,7 +229,7 @@ void symrec_destroy( symrec_t* rec )
 
 /******************************************************************************/
 symrec_t* symrec_get( symrec_t** symtab, UT_array* scope_stack, char *name,
-        int line )
+        int line, int attr_key )
 {
     symrec_t* item = NULL;
 #ifndef TESTING
@@ -213,7 +237,7 @@ symrec_t* symrec_get( symrec_t** symtab, UT_array* scope_stack, char *name,
 #endif // TESTING
 
     /* check whether their scope matches with a scope on the stack */
-    item = symrec_search( symtab, scope_stack, name );
+    item = symrec_search( symtab, scope_stack, name, attr_key );
     if( item == NULL ) {
 #ifdef TESTING
         printf( ERROR_UNDEF_ID, ERR_ERROR, name );
@@ -248,9 +272,7 @@ symrec_t* symrec_put( symrec_t** symtab, symrec_t* new_item )
 #ifndef TESTING
     char error_msg[ CONST_ERROR_LEN ];
 #endif // TESTING
-    bool is_identical = false;
     symrec_t* item = NULL;
-    symrec_t* previous_item = NULL;
     // check wheter key already exists
     HASH_FIND_STR( *symtab, new_item->key, item );
     // the key is new
@@ -258,29 +280,13 @@ symrec_t* symrec_put( symrec_t** symtab, symrec_t* new_item )
         HASH_ADD_KEYPTR( hh, *symtab, new_item->key, strlen( new_item->key ),
                 new_item );
         item = new_item;
+#if defined(DEBUG) || defined(DEBUG_SYMB)
+        printf( "added symbol %s in scope %d\n", item->name, item->scope );
+#endif // DEBUG
     }
     /* hash exists */
     else {
-        // iterate through all entries with the same hash to handle collisions
-        do {
-            // check whether there is an identical entry (name and scope)
-            is_identical = is_symrec_identical( new_item, item,
-                    new_item->type );
-            if( is_identical ) break;
-
-            previous_item = item;   // remember the last item of the list
-            item = item->next;
-        } while( item != NULL );
-
-        if( !is_identical ) {
-            // the item was differen -> add it to the end of the linked list
-            previous_item->next = new_item;
-            item = new_item;
-        }
-    }
-    if( is_identical ) {
-        // the item already existed in the table -> free the allocated space
-        // and throw an yyerror
+        // throw an yyerror
 #ifdef TESTING
         printf( ERROR_DUPLICATE_ID, ERR_ERROR, new_item->name );
         printf( "\n" );
@@ -288,79 +294,22 @@ symrec_t* symrec_put( symrec_t** symtab, symrec_t* new_item )
         sprintf( error_msg, ERROR_DUPLICATE_ID, ERR_ERROR, new_item->name );
         report_yyerror( error_msg, new_item->line );
 #endif // TESTING
-        symrec_destroy( new_item );
         item = NULL;
     }
-#if defined(DEBUG) || defined(DEBUG_SYMB)
-    else {
-        printf( "added symbol %s in scope %d\n", item->name, item->scope );
-    }
-#endif // DEBUG
     return item;
 }
 
 /******************************************************************************/
-symrec_t* symrec_create_box( char* name, int scope, int line, attr_box_t* attr )
-{
-    symrec_t* item = symrec_create( name, scope, SYMREC_BOX, line );
-    item->attr_box = attr;
-    return item;
-}
-
-/******************************************************************************/
-symrec_t* symrec_create_net( char* name, int scope, int line, attr_net_t* attr )
-{
-    symrec_t* item = symrec_create( name, scope, SYMREC_NET, line );
-    item->attr_net = attr;
-    return item;
-}
-
-/******************************************************************************/
-symrec_t* symrec_create_port( char* name, int scope, int line,
-        attr_port_t* attr )
-{
-    symrec_t* item = symrec_create( name, scope, SYMREC_PORT, line );
-    item->attr_port = attr;
-    return item;
-}
-
-/******************************************************************************/
-symrec_t* symrec_create_proto( char* name, int scope, int line,
-        attr_prot_t* attr )
-{
-    symrec_t* item = symrec_create( name, scope, SYMREC_NET_PROTO, line );
-    item->attr_proto = attr;
-    return item;
-}
-
-/******************************************************************************/
-symrec_t* symrec_create_wrap( char* name, int scope, int line,
-        attr_wrap_t* attr )
-{
-    symrec_t* item = symrec_create( name, scope, SYMREC_WRAP, line );
-    item->attr_wrap = attr;
-    return item;
-}
-
-/******************************************************************************/
-symrec_t* symrec_search( symrec_t** symtab, UT_array* scope_stack, char *name )
+symrec_t* symrec_search( symrec_t** symtab, UT_array* scope_stack, char *name,
+        int attr_key )
 {
     int* p = NULL;
     symrec_t* item = NULL;
     char key[ strlen( name ) + 1 + CONST_SCOPE_LEN ];
     while( ( p = ( int* )utarray_prev( scope_stack, p ) ) != NULL ) {
         // generate key
-        sprintf( key, "%s%d", name, *p );
+        sprintf( key, "%s%d%d", name, *p, attr_key );
         HASH_FIND_STR( *symtab, key, item );
-        // iterate through all entries with the same key to handle collisions
-        while( item != NULL ) {
-            if( strlen( item->name ) == strlen( name )
-                && memcmp( item->name, name, strlen( name ) ) == 0
-                && item->scope == *p ) {
-                break; // found a match
-            }
-            item = item->next;
-        }
         if( item != NULL ) break; // found a match
     }
     return item;

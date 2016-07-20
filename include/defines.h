@@ -25,31 +25,39 @@
 #define CONST_SCOPE_LEN 9
 #define CONST_ID_LEN 9
 
-// scanner values (attributes)
-#define VAL_NONE        0
-#define VAL_UP          1
-#define VAL_DOWN        2
-#define VAL_SIDE        3
+/**
+ * @brief   Port collections
+ */
+enum port_class_e
+{
+    PORT_CLASS_NONE,
+    PORT_CLASS_UP,
+    PORT_CLASS_DOWN,
+    PORT_CLASS_SIDE
+};
 
-#define VAL_IN          4
-#define VAL_OUT         5
-#define VAL_BI          9
+/**
+ * @brief   Port modes
+ */
+enum port_mode_e
+{
+    PORT_MODE_IN,
+    PORT_MODE_OUT,
+    PORT_MODE_BI
+};
 
-#define VAL_DECOUPLED   6
-
-#define VAL_STATELESS   7
-
-#define VAL_STATIC      8
-
-// scanner values (elements)
-#define VAL_BOX         1
-#define VAL_WRAPPER     2
-#define VAL_PORT        3
-#define VAL_SPORT       4
-#define VAL_COPY        5
-#define VAL_NET         6
-#define VAL_SELF        7
-#define VAL_CP          8
+/**
+ * @brief   all kind of attributes used in the scanner
+ */
+enum parse_attr_e
+{
+    PARSE_ATTR_DECOUPLED,
+    PARSE_ATTR_STATELESS,
+    PARSE_ATTR_STATIC,
+    PARSE_ATTR_BOX,
+    PARSE_ATTR_WRAP,
+    PARSE_ATTR_NET
+};
 
 #define TEXT_THIS    "this"
 #define TEXT_CP      "smx_cp"

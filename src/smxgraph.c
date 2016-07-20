@@ -26,7 +26,7 @@ void dgraph_connect_1( igraph_t* g, int id1, int id2, int mode1, int mode2,
     int id_from = id1;
     int id_to = id2;
     int id_edge;
-    if( ( mode2 == VAL_OUT ) || ( mode1 == VAL_IN ) ) {
+    if( ( mode2 == PORT_MODE_OUT ) || ( mode1 == PORT_MODE_IN ) ) {
         id_to = id_from;
         id_from = id2;
     }

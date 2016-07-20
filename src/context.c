@@ -26,11 +26,11 @@ bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2, bool cpp, bool cps )
         if( cpp ) {
             // we are good if one port has no class and the other is not a side
             // port
-            if( ( p1->attr_class != VAL_SIDE )
-                    && ( p2->attr_class == VAL_NONE ) )
+            if( ( p1->attr_class != PORT_CLASS_SIDE )
+                    && ( p2->attr_class == PORT_CLASS_NONE ) )
                 return true;
-            if( ( p1->attr_class == VAL_NONE )
-                    && ( p2->attr_class != VAL_SIDE ) )
+            if( ( p1->attr_class == PORT_CLASS_NONE )
+                    && ( p2->attr_class != PORT_CLASS_SIDE ) )
                 return true;
         }
         // we came through here so none of the conditions matched
@@ -39,10 +39,12 @@ bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2, bool cpp, bool cps )
     // or normal connections?
     else {
         // no, if the left port is in another class than DS
-        if( ( p1->attr_class != VAL_DOWN ) && ( p1->attr_class != VAL_NONE ) )
+        if( ( p1->attr_class != PORT_CLASS_DOWN )
+                && ( p1->attr_class != PORT_CLASS_NONE ) )
             return false;
         // no, if the right port is in another class than US
-        if( ( p2->attr_class != VAL_UP ) && ( p2->attr_class != VAL_NONE ) )
+        if( ( p2->attr_class != PORT_CLASS_UP )
+                && ( p2->attr_class != PORT_CLASS_NONE ) )
             return false;
     }
     // we came through here, so all is good, names match
@@ -55,9 +57,9 @@ bool are_port_modes_ok( virt_port_t* p1, virt_port_t* p2 )
     // yes, if modes are different
     if( p1->attr_mode != p2->attr_mode ) return true;
     // yes, if the left port is a copy synchronizer port
-    if( p1->attr_mode == VAL_BI ) return true;
+    if( p1->attr_mode == PORT_MODE_BI ) return true;
     // yes, if the right port is a copy synchronizer port
-    if( p2->attr_mode == VAL_BI ) return true;
+    if( p2->attr_mode == PORT_MODE_BI ) return true;
 
     // we came through here, so port modes are not compatible
     return false;
@@ -251,8 +253,7 @@ void* check_context_ast( symrec_t** symtab, inst_net_t** nets,
             check_context_ast( symtab, nets, scope_stack, ast->program->stmts );
             res = check_context_ast( symtab, nets, scope_stack,
                     ast->program->net );
-            if( ( res != NULL ) && ( ( ( attr_net_t* )res )->v_net ) )
-                virt_net_destroy( ( ( attr_net_t* )res )->v_net );
+            if( res != NULL ) symrec_attr_destroy_net( res );
 #if defined(DEBUG) || defined(DEBUG_NET_GML)
             igraph_write_graph_gml( &net->g, stdout, NULL, "StreamixC" );
 #endif // DEBUG_NET_GML
@@ -271,13 +272,13 @@ void* check_context_ast( symrec_t** symtab, inst_net_t** nets,
             if( ast->assign->type == AST_NET ) {
                 // check prototype if available
                 rec = symrec_search( symtab, scope_stack,
-                        ast->assign->id->symbol->name );
+                        ast->assign->id->symbol->name, 0 );
                 if( rec == NULL ) {
                     // no prototype, install the symbol
                     rec = symrec_create_net( ast->assign->id->symbol->name,
                         *utarray_back( scope_stack ),
                         ast->assign->id->symbol->line, attr );
-                    symrec_put( symtab, rec );
+                    res = symrec_put( symtab, rec );
                 }
                 // check whether types of prototype and definition match
                 else if( check_prototype( rec->attr_proto->ports,
@@ -294,7 +295,10 @@ void* check_context_ast( symrec_t** symtab, inst_net_t** nets,
                         *utarray_back( scope_stack ),
                         ast->assign->id->symbol->line, attr );
                 // install the symbol
-                symrec_put( symtab, rec );
+                if( symrec_put( symtab, rec ) == NULL ) {
+                    symrec_attr_destroy_box( rec->attr_box );
+                    symrec_destroy( rec );
+                }
             }
             break;
         case AST_NET:
@@ -320,6 +324,10 @@ void* check_context_ast( symrec_t** symtab, inst_net_t** nets,
                     np_attr );
             // install the symbol (use port list as attributes)
             res = ( void* )symrec_put( symtab, rec );
+            if( res == NULL ) {
+                symrec_attr_destroy_proto( rec->attr_proto );
+                symrec_destroy( rec );
+            }
             break;
         case AST_PORTS:
             list = ast->list;
@@ -362,11 +370,15 @@ void* check_context_ast( symrec_t** symtab, inst_net_t** nets,
                     w_attr );
             // install the wrapper symbol in the scope of its declaration
             res = ( void* )symrec_put( symtab, rec );
+            if( res == NULL ) {
+                symrec_attr_destroy_wrap( rec->attr_wrap );
+                symrec_destroy( rec );
+            }
             break;
         case AST_PORT:
             // prepare symbol attributes and create symbol
-            p_attr = symrec_attr_create_port( NULL, VAL_BI, VAL_NONE, false,
-                    ast->port->sync_id );
+            p_attr = symrec_attr_create_port( NULL, PORT_MODE_BI, PORT_CLASS_NONE,
+                    false, ast->port->sync_id );
             if( ast->port->mode != NULL )
                 p_attr->mode = ast->port->mode->attr->val;
             if( ast->port->coupling != NULL ) p_attr->decoupled = true;
@@ -378,6 +390,10 @@ void* check_context_ast( symrec_t** symtab, inst_net_t** nets,
                     p_attr );
             // install symbol and return pointer to the symbol record
             res = ( void* )symrec_put( symtab, rec );
+            if( res == NULL ) {
+                symrec_attr_destroy_port( rec->attr_port );
+                symrec_destroy( rec );
+            }
             break;
         default:
             ;
@@ -421,12 +437,12 @@ void cpsync_connect( inst_net_t* net, virt_port_t* port1, virt_port_t* port2 )
     }
     else if( port1->inst->type == INSTREC_SYNC ) {
         cp_sync = port1->inst;
-        dgraph_connect_1( &net->g, cp_sync->id, port2->inst->id, VAL_BI,
+        dgraph_connect_1( &net->g, cp_sync->id, port2->inst->id, PORT_MODE_BI,
                 port2->attr_mode, port2->rec->name );
     }
     else if( port2->inst->type == INSTREC_SYNC ) {
         cp_sync = port2->inst;
-        dgraph_connect_1( &net->g, cp_sync->id, port1->inst->id, VAL_BI,
+        dgraph_connect_1( &net->g, cp_sync->id, port1->inst->id, PORT_MODE_BI,
                 port1->attr_mode, port1->rec->name );
     }
     else {
@@ -439,17 +455,18 @@ void cpsync_connect( inst_net_t* net, virt_port_t* port1, virt_port_t* port2 )
         node_id = igraph_vcount( &net->g );
         igraph_add_vertices( &net->g, 1, NULL );
         igraph_cattribute_VAS_set( &net->g, "label", node_id, TEXT_CP );
-        dgraph_connect_1( &net->g, cp_sync->id, port1->inst->id, VAL_BI,
+        dgraph_connect_1( &net->g, cp_sync->id, port1->inst->id, PORT_MODE_BI,
                 port1->attr_mode, port1->rec->name );
-        dgraph_connect_1( &net->g, cp_sync->id, port2->inst->id, VAL_BI,
+        dgraph_connect_1( &net->g, cp_sync->id, port2->inst->id, PORT_MODE_BI,
                 port2->attr_mode, port2->rec->name );
     }
     // change left port to copy synchronizer port
     port1->inst = cp_sync;
     // set mode of port
-    port1->attr_mode = VAL_BI;
-    // if possible, set port class to anything but VAL_NONE
-    if( port1->attr_class == VAL_NONE ) port1->attr_class = port2->attr_class;
+    port1->attr_mode = PORT_MODE_BI;
+    // if possible, set port class to anything but PORT_CLASS_NONE
+    if( port1->attr_class == PORT_CLASS_NONE )
+        port1->attr_class = port2->attr_class;
 }
 
 /******************************************************************************/
@@ -509,11 +526,11 @@ inst_rec_t* cpsync_merge( inst_net_t* net, virt_port_t* port1,
 void debug_print_rport( symrec_t* port, char* name )
 {
     printf( "%s", name );
-    if( port->attr_port->collection == VAL_DOWN ) printf( "_" );
-    else if( port->attr_port->collection == VAL_UP ) printf( "^" );
-    else if( port->attr_port->collection == VAL_SIDE ) printf( "|" );
-    if( port->attr_port->mode == VAL_IN ) printf( "<--" );
-    else if( port->attr_port->mode == VAL_OUT ) printf( "-->" );
+    if( port->attr_port->collection == PORT_CLASS_DOWN ) printf( "_" );
+    else if( port->attr_port->collection == PORT_CLASS_UP ) printf( "^" );
+    else if( port->attr_port->collection == PORT_CLASS_SIDE ) printf( "|" );
+    if( port->attr_port->mode == PORT_MODE_IN ) printf( "<--" );
+    else if( port->attr_port->mode == PORT_MODE_OUT ) printf( "-->" );
     else printf( "<->" );
     printf( "%s", port->name );
 }
@@ -534,11 +551,11 @@ void debug_print_rports( symrec_list_t* rports, char* name )
 void debug_print_vport( virt_port_t* port )
 {
     printf( "%s(%d)", port->inst->name, port->inst->id );
-    if( port->attr_class == VAL_DOWN ) printf( "_" );
-    else if( port->attr_class == VAL_UP ) printf( "^" );
-    else if( port->attr_class == VAL_SIDE ) printf( "|" );
-    if( port->attr_mode == VAL_IN ) printf( "<--" );
-    else if( port->attr_mode == VAL_OUT ) printf( "-->" );
+    if( port->attr_class == PORT_CLASS_DOWN ) printf( "_" );
+    else if( port->attr_class == PORT_CLASS_UP ) printf( "^" );
+    else if( port->attr_class == PORT_CLASS_SIDE ) printf( "|" );
+    if( port->attr_mode == PORT_MODE_IN ) printf( "<--" );
+    else if( port->attr_mode == PORT_MODE_OUT ) printf( "-->" );
     else printf( "<->" );
     printf( "%s", port->rec->name );
 }
@@ -597,10 +614,10 @@ bool do_port_attrs_match( symrec_list_t* r_ports, virt_port_t* v_ports )
                 && strcmp( r_port_ptr->rec->name, v_port_ptr->rec->name ) == 0
                 && r_port_attr->collection == v_port_ptr->attr_class
                 && ( r_port_attr->mode == v_port_ptr->attr_mode
-                    || v_port_ptr->attr_mode == VAL_BI )
+                    || v_port_ptr->attr_mode == PORT_MODE_BI )
                 ) {
                 // use more specific mode from prototype
-                if( v_port_ptr->attr_mode == VAL_BI )
+                if( v_port_ptr->attr_mode == PORT_MODE_BI )
                     v_port_ptr->attr_mode = r_port_attr->mode;
                 match = true;
                 break;
@@ -665,7 +682,7 @@ virt_net_t* install_nets( symrec_t** symtab, inst_net_t* net,
         case AST_ID:
             // check the context of the symbol
             rec = symrec_get( symtab, scope_stack, ast->symbol->name,
-                    ast->symbol->line );
+                    ast->symbol->line, 0 );
             if( rec == NULL ) return NULL;
 
             // check type of the record

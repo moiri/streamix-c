@@ -49,7 +49,6 @@ ast_node_t* ast_add_list( ast_list_t* list, node_type_t type )
 {
     if( list == NULL ) return NULL;
     ast_node_t *node = ast_add_node( type );
-    node->list = malloc( sizeof( ast_list_t ) );
     node->list = list;
     return node;
 }
