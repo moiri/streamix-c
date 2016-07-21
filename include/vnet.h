@@ -14,10 +14,21 @@
 typedef struct net_con_s net_con_t;
 typedef struct virt_net_s virt_net_t;
 typedef struct virt_port_s virt_port_t;
+typedef enum virt_net_type_e virt_net_type_t;
 
 #include <igraph.h>
 #include "symtab.h"
 #include "insttab.h"
+
+// ENUMS ----------------------------------------------------------------------
+enum virt_net_type_e
+{
+    VNET_BOX,
+    VNET_NET,
+    VNET_PARALLEL,
+    VNET_SERIAL,
+    VNET_WRAP
+};
 
 // STRUCTS --------------------------------------------------------------------
 /**
@@ -39,6 +50,7 @@ struct virt_net_s
 {
     net_con_t*      con;    /**< connection vector structure */
     virt_port_t*    ports;  /**< port list */
+    virt_net_type_t type;   /**< #virt_net_type_e */
 };
 
 /**

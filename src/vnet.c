@@ -38,6 +38,7 @@ virt_net_t* virt_net_create( symrec_t* rec, inst_rec_t* inst )
     v_net = malloc( sizeof( virt_net_t ) );
     v_net->ports = ports_last;
     v_net->con = malloc( sizeof( net_con_t ) );
+    v_net->type = VNET_BOX;
     igraph_vector_ptr_init( &v_net->con->left, 1 );
     VECTOR( v_net->con->left )[ 0 ] = &inst->id;
     igraph_vector_ptr_copy( &v_net->con->right, &v_net->con->left );
@@ -58,6 +59,7 @@ virt_net_t* virt_net_create_parallel( virt_net_t* v_net1, virt_net_t* v_net2 )
     v_net = malloc( sizeof( virt_net_t ) );
     v_net->ports = ports2;
     v_net->con = malloc( sizeof( net_con_t ) );
+    v_net->type = VNET_PARALLEL;
     igraph_vector_ptr_copy( &v_net->con->left, &v_net1->con->left );
     igraph_vector_ptr_append( &v_net->con->left, &v_net2->con->left );
     igraph_vector_ptr_copy( &v_net->con->right, &v_net1->con->right );
@@ -79,6 +81,7 @@ virt_net_t* virt_net_create_serial( virt_net_t* v_net1, virt_net_t* v_net2 )
     v_net = malloc( sizeof( virt_net_t ) );
     v_net->ports = ports2;
     v_net->con = malloc( sizeof( net_con_t ) );
+    v_net->type = VNET_SERIAL;
     igraph_vector_ptr_copy( &v_net->con->left, &v_net1->con->left );
     igraph_vector_ptr_copy( &v_net->con->right, &v_net2->con->right );
 
@@ -96,6 +99,7 @@ virt_net_t* virt_net_copy( virt_net_t* v_net )
     v_net_new = malloc( sizeof( virt_net_t ) );
     v_net_new->ports = ports;
     v_net_new->con = malloc( sizeof( net_con_t ) );
+    v_net_new->type = v_net->type;
     igraph_vector_ptr_copy( &v_net_new->con->left, &v_net->con->left );
     igraph_vector_ptr_copy( &v_net_new->con->right, &v_net->con->right );
 
