@@ -1,0 +1,9 @@
+A = box funcA(in a, out b)
+B = box funcB(in b, out c)
+C = box funcB(in b, out d)
+X = box funcX(out a)
+Z1 = box funcZ(in c)
+Z2 = box funcZ(in d)
+
+Y = A.(B|C)
+connect X.Y.(Z1|Z2)
