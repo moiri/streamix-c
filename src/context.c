@@ -12,6 +12,25 @@
 #include "smxerr.h"
 
 /******************************************************************************/
+void append_inst_ids( inst_rec_t* rec, igraph_vector_t* id )
+{
+    virt_port_t* ports = NULL;
+    if( rec->type == INSTREC_BOX )
+        igraph_vector_push_back( id, rec->id );
+    else {
+        if( rec->type == INSTREC_NET )
+            ports = rec->net->attr_net->v_net->ports;
+        else if( rec->type == INSTREC_WRAP )
+            ports = rec->net->attr_wrap->v_net->ports;
+        while( ports != NULL ) {
+            if( !igraph_vector_contains( id, ports->inst->id ) )
+                igraph_vector_push_back( id, ports->inst->id );
+            ports = ports->next;
+        }
+    }
+}
+
+/******************************************************************************/
 bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2, bool cpp, bool cps )
 {
     // no, if port names do not match
@@ -155,51 +174,27 @@ void check_connections( inst_net_t* net, virt_net_t* v_net1, virt_net_t* v_net2,
 }
 
 /******************************************************************************/
-void check_connection_missing( inst_net_t* net, virt_net_t* v_net_l,
-        virt_net_t* v_net_r, igraph_t* g )
+void check_connection_missing( virt_net_t* v_net_l, virt_net_t* v_net_r,
+        igraph_t* g )
 {
     char error_msg[ CONST_ERROR_LEN ];
     int i, j;
-    igraph_vs_t vs1, vs2;
-    igraph_vector_t v1, v2;
-    igraph_matrix_t res1, res2;
     inst_rec_t* rec1 = NULL;
     inst_rec_t* rec2 = NULL;
-
-    igraph_vector_init( &v1, 0 );
-    igraph_vector_init( &v2, 0 );
-    dgraph_vptr_to_v( &v_net_l->con->right, &v1 );
-    dgraph_vptr_to_v( &v_net_r->con->left, &v2 );
-    igraph_matrix_init( &res1, igraph_vector_size( &v1 ),
-            igraph_vector_size( &v2 ) );
-    igraph_matrix_init( &res2, igraph_vector_size( &v1 ),
-            igraph_vector_size( &v2 ) );
-    igraph_vs_vector( &vs1, &v1 );
-    igraph_vs_vector( &vs2, &v2 );
-    igraph_shortest_paths( g, &res1, vs1, vs2, IGRAPH_OUT );
-    igraph_shortest_paths( g, &res2, vs1, vs2, IGRAPH_IN );
-
-    for( i=0; i<igraph_vector_size( &v1 ); i++ ) {
-        for( j=0; j<igraph_vector_size( &v2 ); j++ ) {
-            if( ( MATRIX( res1, i, j ) > 2 ) &&
-                ( MATRIX( res2, i, j ) > 2 ) ) {
-                rec1 = inst_rec_get( &net->nodes, VECTOR( v1 )[i] );
-                rec2 = inst_rec_get( &net->nodes, VECTOR( v2 )[j] );
+    igraph_vector_ptr_t con1 = v_net_l->con->right;
+    igraph_vector_ptr_t con2 = v_net_r->con->left;
+    for( i=0; i<igraph_vector_ptr_size( &con1 ); i++ ) {
+        rec1 = VECTOR( con1 )[i];
+        for( j=0; j<igraph_vector_ptr_size( &con2 ); j++ ) {
+            rec2 = VECTOR( con2 )[j];
+            if( !is_connected( rec1, rec2, g ) ) {
                 // ERROR: there is no connection between the two nets
                 sprintf( error_msg, ERROR_NO_NET_CON, ERR_ERROR,
-                        rec1->name, ( int )VECTOR( v1 )[i],
-                        rec2->name, ( int )VECTOR( v2 )[j] );
+                        rec1->name, rec1->id, rec2->name, rec2->id );
                 report_yyerror( error_msg, rec1->line );
             }
         }
     }
-
-    igraph_vector_destroy( &v1 );
-    igraph_vector_destroy( &v2 );
-    igraph_matrix_destroy( &res1 );
-    igraph_matrix_destroy( &res2 );
-    igraph_vs_destroy( &vs1 );
-    igraph_vs_destroy( &vs1 );
 }
 
 /******************************************************************************/
@@ -245,6 +240,7 @@ void* check_context_ast( symrec_t** symtab, inst_net_t** nets,
     symrec_list_t* port_list = NULL;
     virt_net_t* v_net;
     void* res = NULL;
+    igraph_t g_con;
     static int _scope = 0;
 
     if( ast == NULL ) return NULL;
@@ -303,8 +299,10 @@ void* check_context_ast( symrec_t** symtab, inst_net_t** nets,
             break;
         case AST_NET:
             net = inst_net_get( nets, *utarray_back( scope_stack ) );
+            igraph_empty( &g_con, 0, false );
             v_net = ( void* )install_nets( symtab, net, scope_stack,
-                    ast->network->net, g );
+                    ast->network->net, g, &g_con );
+            igraph_destroy( &g_con );
             n_attr = symrec_attr_create_net( v_net );
             res = ( void* )n_attr;
             break;
@@ -637,7 +635,7 @@ bool do_port_attrs_match( symrec_list_t* r_ports, virt_port_t* v_ports )
 
 /******************************************************************************/
 virt_net_t* install_nets( symrec_t** symtab, inst_net_t* net,
-        UT_array* scope_stack, ast_node_t* ast, igraph_t* g )
+        UT_array* scope_stack, ast_node_t* ast, igraph_t* g, igraph_t* g_con )
 {
     int node_id;
     symrec_t* rec = NULL;
@@ -651,9 +649,11 @@ virt_net_t* install_nets( symrec_t** symtab, inst_net_t* net,
 
     switch( ast->type ) {
         case AST_PARALLEL:
-            v_net1 = install_nets( symtab, net, scope_stack, ast->op->left, g );
+            v_net1 = install_nets( symtab, net, scope_stack, ast->op->left, g,
+                    g_con);
             if( v_net1 == NULL ) return NULL;
-            v_net2 = install_nets( symtab, net, scope_stack, ast->op->right, g );
+            v_net2 = install_nets( symtab, net, scope_stack, ast->op->right, g,
+                    g_con);
             if( v_net2 == NULL ) return NULL;
             cpsync_connects( net, v_net1, v_net2, true, g );
             v_net = virt_net_create_parallel( v_net1, v_net2 );
@@ -666,13 +666,15 @@ virt_net_t* install_nets( symrec_t** symtab, inst_net_t* net,
 #endif // DEBUG_CONNECT
             break;
         case AST_SERIAL:
-            v_net1 = install_nets( symtab, net, scope_stack, ast->op->left, g );
+            v_net1 = install_nets( symtab, net, scope_stack, ast->op->left, g,
+                    g_con );
             if( v_net1 == NULL ) return NULL;
-            v_net2 = install_nets( symtab, net, scope_stack, ast->op->right, g );
+            v_net2 = install_nets( symtab, net, scope_stack, ast->op->right, g,
+                    g_con );
             if( v_net2 == NULL ) return NULL;
             // check connections and update virtual net
             check_connections( net, v_net1, v_net2, g );
-            check_connection_missing( net, v_net1, v_net2, g );
+            check_connection_missing( v_net1, v_net2, g );
             cpsync_connects( net, v_net1, v_net2, false, g );
             v_net = virt_net_create_serial( v_net1, v_net2 );
             virt_net_destroy( v_net1 );
@@ -691,8 +693,23 @@ virt_net_t* install_nets( symrec_t** symtab, inst_net_t* net,
 
             // check type of the record
             if( rec->type == SYMREC_NET ) {
-                // net -> copy the virtual net
-                v_net = virt_net_copy( rec->attr_net->v_net );
+                node_id = igraph_vcount( g );
+                igraph_add_vertices( g, 1, NULL );
+
+                inst = inst_rec_put( &net->nodes, ast->symbol->name,
+                        node_id, ast->symbol->line, INSTREC_NET, rec );
+                v_net = virt_net_create_vnet( rec->attr_net->v_net->ports,
+                        inst, VNET_NET );
+            }
+            else if( rec->type == SYMREC_WRAP ) {
+                node_id = igraph_vcount( g );
+                igraph_add_vertices( g, 1, NULL );
+
+                inst = inst_rec_put( &net->nodes, ast->symbol->name,
+                        node_id, ast->symbol->line, INSTREC_WRAP, rec );
+                v_net = virt_net_create_vnet( rec->attr_wrap->v_net->ports,
+                        inst, VNET_WRAP );
+
             }
             else if( rec->type == SYMREC_NET_PROTO ) {
                 // prototype -> net definition is missing
@@ -703,18 +720,60 @@ virt_net_t* install_nets( symrec_t** symtab, inst_net_t* net,
                 // symbol -> add net symbol to the instance table
                 node_id = igraph_vcount( g );
                 inst = inst_rec_put( &net->nodes, ast->symbol->name,
-                        node_id, ast->symbol->line, INSTREC_NET, rec );
+                        node_id, ast->symbol->line, INSTREC_BOX, rec );
                 // update graph and virtual net
                 igraph_add_vertices( g, 1, NULL );
                 igraph_cattribute_VAS_set( g, "label", node_id,
                         rec->name );
                 igraph_cattribute_VAS_set( g, "func", node_id,
                         rec->attr_box->impl_name );
-                v_net = virt_net_create( rec, inst );
+                v_net = virt_net_create_box( rec, inst );
             }
             break;
         default:
             ;
     }
     return v_net;
+}
+
+/******************************************************************************/
+bool is_connected( inst_rec_t* rec1, inst_rec_t* rec2, igraph_t* g )
+{
+    int i, j;
+    bool res = false;
+    igraph_vs_t vs1, vs2;
+    igraph_vector_t v1, v2;
+    igraph_matrix_t res1, res2;
+
+    igraph_vector_init( &v1, 0 );
+    igraph_vector_init( &v2, 0 );
+    append_inst_ids( rec1, &v1 );
+    append_inst_ids( rec2, &v2 );
+    igraph_matrix_init( &res1, igraph_vector_size( &v1 ),
+            igraph_vector_size( &v2 ) );
+    igraph_matrix_init( &res2, igraph_vector_size( &v1 ),
+            igraph_vector_size( &v2 ) );
+    igraph_vs_vector( &vs1, &v1 );
+    igraph_vs_vector( &vs2, &v2 );
+    igraph_shortest_paths( g, &res1, vs1, vs2, IGRAPH_OUT );
+    igraph_shortest_paths( g, &res2, vs1, vs2, IGRAPH_IN );
+
+    for( i=0; i<igraph_vector_size( &v1 ); i++ ) {
+        for( j=0; j<igraph_vector_size( &v2 ); j++ ) {
+            if( ( MATRIX( res1, i, j ) < 3 )
+                    || ( MATRIX( res2, i, j ) < 3 ) ) {
+                res = true;
+                break;
+            }
+        }
+        if( res ) break;
+    }
+
+    igraph_vector_destroy( &v1 );
+    igraph_vector_destroy( &v2 );
+    igraph_matrix_destroy( &res1 );
+    igraph_matrix_destroy( &res2 );
+    igraph_vs_destroy( &vs1 );
+    igraph_vs_destroy( &vs1 );
+    return res;
 }

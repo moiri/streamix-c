@@ -12,102 +12,48 @@
 #include "ast.h"
 
 /******************************************************************************/
-virt_net_t* virt_net_create( symrec_t* rec, inst_rec_t* inst )
+net_con_t* net_con_create( inst_rec_t* inst )
 {
-    symrec_list_t* ports_ptr = NULL;
-    virt_net_t* v_net = NULL;
-    virt_port_t* ports = NULL;
+    net_con_t* con = malloc( sizeof( net_con_t ) );
+    igraph_vector_ptr_init( &con->left, 1 );
+    igraph_vector_ptr_init( &con->right, 1 );
+    VECTOR( con->left )[ 0 ] = inst;
+    VECTOR( con->right )[ 0 ] = inst;
+    return con;
+}
+
+/******************************************************************************/
+virt_net_t* virt_net_create_struct( virt_port_t* ports, net_con_t* con,
+        virt_net_type_t type )
+{
+    virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
+    v_net->ports = ports;
+    v_net->con = con;
+    v_net->type = type;
+    return v_net;
+}
+
+/******************************************************************************/
+virt_port_t* virt_port_copy_inst( symrec_list_t* ports, inst_rec_t* inst )
+{
+    virt_port_t* new_ports = NULL;
     virt_port_t* ports_last = NULL;
 
-    if( rec->type == SYMREC_BOX )
-        ports_ptr = rec->attr_box->ports;
-    else if( rec->type == SYMREC_WRAP )
-        ports_ptr = rec->attr_wrap->ports;
-    while( ports_ptr != NULL  ) {
-        ports = malloc( sizeof( virt_port_t ) );
-        ports->rec = ports_ptr->rec;
-        ports->next = ports_last;
-        ports->attr_class =
-            ports_ptr->rec->attr_port->collection;
-        ports->attr_mode =
-            ports_ptr ->rec->attr_port->mode;
-        ports->inst = inst;
-        ports_last = ports;
-        ports_ptr = ports_ptr->next;
+    while( ports != NULL  ) {
+        new_ports = malloc( sizeof( virt_port_t ) );
+        new_ports->rec = ports->rec;
+        new_ports->next = ports_last;
+        new_ports->attr_class = ports->rec->attr_port->collection;
+        new_ports->attr_mode = ports ->rec->attr_port->mode;
+        new_ports->inst = inst;
+        ports_last = new_ports;
+        ports = ports->next;
     }
-    v_net = malloc( sizeof( virt_net_t ) );
-    v_net->ports = ports_last;
-    v_net->con = malloc( sizeof( net_con_t ) );
-    v_net->type = VNET_BOX;
-    igraph_vector_ptr_init( &v_net->con->left, 1 );
-    VECTOR( v_net->con->left )[ 0 ] = &inst->id;
-    igraph_vector_ptr_copy( &v_net->con->right, &v_net->con->left );
-
-    return v_net;
+    return ports_last;
 }
 
 /******************************************************************************/
-virt_net_t* virt_net_create_parallel( virt_net_t* v_net1, virt_net_t* v_net2 )
-{
-    virt_net_t* v_net = NULL;
-    virt_port_t* ports1 = NULL;
-    virt_port_t* ports2 = NULL;
-
-    // alter ports
-    ports1 = virt_net_copy_ports( v_net1->ports, NULL, -1 );
-    ports2 = virt_net_copy_ports( v_net2->ports, ports1, -1 );
-    v_net = malloc( sizeof( virt_net_t ) );
-    v_net->ports = ports2;
-    v_net->con = malloc( sizeof( net_con_t ) );
-    v_net->type = VNET_PARALLEL;
-    igraph_vector_ptr_copy( &v_net->con->left, &v_net1->con->left );
-    igraph_vector_ptr_append( &v_net->con->left, &v_net2->con->left );
-    igraph_vector_ptr_copy( &v_net->con->right, &v_net1->con->right );
-    igraph_vector_ptr_append( &v_net->con->right, &v_net2->con->right );
-
-    return v_net;
-}
-
-/******************************************************************************/
-virt_net_t* virt_net_create_serial( virt_net_t* v_net1, virt_net_t* v_net2 )
-{
-    virt_net_t* v_net = NULL;
-    virt_port_t* ports1 = NULL;
-    virt_port_t* ports2 = NULL;
-
-    // alter ports
-    ports1 = virt_net_copy_ports( v_net1->ports, NULL, PORT_CLASS_UP );
-    ports2 = virt_net_copy_ports( v_net2->ports, ports1, PORT_CLASS_DOWN );
-    v_net = malloc( sizeof( virt_net_t ) );
-    v_net->ports = ports2;
-    v_net->con = malloc( sizeof( net_con_t ) );
-    v_net->type = VNET_SERIAL;
-    igraph_vector_ptr_copy( &v_net->con->left, &v_net1->con->left );
-    igraph_vector_ptr_copy( &v_net->con->right, &v_net2->con->right );
-
-    return v_net;
-}
-
-/******************************************************************************/
-virt_net_t* virt_net_copy( virt_net_t* v_net )
-{
-    virt_net_t* v_net_new = NULL;
-    virt_port_t* ports = NULL;
-
-    // alter ports
-    ports = virt_net_copy_ports( v_net->ports, NULL, -1 );
-    v_net_new = malloc( sizeof( virt_net_t ) );
-    v_net_new->ports = ports;
-    v_net_new->con = malloc( sizeof( net_con_t ) );
-    v_net_new->type = v_net->type;
-    igraph_vector_ptr_copy( &v_net_new->con->left, &v_net->con->left );
-    igraph_vector_ptr_copy( &v_net_new->con->right, &v_net->con->right );
-
-    return v_net_new;
-}
-
-/******************************************************************************/
-virt_port_t* virt_net_copy_ports( virt_port_t* old, virt_port_t* last,
+virt_port_t* virt_port_copy_vnet( virt_port_t* old, virt_port_t* last,
         int class )
 {
     virt_port_t* new = NULL;
@@ -124,8 +70,87 @@ virt_port_t* virt_net_copy_ports( virt_port_t* old, virt_port_t* last,
         last = new;
         old = old->next;
     }
-
     return last;
+}
+
+/******************************************************************************/
+virt_net_t* virt_net_create_box( symrec_t* rec, inst_rec_t* inst )
+{
+    virt_net_t* v_net = NULL;
+    virt_port_t* ports = virt_port_copy_inst( rec->attr_box->ports, inst );
+    net_con_t* con = net_con_create( inst );
+    v_net = virt_net_create_struct( ports, con, VNET_BOX );
+
+    return v_net;
+}
+
+/******************************************************************************/
+virt_net_t* virt_net_create_vnet( virt_port_t* ports, inst_rec_t* inst,
+        virt_net_type_t type )
+{
+    virt_net_t* v_net_new = NULL;
+    virt_port_t* ports_new = virt_port_copy_vnet( ports, NULL, -1 );
+    net_con_t* con = net_con_create( inst );
+    v_net_new = virt_net_create_struct( ports_new, con, type );
+
+    return v_net_new;
+}
+
+/******************************************************************************/
+virt_net_t* virt_net_create_parallel( virt_net_t* v_net1, virt_net_t* v_net2 )
+{
+    virt_net_t* v_net = NULL;
+    virt_port_t* ports1 = NULL;
+    virt_port_t* ports2 = NULL;
+    net_con_t* con = NULL;
+
+    // alter ports
+    ports1 = virt_port_copy_vnet( v_net1->ports, NULL, -1 );
+    ports2 = virt_port_copy_vnet( v_net2->ports, ports1, -1 );
+    con = malloc( sizeof( net_con_t ) );
+    v_net = virt_net_create_struct( ports2, con, VNET_PARALLEL );
+    igraph_vector_ptr_copy( &v_net->con->left, &v_net1->con->left );
+    igraph_vector_ptr_append( &v_net->con->left, &v_net2->con->left );
+    igraph_vector_ptr_copy( &v_net->con->right, &v_net1->con->right );
+    igraph_vector_ptr_append( &v_net->con->right, &v_net2->con->right );
+
+    return v_net;
+}
+
+/******************************************************************************/
+virt_net_t* virt_net_create_serial( virt_net_t* v_net1, virt_net_t* v_net2 )
+{
+    virt_net_t* v_net = NULL;
+    virt_port_t* ports1 = NULL;
+    virt_port_t* ports2 = NULL;
+    net_con_t* con = NULL;
+
+    // alter ports
+    ports1 = virt_port_copy_vnet( v_net1->ports, NULL, PORT_CLASS_UP );
+    ports2 = virt_port_copy_vnet( v_net2->ports, ports1, PORT_CLASS_DOWN );
+    con = malloc( sizeof( net_con_t ) );
+    v_net = virt_net_create_struct( ports2, con, VNET_SERIAL );
+    igraph_vector_ptr_copy( &v_net->con->left, &v_net1->con->left );
+    igraph_vector_ptr_copy( &v_net->con->right, &v_net2->con->right );
+
+    return v_net;
+}
+
+/******************************************************************************/
+virt_net_t* virt_net_copy( virt_net_t* v_net )
+{
+    virt_net_t* v_net_new = NULL;
+    virt_port_t* ports = NULL;
+    net_con_t* con = NULL;
+
+    // alter ports
+    ports = virt_port_copy_vnet( v_net->ports, NULL, -1 );
+    con = malloc( sizeof( net_con_t ) );
+    v_net_new = virt_net_create_struct( ports, con, v_net->type );
+    igraph_vector_ptr_copy( &v_net_new->con->left, &v_net->con->left );
+    igraph_vector_ptr_copy( &v_net_new->con->right, &v_net->con->right );
+
+    return v_net_new;
 }
 
 /******************************************************************************/

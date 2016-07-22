@@ -26,8 +26,10 @@ typedef enum inst_rec_type_e inst_rec_type_t;
  */
 enum inst_rec_type_e
 {
+    INSTREC_BOX,
     INSTREC_NET,
-    INSTREC_SYNC
+    INSTREC_SYNC,
+    INSTREC_WRAP
 };
 
 // STRUCTURES------------------------------------------------------------------

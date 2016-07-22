@@ -16,6 +16,16 @@
 #include "insttab.h"
 #include "symtab.h"
 #include "utarray.h"
+/**
+ * @brief   append id from instances to a initialised vector
+ *
+ * This function either appends the instance id to the vector or if the
+ * instance has child instances it collects all ids of the chlidren.
+ *
+ * @param rec   source instance record
+ * @param id    an initialised vector where the ids are appended
+ */
+void append_inst_ids( inst_rec_t*, igraph_vector_t* );
 
 /**
  * @brief   Checkes whether port names match
@@ -75,13 +85,11 @@ void check_connections( inst_net_t*, virt_net_t*, virt_net_t*, igraph_t* );
  * Reports errors if two nets are not connected but should be according to
  * Streamix operator semantics
  *
- * @param net       pointer to the instance table of a net
  * @param v_net_l   pointer to the virtual net of the left operand
  * @param v_net_r   pointer to the virtual net of the right operand
  * @param g         pointer to a initialized igraph object
  */
-void check_connection_missing( inst_net_t*, virt_net_t*, virt_net_t*,
-        igraph_t* );
+void check_connection_missing( virt_net_t*, virt_net_t*, igraph_t* );
 
 /**
  * @brief    Check the context of all identifiers in the program
@@ -224,10 +232,22 @@ bool do_port_attrs_match( symrec_list_t*, virt_port_t* );
  * @param scope_stack   pointer to the scope stack
  * @param ast           pointer to the ast node
  * @param g             pointer to a initialized igraph object
+ * @param g_con         pointer to a initialized igraph object (connection graph)
  * @return              pointer to a virtual net with a port list and connection
  *                      vectors
  */
 virt_net_t* install_nets( symrec_t**, inst_net_t*, UT_array*, ast_node_t*,
-        igraph_t* );
+        igraph_t*, igraph_t* );
+
+/**
+ * @brief   checks wheter two instances are connected
+ *
+ * @param rec1  a pointer to an instance record
+ * @param rec2  a pointer to an instance record
+ * @param g     pointer to an initialized igraph object
+ * @return      true if there is a connection
+ *              false if the instances are not connected
+ */
+bool is_connected( inst_rec_t*, inst_rec_t*, igraph_t* );
 
 #endif // CONTEXT_H
