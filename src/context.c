@@ -427,6 +427,7 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
     }
     // set source and dest pointer checking left port
     if( port_l->inst->type == INSTREC_BOX ) {
+        port_l->state = VPORT_STATE_TO_TEST;
         if( port_r->inst->type == INSTREC_SYNC )
             port_l->state = VPORT_STATE_CONNECTED;
 
