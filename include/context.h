@@ -123,7 +123,7 @@ void* check_context_ast( symrec_t**, UT_array*, ast_node_t*, igraph_t* );
  */
 bool check_prototype( symrec_list_t*, virt_net_t*, char* );
 
-void connect_ports( virt_port_t*, virt_port_t*, igraph_t* );
+void connect_ports( virt_port_t*, virt_port_t*, igraph_t*, bool );
 
 /**
  * @brief   Connect two ports of copy synchronizers

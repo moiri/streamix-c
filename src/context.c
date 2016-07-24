@@ -107,7 +107,8 @@ bool are_port_modes_ok( virt_port_t* p1, virt_port_t* p2 )
 }
 
 /******************************************************************************/
-void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g )
+void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
+        bool connect_sync )
 {
     int id_edge, id_src = port_l->inst->id, id_dest = port_r->inst->id;
     virt_port_t* p_src = NULL;
@@ -128,6 +129,8 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g )
         else if( port_l->attr_mode == PORT_MODE_IN )
             p_dest = port_l;
     }
+    else if( ( port_l->inst->type == INSTREC_SYNC ) && connect_sync )
+        port_l->state = VPORT_STATE_TO_TEST;
     if( port_r->inst->type == INSTREC_BOX ) {
         if( port_l->inst->type == INSTREC_SYNC )
             port_r->state = VPORT_STATE_CONNECTED;
@@ -139,6 +142,8 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g )
         else if( port_r->attr_mode == PORT_MODE_IN )
             p_dest = port_r;
     }
+    else if( ( port_r->inst->type == INSTREC_SYNC ) && connect_sync )
+        port_r->state = VPORT_STATE_TO_TEST;
     igraph_add_edge( g, id_src, id_dest );
     igraph_get_eid( g, &id_edge, id_src, id_dest, false, false );
     igraph_cattribute_EAS_set( g, "label", id_edge, port_l->name );
@@ -199,7 +204,7 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g )
             res = true;
         }
         else if( are_port_modes_ok( port_l, port_r ) ) {
-            connect_ports( port_l, port_r, g );
+            connect_ports( port_l, port_r, g, true );
             /* dgraph_connect_1( g, inst_l->id, inst_r->id, */
             /*         port_l->attr_mode, port_r->attr_mode, port_l->name ); */
             /* port_l->state = VPORT_STATE_TO_TEST; */
@@ -518,7 +523,7 @@ void cpsync_connect( virt_net_t* v_net, virt_port_t* port1,
     /* else if( inst1->type == INSTREC_SYNC ) { */
     else if( ( inst1->type == INSTREC_SYNC )
             || ( inst2->type == INSTREC_SYNC ) ) {
-        connect_ports( port1, port2, g );
+        connect_ports( port1, port2, g, false );
         /* port2->inst = inst1; */
         /* dgraph_connect_1( g, inst1->id, inst2->id, PORT_MODE_BI, */
         /*         port2->attr_mode, port2->name ); */
@@ -545,8 +550,8 @@ void cpsync_connect( virt_net_t* v_net, virt_port_t* port1,
 #endif // DEBUG_CONNECT
         port_new = virt_port_add( v_net, port_class, PORT_MODE_BI, cp_sync,
                 port1->name );
-        connect_ports( port_new, port1, g );
-        connect_ports( port_new, port2, g );
+        connect_ports( port_new, port1, g, false );
+        connect_ports( port_new, port2, g, false );
     }
 }
 
