@@ -1,0 +1,4 @@
+A = box A( out a )
+B = box B( up in a, down out a )
+C = box C( in a )
+connect A.B.B.B.C
