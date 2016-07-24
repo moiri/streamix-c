@@ -39,11 +39,12 @@ void dgraph_connect_1( igraph_t* g, int id1, int id2, int mode1, int mode2,
 int dgraph_merge_vertice_1( igraph_t* g, int id1, int id2 )
 {
     igraph_vector_t v_new;
+    igraph_attribute_combination_t comb;
     int idx;
     int id_new = 0;
     int id_low = id1;
     int id_high = id2;
-    if( id2 < id1 ) {
+    if( id_high < id_low ) {
         id_low = id2;
         id_high = id1;
     }
@@ -55,7 +56,11 @@ int dgraph_merge_vertice_1( igraph_t* g, int id1, int id2 )
             id_new++;
         }
     }
-    igraph_contract_vertices( g, &v_new, NULL );
+    igraph_attribute_combination( &comb, "label",
+            IGRAPH_ATTRIBUTE_COMBINE_FIRST, "func",
+            IGRAPH_ATTRIBUTE_COMBINE_FIRST, "inst",
+            IGRAPH_ATTRIBUTE_COMBINE_FIRST, IGRAPH_NO_MORE_ATTRIBUTES );
+    igraph_contract_vertices( g, &v_new, &comb );
     igraph_vector_destroy( &v_new );
 
     // id of deleted element

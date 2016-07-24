@@ -15,7 +15,7 @@ extern int yylex_destroy();
 
 int main( int argc, char **argv ) {
     void* ast = NULL;
-    inst_net_t* nets = NULL;        // hash table to store the nets
+    symrec_t* symtab = NULL;        // hash table to store the symbols
     FILE* src_smx;
     FILE* dest_gml;
     igraph_i_set_attribute_table( &igraph_cattribute_table );
@@ -45,9 +45,12 @@ int main( int argc, char **argv ) {
     /* cgraph_init( ast ); */
     ast_flatten( ast );
     igraph_empty( &g, 0, true );
-    check_context( ast, &nets, &g );
+    check_context( ast, &symtab, &g );
     dest_gml = fopen( "streamix.gml", "w" );
     igraph_write_graph_gml( &g, dest_gml, NULL, "StreamixC" );
+    fclose( dest_gml );
+    dest_gml = fopen( P_CON_DOT_PATH, "w" );
+    igraph_write_graph_dot( &g, dest_gml );
     fclose( dest_gml );
 
     /* fclose(con_graph); */
@@ -59,7 +62,7 @@ int main( int argc, char **argv ) {
     // cleanup
     igraph_destroy( &g );
     ast_destroy( ast );
-    inst_net_del_all( &nets );
+    symrec_del_all( &symtab );
     yylex_destroy();
 
     return 0;

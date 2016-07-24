@@ -14,6 +14,7 @@
 typedef struct net_con_s net_con_t;
 typedef struct virt_net_s virt_net_t;
 typedef struct virt_port_s virt_port_t;
+typedef struct virt_port_list_s virt_port_list_t;
 typedef enum virt_net_type_e virt_net_type_t;
 
 #include <igraph.h>
@@ -48,9 +49,16 @@ struct net_con_s
  */
 struct virt_net_s
 {
-    net_con_t*      con;        /**< connection vector structure */
-    virt_port_t*    ports;      /**< port list */
-    virt_net_type_t type;       /**< #virt_net_type_e */
+    net_con_t*          con;        /**< connection vector structure */
+    virt_port_list_t*   ports;      /**< port list */
+    virt_net_type_t     type;       /**< #virt_net_type_e */
+};
+
+struct virt_port_list_s
+{
+    int                 idx;
+    virt_port_t*        port;
+    virt_port_list_t*   next;
 };
 
 /**
@@ -58,11 +66,11 @@ struct virt_net_s
  */
 struct virt_port_s
 {
-    symrec_t*       rec;        /**< pointer to port symbol (if declared) */
-    inst_rec_t*     inst;       /**< pointer to net or cp-sync instance */
+    instrec_t*     inst;        /**< pointer to net instance */
+    char*           name;
     int             attr_class; /**< updated class (VAL_NONE can be changed) */
     int             attr_mode;  /**< updated mode for cp-sync (VAL_BI) */
-    virt_port_t* next;
+    bool            connected;
 };
 
 // FUNCTIONS ------------------------------------------------------------------
@@ -72,7 +80,7 @@ struct virt_port_s
  * @param inst  pointer to a instance record
  * @return      pointer to a net connection structure
  */
-net_con_t* net_con_create( inst_rec_t* );
+net_con_t* net_con_create( instrec_t* );
 
 /**
  * @brief   Make a copy of the port list of a symbol record
@@ -81,18 +89,12 @@ net_con_t* net_con_create( inst_rec_t* );
  * @param inst  a pointer to the instance the port belongs to
  * @return      pointer to the last element of the new list
  */
-virt_port_t* virt_port_copy_inst( symrec_list_t* ports, inst_rec_t* inst );
+virt_port_list_t* virt_port_copy_box( symrec_list_t* ports, instrec_t* inst );
 
-/**
- * @brief   Make a copy of the port list in a virtual net
- *
- * @param old   a pointer to the port list to be copied
- * @param last  a pointer to the last element of a potential other list
- * @param class force a class to each port in the list
- *              if set to -1 this is ignored
- * @return      pointer to the last element of the new list
- */
-virt_port_t* virt_port_copy_vnet( virt_port_t*, virt_port_t*, int );
+virt_port_list_t* virt_port_add( virt_net_t*, port_class_t, port_mode_t,
+        instrec_t*, char* name );
+virt_port_t* virt_port_create( port_class_t, port_mode_t, instrec_t*, char* );
+void virt_port_remove( virt_net_t*, virt_port_t* );
 
 /**
  * @brief   Create a new virtual net structure
@@ -102,7 +104,7 @@ virt_port_t* virt_port_copy_vnet( virt_port_t*, virt_port_t*, int );
  * @param type  type of the virtual net to be created
  * @return      pointer to the newly created virtual net
  */
-virt_net_t* virt_net_create_struct( virt_port_t*, net_con_t*, virt_net_type_t );
+virt_net_t* virt_net_create_struct( virt_port_list_t*, net_con_t*, virt_net_type_t );
 
 /**
  * @brief   Create a new virtual net of a box
@@ -112,7 +114,7 @@ virt_net_t* virt_net_create_struct( virt_port_t*, net_con_t*, virt_net_type_t );
  * @param type  type of the virtual net to be created
  * @return      pointer to the newly created virtual net
  */
-virt_net_t* virt_net_create_box( symrec_t*, inst_rec_t* );
+virt_net_t* virt_net_create_box( symrec_t*, instrec_t* );
 
 /**
  * @brief   Create a new virtual net of a wrapper or net
@@ -122,7 +124,8 @@ virt_net_t* virt_net_create_box( symrec_t*, inst_rec_t* );
  * @param type  type of the virtual net to create
  * @return      pointer to the newly created virtual net
  */
-virt_net_t* virt_net_create_vnet( virt_port_t*, inst_rec_t*, virt_net_type_t );
+virt_net_t* virt_net_create_vnet( virt_port_list_t*, instrec_t*,
+        virt_net_type_t );
 
 /**
  * @brief   Create a virtual net from two operands op1|op2
@@ -149,21 +152,26 @@ virt_net_t* virt_net_create_parallel( virt_net_t*, virt_net_t* );
 virt_net_t* virt_net_create_serial( virt_net_t*, virt_net_t* );
 
 /**
- * @brief   Make a deep copy of a virtual net
- *
- * Create a deep copy from a virtual net. Note that all all ports of a virtual
- * net only point to the port record in the symbol table. Hence only the
- * pointer list is copied but not the port record itself
- *
- * @param v_net pointer to a virtual net
- * @return      pointer to the new virtual net
- */
-virt_net_t* virt_net_copy( virt_net_t* );
-
-/**
  * @brief   Destroy a virtual net and its conent.
  *
  * @param v_net pointer to the virtual net
  */
 void virt_net_destroy( virt_net_t* );
+void virt_net_destroy_shallow( virt_net_t* );
+instrec_t* get_inst_from_virt_port( virt_port_t* );
+
+/**
+ * @brief   Print debug information of a port of a virtual net
+ *
+ * @param port  pointer to the port of a virtual net
+ */
+void debug_print_vport( virt_port_t* );
+
+/**
+ * @brief   Print debug information of all ports in a virtual net
+ *
+ * @param v_net pointer to the virtual net
+ */
+void debug_print_vports( virt_net_t*, bool );
+void debug_print_con( virt_net_t* );
 #endif // VNET_H
