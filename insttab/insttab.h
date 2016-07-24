@@ -41,8 +41,7 @@ struct instrec_s
     int             id;     /**< id of the instance symbol */
     int             line;   /**< line number in the source code of the symbol */
     instrec_type_t  type;   /**< type of the symbol */
-    symrec_t*       net;    /**< pointer to the declaration in the symtab */
-    UT_hash_handle  hh;     /**< makes this structure hashable */
+    symrec_t*       symb;   /**< pointer to the declaration in the symtab */
 };
 
 // FUNCTIONS ------------------------------------------------------------------

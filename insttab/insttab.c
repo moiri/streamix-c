@@ -21,7 +21,7 @@ instrec_t* instrec_create( char* name, int id, int line, instrec_type_t type,
     new_item->id = id;
     new_item->line = line;
     new_item->type = type;
-    new_item->net = rec;
+    new_item->symb = rec;
     new_item->name = ( char* )malloc( strlen( name ) + 1 );
     strcpy( new_item->name, name );
 #if defined(DEBUG) || defined(DEBUG_INST)

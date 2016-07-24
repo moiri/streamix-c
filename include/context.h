@@ -58,15 +58,12 @@ bool are_port_modes_ok( virt_port_t*, virt_port_t* );
  * Check the connection of two ports from virtual nets and connect them.
  * The dependancy graph is updated.
  *
- * @param v_net_l   pointer to the virtual net of the left operand
- * @param v_net_r   pointer to the virtual net of the right operand
  * @param ports_l   pointer to the port of a virtual net of the left operator
  * @param ports_r   pointer to the port of a virtual net of the right operator
  * @param g         pointer to a initialized igraph object
  * @return          true if connection was ok, false if no connection
  */
-bool check_connection( virt_net_t*, virt_net_t*, virt_port_t*, virt_port_t*,
-        igraph_t* g );
+bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g );
 
 /**
  * @brief    check port connections of two nets
@@ -126,6 +123,8 @@ void* check_context_ast( symrec_t**, UT_array*, ast_node_t*, igraph_t* );
  */
 bool check_prototype( symrec_list_t*, virt_net_t*, char* );
 
+void connect_ports( virt_port_t*, virt_port_t*, igraph_t* );
+
 /**
  * @brief   Connect two ports of copy synchronizers
  *
@@ -164,6 +163,7 @@ void cpsync_connects( virt_net_t*, bool, igraph_t* );
  * @return      pointer to the merged copy synchronizer
  */
 instrec_t* cpsync_merge( virt_port_t*, virt_port_t*, igraph_t* );
+void cpsync_merge_ports( virt_port_t*, virt_port_t*, instrec_t*, igraph_t* );
 
 /**
  * @brief   Print debug information of a port of a port record list
@@ -231,5 +231,7 @@ virt_net_t* install_nets( symrec_t**, UT_array*, ast_node_t*,
  *              false if the instances are not connected
  */
 bool is_connected( instrec_t*, instrec_t*, igraph_t* );
+void virt_net_update_class( virt_net_t*, port_class_t );
+virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t* );
 
 #endif // CONTEXT_H

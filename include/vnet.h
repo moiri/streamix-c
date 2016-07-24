@@ -16,6 +16,7 @@ typedef struct virt_net_s virt_net_t;
 typedef struct virt_port_s virt_port_t;
 typedef struct virt_port_list_s virt_port_list_t;
 typedef enum virt_net_type_e virt_net_type_t;
+typedef enum virt_port_state_e virt_port_state_t;
 
 #include <igraph.h>
 #include "symtab.h"
@@ -29,6 +30,14 @@ enum virt_net_type_e
     VNET_PARALLEL,
     VNET_SERIAL,
     VNET_WRAP
+};
+
+enum virt_port_state_e
+{
+    VPORT_STATE_DISABLED,
+    VPORT_STATE_OPEN,
+    VPORT_STATE_TO_TEST,
+    VPORT_STATE_CONNECTED
 };
 
 // STRUCTS --------------------------------------------------------------------
@@ -66,11 +75,11 @@ struct virt_port_list_s
  */
 struct virt_port_s
 {
-    instrec_t*     inst;        /**< pointer to net instance */
-    char*           name;
-    int             attr_class; /**< updated class (VAL_NONE can be changed) */
-    int             attr_mode;  /**< updated mode for cp-sync (VAL_BI) */
-    bool            connected;
+    instrec_t*          inst;       /**< pointer to net instance */
+    char*               name;
+    int                 attr_class; /**< updated class (VAL_NONE can be changed) */
+    int                 attr_mode;  /**< updated mode for cp-sync (VAL_BI) */
+    virt_port_state_t   state;
 };
 
 // FUNCTIONS ------------------------------------------------------------------
@@ -91,7 +100,7 @@ net_con_t* net_con_create( instrec_t* );
  */
 virt_port_list_t* virt_port_copy_box( symrec_list_t* ports, instrec_t* inst );
 
-virt_port_list_t* virt_port_add( virt_net_t*, port_class_t, port_mode_t,
+virt_port_t* virt_port_add( virt_net_t*, port_class_t, port_mode_t,
         instrec_t*, char* name );
 virt_port_t* virt_port_create( port_class_t, port_mode_t, instrec_t*, char* );
 void virt_port_remove( virt_net_t*, virt_port_t* );
@@ -172,6 +181,6 @@ void debug_print_vport( virt_port_t* );
  *
  * @param v_net pointer to the virtual net
  */
-void debug_print_vports( virt_net_t*, bool );
+void debug_print_vports( virt_net_t* );
 void debug_print_con( virt_net_t* );
 #endif // VNET_H
