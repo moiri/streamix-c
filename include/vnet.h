@@ -23,6 +23,9 @@ typedef enum virt_port_state_e virt_port_state_t;
 #include "insttab.h"
 
 // ENUMS ----------------------------------------------------------------------
+/**
+ * @brief   type of virtual net
+ */
 enum virt_net_type_e
 {
     VNET_BOX,
@@ -32,12 +35,15 @@ enum virt_net_type_e
     VNET_WRAP
 };
 
+/**
+ * @brief   state of a virtual port
+ */
 enum virt_port_state_e
 {
-    VPORT_STATE_DISABLED,
-    VPORT_STATE_OPEN,
-    VPORT_STATE_TO_TEST,
-    VPORT_STATE_CONNECTED
+    VPORT_STATE_DISABLED,   /**< port can not be used anymore */
+    VPORT_STATE_OPEN,       /**< port is ready to be connected */
+    VPORT_STATE_TO_TEST,    /**< port is connected but not yet tested */
+    VPORT_STATE_CONNECTED   /**< port is connected and tested */
 };
 
 // STRUCTS --------------------------------------------------------------------
@@ -63,11 +69,14 @@ struct virt_net_s
     virt_net_type_t     type;       /**< #virt_net_type_e */
 };
 
+/**
+ * @brief   a list element of a virtual port list
+ */
 struct virt_port_list_s
 {
-    int                 idx;
-    virt_port_t*        port;
-    virt_port_list_t*   next;
+    int                 idx;    /**< index of the element */
+    virt_port_t*        port;   /**< pointer to the port */
+    virt_port_list_t*   next;   /**< pointer to the next element */
 };
 
 /**
@@ -76,10 +85,10 @@ struct virt_port_list_s
 struct virt_port_s
 {
     instrec_t*          inst;       /**< pointer to net instance */
-    char*               name;
-    int                 attr_class; /**< updated class (VAL_NONE can be changed) */
+    char*               name;       /**< pointer to the name (not allocated) */
+    int                 attr_class; /**< updated class */
     int                 attr_mode;  /**< updated mode for cp-sync (VAL_BI) */
-    virt_port_state_t   state;
+    virt_port_state_t   state;      /**< #virt_port_state_e */
 };
 
 // FUNCTIONS ------------------------------------------------------------------
@@ -92,20 +101,6 @@ struct virt_port_s
 net_con_t* net_con_create( instrec_t* );
 
 /**
- * @brief   Make a copy of the port list of a symbol record
- *
- * @param ports a pointer to the port list to be copied
- * @param inst  a pointer to the instance the port belongs to
- * @return      pointer to the last element of the new list
- */
-virt_port_list_t* virt_port_copy_box( symrec_list_t* ports, instrec_t* inst );
-
-virt_port_t* virt_port_add( virt_net_t*, port_class_t, port_mode_t,
-        instrec_t*, char* name );
-virt_port_t* virt_port_create( port_class_t, port_mode_t, instrec_t*, char* );
-void virt_port_remove( virt_net_t*, virt_port_t* );
-
-/**
  * @brief   Create a new virtual net structure
  *
  * @param ports pointer to a virtual port list
@@ -113,14 +108,14 @@ void virt_port_remove( virt_net_t*, virt_port_t* );
  * @param type  type of the virtual net to be created
  * @return      pointer to the newly created virtual net
  */
-virt_net_t* virt_net_create_struct( virt_port_list_t*, net_con_t*, virt_net_type_t );
+virt_net_t* virt_net_create_struct( virt_port_list_t*, net_con_t*,
+        virt_net_type_t );
 
 /**
  * @brief   Create a new virtual net of a box
  *
  * @param rec   pointer to a record from the symbol table
  * @param inst  pointer to a record of the instance table
- * @param type  type of the virtual net to be created
  * @return      pointer to the newly created virtual net
  */
 virt_net_t* virt_net_create_box( symrec_t*, instrec_t* );
@@ -163,11 +158,87 @@ virt_net_t* virt_net_create_serial( virt_net_t*, virt_net_t* );
 /**
  * @brief   Destroy a virtual net and its conent.
  *
- * @param v_net pointer to the virtual net
+ * @param v_net     pointer to the virtual net
+ * @parma shallow   if true do not free the port structures
  */
-void virt_net_destroy( virt_net_t* );
+void virt_net_destroy( virt_net_t*, bool );
+
+/**
+ * @brief   Destroy a virtual net and its conent except the port structures.
+ *
+ * @param v_net     pointer to the virtual net
+ */
 void virt_net_destroy_shallow( virt_net_t* );
-instrec_t* get_inst_from_virt_port( virt_port_t* );
+
+/**
+ * @brief   update the port class of all open ports in the v_net
+ *
+ * @param v_net         a pointer to a virtual net to update the ports
+ * @param port_class    the class the ports will be updated to
+ */
+void virt_net_update_class( virt_net_t*, port_class_t );
+
+/**
+ * @brief   Add a new virtual port to a virtual net
+ *
+ * @param v_net         a pointer to a virtual net where the port will be added
+ * @param port_class    the class of the new port
+ * @param port_mode     the mode of the new port
+ * @param port_inst     the instance the port is part of
+ * @param name          a pointer to the name of the port ( no allocation )
+ * @return              a pointer to the newly created port
+ */
+virt_port_t* virt_port_add( virt_net_t*, port_class_t, port_mode_t, instrec_t*,
+        char* );
+/**
+ * @brief   Assign ports to a virtual net
+ *
+ * Create a new port list and assign existing ports to it. Assign the new
+ * list to a virtual net
+ *
+ * @param old       port list containing the ports to assign
+ * @param last_list a pointer to a list which will be chained to the new list
+ * @return          a pointer to the new port list
+ */
+virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t* );
+
+/**
+ * @brief   Create a new virtual port
+ *
+ * @param port_class    the class of the new port
+ * @param port_mode     the mode of the new port
+ * @param port_inst     the instance the port is part of
+ * @param name          a pointer to the name of the port ( no allocation )
+ * @return              a pointer to the newly created port
+ */
+virt_port_t* virt_port_create( port_class_t, port_mode_t, instrec_t*, char* );
+
+/**
+ * @brief   Make a copy of the port list of a symbol record
+ *
+ * @param ports a pointer to the port list to be copied
+ * @param inst  a pointer to the instance the port belongs to
+ * @return      pointer to the last element of the new list
+ */
+virt_port_list_t* virt_port_copy_box( symrec_list_t*, instrec_t* );
+
+/**
+ * @brief   remove a port from a port list
+ *
+ * @depricated  as port lists are copied it is not consistent to remove ports
+ *              port states are used instead (e.g. VPORT_STATE_DISABLED)
+ *
+ * @param v_net a pointer to the virtual net where to port will be removed
+ * @param port  a pointer to the port to be removed
+ */
+void virt_port_remove( virt_net_t*, virt_port_t* );
+
+/**
+ * @brief   Print debugging information of a net_con structure
+ *
+ * @param v_net pointer to the virtual net holding the con structure
+ */
+void debug_print_con( virt_net_t* );
 
 /**
  * @brief   Print debug information of a port of a virtual net
@@ -182,5 +253,4 @@ void debug_print_vport( virt_port_t* );
  * @param v_net pointer to the virtual net
  */
 void debug_print_vports( virt_net_t* );
-void debug_print_con( virt_net_t* );
 #endif // VNET_H

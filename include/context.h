@@ -16,14 +16,17 @@
 #include "insttab.h"
 #include "symtab.h"
 #include "utarray.h"
+
 /**
  * @brief   append id from instances to a initialised vector
  *
  * This function either appends the instance id to the vector or if the
  * instance has child instances it collects all ids of the chlidren.
  *
- * @param rec   source instance record
- * @param id    an initialised vector where the ids are appended
+ * @param rec           source instance record
+ * @param id            an initialised vector where the ids are appended
+ * @param port_class    only consider instances from ports with this port class
+ *                      or no port class
  */
 void append_inst_ids( instrec_t*, igraph_vector_t*, port_class_t );
 
@@ -66,10 +69,7 @@ bool are_port_modes_ok( virt_port_t*, virt_port_t* );
 bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g );
 
 /**
- * @brief    check port connections of two nets
- *
- * Check the connection of two virtual nets and connect them. Connecting ports
- * are removed from the virtual nets.
+ * @brief    Check port connections of two nets and connect them
  *
  * @param v_net1    pointer to the virtual net of the left operator
  * @param v_net2    pointer to the virtual net of the right operator
@@ -92,9 +92,9 @@ void check_connection_missing( virt_net_t*, virt_net_t*, igraph_t* );
 /**
  * @brief    Check the context of all identifiers in the program
  *
- * @param ast   pointer to the root ast node
- * @param nets  pointer to the symbol table
- * @param g     pointer to a initialized igraph object
+ * @param ast       pointer to the root ast node
+ * @param symtab    pointer to the symbol table
+ * @param g         pointer to an initialized igraph object
  */
 void check_context( ast_node_t*, symrec_t**, igraph_t* );
 
@@ -123,6 +123,19 @@ void* check_context_ast( symrec_t**, UT_array*, ast_node_t*, igraph_t* );
  */
 bool check_prototype( symrec_list_t*, virt_net_t*, char* );
 
+/**
+ * @brief   Connect two instances by a pirt of matching ports
+ *
+ * The dependancy graph is updated, port classes and states are set
+ * according to the connection semantics
+ *
+ * @param port_l        pointer to a virtual port of the left instance
+ * @param port_r        pointer to a virtual port of the right instance
+ * @oaram g             pointer to the dependancy graph to update
+ * @param connect_sync  if true, port state of synch-ports is updated.
+ *                      this must be true when a serial connection is
+ *                      performed
+ */
 void connect_ports( virt_port_t*, virt_port_t*, igraph_t*, bool );
 
 /**
@@ -135,7 +148,7 @@ void connect_ports( virt_port_t*, virt_port_t*, igraph_t*, bool );
  * @param net   pointer to the virtuel net
  * @param port1 pointer to the port of a virtual net of the left operator
  * @param port2 pointer to the port of a virtual net of the right operator
- * @param g     pointer to a initialized igraph object
+ * @param g     pointer to a the dependancy graph to be updated
  * @return      pointer to a copy synchronizer
  */
 void cpsync_connect( virt_net_t*, virt_port_t*, virt_port_t*, igraph_t* );
@@ -146,8 +159,7 @@ void cpsync_connect( virt_net_t*, virt_port_t*, virt_port_t*, igraph_t* );
  * Establish copy synchronizer connections between two virtual nets. This
  * includes side ports as well as regular ports.
  *
- * @param v_net1    pointer to the virtual net of the left operator
- * @param v_net2    pointer to the virtual net of the right operator
+ * @param v_net1    pointer to the virtual net
  * @param parallel  flag to indicate wheter copy synchronizer connections
  *                  in parallel operators are checked
  * @param g         pointer to a initialized igraph object
@@ -155,7 +167,11 @@ void cpsync_connect( virt_net_t*, virt_port_t*, virt_port_t*, igraph_t* );
 void cpsync_connects( virt_net_t*, bool, igraph_t* );
 
 /**
- * @brief   Merge two copy sunchronizer
+ * @brief   Merge two copy synchronizer
+ *
+ * This merges two copy synchronizer by merging two graph vertices and
+ * consucutevly updating alle changes ids. It also removes the obsolete
+ * instance of the cp sync.
  *
  * @param port1 pointer to the port of a virtual net
  * @param port2 pointer to the port of a virtual net
@@ -163,6 +179,15 @@ void cpsync_connects( virt_net_t*, bool, igraph_t* );
  * @return      pointer to the merged copy synchronizer
  */
 instrec_t* cpsync_merge( virt_port_t*, virt_port_t*, igraph_t* );
+
+/**
+ * @brief   update ports of a virtual net after merging two copy synchrpnizers
+ *
+ * @param port_l    pointer to the left virtual port
+ * @param port_r    pointer to the right virtual port
+ * @param cp_sync   pointer to the copy synchronizer instance
+ * @param g         pointer to the dependency graph
+ */
 void cpsync_merge_ports( virt_port_t*, virt_port_t*, instrec_t*, igraph_t* );
 
 /**
@@ -218,8 +243,7 @@ bool do_port_attrs_match( symrec_list_t*, virt_port_list_t* );
  * @return              pointer to a virtual net with a port list and connection
  *                      vectors
  */
-virt_net_t* install_nets( symrec_t**, UT_array*, ast_node_t*,
-        igraph_t* );
+virt_net_t* install_nets( symrec_t**, UT_array*, ast_node_t*, igraph_t* );
 
 /**
  * @brief   checks wheter two instances are connected
@@ -231,7 +255,5 @@ virt_net_t* install_nets( symrec_t**, UT_array*, ast_node_t*,
  *              false if the instances are not connected
  */
 bool is_connected( instrec_t*, instrec_t*, igraph_t* );
-void virt_net_update_class( virt_net_t*, port_class_t );
-virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t* );
 
 #endif // CONTEXT_H

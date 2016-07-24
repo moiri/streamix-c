@@ -1,6 +1,6 @@
-A = box funcA(in a, out b)
+A = box funcA(up in a, down out a)
 X = box funcX(out a)
-Z = box funcY(in b)
+Z = box funcY(in a)
 
 Y = A|A
 connect (X|X).Y.Y.(Z|Z)

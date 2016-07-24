@@ -12,14 +12,6 @@
 #include "ast.h"
 
 /******************************************************************************/
-instrec_t* get_inst_from_virt_port( virt_port_t* port )
-{
-    /* if( port->cp_sync != NULL ) return port->cp_sync; */
-    /* else return port->box; */
-    return port->inst;
-}
-
-/******************************************************************************/
 net_con_t* net_con_create( instrec_t* inst )
 {
     net_con_t* con = malloc( sizeof( net_con_t ) );
@@ -39,127 +31,6 @@ virt_net_t* virt_net_create_struct( virt_port_list_t* ports, net_con_t* con,
     v_net->con = con;
     v_net->type = type;
     return v_net;
-}
-
-/******************************************************************************/
-virt_port_list_t* virt_port_copy_box( symrec_list_t* ports, instrec_t* inst )
-{
-    virt_port_t* new_port = NULL;
-    virt_port_list_t* list_last = NULL;
-    virt_port_list_t* vports = NULL;
-    int idx = 0;
-
-    while( ports != NULL  ) {
-        vports = malloc( sizeof( virt_port_list_t ) );
-        new_port = virt_port_create( ports->rec->attr_port->collection,
-                ports->rec->attr_port->mode, inst, ports->rec->name );
-        vports->port = new_port;
-        vports->next = list_last;
-        vports->idx = idx;
-        list_last = vports;
-        ports = ports->next;
-        idx++;
-    }
-    return list_last;
-}
-
-/******************************************************************************/
-virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
-        instrec_t* port_inst, char* name )
-{
-    virt_port_t* new_port = NULL;
-
-    new_port = malloc( sizeof( virt_port_t ) );
-    new_port->attr_class = port_class;
-    new_port->attr_mode = port_mode;
-    new_port->inst = port_inst;
-    new_port->name = name;
-    new_port->state = VPORT_STATE_OPEN;
-
-    return new_port;
-}
-
-/******************************************************************************/
-virt_port_t* virt_port_add( virt_net_t* v_net, port_class_t port_class,
-        port_mode_t port_mode, instrec_t* port_inst, char* name )
-{
-    virt_port_list_t* list_last = NULL;
-    virt_port_list_t* list_new = NULL;
-    virt_port_list_t* list = v_net->ports;
-    virt_port_t* new_port = NULL;
-    int idx = 0;
-
-    while( list != NULL ) {
-        list_last = list;
-        idx++;
-        list = list->next;
-    }
-
-    new_port = virt_port_create( port_class, port_mode, port_inst, name );
-    list_new = malloc( sizeof( virt_port_list_t ) );
-    list_new->port = new_port;
-    list_new->idx = idx;
-    list_new->next = NULL;
-    list_last->next = list_new;
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-    printf( "virt_port_add: Add port %s of inst %s(%d)\n", new_port->name,
-            new_port->inst->name, new_port->inst->id );
-#endif // DEBUG_CONNECT
-
-    return new_port;
-}
-
-/******************************************************************************/
-void virt_port_remove( virt_net_t* v_net, virt_port_t* port )
-{
-    virt_port_list_t* list_last = NULL;
-    virt_port_list_t* list = v_net->ports;
-
-    while( list != NULL ) {
-        if( list->port == port ) {
-            if( list_last == NULL ) v_net->ports = list->next;
-            else list_last->next = list->next;
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-            printf( "virt_port_remove: Remove port %s of inst %s(%d)\n",
-                    list->port->name, list->port->inst->name,
-                    list->port->inst->id );
-#endif // DEBUG_CONNECT
-            free( list->port );
-            free( list );
-            break;
-        }
-        list_last = list;
-        list = list->next;
-    }
-}
-
-/******************************************************************************/
-virt_port_list_t* virt_port_assign( virt_port_list_t* old,
-        virt_port_list_t* list_last )
-{
-    virt_port_list_t* new_list = NULL;
-    /* virt_port_list_t* last_elem = NULL; */
-    virt_port_list_t* old_list = old;
-    int idx = 0;
-    if( list_last != NULL) idx = list_last->idx + 1;
-
-    /* printf("virt_port_assign: \n"); */
-    while( old_list != NULL ) {
-        /* printf(" %s,", old_list->port->name ); */
-        new_list = malloc( sizeof( virt_port_list_t ) );
-        /* old_list->idx = idx; */
-        new_list->port = old_list->port;
-        new_list->next = list_last;
-        new_list->idx = idx;
-        idx++;
-        list_last = new_list;
-        /* last_elem = old_list; */
-        old_list = old_list->next;
-    }
-    /* last_elem->next = list_last; */
-    /* printf("\n"); */
-    /* return list_last; */
-    return new_list;
 }
 
 /******************************************************************************/
@@ -207,19 +78,6 @@ virt_net_t* virt_net_create_parallel( virt_net_t* v_net1, virt_net_t* v_net2 )
 }
 
 /******************************************************************************/
-void virt_net_update_class( virt_net_t* v_net, port_class_t port_class )
-{
-    virt_port_list_t* list = v_net->ports;
-    while( list != NULL ) {
-        if( ( list->port->attr_class != PORT_CLASS_SIDE )
-                && ( list->port->state == VPORT_STATE_OPEN ) )
-            list->port->attr_class = port_class;
-        list = list->next;
-    }
-
-}
-
-/******************************************************************************/
 virt_net_t* virt_net_create_serial( virt_net_t* v_net1, virt_net_t* v_net2 )
 {
     virt_net_t* v_net = NULL;
@@ -239,13 +97,14 @@ virt_net_t* virt_net_create_serial( virt_net_t* v_net1, virt_net_t* v_net2 )
 }
 
 /******************************************************************************/
-void virt_net_destroy_shallow( virt_net_t* v_net )
+void virt_net_destroy( virt_net_t* v_net, bool shallow )
 {
     virt_port_list_t* ports = NULL;
-    // free port list structures
+    // free ports
     while( v_net->ports != NULL ) {
         ports = v_net->ports;
         v_net->ports = v_net->ports->next;
+        if( !shallow && ( ports->port != NULL ) ) free( ports->port );
         free( ports );
     }
     // free connection vectors
@@ -258,23 +117,135 @@ void virt_net_destroy_shallow( virt_net_t* v_net )
 }
 
 /******************************************************************************/
-void virt_net_destroy( virt_net_t* v_net )
+void virt_net_destroy_shallow( virt_net_t* v_net )
 {
-    virt_port_list_t* ports = NULL;
-    // free ports
-    while( v_net->ports != NULL ) {
-        ports = v_net->ports;
-        v_net->ports = v_net->ports->next;
-        if( ports->port != NULL ) free( ports->port );
-        free( ports );
+    virt_net_destroy( v_net, true );
+}
+
+/******************************************************************************/
+void virt_net_update_class( virt_net_t* v_net, port_class_t port_class )
+{
+    virt_port_list_t* list = v_net->ports;
+    while( list != NULL ) {
+        if( ( list->port->attr_class != PORT_CLASS_SIDE )
+                && ( list->port->state == VPORT_STATE_OPEN ) )
+            list->port->attr_class = port_class;
+        list = list->next;
     }
-    // free connection vectors
-    if( v_net->con != NULL ) {
-        igraph_vector_ptr_destroy( &v_net->con->left );
-        igraph_vector_ptr_destroy( &v_net->con->right );
-        free( v_net->con );
+
+}
+
+/******************************************************************************/
+virt_port_t* virt_port_add( virt_net_t* v_net, port_class_t port_class,
+        port_mode_t port_mode, instrec_t* port_inst, char* name )
+{
+    virt_port_list_t* list_last = NULL;
+    virt_port_list_t* list_new = NULL;
+    virt_port_list_t* list = v_net->ports;
+    virt_port_t* new_port = NULL;
+    int idx = 0;
+
+    while( list != NULL ) {
+        list_last = list;
+        idx++;
+        list = list->next;
     }
-    free( v_net );
+
+    new_port = virt_port_create( port_class, port_mode, port_inst, name );
+    list_new = malloc( sizeof( virt_port_list_t ) );
+    list_new->port = new_port;
+    list_new->idx = idx;
+    list_new->next = NULL;
+    list_last->next = list_new;
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+    printf( "virt_port_add: Add port %s of inst %s(%d)\n", new_port->name,
+            new_port->inst->name, new_port->inst->id );
+#endif // DEBUG_CONNECT
+
+    return new_port;
+}
+
+/******************************************************************************/
+virt_port_list_t* virt_port_assign( virt_port_list_t* old,
+        virt_port_list_t* list_last )
+{
+    virt_port_list_t* new_list = NULL;
+    virt_port_list_t* old_list = old;
+    int idx = 0;
+    if( list_last != NULL) idx = list_last->idx + 1;
+
+    while( old_list != NULL ) {
+        new_list = malloc( sizeof( virt_port_list_t ) );
+        new_list->port = old_list->port;
+        new_list->next = list_last;
+        new_list->idx = idx;
+        idx++;
+        list_last = new_list;
+        old_list = old_list->next;
+    }
+    return new_list;
+}
+
+/******************************************************************************/
+virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
+        instrec_t* port_inst, char* name )
+{
+    virt_port_t* new_port = NULL;
+
+    new_port = malloc( sizeof( virt_port_t ) );
+    new_port->attr_class = port_class;
+    new_port->attr_mode = port_mode;
+    new_port->inst = port_inst;
+    new_port->name = name;
+    new_port->state = VPORT_STATE_OPEN;
+
+    return new_port;
+}
+
+/******************************************************************************/
+virt_port_list_t* virt_port_copy_box( symrec_list_t* ports, instrec_t* inst )
+{
+    virt_port_t* new_port = NULL;
+    virt_port_list_t* list_last = NULL;
+    virt_port_list_t* vports = NULL;
+    int idx = 0;
+
+    while( ports != NULL  ) {
+        vports = malloc( sizeof( virt_port_list_t ) );
+        new_port = virt_port_create( ports->rec->attr_port->collection,
+                ports->rec->attr_port->mode, inst, ports->rec->name );
+        vports->port = new_port;
+        vports->next = list_last;
+        vports->idx = idx;
+        list_last = vports;
+        ports = ports->next;
+        idx++;
+    }
+    return list_last;
+}
+
+/******************************************************************************/
+void virt_port_remove( virt_net_t* v_net, virt_port_t* port )
+{
+    virt_port_list_t* list_last = NULL;
+    virt_port_list_t* list = v_net->ports;
+
+    while( list != NULL ) {
+        if( list->port == port ) {
+            if( list_last == NULL ) v_net->ports = list->next;
+            else list_last->next = list->next;
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+            printf( "virt_port_remove: Remove port %s of inst %s(%d)\n",
+                    list->port->name, list->port->inst->name,
+                    list->port->inst->id );
+#endif // DEBUG_CONNECT
+            free( list->port );
+            free( list );
+            break;
+        }
+        list_last = list;
+        list = list->next;
+    }
 }
 
 /******************************************************************************/
@@ -305,11 +276,10 @@ void debug_print_con( virt_net_t* v_net )
 /******************************************************************************/
 void debug_print_vport( virt_port_t* port )
 {
-    instrec_t* inst = get_inst_from_virt_port( port );
     if( port->state == VPORT_STATE_CONNECTED ) printf("+");
     if( port->state == VPORT_STATE_TO_TEST ) printf("?");
     if( port->state == VPORT_STATE_DISABLED ) printf("!");
-    printf( "%s(%d)", inst->name, inst->id );
+    printf( "%s(%d)", port->inst->name, port->inst->id );
     if( port->attr_class == PORT_CLASS_DOWN ) printf( "_" );
     else if( port->attr_class == PORT_CLASS_UP ) printf( "^" );
     else if( port->attr_class == PORT_CLASS_SIDE ) printf( "|" );
