@@ -42,6 +42,7 @@ void append_inst_ids( instrec_t* rec, igraph_vector_t* id,
                             ports->port->inst->id );
 #endif // DEBUG_CONNECT_MISSING
                 }
+                /* ports->port->state = VPORT_STATE_CONNECTED; */
             }
             ports = ports->next;
         }
@@ -452,8 +453,8 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
     else if( ( port_r->inst->type == INSTREC_SYNC ) && connect_sync )
         port_r->state = VPORT_STATE_TO_TEST;
     // add edge to the graph and set attributes
+    id_edge = igraph_ecount( g );
     igraph_add_edge( g, id_src, id_dest );
-    igraph_get_eid( g, &id_edge, id_src, id_dest, false, false );
     igraph_cattribute_EAS_set( g, "label", id_edge, port_l->name );
     igraph_cattribute_EAN_set( g, "p_src", id_edge, ( uintptr_t )p_src );
     igraph_cattribute_EAN_set( g, "p_dest", id_edge, ( uintptr_t )p_dest );
@@ -680,6 +681,92 @@ bool do_port_attrs_match( symrec_list_t* r_ports, virt_port_list_t* v_ports )
 
     return match;
 }
+
+void copy_graph_vertex( igraph_t* g_src, igraph_t* g_dest, int id )
+{
+    instrec_t* inst;
+    int id_new = igraph_vcount( g_dest );
+    igraph_add_vertices( g_dest, 1, NULL );
+    igraph_cattribute_VAS_set( g_dest, "label", id_new,
+            igraph_cattribute_VAS( g_src, "label", id ) );
+    igraph_cattribute_VAS_set( g_dest, "func", id_new,
+            igraph_cattribute_VAS( g_src, "func", id ) );
+    inst = ( instrec_t* )( uintptr_t )
+        igraph_cattribute_VAN( g_src, "inst", id );
+    inst->id = id_new;
+    igraph_cattribute_VAN_set( g_dest, "inst", id_new, ( uintptr_t )inst );
+}
+
+void copy_graph_edge_attr( igraph_t* g_src, igraph_t* g_dest, int id_new, int id )
+{
+    igraph_cattribute_EAS_set( g_dest, "label", id_new,
+            igraph_cattribute_EAS( g_src, "label", id ) );
+    igraph_cattribute_EAN_set( g_dest, "p_src", id_new,
+            igraph_cattribute_EAN( g_src, "p_src", id ) );
+    igraph_cattribute_EAN_set( g_dest, "p_dest", id_new,
+            igraph_cattribute_EAN( g_src, "p_dest", id ) );
+}
+
+void flatten_graph( igraph_t* g_parent, igraph_t* g_child, virt_net_t* v_net,
+        int net_id )
+{
+    instrec_t *inst;
+    virt_port_list_t* ports = v_net->ports;
+    virt_port_t *p_src, *p_dest, *port;
+    igraph_es_t es;
+    igraph_vs_t vs;
+    igraph_eit_t eit;
+    int id_from, id_to, id_edge, id;
+
+    // add all edges of the child to the parent
+    es = igraph_ess_all( IGRAPH_EDGEORDER_ID );
+    igraph_eit_create( g_child, es, &eit );
+    while( !IGRAPH_EIT_END( eit ) ) {
+        igraph_edge( g_child, IGRAPH_EIT_GET( eit ), &id_from, &id_to );
+        // add vertices to the parent
+        copy_graph_vertex( g_child, g_parent, id_from );
+        copy_graph_vertex( g_child, g_parent, id_to );
+        // add add edges to the parent
+        id_edge = igraph_ecount( g_parent );
+        igraph_add_edge( g_parent, id_from, id_to );
+        copy_graph_edge_attr( g_child, g_parent, id_edge,
+                IGRAPH_EIT_GET( eit ) );
+        IGRAPH_EIT_NEXT( eit );
+    }
+    igraph_eit_destroy( &eit );
+    igraph_es_destroy( &es );
+    // get all ports connecting to the net
+    igraph_es_incident( &es, net_id, IGRAPH_ALL );
+    igraph_eit_create( g_parent, es, &eit );
+    // for each edge connect to the actual nets form the child graph
+    while( !IGRAPH_EIT_END( eit ) ) {
+        p_src = ( virt_port_t* )( uintptr_t )
+            igraph_cattribute_EAN( g_parent, "p_src", IGRAPH_EIT_GET( eit ) );
+        p_dest = ( virt_port_t* )( uintptr_t )
+            igraph_cattribute_EAN( g_parent, "p_dest", IGRAPH_EIT_GET( eit ) );
+        // get id of the non net end of the edge
+        if( p_dest->inst->id != net_id ) port = p_dest;
+        else if( p_src->inst->id != net_id ) port = p_src;
+        // connect this port to the matching port of the virtual net
+        while( ports != NULL ) {
+            check_connection( port, ports->port, g_parent );
+            ports = ports->next;
+        }
+        IGRAPH_EIT_NEXT( eit );
+    }
+    igraph_eit_destroy( &eit );
+    igraph_es_destroy( &es );
+    // remove the net vertice and adjust all ids
+    vs = igraph_vss_1( net_id );
+    igraph_delete_vertices( g_parent, vs );
+    igraph_vs_destroy( &vs );
+    for( id = net_id; id < igraph_vcount( g_parent ); id++ ) {
+        inst = ( instrec_t* )
+            ( uintptr_t )igraph_cattribute_VAN( g_parent, "inst", id );
+        instrec_replace_id( inst, id + 1, id );
+    }
+}
+
 
 /******************************************************************************/
 virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
