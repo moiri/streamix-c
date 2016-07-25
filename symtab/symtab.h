@@ -91,6 +91,7 @@ struct attr_box_s
 struct attr_net_s
 {
     virt_net_t* v_net;  /**< pointer to a virtual net */
+    igraph_t*   g;
 };
 
 /**
@@ -121,6 +122,7 @@ struct attr_wrap_s
     bool            attr_static;/**< wrapper does no proliferation */
     symrec_list_t*  ports;      /**< pointer to the port list of the net */
     virt_net_t*     v_net;      /**< pointer to a virtual net */
+    igraph_t*       g;
 };
 
 // FUNCTIONS ------------------------------------------------------------------
@@ -138,9 +140,10 @@ attr_box_t* symrec_attr_create_box( bool, char*, symrec_list_t* );
  * @brief   Create a net attribute structure
  *
  * @param v_net pointer to a virtual net
+ * @param g     pointer to a graph object
  * @return      pointer to the new structure
  */
-attr_net_t* symrec_attr_create_net( virt_net_t* );
+attr_net_t* symrec_attr_create_net( virt_net_t*, igraph_t* );
 
 /**
  * @brief   Create a port attribute structure

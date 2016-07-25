@@ -239,6 +239,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
     virt_net_t* v_net;
     void* res = NULL;
     static int _scope = 0;
+    igraph_t g_net;
 
     if( ast == NULL ) return NULL;
 
@@ -310,9 +311,10 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             }
             break;
         case AST_NET:
+            igraph_empty( &g_net, 0, true );
             v_net = ( void* )install_nets( symtab, scope_stack,
-                    ast->network->net, g );
-            n_attr = symrec_attr_create_net( v_net );
+                    ast->network->net, &g_net );
+            n_attr = symrec_attr_create_net( v_net, &g_net );
             res = ( void* )n_attr;
             break;
         case AST_WRAP:
@@ -682,22 +684,33 @@ bool do_port_attrs_match( symrec_list_t* r_ports, virt_port_list_t* v_ports )
     return match;
 }
 
-void copy_graph_vertex( igraph_t* g_src, igraph_t* g_dest, int id )
+/******************************************************************************/
+void dgraph_vertex_add( igraph_t* g, int node_id, const char* label,
+        const char* impl_name, instrec_t* inst )
+{
+    igraph_add_vertices( g, 1, NULL );
+    igraph_cattribute_VAS_set( g, "label", node_id, label );
+    igraph_cattribute_VAS_set( g, "func", node_id, impl_name );
+    igraph_cattribute_VAN_set( g, "inst", node_id, ( uintptr_t )inst );
+}
+
+/******************************************************************************/
+void dgraph_vertex_copy( igraph_t* g_src, igraph_t* g_dest, int id )
 {
     instrec_t* inst;
     int id_new = igraph_vcount( g_dest );
-    igraph_add_vertices( g_dest, 1, NULL );
-    igraph_cattribute_VAS_set( g_dest, "label", id_new,
-            igraph_cattribute_VAS( g_src, "label", id ) );
-    igraph_cattribute_VAS_set( g_dest, "func", id_new,
-            igraph_cattribute_VAS( g_src, "func", id ) );
-    inst = ( instrec_t* )( uintptr_t )
-        igraph_cattribute_VAN( g_src, "inst", id );
+    inst = ( instrec_t* )( uintptr_t )igraph_cattribute_VAN( g_src, "inst",
+            id );
+    dgraph_vertex_add( g_dest, id_new,
+            igraph_cattribute_VAS( g_src, "label", id ),
+            igraph_cattribute_VAS( g_src, "func", id ),
+            inst );
     inst->id = id_new;
-    igraph_cattribute_VAN_set( g_dest, "inst", id_new, ( uintptr_t )inst );
 }
 
-void copy_graph_edge_attr( igraph_t* g_src, igraph_t* g_dest, int id_new, int id )
+/******************************************************************************/
+void dgraph_edge_copy_attr( igraph_t* g_src, igraph_t* g_dest, int id_new,
+        int id )
 {
     igraph_cattribute_EAS_set( g_dest, "label", id_new,
             igraph_cattribute_EAS( g_src, "label", id ) );
@@ -707,7 +720,8 @@ void copy_graph_edge_attr( igraph_t* g_src, igraph_t* g_dest, int id_new, int id
             igraph_cattribute_EAN( g_src, "p_dest", id ) );
 }
 
-void flatten_graph( igraph_t* g_parent, igraph_t* g_child, virt_net_t* v_net,
+/******************************************************************************/
+void dgraph_flatten( igraph_t* g_parent, igraph_t* g_child, virt_net_t* v_net,
         int net_id )
 {
     instrec_t *inst;
@@ -723,13 +737,13 @@ void flatten_graph( igraph_t* g_parent, igraph_t* g_child, virt_net_t* v_net,
     igraph_eit_create( g_child, es, &eit );
     while( !IGRAPH_EIT_END( eit ) ) {
         igraph_edge( g_child, IGRAPH_EIT_GET( eit ), &id_from, &id_to );
-        // add vertices to the parent
-        copy_graph_vertex( g_child, g_parent, id_from );
-        copy_graph_vertex( g_child, g_parent, id_to );
+        // check wheter vertex is a NET
+        dgraph_flatten_net( g_parent, g_child, id_from );
+        dgraph_flatten_net( g_parent, g_child, id_to );
         // add add edges to the parent
         id_edge = igraph_ecount( g_parent );
         igraph_add_edge( g_parent, id_from, id_to );
-        copy_graph_edge_attr( g_child, g_parent, id_edge,
+        dgraph_edge_copy_attr( g_child, g_parent, id_edge,
                 IGRAPH_EIT_GET( eit ) );
         IGRAPH_EIT_NEXT( eit );
     }
@@ -767,6 +781,21 @@ void flatten_graph( igraph_t* g_parent, igraph_t* g_child, virt_net_t* v_net,
     }
 }
 
+/******************************************************************************/
+void dgraph_flatten_net( igraph_t* g_parent, igraph_t* g_child, int id )
+{
+    instrec_t *inst;
+    inst = ( instrec_t* )( uintptr_t )
+        igraph_cattribute_VAN( g_child, "inst", id );
+    if( inst->type == INSTREC_NET )
+        dgraph_flatten( g_child, inst->symb->attr_net->g,
+                inst->symb->attr_net->v_net, id  );
+    else if( inst->type == INSTREC_WRAP )
+        dgraph_flatten( g_child, inst->symb->attr_wrap->g,
+                inst->symb->attr_wrap->v_net, id  );
+    else // add vertices to the parent
+        dgraph_vertex_copy( g_child, g_parent, id );
+}
 
 /******************************************************************************/
 virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
@@ -822,54 +851,44 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
                     ast->symbol->line, 0 );
             if( rec == NULL ) return NULL;
 
+            node_id = igraph_vcount( g );
             // check type of the record
-            if( rec->type == SYMREC_NET_PROTO ) {
-                // prototype -> net definition is missing
-                sprintf( error_msg, ERROR_UNDEF_NET, ERR_ERROR, rec->name );
-                report_yyerror( error_msg, ast->symbol->line );
+            switch( rec->type ) {
+                case SYMREC_BOX:
+                    inst = instrec_create( ast->symbol->name, node_id,
+                            ast->symbol->line, INSTREC_BOX, rec );
+                    dgraph_vertex_add( g, node_id, rec->name,
+                            rec->attr_box->impl_name, inst );
+                    v_net = virt_net_create_box( rec, inst );
+                    break;
+                case SYMREC_NET:
+                    inst = instrec_create( ast->symbol->name, node_id,
+                            ast->symbol->line, INSTREC_NET, rec );
+                    dgraph_vertex_add( g, node_id, rec->name, "func", inst );
+                    v_net = virt_net_create_net( rec->attr_net->v_net, inst,
+                            VNET_NET );
+                    break;
+                case SYMREC_WRAP:
+                    inst = instrec_create( ast->symbol->name, node_id,
+                            ast->symbol->line, INSTREC_WRAP, rec );
+                    dgraph_vertex_add( g, node_id, rec->name, "func", inst );
+                    v_net = virt_net_create_net( rec->attr_wrap->v_net, inst,
+                            VNET_WRAP );
+                    break;
+                case SYMREC_NET_PROTO:
+                    // prototype -> net definition is missing
+                    sprintf( error_msg, ERROR_UNDEF_NET, ERR_ERROR, rec->name );
+                    report_yyerror( error_msg, ast->symbol->line );
+                    break;
+                default:
+                    ;
             }
-            else if( rec->type == SYMREC_NET ) {
-                inst = instrec_create( ast->symbol->name, -1,
-                        ast->symbol->line, INSTREC_NET, rec );
-
-                v_net = virt_net_create_vnet( rec->attr_net->v_net->ports,
-                        inst, VNET_NET );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-                printf( "Create net v_net: " );
-                debug_print_vports( v_net );
-#endif // DEBUG_CONNECT
-            }
-            else if( rec->type == SYMREC_WRAP ) {
-                inst = instrec_create( ast->symbol->name, -1,
-                        ast->symbol->line, INSTREC_WRAP, rec );
-
-                v_net = virt_net_create_vnet( rec->attr_wrap->v_net->ports,
-                        inst, VNET_WRAP );
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-                printf( "Create wrap v_net: " );
-                debug_print_vports( v_net );
-#endif // DEBUG_CONNECT
-
-            }
-            else {
-                // symbol -> add net symbol to the instance table
-                node_id = igraph_vcount( g );
-                inst = instrec_create( ast->symbol->name, node_id,
-                        ast->symbol->line, INSTREC_BOX, rec );
-                igraph_add_vertices( g, 1, NULL );
-                igraph_cattribute_VAS_set( g, "label", node_id,
-                        rec->name );
-                igraph_cattribute_VAS_set( g, "func", node_id,
-                        rec->attr_box->impl_name );
-                igraph_cattribute_VAN_set( g, "inst", node_id,
-                        ( uintptr_t )inst );
-
-                v_net = virt_net_create_box( rec, inst );
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
+            if( v_net != NULL ) {
                 printf( "Create box v_net: " );
                 debug_print_vports( v_net );
-#endif // DEBUG_CONNECT
             }
+#endif // DEBUG_CONNECT
             break;
         default:
             ;

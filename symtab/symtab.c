@@ -29,10 +29,11 @@ attr_box_t* symrec_attr_create_box( bool attr_pure, char* impl_name,
 }
 
 /******************************************************************************/
-attr_net_t* symrec_attr_create_net( virt_net_t* v_net )
+attr_net_t* symrec_attr_create_net( virt_net_t* v_net, igraph_t* g )
 {
     attr_net_t* new_attr = malloc( sizeof( attr_net_t ) );
     new_attr->v_net = v_net;
+    new_attr->g = g;
     return new_attr;
 }
 
@@ -79,7 +80,8 @@ void symrec_attr_destroy_box( attr_box_t* attr )
 /******************************************************************************/
 void symrec_attr_destroy_net( attr_net_t* attr )
 {
-    /* if( attr->v_net != NULL ) virt_net_destroy( attr->v_net ); */
+    if( attr->v_net != NULL ) virt_net_destroy_shallow( attr->v_net );
+    igraph_destroy( attr->g );
     free( attr );
 }
 

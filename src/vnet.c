@@ -45,6 +45,18 @@ virt_net_t* virt_net_create_box( symrec_t* rec, instrec_t* inst )
 }
 
 /******************************************************************************/
+virt_net_t* virt_net_create_net( virt_net_t* v_net, instrec_t* inst,
+        virt_net_type_t type )
+{
+    virt_net_t* v_net_new = NULL;
+    virt_port_list_t* ports = virt_port_copy_net( v_net->ports, inst );
+    net_con_t* con = net_con_create( inst );
+    v_net_new = virt_net_create_struct( ports, con, type );
+
+    return v_net_new;
+}
+
+/******************************************************************************/
 virt_net_t* virt_net_create_vnet( virt_port_list_t* ports, instrec_t* inst,
         virt_net_type_t type )
 {
@@ -222,6 +234,28 @@ virt_port_list_t* virt_port_copy_box( symrec_list_t* ports, instrec_t* inst )
         idx++;
     }
     return list_last;
+}
+
+/******************************************************************************/
+virt_port_list_t* virt_port_copy_net( virt_port_list_t* ports, instrec_t* inst )
+{
+    virt_port_t* new_port = NULL;
+    virt_port_list_t* list_last = NULL;
+    virt_port_list_t* new_list = NULL;
+    int idx = 0;
+
+    while( ports != NULL ) {
+        new_list = malloc( sizeof( virt_port_list_t ) );
+        new_port = virt_port_create( ports->port->attr_class,
+                ports->port->attr_mode, inst, ports->port->name );
+        new_list->port = new_port;
+        new_list->next = list_last;
+        new_list->idx = idx;
+        list_last = new_list;
+        ports = ports->next;
+        idx++;
+    }
+    return new_list;
 }
 
 /******************************************************************************/

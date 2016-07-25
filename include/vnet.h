@@ -119,6 +119,7 @@ virt_net_t* virt_net_create_struct( virt_port_list_t*, net_con_t*,
  * @return      pointer to the newly created virtual net
  */
 virt_net_t* virt_net_create_box( symrec_t*, instrec_t* );
+virt_net_t* virt_net_create_net( virt_net_t*, instrec_t*, virt_net_type_t );
 
 /**
  * @brief   Create a new virtual net of a wrapper or net
@@ -221,6 +222,7 @@ virt_port_t* virt_port_create( port_class_t, port_mode_t, instrec_t*, char* );
  * @return      pointer to the last element of the new list
  */
 virt_port_list_t* virt_port_copy_box( symrec_list_t*, instrec_t* );
+virt_port_list_t* virt_port_copy_net( virt_port_list_t*, instrec_t* );
 
 /**
  * @brief   remove a port from a port list
