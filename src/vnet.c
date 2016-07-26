@@ -17,8 +17,8 @@ net_con_t* net_con_create( instrec_t* inst )
     net_con_t* con = malloc( sizeof( net_con_t ) );
     igraph_vector_ptr_init( &con->left, 1 );
     igraph_vector_ptr_init( &con->right, 1 );
-    VECTOR( con->left )[ 0 ] = inst;
-    VECTOR( con->right )[ 0 ] = inst;
+    VECTOR( con->left )[ 0 ] = &inst->id;
+    VECTOR( con->right )[ 0 ] = &inst->id;
     return con;
 }
 
@@ -245,15 +245,17 @@ virt_port_list_t* virt_port_copy_net( virt_port_list_t* ports, instrec_t* inst )
     int idx = 0;
 
     while( ports != NULL ) {
-        new_list = malloc( sizeof( virt_port_list_t ) );
-        new_port = virt_port_create( ports->port->attr_class,
-                ports->port->attr_mode, inst, ports->port->name );
-        new_list->port = new_port;
-        new_list->next = list_last;
-        new_list->idx = idx;
-        list_last = new_list;
+        if( ports->port->state == VPORT_STATE_OPEN ) {
+            new_list = malloc( sizeof( virt_port_list_t ) );
+            new_port = virt_port_create( ports->port->attr_class,
+                    ports->port->attr_mode, inst, ports->port->name );
+            new_list->port = new_port;
+            new_list->next = list_last;
+            new_list->idx = idx;
+            list_last = new_list;
+            idx++;
+        }
         ports = ports->next;
-        idx++;
     }
     return new_list;
 }
@@ -311,7 +313,6 @@ void debug_print_con( virt_net_t* v_net )
 void debug_print_vport( virt_port_t* port )
 {
     if( port->state == VPORT_STATE_CONNECTED ) printf("+");
-    if( port->state == VPORT_STATE_TO_TEST ) printf("?");
     if( port->state == VPORT_STATE_DISABLED ) printf("!");
     printf( "%s(%d)", port->inst->name, port->inst->id );
     if( port->attr_class == PORT_CLASS_DOWN ) printf( "_" );

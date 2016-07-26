@@ -91,7 +91,7 @@ struct attr_box_s
 struct attr_net_s
 {
     virt_net_t* v_net;  /**< pointer to a virtual net */
-    igraph_t*   g;
+    igraph_t    g;
 };
 
 /**
@@ -122,7 +122,7 @@ struct attr_wrap_s
     bool            attr_static;/**< wrapper does no proliferation */
     symrec_list_t*  ports;      /**< pointer to the port list of the net */
     virt_net_t*     v_net;      /**< pointer to a virtual net */
-    igraph_t*       g;
+    igraph_t        g;
 };
 
 // FUNCTIONS ------------------------------------------------------------------

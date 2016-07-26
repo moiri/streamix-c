@@ -107,10 +107,9 @@ void check_context( ast_node_t*, symrec_t**, igraph_t* );
  * @param symtab        pointer to the symbol table
  * @param scope_stack   pointer to the scope stack
  * @param ast           pointer to the ast node
- * @param g             pointer to a initialized igraph object
  * @return              pointer to a symrec net attribute (cast to void*)
  */
-void* check_context_ast( symrec_t**, UT_array*, ast_node_t*, igraph_t* );
+void* check_context_ast( symrec_t**, UT_array*, ast_node_t* );
 
 /**
  * @brief   Check whether types of a prototype and a net match
@@ -256,9 +255,10 @@ virt_net_t* install_nets( symrec_t**, UT_array*, ast_node_t*, igraph_t* );
  */
 bool is_connected( instrec_t*, instrec_t*, igraph_t* );
 void dgraph_vertex_add( igraph_t*, int, const char*, const char*, instrec_t* );
-void dgraph_vertex_copy( igraph_t*, igraph_t*, int );
+int dgraph_vertex_copy( igraph_t*, igraph_t*, int );
 void dgraph_edge_copy_attr( igraph_t*, igraph_t*, int, int );
-void dgraph_flatten( igraph_t*, igraph_t*, virt_net_t*, int );
-void dgraph_flatten_net( igraph_t*, igraph_t*, int );
+void dgraph_flatten( igraph_t*, igraph_t* );
+void dgraph_flatten_child( igraph_t*, igraph_t*, int );
+void dgraph_flatten_net( igraph_t*, virt_net_t*, int );
 
 #endif // CONTEXT_H

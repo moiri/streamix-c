@@ -42,8 +42,7 @@ enum virt_port_state_e
 {
     VPORT_STATE_DISABLED,   /**< port can not be used anymore */
     VPORT_STATE_OPEN,       /**< port is ready to be connected */
-    VPORT_STATE_TO_TEST,    /**< port is connected but not yet tested */
-    VPORT_STATE_CONNECTED   /**< port is connected and tested */
+    VPORT_STATE_CONNECTED   /**< port is connected */
 };
 
 // STRUCTS --------------------------------------------------------------------
