@@ -18,19 +18,6 @@
 #include "utarray.h"
 
 /**
- * @brief   append id from instances to a initialised vector
- *
- * This function either appends the instance id to the vector or if the
- * instance has child instances it collects all ids of the chlidren.
- *
- * @param rec           source instance record
- * @param id            an initialised vector where the ids are appended
- * @param port_class    only consider instances from ports with this port class
- *                      or no port class
- */
-void append_inst_ids( instrec_t*, igraph_vector_t*, port_class_t );
-
-/**
  * @brief   Checkes whether port names match
  *
  * The port classes (collections) are taken into account to check the name
@@ -260,5 +247,6 @@ void dgraph_edge_copy_attr( igraph_t*, igraph_t*, int, int );
 void dgraph_flatten( igraph_t*, igraph_t* );
 void dgraph_flatten_child( igraph_t*, igraph_t*, int );
 void dgraph_flatten_net( igraph_t*, virt_net_t*, int );
+void dgraph_check_connection( virt_net_t*, virt_port_t*, igraph_t* );
 
 #endif // CONTEXT_H

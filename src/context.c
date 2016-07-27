@@ -360,18 +360,33 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
         bool connect_sync )
 {
     int id_edge;
-    int id_src = port_l->inst->id;
-    int id_dest = port_r->inst->id;
-    virt_port_t* p_src = port_l;
-    virt_port_t* p_dest = port_r;
+    int id_src, id_dest;
+    virt_port_t *p_src, *p_dest;
     // set source and dest id
-    if( ( port_r->attr_mode == PORT_MODE_OUT )
-            || ( port_l->attr_mode == PORT_MODE_IN ) ) {
-        id_dest = id_src;
-        id_src = port_r->inst->id;
-        p_dest = p_src;
+    if( ( ( port_l->inst->type == INSTREC_SYNC )
+                && ( port_r->attr_mode == PORT_MODE_OUT ) )
+            || ( ( port_r->inst->type == INSTREC_SYNC )
+                && ( port_l->attr_mode == PORT_MODE_IN ) )
+            || ( ( port_l->attr_mode == PORT_MODE_IN )
+                && ( port_r->attr_mode == PORT_MODE_OUT ) ) ) {
+        p_dest = port_l;
+        id_dest = p_dest->inst->id;
         p_src = port_r;
+        id_src = p_src->inst->id;
     }
+    else if( ( ( port_l->inst->type == INSTREC_SYNC )
+                && ( port_r->attr_mode == PORT_MODE_IN ) )
+            || ( ( port_r->inst->type == INSTREC_SYNC )
+                && ( port_l->attr_mode == PORT_MODE_OUT ) )
+            || ( ( port_l->attr_mode == PORT_MODE_OUT )
+                && ( port_r->attr_mode == PORT_MODE_IN ) ) ) {
+        p_dest = port_r;
+        id_dest = p_dest->inst->id;
+        p_src = port_l;
+        id_src = p_src->inst->id;
+    }
+    else return;
+
     // set port state
     if( ( port_l->inst->type == INSTREC_BOX ) || connect_sync )
         port_l->state = VPORT_STATE_CONNECTED;
@@ -395,6 +410,7 @@ void cpsync_connect( virt_net_t* v_net, virt_port_t* port1,
     instrec_t* inst2 = port2->inst;
     virt_port_t* port_new;
     port_class_t port_class;
+    port_mode_t port_mode;
     // if possible, set port class to anything but PORT_CLASS_NONE
     if( port1->attr_class == PORT_CLASS_NONE )
         port_class = port2->attr_class;
@@ -423,7 +439,13 @@ void cpsync_connect( virt_net_t* v_net, virt_port_t* port1,
         printf( "Create copy-synchronizer %s(%d)\n", cp_sync->name,
                 cp_sync->id );
 #endif // DEBUG_CONNECT
-        port_new = virt_port_add( v_net, port_class, PORT_MODE_BI, cp_sync,
+        if( port1->attr_class == port2->attr_class )
+            port_class = port1->attr_class;
+        else port_class = PORT_CLASS_NONE;
+        if( port1->attr_mode == port2->attr_mode )
+            port_mode = port1->attr_mode;
+        else port_mode = PORT_MODE_BI;
+        port_new = virt_port_add( v_net, port_class, port_mode, cp_sync,
                 port1->name );
         connect_ports( port_new, port1, g, false );
         connect_ports( port_new, port2, g, false );
@@ -640,18 +662,25 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
         if( inst->type == INSTREC_NET ) {
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
             printf( "Flatten instance '%s(%d)'\n", inst->name, inst->id );
+            igraph_write_graph_dot( g, stdout );
 #endif // DEBUG_FLATTEN_GRAPH
-            igraph_write_graph_dot( g, stdout );
             dgraph_flatten( g, &inst->symb->attr_net->g );
-            igraph_write_graph_dot( g, stdout );
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
+            igraph_write_graph_dot( g, stdout );
             printf( "Flatten instance net '%s(%d)'\n", inst->name, inst->id );
             debug_print_vports( inst->symb->attr_net->v_net );
 #endif // DEBUG_FLATTEN_GRAPH
             dgraph_flatten_net( g, inst->symb->attr_net->v_net, inst->id );
+#if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
             igraph_write_graph_dot( g, stdout );
+#endif // DEBUG_FLATTEN_GRAPH
         }
-        IGRAPH_VIT_NEXT( vit );
+        else {
+            // only go to the next vertex if it was not an instance because
+            // dgraph_flatten_net removes an instance and adjusts all following
+            // ids by -1. Hence the iterator is already on the next instance
+            IGRAPH_VIT_NEXT( vit );
+        }
     }
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
@@ -688,10 +717,27 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
 }
 
 /******************************************************************************/
+void dgraph_check_connection( virt_net_t* v_net, virt_port_t* port,
+        igraph_t* g )
+{
+    virt_port_list_t* ports = NULL;
+    ports = v_net->ports;
+    while( ports != NULL ) {
+        if( ports->port->inst->type == INSTREC_NET )
+            dgraph_check_connection( ports->port->inst->symb->attr_net->v_net,
+                    port, g );
+        else if( ports->port->state == VPORT_STATE_OPEN )
+            if( check_connection( port, ports->port, g ) ) break;
+        ports = ports->next;
+    }
+
+}
+
+/******************************************************************************/
 void dgraph_flatten_net( igraph_t* g, virt_net_t* v_net, int net_id )
 {
     instrec_t *inst;
-    virt_port_list_t* ports = NULL;
+    /* virt_port_list_t* ports = NULL; */
     virt_port_t *p_src, *p_dest, *port;
     igraph_vs_t vs;
     igraph_es_t es;
@@ -711,12 +757,7 @@ void dgraph_flatten_net( igraph_t* g, virt_net_t* v_net, int net_id )
         if( p_dest->inst->id != net_id ) port = p_dest;
         else if( p_src->inst->id != net_id ) port = p_src;
         // connect this port to the matching port of the virtual net
-        ports = v_net->ports;
-        while( ports != NULL ) {
-            if( ports->port->state == VPORT_STATE_OPEN )
-                if( check_connection( port, ports->port, g ) ) break;
-            ports = ports->next;
-        }
+        dgraph_check_connection( v_net, port, g );
         IGRAPH_EIT_NEXT( eit );
     }
     igraph_eit_destroy( &eit );

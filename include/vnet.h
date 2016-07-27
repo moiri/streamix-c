@@ -30,6 +30,7 @@ enum virt_net_type_e
 {
     VNET_BOX,
     VNET_NET,
+    VNET_FLATTEN,
     VNET_PARALLEL,
     VNET_SERIAL,
     VNET_WRAP
@@ -222,6 +223,7 @@ virt_port_t* virt_port_create( port_class_t, port_mode_t, instrec_t*, char* );
  */
 virt_port_list_t* virt_port_copy_box( symrec_list_t*, instrec_t* );
 virt_port_list_t* virt_port_copy_net( virt_port_list_t*, instrec_t* );
+virt_port_t* virt_port_copy( virt_port_t* );
 
 /**
  * @brief   remove a port from a port list

@@ -215,6 +215,15 @@ virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
 }
 
 /******************************************************************************/
+virt_port_t* virt_port_copy( virt_port_t* port )
+{
+    virt_port_t* new_port = virt_port_create( port->attr_class, port->attr_mode,
+                port->inst, port->name );
+    new_port->state = port->state;
+    return new_port;
+}
+
+/******************************************************************************/
 virt_port_list_t* virt_port_copy_box( symrec_list_t* ports, instrec_t* inst )
 {
     virt_port_t* new_port = NULL;
