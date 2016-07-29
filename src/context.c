@@ -96,13 +96,12 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g )
             res = true;
         }
         else if( are_port_modes_ok( port_l, port_r ) ) {
-            connect_ports( port_l, port_r, g, true );
-            port_l->attr_class = PORT_CLASS_DOWN;
-            port_r->attr_class = PORT_CLASS_UP;
-
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
+            connect_ports( port_l, port_r, g, true );
+            port_l->attr_class = PORT_CLASS_DOWN;
+            port_r->attr_class = PORT_CLASS_UP;
             res = true;
         }
         else {
@@ -308,8 +307,8 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             break;
         case AST_PORT:
             // prepare symbol attributes and create symbol
-            p_attr = symrec_attr_create_port( NULL, PORT_MODE_BI, PORT_CLASS_NONE,
-                    false, ast->port->sync_id );
+            p_attr = symrec_attr_create_port( NULL, PORT_MODE_BI,
+                    PORT_CLASS_NONE, false, ast->port->sync_id );
             if( ast->port->mode != NULL )
                 p_attr->mode = ast->port->mode->attr->val;
             if( ast->port->coupling != NULL ) p_attr->decoupled = true;
@@ -359,8 +358,6 @@ bool check_prototype( symrec_list_t* r_ports, virt_net_t* v_net, char *name )
 void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
         bool connect_sync )
 {
-    int id_edge;
-    int id_src, id_dest;
     virt_port_t *p_src, *p_dest;
     // set source and dest id
     if( ( ( port_l->inst->type == INSTREC_SYNC )
@@ -370,9 +367,7 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
             || ( ( port_l->attr_mode == PORT_MODE_IN )
                 && ( port_r->attr_mode == PORT_MODE_OUT ) ) ) {
         p_dest = port_l;
-        id_dest = p_dest->inst->id;
         p_src = port_r;
-        id_src = p_src->inst->id;
     }
     else if( ( ( port_l->inst->type == INSTREC_SYNC )
                 && ( port_r->attr_mode == PORT_MODE_IN ) )
@@ -381,9 +376,7 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
             || ( ( port_l->attr_mode == PORT_MODE_OUT )
                 && ( port_r->attr_mode == PORT_MODE_IN ) ) ) {
         p_dest = port_r;
-        id_dest = p_dest->inst->id;
         p_src = port_l;
-        id_src = p_src->inst->id;
     }
     else return;
 
@@ -393,18 +386,13 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
     if( ( port_r->inst->type == INSTREC_BOX ) || connect_sync )
         port_r->state = VPORT_STATE_CONNECTED;
     // add edge to the graph and set attributes
-    id_edge = igraph_ecount( g );
-    igraph_add_edge( g, id_src, id_dest );
-    igraph_cattribute_EAS_set( g, "label", id_edge, port_l->name );
-    igraph_cattribute_EAN_set( g, "p_src", id_edge, ( uintptr_t )p_src );
-    igraph_cattribute_EAN_set( g, "p_dest", id_edge, ( uintptr_t )p_dest );
+    dgraph_edge_add( g, p_src, p_dest );
 }
 
 /******************************************************************************/
 void cpsync_connect( virt_net_t* v_net, virt_port_t* port1,
         virt_port_t* port2, igraph_t* g )
 {
-    int node_id;
     instrec_t* cp_sync = NULL;
     instrec_t* inst1 = port1->inst;
     instrec_t* inst2 = port2->inst;
@@ -429,12 +417,7 @@ void cpsync_connect( virt_net_t* v_net, virt_port_t* port1,
     }
     else {
         // create copy synchronizer instance and update the graph
-        node_id = igraph_vcount( g );
-        cp_sync = instrec_create( TEXT_CP, node_id, -1, INSTREC_SYNC, NULL );
-        igraph_add_vertices( g, 1, NULL );
-        igraph_cattribute_VAS_set( g, "label", node_id, TEXT_CP );
-        igraph_cattribute_VAS_set( g, "func", node_id, "func" );
-        igraph_cattribute_VAN_set( g, "inst", node_id, ( uintptr_t )cp_sync );
+        cp_sync = dgraph_vertex_add_sync( g );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
         printf( "Create copy-synchronizer %s(%d)\n", cp_sync->name,
                 cp_sync->id );
@@ -605,74 +588,190 @@ bool do_port_attrs_match( symrec_list_t* r_ports, virt_port_list_t* v_ports )
 }
 
 /******************************************************************************/
-void dgraph_vertex_add( igraph_t* g, int node_id, const char* label,
-        const char* impl_name, instrec_t* inst )
+void dgraph_check_connection( virt_net_t* v_net, virt_port_t* port,
+        igraph_t* g )
 {
-    igraph_add_vertices( g, 1, NULL );
-    igraph_cattribute_VAS_set( g, "label", node_id, label );
-    igraph_cattribute_VAS_set( g, "func", node_id, impl_name );
-    igraph_cattribute_VAN_set( g, "inst", node_id, ( uintptr_t )inst );
+    symrec_t* symb;
+    virt_port_list_t* ports = NULL;
+    ports = v_net->ports;
+    while( ports != NULL ) {
+        if( ports->port->inst->type == INSTREC_NET ) {
+            symb = ( symrec_t* )( uintptr_t ) igraph_cattribute_VAN( g,
+                    INST_ATTR_SYMB, ports->port->inst->id );
+            dgraph_check_connection( symb->attr_net->v_net, port, g );
+        }
+        else
+            if( ports->port->state == VPORT_STATE_OPEN )
+                if( check_connection( port, ports->port, g ) ) break;
+        ports = ports->next;
+    }
 }
 
 /******************************************************************************/
-int dgraph_vertex_copy( igraph_t* g_src, igraph_t* g_dest, int id )
+int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest )
 {
-    instrec_t* inst;
-    int id_new = igraph_vcount( g_dest );
-    inst = ( instrec_t* )( uintptr_t )igraph_cattribute_VAN( g_src, "inst",
-            id );
-    dgraph_vertex_add( g_dest, id_new,
-            igraph_cattribute_VAS( g_src, "label", id ),
-            igraph_cattribute_VAS( g_src, "func", id ),
-            inst );
+    int id = igraph_ecount( g );
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
-    printf( " add new vertex '%s(%d->%d)'\n", inst->name, inst->id, id_new );
+    printf( " add new edge %s(%d->%d)\n", p_src->name, p_src->inst->id,
+            p_dest->inst->id );
 #endif // DEBUG_FLATTEN_GRAPH
-    inst->id = id_new;
-    return id_new;
+    igraph_add_edge( g, p_src->inst->id, p_dest->inst->id );
+    igraph_cattribute_EAS_set( g, PORT_ATTR_LABEL, id, p_src->name );
+    igraph_cattribute_EAN_set( g, PORT_ATTR_PSRC, id, ( uintptr_t )p_src );
+    igraph_cattribute_EAN_set( g, PORT_ATTR_PDST, id, ( uintptr_t )p_dest );
+    return id;
 }
 
 /******************************************************************************/
-void dgraph_edge_copy_attr( igraph_t* g_src, igraph_t* g_dest, int id,
-        int id_new )
-{
-    igraph_cattribute_EAS_set( g_dest, "label", id_new,
-            igraph_cattribute_EAS( g_src, "label", id ) );
-    igraph_cattribute_EAN_set( g_dest, "p_src", id_new,
-            igraph_cattribute_EAN( g_src, "p_src", id ) );
-    igraph_cattribute_EAN_set( g_dest, "p_dest", id_new,
-            igraph_cattribute_EAN( g_src, "p_dest", id ) );
-}
-
-/******************************************************************************/
-void dgraph_flatten( igraph_t* g_new, igraph_t* g )
+void dgraph_append_shallow( igraph_t* g, igraph_t* g_tpl )
 {
     igraph_es_t es;
     igraph_vs_t vs;
     igraph_eit_t eit;
     igraph_vit_t vit;
-    int id_from, id_to, id_new;
-    instrec_t *inst, *inst_from, *inst_to;
+    instrec_t** inst_map;
+    virt_port_t *p_src, *p_dest;
+    int id_inst, id_edge, id_from, id_to;
+    // all vertexes are boxes - copy all vertices to the new graph
+    inst_map = malloc( igraph_vcount( g_tpl ) * sizeof( instrec_t* ) );
+    vs = igraph_vss_all();
+    igraph_vit_create( g_tpl, vs, &vit );
+    while( !IGRAPH_VIT_END( vit ) ) {
+        id_inst = IGRAPH_VIT_GET( vit );
+        inst_map[ id_inst ] = dgraph_vertex_copy_shallow( g_tpl, g, id_inst );
+        IGRAPH_VIT_NEXT( vit );
+    }
+    igraph_vit_destroy( &vit );
+    igraph_vs_destroy( &vs );
+    // copy all edges to the new graph
+    es = igraph_ess_all( IGRAPH_EDGEORDER_ID );
+    igraph_eit_create( g_tpl, es, &eit );
+    while( !IGRAPH_EIT_END( eit ) ) {
+        id_edge = IGRAPH_EIT_GET( eit );
+        igraph_edge( g_tpl, IGRAPH_EIT_GET( eit ), &id_from, &id_to );
+        p_src = dgraph_search_port( g_tpl, g, id_edge, inst_map[ id_from ]->id,
+                PORT_ATTR_PSRC );
+        p_dest = dgraph_search_port( g_tpl, g, id_edge, inst_map[ id_to ]->id,
+                PORT_ATTR_PDST );
+        dgraph_edge_add( g, p_src, p_dest );
+        IGRAPH_EIT_NEXT( eit );
+    }
+    igraph_eit_destroy( &eit );
+    igraph_es_destroy( &es );
+}
 
+/******************************************************************************/
+void dgraph_virt_net_update( igraph_t* g, virt_net_t* v_net, igraph_t* g_new )
+{
+    igraph_es_t es;
+    igraph_vs_t vs;
+    igraph_eit_t eit;
+    igraph_vit_t vit;
+    instrec_t* inst;
+    igraph_t* g_old;
+    virt_net_t *v_net_old, *v_net_new;
+    virt_port_t *p_src, *p_dest;
+    int id_inst, id_edge, id_from, id_to;
+    // copy graph
     vs = igraph_vss_all();
     igraph_vit_create( g, vs, &vit );
     while( !IGRAPH_VIT_END( vit ) ) {
-        inst = ( instrec_t* )( uintptr_t )igraph_cattribute_VAN( g, "inst",
-                IGRAPH_VIT_GET( vit ) );
+        id_inst = IGRAPH_VIT_GET( vit );
+        inst = ( instrec_t* )( uintptr_t )igraph_cattribute_VAN( g,
+                INST_ATTR_INST, id_inst );
+        switch( inst->type ) {
+            case INSTREC_BOX:
+                break;
+            case INSTREC_NET:
+                v_net_old = ( virt_net_t* )( uintptr_t )
+                        igraph_cattribute_VAN( g, INST_ATTR_VNET, id_inst );
+                g_old = ( igraph_t* )( uintptr_t )igraph_cattribute_VAN( g,
+                        INST_ATTR_GRAPH, id_inst );
+                dgraph_virt_net_update( g_old, v_net_old, g_new );
+                break;
+            default:
+                ;
+        }
+        dgraph_vertex_copy( g_tpl, g, id_inst );
+        IGRAPH_VIT_NEXT( vit );
+    }
+    igraph_vit_destroy( &vit );
+    igraph_vs_destroy( &vs );
+}
+
+/******************************************************************************/
+void dgraph_copy( igraph_t* g, igraph_t* g_tpl )
+{
+    igraph_es_t es;
+    igraph_vs_t vs;
+    igraph_eit_t eit;
+    igraph_vit_t vit;
+    instrec_t** inst_map;
+    virt_port_t *p_src, *p_dest;
+    int id_inst, id_edge, id_from, id_to;
+    // copy graph
+    inst_map = malloc( igraph_vcount( g_tpl ) * sizeof( instrec_t* ) );
+    vs = igraph_vss_all();
+    igraph_vit_create( g_tpl, vs, &vit );
+    while( !IGRAPH_VIT_END( vit ) ) {
+        id_inst = IGRAPH_VIT_GET( vit );
+        inst_map[ id_inst ] = dgraph_vertex_copy( g_tpl, g, id_inst );
+        IGRAPH_VIT_NEXT( vit );
+    }
+    igraph_vit_destroy( &vit );
+    igraph_vs_destroy( &vs );
+    // copy all edges to the new graph
+    es = igraph_ess_all( IGRAPH_EDGEORDER_ID );
+    igraph_eit_create( g_tpl, es, &eit );
+    while( !IGRAPH_EIT_END( eit ) ) {
+        id_edge = IGRAPH_EIT_GET( eit );
+        igraph_edge( g_tpl, IGRAPH_EIT_GET( eit ), &id_from, &id_to );
+        p_src = dgraph_search_port( g_tpl, g, id_edge, inst_map[ id_from ]->id,
+                PORT_ATTR_PSRC );
+        p_dest = dgraph_search_port( g_tpl, g, id_edge, inst_map[ id_to ]->id,
+                PORT_ATTR_PDST );
+        dgraph_edge_add( g, p_src, p_dest );
+        IGRAPH_EIT_NEXT( eit );
+    }
+    igraph_eit_destroy( &eit );
+    igraph_es_destroy( &es );
+    free( inst_map );
+}
+
+/******************************************************************************/
+void dgraph_flatten( igraph_t* g_new, igraph_t* g )
+{
+    igraph_vs_t vs;
+    igraph_vit_t vit;
+    instrec_t *inst;
+    virt_net_t* v_net;
+    igraph_t* g_child;
+    igraph_t g_tmp;
+
+    igraph_empty( &g_tmp, 0, IGRAPH_DIRECTED );
+    dgraph_copy( &g_tmp, g );
+    vs = igraph_vss_all();
+    igraph_vit_create( &g_tmp, vs, &vit );
+    while( !IGRAPH_VIT_END( vit ) ) {
+        inst = ( instrec_t* )( uintptr_t )igraph_cattribute_VAN( &g_tmp,
+                INST_ATTR_INST, IGRAPH_VIT_GET( vit ) );
         if( inst->type == INSTREC_NET ) {
+            v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( &g_tmp,
+                    INST_ATTR_VNET, inst->id );
+            g_child = ( igraph_t* )( uintptr_t )igraph_cattribute_VAN( &g_tmp,
+                    INST_ATTR_GRAPH, inst->id );
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
             printf( "Flatten instance '%s(%d)'\n", inst->name, inst->id );
-            igraph_write_graph_dot( g, stdout );
 #endif // DEBUG_FLATTEN_GRAPH
-            dgraph_flatten( g, &inst->symb->attr_net->g );
+            dgraph_flatten( &g_tmp, g_child );
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
-            igraph_write_graph_dot( g, stdout );
+            igraph_write_graph_dot( &g_tmp, stdout );
             printf( "Flatten instance net '%s(%d)'\n", inst->name, inst->id );
-            debug_print_vports( inst->symb->attr_net->v_net );
+            debug_print_vports( v_net );
 #endif // DEBUG_FLATTEN_GRAPH
-            dgraph_flatten_net( g, inst->symb->attr_net->v_net, inst->id );
+            dgraph_flatten_net( &g_tmp, v_net, inst->id );
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
-            igraph_write_graph_dot( g, stdout );
+            igraph_write_graph_dot( &g_tmp, stdout );
 #endif // DEBUG_FLATTEN_GRAPH
         }
         else {
@@ -685,52 +784,7 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
 
-    // all vertexes are boxes - copy all vertices to the new graph
-    vs = igraph_vss_all();
-    igraph_vit_create( g, vs, &vit );
-    while( !IGRAPH_VIT_END( vit ) ) {
-        dgraph_vertex_copy( g, g_new, IGRAPH_VIT_GET( vit ) );
-        IGRAPH_VIT_NEXT( vit );
-    }
-    igraph_vit_destroy( &vit );
-    igraph_vs_destroy( &vs );
-    // copy all edges to the new graph
-    es = igraph_ess_all( IGRAPH_EDGEORDER_ID );
-    igraph_eit_create( g, es, &eit );
-    while( !IGRAPH_EIT_END( eit ) ) {
-        igraph_edge( g, IGRAPH_EIT_GET( eit ), &id_from, &id_to );
-        // add add edges to the parent
-        id_new = igraph_ecount( g_new );
-        inst_from = ( instrec_t* )
-            ( uintptr_t )igraph_cattribute_VAN( g, "inst", id_from );
-        inst_to = ( instrec_t* )
-            ( uintptr_t )igraph_cattribute_VAN( g, "inst", id_to );
-#if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
-        printf( " add new edge %d->%d\n", inst_from->id, inst_to->id );
-#endif // DEBUG_FLATTEN_GRAPH
-        igraph_add_edge( g_new, inst_from->id, inst_to->id );
-        dgraph_edge_copy_attr( g, g_new, IGRAPH_EIT_GET( eit ), id_new );
-        IGRAPH_EIT_NEXT( eit );
-    }
-    igraph_eit_destroy( &eit );
-    igraph_es_destroy( &es );
-}
-
-/******************************************************************************/
-void dgraph_check_connection( virt_net_t* v_net, virt_port_t* port,
-        igraph_t* g )
-{
-    virt_port_list_t* ports = NULL;
-    ports = v_net->ports;
-    while( ports != NULL ) {
-        if( ports->port->inst->type == INSTREC_NET )
-            dgraph_check_connection( ports->port->inst->symb->attr_net->v_net,
-                    port, g );
-        else if( ports->port->state == VPORT_STATE_OPEN )
-            if( check_connection( port, ports->port, g ) ) break;
-        ports = ports->next;
-    }
-
+    dgraph_append_shallow( g_new, &g_tmp );
 }
 
 /******************************************************************************/
@@ -750,12 +804,13 @@ void dgraph_flatten_net( igraph_t* g, virt_net_t* v_net, int net_id )
     // for each edge connect to the actual nets form the graph
     while( !IGRAPH_EIT_END( eit ) ) {
         p_src = ( virt_port_t* )( uintptr_t )
-            igraph_cattribute_EAN( g, "p_src", IGRAPH_EIT_GET( eit ) );
+            igraph_cattribute_EAN( g, PORT_ATTR_PSRC, IGRAPH_EIT_GET( eit ) );
         p_dest = ( virt_port_t* )( uintptr_t )
-            igraph_cattribute_EAN( g, "p_dest", IGRAPH_EIT_GET( eit ) );
+            igraph_cattribute_EAN( g, PORT_ATTR_PDST, IGRAPH_EIT_GET( eit ) );
         // get id of the non net end of the edge
         if( p_dest->inst->id != net_id ) port = p_dest;
         else if( p_src->inst->id != net_id ) port = p_src;
+        debug_print_vports( v_net );
         // connect this port to the matching port of the virtual net
         dgraph_check_connection( v_net, port, g );
         IGRAPH_EIT_NEXT( eit );
@@ -778,15 +833,215 @@ void dgraph_flatten_net( igraph_t* g, virt_net_t* v_net, int net_id )
 }
 
 /******************************************************************************/
+virt_port_t* dgraph_search_port( igraph_t* g, igraph_t* g_new, int id_edge,
+        int id_inst, const char* attr )
+{
+    virt_net_t* v_net = NULL;
+    virt_port_t* port = ( virt_port_t* )( uintptr_t )igraph_cattribute_EAN( g,
+            attr, id_edge );
+    v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g_new,
+            INST_ATTR_VNET, id_inst );
+    return virt_port_get_equivalent( v_net, port );
+}
+
+/******************************************************************************/
+int dgraph_vertex_add( igraph_t* g, const char* name )
+{
+    int id = igraph_vcount( g );
+    igraph_add_vertices( g, 1, NULL );
+    igraph_cattribute_VAS_set( g, INST_ATTR_LABEL, id, name );
+#if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
+    printf( "dgraph_vertex_add: '%s(%d)'\n", name, id );
+#endif // DEBUG_FLATTEN_GRAPH
+    return id;
+}
+
+/******************************************************************************/
+virt_net_t* dgraph_vertex_add_box( igraph_t* g, symrec_t* symb, int line )
+{
+    int id = dgraph_vertex_add( g, symb->name );
+    instrec_t* inst = instrec_create( symb->name, id, line, INSTREC_BOX );
+    virt_net_t* v_net = virt_net_create_box( symb, inst );
+    igraph_cattribute_VAS_set( g, INST_ATTR_FUNC, id,
+            symb->attr_box->impl_name );
+    igraph_cattribute_VAN_set( g, INST_ATTR_SYMB, id, ( uintptr_t )symb );
+    igraph_cattribute_VAN_set( g, INST_ATTR_INST, id, ( uintptr_t )inst );
+    igraph_cattribute_VAN_set( g, INST_ATTR_VNET, id, ( uintptr_t )v_net );
+    return v_net;
+}
+
+/******************************************************************************/
+virt_net_t* dgraph_vertex_add_net( igraph_t* g, symrec_t* symb, int line )
+{
+    int id = dgraph_vertex_add( g, symb->name );
+    instrec_t* inst = instrec_create( symb->name, id, line, INSTREC_NET );
+    virt_net_t* v_net = virt_net_create_net( symb->attr_net->v_net, inst,
+            VNET_NET );
+    igraph_cattribute_VAN_set( g, INST_ATTR_SYMB, id, ( uintptr_t )symb );
+    igraph_cattribute_VAN_set( g, INST_ATTR_INST, id, ( uintptr_t )inst );
+    igraph_cattribute_VAN_set( g, INST_ATTR_VNET, id, ( uintptr_t )v_net );
+    igraph_cattribute_VAN_set( g, INST_ATTR_GRAPH, id,
+            ( uintptr_t )&symb->attr_net->g );
+    return v_net;
+}
+
+/******************************************************************************/
+instrec_t* dgraph_vertex_add_sync( igraph_t* g )
+{
+    int id = dgraph_vertex_add( g, TEXT_CP );
+    instrec_t* inst = instrec_create( TEXT_CP, id, -1, INSTREC_SYNC );
+    igraph_cattribute_VAN_set( g, INST_ATTR_INST, id, ( uintptr_t )inst );
+    return inst;
+}
+
+/******************************************************************************/
+virt_net_t* dgraph_vertex_add_wrap( igraph_t* g, symrec_t* symb, int line )
+{
+    int id = dgraph_vertex_add( g, symb->name );
+    instrec_t* inst = instrec_create( symb->name, id, line, INSTREC_WRAP );
+    virt_net_t* v_net = virt_net_create_net( symb->attr_wrap->v_net, inst,
+            VNET_NET );
+    igraph_cattribute_VAN_set( g, INST_ATTR_SYMB, id, ( uintptr_t )symb );
+    igraph_cattribute_VAN_set( g, INST_ATTR_INST, id, ( uintptr_t )inst );
+    igraph_cattribute_VAN_set( g, INST_ATTR_VNET, id, ( uintptr_t )v_net );
+    igraph_cattribute_VAN_set( g, INST_ATTR_GRAPH, id,
+            ( uintptr_t )&symb->attr_wrap->g );
+    return v_net;
+}
+
+/******************************************************************************/
+instrec_t* dgraph_vertex_copy( igraph_t* g_src, igraph_t* g_dest, int id )
+{
+    int new_id;
+    virt_net_t *v_net_old, *v_net_new;
+    instrec_t *inst_old, *inst_new;
+    // get old inst
+    inst_old = ( instrec_t* )( uintptr_t ) igraph_cattribute_VAN( g_src,
+            INST_ATTR_INST, id );
+    // add new vertex
+    new_id = dgraph_vertex_add( g_dest, inst_old->name );
+    // create new instance and add the attribute
+    inst_new = instrec_create( inst_old->name, new_id, inst_old->line,
+            inst_old->type );
+    igraph_cattribute_VAN_set( g_dest, INST_ATTR_INST, new_id,
+            ( uintptr_t )inst_new );
+#if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
+    printf( "dgraph_vertex_copy: '%s(%d->%d)'\n", inst_new->name, id, new_id );
+#endif // DEBUG_FLATTEN_GRAPH
+    // add attr 'function name' if it exists
+    if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
+                INST_ATTR_FUNC ) )
+        igraph_cattribute_VAS_set( g_dest, INST_ATTR_FUNC, new_id,
+            igraph_cattribute_VAS( g_src, INST_ATTR_FUNC, id ) );
+    // add attr 'symbol' if it exists
+    if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
+                INST_ATTR_SYMB ) )
+        igraph_cattribute_VAN_set( g_dest, INST_ATTR_SYMB, new_id,
+            igraph_cattribute_VAN( g_src, INST_ATTR_SYMB, id ) );
+    // add attr 'graph' if it exists
+    if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
+                INST_ATTR_GRAPH ) )
+        igraph_cattribute_VAN_set( g_dest, INST_ATTR_GRAPH, new_id,
+            igraph_cattribute_VAN( g_src, INST_ATTR_GRAPH, id ) );
+    // create and add attr 'virtual net' if it exists
+    if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
+                INST_ATTR_VNET ) ) {
+        v_net_old = ( virt_net_t* )( uintptr_t )
+            igraph_cattribute_VAN( g_src, INST_ATTR_VNET, id );
+        debug_print_vports( v_net_old );
+        v_net_new = virt_net_copy_flatten( v_net_old, inst_new );
+        igraph_cattribute_VAN_set( g_dest, INST_ATTR_VNET, new_id,
+                ( uintptr_t )v_net_new );
+    }
+    return inst_new;
+}
+
+/******************************************************************************/
+instrec_t* dgraph_vertex_copy_shallow( igraph_t* g_src, igraph_t* g_dest,
+        int id )
+{
+    int new_id;
+    instrec_t *inst;
+    // get old inst
+    inst = ( instrec_t* )( uintptr_t ) igraph_cattribute_VAN( g_src,
+            INST_ATTR_INST, id );
+    // add new vertex
+    new_id = dgraph_vertex_add( g_dest, inst->name );
+    // update the instance id and add the attribute
+    inst->id = new_id;
+    igraph_cattribute_VAN_set( g_dest, INST_ATTR_INST, new_id,
+            ( uintptr_t )inst );
+#if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
+    printf( "dgraph_vertex_copy_shallow: '%s(%d->%d)'\n", inst->name, id,
+            new_id );
+#endif // DEBUG_FLATTEN_GRAPH
+    // add attr 'function name' if it exists
+    if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
+                INST_ATTR_FUNC ) )
+        igraph_cattribute_VAS_set( g_dest, INST_ATTR_FUNC, new_id,
+            igraph_cattribute_VAS( g_src, INST_ATTR_FUNC, id ) );
+    // add attr 'symbol' if it exists
+    if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
+                INST_ATTR_SYMB ) )
+        igraph_cattribute_VAN_set( g_dest, INST_ATTR_SYMB, new_id,
+            igraph_cattribute_VAN( g_src, INST_ATTR_SYMB, id ) );
+    // add attr 'graph' if it exists
+    if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
+                INST_ATTR_GRAPH ) )
+        igraph_cattribute_VAN_set( g_dest, INST_ATTR_GRAPH, new_id,
+            igraph_cattribute_VAN( g_src, INST_ATTR_GRAPH, id ) );
+    // create and add attr 'virtual net' if it exists
+    if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
+                INST_ATTR_VNET ) )
+        igraph_cattribute_VAN_set( g_dest, INST_ATTR_VNET, new_id,
+            igraph_cattribute_VAN( g_src, INST_ATTR_VNET, id ) );
+    return inst;
+}
+
+/******************************************************************************/
+instrec_t* _dgraph_vertex_copy( igraph_t* g_src, igraph_t* g_dest, int id )
+{
+    virt_net_t* v_net = NULL;
+    symrec_t* symb = NULL;
+    instrec_t* inst = ( instrec_t* )( uintptr_t )
+        igraph_cattribute_VAN( g_src, INST_ATTR_INST, id );
+#if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
+    printf( "dgraph_vertex_copy: '%s(%d)'\n", inst->name, id );
+#endif // DEBUG_FLATTEN_GRAPH
+    if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
+                INST_ATTR_SYMB ) )
+        symb = ( symrec_t* )( uintptr_t )
+            igraph_cattribute_VAN( g_src, INST_ATTR_SYMB, id );
+    switch( inst->type ) {
+        case INSTREC_BOX:
+            v_net = dgraph_vertex_add_box( g_dest, symb, inst->line );
+            inst = v_net->inst;
+            break;
+        case INSTREC_NET:
+            v_net = dgraph_vertex_add_net( g_dest, symb, inst->line );
+            inst = v_net->inst;
+            break;
+        case INSTREC_WRAP:
+            v_net = dgraph_vertex_add_wrap( g_dest, symb, inst->line );
+            inst = v_net->inst;
+            break;
+        case INSTREC_SYNC:
+            inst = dgraph_vertex_add_sync( g_dest );
+            break;
+        default:
+            ;
+    }
+    return inst;
+}
+
+/******************************************************************************/
 virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
         ast_node_t* ast, igraph_t* g )
 {
-    int node_id;
     symrec_t* rec = NULL;
     virt_net_t* v_net = NULL;
     virt_net_t* v_net1 = NULL;
     virt_net_t* v_net2 = NULL;
-    instrec_t* inst = NULL;
     char error_msg[ CONST_ERROR_LEN ];
 
     if( ast == NULL ) return NULL;
@@ -798,13 +1053,9 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             v_net2 = install_nets( symtab, scope_stack, ast->op->right, g );
             if( v_net2 == NULL ) return NULL;
             v_net = virt_net_create_parallel( v_net1, v_net2 );
-            virt_net_destroy_shallow( v_net1 );
-            virt_net_destroy_shallow( v_net2 );
+            /* virt_net_destroy_shallow( v_net1 ); */
+            /* virt_net_destroy_shallow( v_net2 ); */
             cpsync_connects( v_net, true, g );
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-            printf( "Parallel combination done, v_net: " );
-            debug_print_vports( v_net );
-#endif // DEBUG_CONNECT
             break;
         case AST_SERIAL:
             v_net1 = install_nets( symtab, scope_stack, ast->op->left, g );
@@ -817,13 +1068,9 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             virt_net_update_class( v_net2, PORT_CLASS_DOWN );
             check_connection_missing( v_net1, v_net2, g );
             v_net = virt_net_create_serial( v_net1, v_net2 );
-            virt_net_destroy_shallow( v_net1 );
-            virt_net_destroy_shallow( v_net2 );
+            /* virt_net_destroy_shallow( v_net1 ); */
+            /* virt_net_destroy_shallow( v_net2 ); */
             cpsync_connects( v_net, false, g );
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-            printf( "Serial combination done, v_net: " );
-            debug_print_vports( v_net );
-#endif // DEBUG_CONNECT
             break;
         case AST_ID:
             // check the context of the symbol
@@ -831,29 +1078,16 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
                     ast->symbol->line, 0 );
             if( rec == NULL ) return NULL;
 
-            node_id = igraph_vcount( g );
             // check type of the record
             switch( rec->type ) {
                 case SYMREC_BOX:
-                    inst = instrec_create( ast->symbol->name, node_id,
-                            ast->symbol->line, INSTREC_BOX, rec );
-                    dgraph_vertex_add( g, node_id, rec->name,
-                            rec->attr_box->impl_name, inst );
-                    v_net = virt_net_create_box( rec, inst );
+                    v_net = dgraph_vertex_add_box( g, rec, ast->symbol->line );
                     break;
                 case SYMREC_NET:
-                    inst = instrec_create( ast->symbol->name, node_id,
-                            ast->symbol->line, INSTREC_NET, rec );
-                    dgraph_vertex_add( g, node_id, rec->name, "func", inst );
-                    v_net = virt_net_create_net( rec->attr_net->v_net, inst,
-                            VNET_NET );
+                    v_net = dgraph_vertex_add_net( g, rec, ast->symbol->line );
                     break;
                 case SYMREC_WRAP:
-                    inst = instrec_create( ast->symbol->name, node_id,
-                            ast->symbol->line, INSTREC_WRAP, rec );
-                    dgraph_vertex_add( g, node_id, rec->name, "func", inst );
-                    v_net = virt_net_create_net( rec->attr_wrap->v_net, inst,
-                            VNET_WRAP );
+                    v_net = dgraph_vertex_add_wrap( g, rec, ast->symbol->line );
                     break;
                 case SYMREC_NET_PROTO:
                     // prototype -> net definition is missing
@@ -863,12 +1097,6 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
                 default:
                     ;
             }
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-            if( v_net != NULL ) {
-                printf( "Create v_net: " );
-                debug_print_vports( v_net );
-            }
-#endif // DEBUG_CONNECT
             break;
         default:
             ;

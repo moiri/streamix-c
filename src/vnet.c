@@ -23,13 +23,34 @@ net_con_t* net_con_create( instrec_t* inst )
 }
 
 /******************************************************************************/
+virt_net_t* virt_net_copy_flatten( virt_net_t* v_net, instrec_t* inst )
+{
+    virt_net_t* v_net_new = NULL;
+    virt_port_list_t*  ports_new = virt_ports_copy_net( v_net->ports, inst,
+            false );
+    v_net_new = virt_net_create_struct( ports_new, NULL, inst, v_net->type );
+    return v_net_new;
+}
+
+/******************************************************************************/
 virt_net_t* virt_net_create_struct( virt_port_list_t* ports, net_con_t* con,
-        virt_net_type_t type )
+        instrec_t* inst, virt_net_type_t type )
 {
     virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
+    v_net->inst = inst;
     v_net->ports = ports;
     v_net->con = con;
     v_net->type = type;
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+    printf( "virt_net_create: " );
+    if( ( v_net->inst == NULL ) && ( v_net->type == VNET_SERIAL ) )
+        printf( "serial: " );
+    else if( ( v_net->inst == NULL ) && ( v_net->type == VNET_PARALLEL ) )
+        printf( "parallel: " );
+    else if( v_net->inst != NULL )
+        printf( "%s(%d): ", v_net->inst->name, v_net->inst->id );
+    debug_print_vports( v_net );
+#endif // DEBUG_CONNECT
     return v_net;
 }
 
@@ -37,9 +58,9 @@ virt_net_t* virt_net_create_struct( virt_port_list_t* ports, net_con_t* con,
 virt_net_t* virt_net_create_box( symrec_t* rec, instrec_t* inst )
 {
     virt_net_t* v_net = NULL;
-    virt_port_list_t* ports = virt_port_copy_box( rec->attr_box->ports, inst );
+    virt_port_list_t* ports = virt_ports_copy_box( rec->attr_box->ports, inst );
     net_con_t* con = net_con_create( inst );
-    v_net = virt_net_create_struct( ports, con, VNET_BOX );
+    v_net = virt_net_create_struct( ports, con, inst, VNET_BOX );
 
     return v_net;
 }
@@ -49,11 +70,28 @@ virt_net_t* virt_net_create_net( virt_net_t* v_net, instrec_t* inst,
         virt_net_type_t type )
 {
     virt_net_t* v_net_new = NULL;
-    virt_port_list_t* ports = virt_port_copy_net( v_net->ports, inst );
+    virt_port_list_t* ports = virt_ports_copy_net( v_net->ports, inst, true );
     net_con_t* con = net_con_create( inst );
-    v_net_new = virt_net_create_struct( ports, con, type );
+    v_net_new = virt_net_create_struct( ports, con, inst, type );
 
     return v_net_new;
+}
+
+/******************************************************************************/
+virt_net_t* virt_net_create_sync( instrec_t* inst, virt_port_t* port1,
+        virt_port_t* port2 )
+{
+    virt_net_t* v_net = NULL;
+    virt_port_list_t* ports = malloc( sizeof( virt_port_list_t ) );
+    ports->idx = 0;
+    ports->port = port1;
+    ports->next = malloc( sizeof( virt_port_list_t ) );
+    ports->next->idx = 0;
+    ports->next->port = port2;
+    ports->next->next = NULL;
+    v_net = virt_net_create_struct( ports, NULL, inst, VNET_SYNC );
+
+    return v_net;
 }
 
 /******************************************************************************/
@@ -63,7 +101,7 @@ virt_net_t* virt_net_create_vnet( virt_port_list_t* ports, instrec_t* inst,
     virt_net_t* v_net_new = NULL;
     virt_port_list_t*  ports_new = virt_port_assign( ports, NULL );
     net_con_t* con = net_con_create( inst );
-    v_net_new = virt_net_create_struct( ports_new, con, type );
+    v_net_new = virt_net_create_struct( ports_new, con, inst, type );
 
     return v_net_new;
 }
@@ -80,7 +118,7 @@ virt_net_t* virt_net_create_parallel( virt_net_t* v_net1, virt_net_t* v_net2 )
     ports1 = virt_port_assign( v_net1->ports, NULL );
     ports2 = virt_port_assign( v_net2->ports, ports1 );
     con = malloc( sizeof( net_con_t ) );
-    v_net = virt_net_create_struct( ports2, con, VNET_PARALLEL );
+    v_net = virt_net_create_struct( ports2, con, NULL, VNET_PARALLEL );
     igraph_vector_ptr_copy( &v_net->con->left, &v_net1->con->left );
     igraph_vector_ptr_append( &v_net->con->left, &v_net2->con->left );
     igraph_vector_ptr_copy( &v_net->con->right, &v_net1->con->right );
@@ -101,7 +139,7 @@ virt_net_t* virt_net_create_serial( virt_net_t* v_net1, virt_net_t* v_net2 )
     ports1 = virt_port_assign( v_net1->ports, NULL );
     ports2 = virt_port_assign( v_net2->ports, ports1 );
     con = malloc( sizeof( net_con_t ) );
-    v_net = virt_net_create_struct( ports2, con, VNET_SERIAL );
+    v_net = virt_net_create_struct( ports2, con, NULL, VNET_SERIAL );
     igraph_vector_ptr_copy( &v_net->con->left, &v_net1->con->left );
     igraph_vector_ptr_copy( &v_net->con->right, &v_net2->con->right );
 
@@ -224,7 +262,7 @@ virt_port_t* virt_port_copy( virt_port_t* port )
 }
 
 /******************************************************************************/
-virt_port_list_t* virt_port_copy_box( symrec_list_t* ports, instrec_t* inst )
+virt_port_list_t* virt_ports_copy_box( symrec_list_t* ports, instrec_t* inst )
 {
     virt_port_t* new_port = NULL;
     virt_port_list_t* list_last = NULL;
@@ -246,7 +284,8 @@ virt_port_list_t* virt_port_copy_box( symrec_list_t* ports, instrec_t* inst )
 }
 
 /******************************************************************************/
-virt_port_list_t* virt_port_copy_net( virt_port_list_t* ports, instrec_t* inst )
+virt_port_list_t* virt_ports_copy_net( virt_port_list_t* ports, instrec_t* inst,
+        bool check_status )
 {
     virt_port_t* new_port = NULL;
     virt_port_list_t* list_last = NULL;
@@ -254,7 +293,7 @@ virt_port_list_t* virt_port_copy_net( virt_port_list_t* ports, instrec_t* inst )
     int idx = 0;
 
     while( ports != NULL ) {
-        if( ports->port->state == VPORT_STATE_OPEN ) {
+        if( !check_status || ( ports->port->state == VPORT_STATE_OPEN ) ) {
             new_list = malloc( sizeof( virt_port_list_t ) );
             new_port = virt_port_create( ports->port->attr_class,
                     ports->port->attr_mode, inst, ports->port->name );
@@ -267,6 +306,27 @@ virt_port_list_t* virt_port_copy_net( virt_port_list_t* ports, instrec_t* inst )
         ports = ports->next;
     }
     return new_list;
+}
+
+/******************************************************************************/
+virt_port_t* virt_port_get_equivalent( virt_net_t* v_net, virt_port_t* port )
+{
+    virt_port_list_t* ports = v_net->ports;
+    while( ports != NULL ) {
+        printf("compare ports:\n " );
+        debug_print_vport( ports->port );
+        printf(" (%p/%p)\n ", ports->port, ports->port->name );
+        debug_print_vport( port );
+        printf(" (%p/%p)\n", port, port->name );
+        if( ( ports->port->name == port->name )
+                && ( ports->port->attr_mode == port->attr_mode )
+                && ( ports->port->attr_class == port->attr_class )
+                && ( ports->port->inst->type == port->inst->type ) ) {
+            return ports->port;
+        }
+        ports = ports->next;
+    }
+    return NULL;
 }
 
 /******************************************************************************/
@@ -291,31 +351,6 @@ void virt_port_remove( virt_net_t* v_net, virt_port_t* port )
         list_last = list;
         list = list->next;
     }
-}
-
-/******************************************************************************/
-void debug_print_con( virt_net_t* v_net )
-{
-    int i;
-    instrec_t* rec = NULL;
-    igraph_vector_ptr_t con;
-    con= v_net->con->left;
-    printf( "v_net con left:" );
-    for( i=0; i<igraph_vector_ptr_size( &con ); i++ ) {
-        rec = VECTOR( con )[i];
-        printf( "\n %s: ", rec->name );
-        if( rec->type == INSTREC_NET )
-            debug_print_vports( rec->symb->attr_net->v_net );
-    }
-    con = v_net->con->right;
-    printf( "\nv_net con right:" );
-    for( i=0; i<igraph_vector_ptr_size( &con ); i++ ) {
-        rec = VECTOR( con )[i];
-        printf( "\n %s: ", rec->name );
-        if( rec->type == INSTREC_NET )
-            debug_print_vports( rec->symb->attr_net->v_net );
-    }
-    printf( "\n" );
 }
 
 /******************************************************************************/

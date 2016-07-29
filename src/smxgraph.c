@@ -56,9 +56,8 @@ int dgraph_merge_vertice_1( igraph_t* g, int id1, int id2 )
             id_new++;
         }
     }
-    igraph_attribute_combination( &comb, "label",
-            IGRAPH_ATTRIBUTE_COMBINE_FIRST, "func",
-            IGRAPH_ATTRIBUTE_COMBINE_FIRST, "inst",
+    igraph_attribute_combination( &comb, INST_ATTR_LABEL,
+            IGRAPH_ATTRIBUTE_COMBINE_FIRST, INST_ATTR_INST,
             IGRAPH_ATTRIBUTE_COMBINE_FIRST, IGRAPH_NO_MORE_ATTRIBUTES );
     igraph_contract_vertices( g, &v_new, &comb );
     igraph_vector_destroy( &v_new );

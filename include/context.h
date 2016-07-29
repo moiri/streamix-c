@@ -241,12 +241,17 @@ virt_net_t* install_nets( symrec_t**, UT_array*, ast_node_t*, igraph_t* );
  *              false if the instances are not connected
  */
 bool is_connected( instrec_t*, instrec_t*, igraph_t* );
-void dgraph_vertex_add( igraph_t*, int, const char*, const char*, instrec_t* );
-int dgraph_vertex_copy( igraph_t*, igraph_t*, int );
-void dgraph_edge_copy_attr( igraph_t*, igraph_t*, int, int );
+int dgraph_edge_add( igraph_t*, virt_port_t*, virt_port_t* );
+int dgraph_vertex_add( igraph_t*, const char* name );
+virt_net_t* dgraph_vertex_add_box( igraph_t*, symrec_t*, int );
+virt_net_t* dgraph_vertex_add_net( igraph_t*, symrec_t*, int );
+instrec_t* dgraph_vertex_add_sync( igraph_t* );
+virt_net_t* dgraph_vertex_add_wrap( igraph_t*, symrec_t*, int );
+instrec_t* dgraph_vertex_copy( igraph_t*, igraph_t*, int );
+instrec_t* dgraph_vertex_copy_shallow( igraph_t*, igraph_t*, int );
 void dgraph_flatten( igraph_t*, igraph_t* );
-void dgraph_flatten_child( igraph_t*, igraph_t*, int );
 void dgraph_flatten_net( igraph_t*, virt_net_t*, int );
 void dgraph_check_connection( virt_net_t*, virt_port_t*, igraph_t* );
+virt_port_t* dgraph_search_port( igraph_t*, igraph_t*, int, int, const char* );
 
 #endif // CONTEXT_H

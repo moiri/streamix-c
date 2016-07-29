@@ -32,6 +32,7 @@ enum virt_net_type_e
     VNET_NET,
     VNET_FLATTEN,
     VNET_PARALLEL,
+    VNET_SYNC,
     VNET_SERIAL,
     VNET_WRAP
 };
@@ -64,6 +65,7 @@ struct net_con_s
  */
 struct virt_net_s
 {
+    instrec_t*          inst;       /**< pointer to net instance */
     net_con_t*          con;        /**< connection vector structure */
     virt_port_list_t*   ports;      /**< port list */
     virt_net_type_t     type;       /**< #virt_net_type_e */
@@ -100,6 +102,8 @@ struct virt_port_s
  */
 net_con_t* net_con_create( instrec_t* );
 
+virt_net_t* virt_net_copy_flatten( virt_net_t*, instrec_t* );
+
 /**
  * @brief   Create a new virtual net structure
  *
@@ -109,7 +113,7 @@ net_con_t* net_con_create( instrec_t* );
  * @return      pointer to the newly created virtual net
  */
 virt_net_t* virt_net_create_struct( virt_port_list_t*, net_con_t*,
-        virt_net_type_t );
+        instrec_t*, virt_net_type_t );
 
 /**
  * @brief   Create a new virtual net of a box
@@ -155,6 +159,7 @@ virt_net_t* virt_net_create_parallel( virt_net_t*, virt_net_t* );
  * @return          pointer to the new virtual net
  */
 virt_net_t* virt_net_create_serial( virt_net_t*, virt_net_t* );
+virt_net_t* virt_net_create_sync( instrec_t*, virt_port_t*, virt_port_t* );
 
 /**
  * @brief   Destroy a virtual net and its conent.
@@ -214,6 +219,7 @@ virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t* );
  */
 virt_port_t* virt_port_create( port_class_t, port_mode_t, instrec_t*, char* );
 
+virt_port_t* virt_port_copy( virt_port_t* );
 /**
  * @brief   Make a copy of the port list of a symbol record
  *
@@ -221,9 +227,9 @@ virt_port_t* virt_port_create( port_class_t, port_mode_t, instrec_t*, char* );
  * @param inst  a pointer to the instance the port belongs to
  * @return      pointer to the last element of the new list
  */
-virt_port_list_t* virt_port_copy_box( symrec_list_t*, instrec_t* );
-virt_port_list_t* virt_port_copy_net( virt_port_list_t*, instrec_t* );
-virt_port_t* virt_port_copy( virt_port_t* );
+virt_port_list_t* virt_ports_copy_box( symrec_list_t*, instrec_t* );
+virt_port_list_t* virt_ports_copy_net( virt_port_list_t*, instrec_t*, bool );
+virt_port_t* virt_port_get_equivalent( virt_net_t*, virt_port_t* );
 
 /**
  * @brief   remove a port from a port list
@@ -235,13 +241,6 @@ virt_port_t* virt_port_copy( virt_port_t* );
  * @param port  a pointer to the port to be removed
  */
 void virt_port_remove( virt_net_t*, virt_port_t* );
-
-/**
- * @brief   Print debugging information of a net_con structure
- *
- * @param v_net pointer to the virtual net holding the con structure
- */
-void debug_print_con( virt_net_t* );
 
 /**
  * @brief   Print debug information of a port of a virtual net

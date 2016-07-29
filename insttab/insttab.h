@@ -42,7 +42,6 @@ struct instrec_s
     int             id;     /**< id of the instance symbol */
     int             line;   /**< line number in the source code of the symbol */
     instrec_type_t  type;   /**< type of the symbol */
-    symrec_t*       symb;   /**< pointer to the declaration in the symtab */
 };
 
 // FUNCTIONS ------------------------------------------------------------------
@@ -54,10 +53,9 @@ struct instrec_s
  * @param id    id of the record
  * @param line  line of the record
  * @param type  type of the record
- * @param rec   pointer to the symbol record
  * @return      pointer to the record
  */
-instrec_t* instrec_create( char*, int, int, instrec_type_t, symrec_t* );
+instrec_t* instrec_create( char*, int, int, instrec_type_t );
 
 /**
  * @brief   Destroy an instance record
