@@ -31,7 +31,7 @@
  *              serial operators are checked
  * @return      true if ports can connect, false if not
  */
-bool are_port_names_ok( virt_port_t*, virt_port_t*, bool, bool );
+bool are_port_names_ok( virt_port_t*, virt_port_t*, bool, bool, bool );
 
 /**
  * @brief    Checkes whether port modes match
@@ -53,7 +53,7 @@ bool are_port_modes_ok( virt_port_t*, virt_port_t* );
  * @param g         pointer to a initialized igraph object
  * @return          true if connection was ok, false if no connection
  */
-bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g );
+bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g, bool );
 
 /**
  * @brief    Check port connections of two nets and connect them
@@ -250,7 +250,7 @@ virt_net_t* dgraph_vertex_add_wrap( igraph_t*, symrec_t*, int );
 instrec_t* dgraph_vertex_copy( igraph_t*, igraph_t*, int );
 instrec_t* dgraph_vertex_copy_shallow( igraph_t*, igraph_t*, int );
 void dgraph_flatten( igraph_t*, igraph_t* );
-void dgraph_flatten_net( igraph_t*, igraph_t*, igraph_t*, int );
+void dgraph_flatten_net( igraph_t*, igraph_t*, int );
 virt_port_t* dgraph_search_port( igraph_t*, igraph_t*, int, int, const char* );
 virt_port_t* dgraph_search_port_by_symb( igraph_t*, virt_port_t* );
 void dgraph_copy( igraph_t*, igraph_t* );

@@ -9,14 +9,18 @@
 
 #include "smxgraph.h"
 #include "defines.h"
+#include "insttab.h"
 
 /******************************************************************************/
 void dgraph_vptr_to_v( igraph_vector_ptr_t* vptr, igraph_vector_t* v )
 {
     int i;
+    instrec_t* inst;
     igraph_vector_resize( v, igraph_vector_ptr_size( vptr ) );
-    for( i = 0; i < igraph_vector_ptr_size( vptr ); i++ )
-        VECTOR( *v )[i] = *( int* )igraph_vector_ptr_e( vptr, i );
+    for( i = 0; i < igraph_vector_ptr_size( vptr ); i++ ) {
+        inst = ( instrec_t* )igraph_vector_ptr_e( vptr, i );
+        VECTOR( *v )[i] = inst->id;
+    }
 }
 
 /******************************************************************************/
@@ -57,7 +61,11 @@ int dgraph_merge_vertice_1( igraph_t* g, int id1, int id2 )
         }
     }
     igraph_attribute_combination( &comb, INST_ATTR_LABEL,
+            IGRAPH_ATTRIBUTE_COMBINE_FIRST, INST_ATTR_FUNC,
             IGRAPH_ATTRIBUTE_COMBINE_FIRST, INST_ATTR_INST,
+            IGRAPH_ATTRIBUTE_COMBINE_FIRST, INST_ATTR_SYMB,
+            IGRAPH_ATTRIBUTE_COMBINE_FIRST, INST_ATTR_VNET,
+            IGRAPH_ATTRIBUTE_COMBINE_FIRST, INST_ATTR_GRAPH,
             IGRAPH_ATTRIBUTE_COMBINE_FIRST, IGRAPH_NO_MORE_ATTRIBUTES );
     igraph_contract_vertices( g, &v_new, &comb );
     igraph_vector_destroy( &v_new );

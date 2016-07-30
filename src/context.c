@@ -12,7 +12,8 @@
 #include "smxerr.h"
 
 /******************************************************************************/
-bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2, bool cpp, bool cps )
+bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2, bool cpp, bool cps,
+        bool directed )
 {
     // no, if port names do not match
     if( strcmp( p1->name, p2->name ) != 0 )
@@ -36,8 +37,8 @@ bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2, bool cpp, bool cps )
         // we came through here so none of the conditions matched
         return false;
     }
-    // or normal connections?
-    else {
+    // or normal undirected connections?
+    else if( !directed ) {
         // ok, if either of the ports has no class speciefied
         if( ( p1->attr_class == PORT_CLASS_NONE )
                 || ( p2->attr_class == PORT_CLASS_NONE ) )
@@ -50,9 +51,22 @@ bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2, bool cpp, bool cps )
         if( ( p1->attr_class == PORT_CLASS_UP )
                 && ( p2->attr_class == PORT_CLASS_DOWN ) )
             return true;
+        // we came through here so none of the conditions matched
+        return false;
     }
-    // we came through here so none of the conditions matched
-    return false;
+    // or normal directed connections?
+    else {
+        // no, if the left port is in another class than DS
+        if( ( p1->attr_class != PORT_CLASS_DOWN )
+                && ( p1->attr_class != PORT_CLASS_NONE ) )
+            return false;
+        // no, if the right port is in another class than US
+        if( ( p2->attr_class != PORT_CLASS_UP )
+                && ( p2->attr_class != PORT_CLASS_NONE ) )
+            return false;
+    }
+    // we came through here, so all is good, names match
+    return true;
 }
 
 /******************************************************************************/
@@ -70,7 +84,8 @@ bool are_port_modes_ok( virt_port_t* p1, virt_port_t* p2 )
 }
 
 /******************************************************************************/
-bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g )
+bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
+        bool directed )
 {
     instrec_t *inst_l, *inst_r;
     bool res = false;
@@ -83,16 +98,16 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g )
 #endif // DEBUG_CONNECT
     inst_l = port_l->inst;
     inst_r = port_r->inst;
-    if( are_port_names_ok( port_l, port_r, false, false ) ) {
+    if( are_port_names_ok( port_l, port_r, false, false, directed ) ) {
         if( ( inst_l->type == INSTREC_SYNC )
                 && ( inst_r->type == INSTREC_SYNC ) ) {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
             // merge copy synchronizers
-            cpsync_merge( port_l, port_r, g );
             port_l->state = VPORT_STATE_DISABLED;
             port_r->state = VPORT_STATE_DISABLED;
+            cpsync_merge( port_l, port_r, g );
             res = true;
         }
         else if( are_port_modes_ok( port_l, port_r ) ) {
@@ -123,6 +138,54 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g )
 }
 
 /******************************************************************************/
+void check_connection_missing( virt_net_t* v_net_l, virt_net_t* v_net_r,
+        igraph_t* g )
+{
+    int i, j;
+    char error_msg[ CONST_ERROR_LEN ];
+    igraph_vs_t vs1, vs2;
+    igraph_vector_t v1, v2;
+    instrec_t *inst1, *inst2;
+    igraph_matrix_t res1, res2;
+    igraph_vector_init( &v1, 0 );
+    igraph_vector_init( &v2, 0 );
+    dgraph_vptr_to_v( &v_net_l->con->right, &v1 );
+    dgraph_vptr_to_v( &v_net_r->con->left, &v2 );
+    igraph_matrix_init( &res1, igraph_vector_size( &v1 ),
+            igraph_vector_size( &v2 ) );
+    igraph_matrix_init( &res2, igraph_vector_size( &v1 ),
+            igraph_vector_size( &v2 ) );
+    igraph_vs_vector( &vs1, &v1 );
+    igraph_vs_vector( &vs2, &v2 );
+    igraph_shortest_paths( g, &res1, vs1, vs2, IGRAPH_OUT );
+    igraph_shortest_paths( g, &res2, vs1, vs2, IGRAPH_IN );
+
+    for( i=0; i<igraph_vector_size( &v1 ); i++ ) {
+        for( j=0; j<igraph_vector_size( &v2 ); j++ ) {
+#if defined(DEBUG) || defined(DEBUG_CONNECT_MISSING)
+            printf(" check ids %d and %d\n", ( int )VECTOR( v1 )[i],
+                    ( int )VECTOR( v2 )[j]);
+#endif // DEBUG_CONNECT_MISSING
+            if( ( MATRIX( res1, i, j ) > 2 ) && ( MATRIX( res2, i, j ) > 2 ) ) {
+                inst1 = VECTOR( v_net_l->con->right )[i];
+                inst2 = VECTOR( v_net_r->con->left )[j];
+                // ERROR: there is no connection between the two nets
+                sprintf( error_msg, ERROR_NO_NET_CON, ERR_ERROR, inst1->name,
+                        inst1->id, inst2->name, inst2->id );
+                report_yyerror( error_msg, inst1->line );
+            }
+        }
+    }
+
+    igraph_vector_destroy( &v1 );
+    igraph_vector_destroy( &v2 );
+    igraph_matrix_destroy( &res1 );
+    igraph_matrix_destroy( &res2 );
+    igraph_vs_destroy( &vs1 );
+    igraph_vs_destroy( &vs1 );
+}
+
+/******************************************************************************/
 void check_connections( virt_net_t* v_net1, virt_net_t* v_net2, igraph_t* g )
 {
     virt_port_list_t* ports_l = NULL;
@@ -135,7 +198,8 @@ void check_connections( virt_net_t* v_net1, virt_net_t* v_net2, igraph_t* g )
         while( ports_r != NULL ) {
             if( ( ports_l->port->state == VPORT_STATE_OPEN )
                     && ( ports_r->port->state == VPORT_STATE_OPEN ) ) {
-                res = check_connection( ports_l->port, ports_r->port, g );
+                res = check_connection( ports_l->port, ports_r->port, g,
+                        true );
                 if( res ) break;
             }
             ports_r = ports_r->next;
@@ -256,7 +320,9 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             v_net = ( void* )install_nets( symtab, scope_stack,
                     ast->network->net, &g_net );
             n_attr = symrec_attr_create_net( v_net, &g_net );
+#if defined(DEBUG) || defined(DEBUG_NET_DOT)
             igraph_write_graph_dot( &g_net, stdout );
+#endif // DEBUG
             res = ( void* )n_attr;
             break;
         case AST_WRAP:
@@ -410,8 +476,8 @@ void cpsync_connect( virt_net_t* v_net, virt_port_t* port1,
     if( ( inst1->type == INSTREC_SYNC )
             && ( inst2->type == INSTREC_SYNC ) ) {
         // merge copy synchronizers
-        cpsync_merge( port1, port2, g );
         port2->state = VPORT_STATE_DISABLED;
+        cpsync_merge( port1, port2, g );
     }
     else if( ( inst1->type == INSTREC_SYNC )
             || ( inst2->type == INSTREC_SYNC ) ) {
@@ -459,7 +525,7 @@ void cpsync_connects( virt_net_t* v_net, bool parallel, igraph_t* g )
                     && ( ports1->port->state == VPORT_STATE_OPEN )
                     && ( ports2->port->state == VPORT_STATE_OPEN )
                     && are_port_names_ok( ports1->port, ports2->port, parallel,
-                        !parallel ) ) {
+                        !parallel, true ) ) {
                 cpsync_connect( v_net, ports1->port, ports2->port, g );
             }
             ports2 = ports2->next;
@@ -473,33 +539,44 @@ instrec_t* cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
 {
     int id, id_del;
     instrec_t *res, *temp;
+    virt_net_t* v_net1;
+    virt_net_t* v_net2;
     instrec_t* inst1 = port1->inst;
     instrec_t* inst2 = port2->inst;
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
     printf( "Merge %s(%d) and %s(%d)", inst1->name, inst1->id, inst2->name,
             inst2->id );
 #endif // DEBUG_CONNECT
+    v_net1 = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
+            INST_ATTR_VNET, inst1->id );
+    v_net2 = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
+            INST_ATTR_VNET, inst2->id );
     id_del = dgraph_merge_vertice_1( g, inst1->id,
             inst2->id );
     // delete one copy synchronizer
     if( id_del == inst1->id ) {
-        instrec_destroy( inst1 );
+        /* instrec_destroy( inst1 ); */
         res = port1->inst = inst2;
     }
     else {
-        instrec_destroy( inst2 );
+        /* instrec_destroy( inst2 ); */
         res = port2->inst = inst1;
     }
     // adjust all ids starting from the id of the deleted record
     for( id = id_del; id < igraph_vcount( g ); id++ ) {
         temp = ( instrec_t* )
-            ( uintptr_t )igraph_cattribute_VAN( g, "inst", id );
+            ( uintptr_t )igraph_cattribute_VAN( g, INST_ATTR_INST, id );
         instrec_replace_id( temp, id + 1, id );
     }
-
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
     printf( " into %s(%d)\n", res->name, res->id );
 #endif // DEBUG_CONNECT
+    // update v_net
+    igraph_cattribute_VAN_set( g, INST_ATTR_VNET, res->id,
+            ( uintptr_t )virt_net_create_sync_merge( v_net1, v_net2, res ) );
+    virt_net_destroy_shallow( v_net1 );
+    virt_net_destroy_shallow( v_net2 );
+
     return res;
 }
 
@@ -689,46 +766,46 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
     igraph_vs_t vs;
     igraph_vit_t vit;
     instrec_t *inst;
-    virt_net_t* v_net;
-    igraph_t* g_child;
-    igraph_t g_tmp;
+    igraph_t g_child;
+    igraph_t g_in;
+    igraph_t* g_tmp;
+    int inst_id;
 
-    dgraph_append_shallow( g_new, g );
+    igraph_copy( &g_in, g );
     vs = igraph_vss_all();
-    igraph_vit_create( g, vs, &vit );
+    igraph_vit_create( &g_in, vs, &vit );
     while( !IGRAPH_VIT_END( vit ) ) {
-        inst = ( instrec_t* )( uintptr_t )igraph_cattribute_VAN( g,
-                INST_ATTR_INST, IGRAPH_VIT_GET( vit ) );
+        inst_id = IGRAPH_VIT_GET( vit );
+        inst = ( instrec_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
+                INST_ATTR_INST, inst_id );
         if( inst->type == INSTREC_NET ) {
-            v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
-                    INST_ATTR_VNET, inst->id );
-            g_child = ( igraph_t* )( uintptr_t )igraph_cattribute_VAN( g,
-                    INST_ATTR_GRAPH, inst->id );
+            g_tmp = ( igraph_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
+                    INST_ATTR_GRAPH, inst_id );
+            dgraph_copy( &g_child, g_tmp );
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
             printf( "Flatten instance '%s(%d)'\n", inst->name, inst->id );
-            igraph_write_graph_dot( g_new, stdout );
+            igraph_write_graph_dot( g, stdout );
 #endif // DEBUG_FLATTEN_GRAPH
-            dgraph_copy( &g_tmp, g_child );
-            dgraph_flatten( g_new, &g_tmp );
+            dgraph_flatten( g, &g_child );
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
             printf( "Flatten instance net '%s(%d)'\n", inst->name, inst->id );
-            igraph_write_graph_dot( g_new, stdout );
-            debug_print_vports( v_net );
+            igraph_write_graph_dot( g, stdout );
 #endif // DEBUG_FLATTEN_GRAPH
-            dgraph_flatten_net( g_new, g, &g_tmp, inst->id );
+            dgraph_flatten_net( g, &g_child, inst->id );
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
-            igraph_write_graph_dot( &g_tmp, stdout );
+            igraph_write_graph_dot( g, stdout );
 #endif // DEBUG_FLATTEN_GRAPH
+            igraph_destroy( &g_child );
         }
         IGRAPH_VIT_NEXT( vit );
     }
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
+    dgraph_append_shallow( g_new, g );
 }
 
 /******************************************************************************/
-void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_parent, igraph_t* g_child,
-        int net_id )
+void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, int net_id )
 {
     instrec_t *inst;
     /* virt_port_list_t* ports = NULL; */
@@ -740,19 +817,14 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_parent, igraph_t* g_child,
 
     // get all ports connecting to the net
     igraph_es_incident( &es, net_id, IGRAPH_ALL );
-    igraph_eit_create( g_parent, es, &eit );
+    igraph_eit_create( g_new, es, &eit );
     // for each edge connect to the actual nets form the graph
     while( !IGRAPH_EIT_END( eit ) ) {
-        p_src = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g_parent,
+        p_src = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g_new,
                 PORT_ATTR_PSRC, IGRAPH_EIT_GET( eit ) );
-        p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g_parent,
+        p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g_new,
                 PORT_ATTR_PDST, IGRAPH_EIT_GET( eit ) );
         // get id of the non net end of the edge
-        /* printf( "p_src(%d/%d): ", p_src->inst->id, net_id ); */
-        /* debug_print_vport( p_src ); */
-        /* printf( "\np_dest(%d/%d): ", p_dest->inst->id, net_id ); */
-        /* debug_print_vport( p_dest ); */
-        /* printf( "\n" ); */
         if( p_dest->inst->id != net_id ) {
             port = p_dest;
             port_net = p_src;
@@ -764,7 +836,7 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_parent, igraph_t* g_child,
         // get open port with same symbol pointer from child graph
         port_net_new = dgraph_search_port_by_symb( g_child, port_net );
         // connect this port to the matching port of the virtual net
-        check_connection( port_net_new, port, g_new );
+        check_connection( port_net_new, port, g_new, false );
         IGRAPH_EIT_NEXT( eit );
     }
     igraph_eit_destroy( &eit );
@@ -793,48 +865,51 @@ virt_port_t* dgraph_search_port( igraph_t* g, igraph_t* g_new, int id_edge,
             attr, id_edge );
     v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g_new,
             INST_ATTR_VNET, id_inst );
-    return virt_port_get_equivalent( v_net, port );
+#if defined(DEBUG) || defined(DEBUG_SEARCH_PORT)
+    printf( "Search port " );
+    debug_print_vport( port );
+    printf( "\n in virtual net: " );
+    debug_print_vports( v_net );
+#endif // DEBUG
+    return virt_port_get_equivalent( v_net, port, true );
 }
 
 /******************************************************************************/
 virt_port_t* dgraph_search_port_by_symb( igraph_t* g, virt_port_t* port )
 {
-    virt_port_t* new_port;
+    virt_port_t *port_res = NULL, *port_inst = NULL;
     virt_net_t* v_net;
     igraph_vs_t vs;
     igraph_vit_t vit;
     int id_inst;
-    virt_port_list_t* ports = NULL;
     // copy graph
+#if defined(DEBUG) || defined(DEBUG_SEARCH_PORT)
     printf( "Search port " );
     debug_print_vport( port );
     printf( "\n" );
+#endif // DEBUG
     vs = igraph_vss_all();
     igraph_vit_create( g, vs, &vit );
     while( !IGRAPH_VIT_END( vit ) ) {
         id_inst = IGRAPH_VIT_GET( vit );
         v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
                 INST_ATTR_VNET, id_inst );
+#if defined(DEBUG) || defined(DEBUG_SEARCH_PORT)
         printf( " in virtual net: " );
         debug_print_vports( v_net );
-        ports = v_net->ports;
-        while( ports != NULL ) {
-            if( ( port->symb == ports->port->symb )
-                    && ( ports->port->state == VPORT_STATE_OPEN ) ) {
-                new_port = ports->port;
-                printf( "Found port: " );
-                debug_print_vport( new_port  );
-                printf( "\n" );
+#endif // DEBUG
+        port_inst = virt_port_get_equivalent( v_net, port, false );
+        if( port_inst != NULL ) {
+            port_res = port_inst;
+            if( port_inst->inst->type == INSTREC_SYNC )
                 break;
-            }
-            ports = ports->next;
         }
         IGRAPH_VIT_NEXT( vit );
     }
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
 
-    return new_port;
+    return port_res;
 }
 
 /******************************************************************************/
@@ -860,6 +935,7 @@ virt_net_t* dgraph_vertex_add_box( igraph_t* g, symrec_t* symb, int line )
     igraph_cattribute_VAN_set( g, INST_ATTR_SYMB, id, ( uintptr_t )symb );
     igraph_cattribute_VAN_set( g, INST_ATTR_INST, id, ( uintptr_t )inst );
     igraph_cattribute_VAN_set( g, INST_ATTR_VNET, id, ( uintptr_t )v_net );
+    igraph_cattribute_VAN_set( g, INST_ATTR_GRAPH, id, 0 );
     return v_net;
 }
 
@@ -870,6 +946,7 @@ virt_net_t* dgraph_vertex_add_net( igraph_t* g, symrec_t* symb, int line )
     instrec_t* inst = instrec_create( symb->name, id, line, INSTREC_NET );
     virt_net_t* v_net = virt_net_create_net( symb->attr_net->v_net, inst,
             VNET_NET );
+    igraph_cattribute_VAS_set( g, INST_ATTR_FUNC, id, TEXT_NULL );
     igraph_cattribute_VAN_set( g, INST_ATTR_SYMB, id, ( uintptr_t )symb );
     igraph_cattribute_VAN_set( g, INST_ATTR_INST, id, ( uintptr_t )inst );
     igraph_cattribute_VAN_set( g, INST_ATTR_VNET, id, ( uintptr_t )v_net );
@@ -885,8 +962,11 @@ virt_net_t* dgraph_vertex_add_sync( igraph_t* g, virt_port_t* port1,
     int id = dgraph_vertex_add( g, TEXT_CP );
     instrec_t* inst = instrec_create( TEXT_CP, id, -1, INSTREC_SYNC );
     virt_net_t* v_net = virt_net_create_sync( inst, port1, port2 );
+    igraph_cattribute_VAS_set( g, INST_ATTR_FUNC, id, TEXT_NULL );
+    igraph_cattribute_VAN_set( g, INST_ATTR_SYMB, id, ( uintptr_t )NULL );
     igraph_cattribute_VAN_set( g, INST_ATTR_INST, id, ( uintptr_t )inst );
     igraph_cattribute_VAN_set( g, INST_ATTR_VNET, id, ( uintptr_t )v_net );
+    igraph_cattribute_VAN_set( g, INST_ATTR_GRAPH, id, 0 );
     return v_net;
 }
 
@@ -897,6 +977,7 @@ virt_net_t* dgraph_vertex_add_wrap( igraph_t* g, symrec_t* symb, int line )
     instrec_t* inst = instrec_create( symb->name, id, line, INSTREC_WRAP );
     virt_net_t* v_net = virt_net_create_net( symb->attr_wrap->v_net, inst,
             VNET_NET );
+    igraph_cattribute_VAS_set( g, INST_ATTR_FUNC, id, TEXT_NULL );
     igraph_cattribute_VAN_set( g, INST_ATTR_SYMB, id, ( uintptr_t )symb );
     igraph_cattribute_VAN_set( g, INST_ATTR_INST, id, ( uintptr_t )inst );
     igraph_cattribute_VAN_set( g, INST_ATTR_VNET, id, ( uintptr_t )v_net );
@@ -1061,49 +1142,4 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             ;
     }
     return v_net;
-}
-
-/******************************************************************************/
-void check_connection_missing( virt_net_t* v_net_l, virt_net_t* v_net_r,
-        igraph_t* g )
-{
-    int i, j;
-    bool res = false;
-    igraph_vs_t vs1, vs2;
-    igraph_vector_t v1, v2;
-    igraph_matrix_t res1, res2;
-    igraph_vector_init( &v1, 0 );
-    igraph_vector_init( &v2, 0 );
-    dgraph_vptr_to_v( &v_net_l->con->right, &v1 );
-    dgraph_vptr_to_v( &v_net_r->con->left, &v2 );
-    igraph_matrix_init( &res1, igraph_vector_size( &v1 ),
-            igraph_vector_size( &v2 ) );
-    igraph_matrix_init( &res2, igraph_vector_size( &v1 ),
-            igraph_vector_size( &v2 ) );
-    igraph_vs_vector( &vs1, &v1 );
-    igraph_vs_vector( &vs2, &v2 );
-    igraph_shortest_paths( g, &res1, vs1, vs2, IGRAPH_OUT );
-    igraph_shortest_paths( g, &res2, vs1, vs2, IGRAPH_IN );
-
-    for( i=0; i<igraph_vector_size( &v1 ); i++ ) {
-        for( j=0; j<igraph_vector_size( &v2 ); j++ ) {
-#if defined(DEBUG) || defined(DEBUG_CONNECT_MISSING)
-            printf(" check ids %d and %d\n", ( int )VECTOR( v1 )[i],
-                    ( int )VECTOR( v2 )[j]);
-#endif // DEBUG_CONNECT_MISSING
-            if( ( MATRIX( res1, i, j ) < 3 )
-                    || ( MATRIX( res2, i, j ) < 3 ) ) {
-                res = true;
-                break;
-            }
-        }
-        if( res ) break;
-    }
-
-    igraph_vector_destroy( &v1 );
-    igraph_vector_destroy( &v2 );
-    igraph_matrix_destroy( &res1 );
-    igraph_matrix_destroy( &res2 );
-    igraph_vs_destroy( &vs1 );
-    igraph_vs_destroy( &vs1 );
 }

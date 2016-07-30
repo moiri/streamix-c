@@ -161,6 +161,7 @@ virt_net_t* virt_net_create_parallel( virt_net_t*, virt_net_t* );
  */
 virt_net_t* virt_net_create_serial( virt_net_t*, virt_net_t* );
 virt_net_t* virt_net_create_sync( instrec_t*, virt_port_t*, virt_port_t* );
+virt_net_t* virt_net_create_sync_merge( virt_net_t*, virt_net_t*, instrec_t* );
 
 /**
  * @brief   Destroy a virtual net and its conent.
@@ -208,7 +209,8 @@ void virt_port_append( virt_net_t*, virt_port_t* );
  * @param last_list a pointer to a list which will be chained to the new list
  * @return          a pointer to the new port list
  */
-virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t* );
+virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t*,
+        instrec_t* );
 
 /**
  * @brief   Create a new virtual port
@@ -232,7 +234,7 @@ virt_port_t* virt_port_copy( virt_port_t* );
  */
 virt_port_list_t* virt_ports_copy_box( symrec_list_t*, instrec_t* );
 virt_port_list_t* virt_ports_copy_net( virt_port_list_t*, instrec_t*, bool );
-virt_port_t* virt_port_get_equivalent( virt_net_t*, virt_port_t* );
+virt_port_t* virt_port_get_equivalent( virt_net_t*, virt_port_t*, bool );
 
 /**
  * @brief   remove a port from a port list
