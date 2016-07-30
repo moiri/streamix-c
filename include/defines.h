@@ -71,7 +71,7 @@ enum parse_attr_e
 #define INST_ATTR_SYMB  "symb"
 #define INST_ATTR_INST  "inst"
 #define INST_ATTR_VNET  "vnet"
-#define INST_ATTR_GRAPH "graph"
+#define INST_ATTR_GRAPH "igraph"
 
 #define PORT_ATTR_LABEL "label"
 #define PORT_ATTR_PSRC  "p_src"
