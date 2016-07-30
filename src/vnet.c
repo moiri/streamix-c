@@ -187,12 +187,21 @@ void virt_net_update_class( virt_net_t* v_net, port_class_t port_class )
 
 /******************************************************************************/
 virt_port_t* virt_port_add( virt_net_t* v_net, port_class_t port_class,
-        port_mode_t port_mode, instrec_t* port_inst, char* name )
+        port_mode_t port_mode, instrec_t* port_inst, char* name,
+        symrec_t* symb )
+{
+    virt_port_t* new_port = NULL;
+    new_port = virt_port_create( port_class, port_mode, port_inst, name, symb );
+    virt_port_append( v_net, new_port );
+    return new_port;
+}
+
+/******************************************************************************/
+void virt_port_append( virt_net_t* v_net, virt_port_t* port )
 {
     virt_port_list_t* list_last = NULL;
     virt_port_list_t* list_new = NULL;
     virt_port_list_t* list = v_net->ports;
-    virt_port_t* new_port = NULL;
     int idx = 0;
 
     while( list != NULL ) {
@@ -201,18 +210,15 @@ virt_port_t* virt_port_add( virt_net_t* v_net, port_class_t port_class,
         list = list->next;
     }
 
-    new_port = virt_port_create( port_class, port_mode, port_inst, name );
     list_new = malloc( sizeof( virt_port_list_t ) );
-    list_new->port = new_port;
+    list_new->port = port;
     list_new->idx = idx;
     list_new->next = NULL;
     list_last->next = list_new;
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-    printf( "virt_port_add: Add port %s of inst %s(%d)\n", new_port->name,
-            new_port->inst->name, new_port->inst->id );
+    printf( "virt_port_add: Add port %s of inst %s(%d)\n", port->name,
+            port->inst->name, port->inst->id );
 #endif // DEBUG_CONNECT
-
-    return new_port;
 }
 
 /******************************************************************************/
@@ -238,7 +244,7 @@ virt_port_list_t* virt_port_assign( virt_port_list_t* old,
 
 /******************************************************************************/
 virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
-        instrec_t* port_inst, char* name )
+        instrec_t* port_inst, char* name, symrec_t* symb )
 {
     virt_port_t* new_port = NULL;
 
@@ -247,6 +253,7 @@ virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
     new_port->attr_mode = port_mode;
     new_port->inst = port_inst;
     new_port->name = name;
+    new_port->symb = symb;
     new_port->state = VPORT_STATE_OPEN;
 
     return new_port;
@@ -256,7 +263,7 @@ virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
 virt_port_t* virt_port_copy( virt_port_t* port )
 {
     virt_port_t* new_port = virt_port_create( port->attr_class, port->attr_mode,
-                port->inst, port->name );
+                port->inst, port->name, port->symb );
     new_port->state = port->state;
     return new_port;
 }
@@ -272,7 +279,8 @@ virt_port_list_t* virt_ports_copy_box( symrec_list_t* ports, instrec_t* inst )
     while( ports != NULL  ) {
         vports = malloc( sizeof( virt_port_list_t ) );
         new_port = virt_port_create( ports->rec->attr_port->collection,
-                ports->rec->attr_port->mode, inst, ports->rec->name );
+                ports->rec->attr_port->mode, inst, ports->rec->name,
+                ports->rec );
         vports->port = new_port;
         vports->next = list_last;
         vports->idx = idx;
@@ -296,7 +304,8 @@ virt_port_list_t* virt_ports_copy_net( virt_port_list_t* ports, instrec_t* inst,
         if( !check_status || ( ports->port->state == VPORT_STATE_OPEN ) ) {
             new_list = malloc( sizeof( virt_port_list_t ) );
             new_port = virt_port_create( ports->port->attr_class,
-                    ports->port->attr_mode, inst, ports->port->name );
+                    ports->port->attr_mode, inst, ports->port->name,
+                    ports->port->symb );
             new_list->port = new_port;
             new_list->next = list_last;
             new_list->idx = idx;
@@ -365,7 +374,7 @@ void debug_print_vport( virt_port_t* port )
     if( port->attr_mode == PORT_MODE_IN ) printf( "<--" );
     else if( port->attr_mode == PORT_MODE_OUT ) printf( "-->" );
     else printf( "<->" );
-    printf( "%s", port->name );
+    printf( "%s(%p)", port->name, port->symb );
 }
 
 /******************************************************************************/

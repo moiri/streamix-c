@@ -87,6 +87,7 @@ struct virt_port_list_s
 struct virt_port_s
 {
     instrec_t*          inst;       /**< pointer to net instance */
+    symrec_t*           symb;       /**< pointer to the port symbol */
     char*               name;       /**< pointer to the name (not allocated) */
     int                 attr_class; /**< updated class */
     int                 attr_mode;  /**< updated mode for cp-sync (VAL_BI) */
@@ -195,7 +196,8 @@ void virt_net_update_class( virt_net_t*, port_class_t );
  * @return              a pointer to the newly created port
  */
 virt_port_t* virt_port_add( virt_net_t*, port_class_t, port_mode_t, instrec_t*,
-        char* );
+        char*, symrec_t* );
+void virt_port_append( virt_net_t*, virt_port_t* );
 /**
  * @brief   Assign ports to a virtual net
  *
@@ -217,7 +219,8 @@ virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t* );
  * @param name          a pointer to the name of the port ( no allocation )
  * @return              a pointer to the newly created port
  */
-virt_port_t* virt_port_create( port_class_t, port_mode_t, instrec_t*, char* );
+virt_port_t* virt_port_create( port_class_t, port_mode_t, instrec_t*, char*,
+        symrec_t* );
 
 virt_port_t* virt_port_copy( virt_port_t* );
 /**

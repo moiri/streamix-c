@@ -50,6 +50,8 @@ int main( int argc, char **argv ) {
     igraph_write_graph_gml( &g, dest_gml, NULL, "StreamixC" );
     fclose( dest_gml );
     dest_gml = fopen( P_CON_DOT_PATH, "w" );
+    igraph_cattribute_remove_v( &g, INST_ATTR_GRAPH );
+    igraph_cattribute_remove_v( &g, INST_ATTR_FUNC );
     igraph_write_graph_dot( &g, dest_gml );
     fclose( dest_gml );
 
