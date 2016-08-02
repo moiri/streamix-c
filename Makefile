@@ -55,14 +55,13 @@ DOT_FLAGS += -DDOT_EDGE_LABEL
 # position the syncroniyers before the nets
 DOT_FLAGS += -DDOT_SYNC_FIRST
 
-TEST_IN = test
+TEST_IN = smx
 TEST_SUSPENDED = sus
 TEST_OUT = res
 TEST_SOL = sol
 TEST_PATH = test
-IN_PATH = test
 IN_FILE = cpa
-INPUT = $(IN_PATH)/$(IN_FILE).$(TEST_IN)
+INPUT = $(TEST_PATH)/$(IN_FILE).$(TEST_IN)
 
 all: $(PARSER)
 
