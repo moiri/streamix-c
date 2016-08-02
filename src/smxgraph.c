@@ -242,8 +242,7 @@ virt_net_t* dgraph_vertex_add_net( igraph_t* g, symrec_t* symb, int line )
 {
     int id = dgraph_vertex_add( g, symb->name );
     instrec_t* inst = instrec_create( symb->name, id, line, INSTREC_NET );
-    virt_net_t* v_net = virt_net_create_net( symb->attr_net->v_net, inst,
-            VNET_NET );
+    virt_net_t* v_net = virt_net_create_net( symb->attr_net->v_net, inst );
     dgraph_vertex_add_attr( g, id, NULL, symb, inst, v_net,
             &symb->attr_net->g );
     return v_net;
@@ -265,8 +264,7 @@ virt_net_t* dgraph_vertex_add_wrap( igraph_t* g, symrec_t* symb, int line )
 {
     int id = dgraph_vertex_add( g, symb->name );
     instrec_t* inst = instrec_create( symb->name, id, line, INSTREC_WRAP );
-    virt_net_t* v_net = virt_net_create_net( symb->attr_wrap->v_net, inst,
-            VNET_NET );
+    virt_net_t* v_net = virt_net_create_wrap( symb->attr_wrap->v_net, inst );
     dgraph_vertex_add_attr( g, id, NULL, symb, inst, v_net,
             &symb->attr_wrap->g );
     return v_net;
@@ -313,7 +311,7 @@ instrec_t* dgraph_vertex_copy( igraph_t* g_src, igraph_t* g_dest, int id,
                 INST_ATTR_VNET ) ) {
         v_net_new = v_net_old = ( virt_net_t* )( uintptr_t )
             igraph_cattribute_VAN( g_src, INST_ATTR_VNET, id );
-        if( deep ) v_net_new = virt_net_copy_flatten( v_net_old, inst_new );
+        if( deep ) v_net_new = virt_net_create_flatten( v_net_old, inst_new );
         igraph_cattribute_VAN_set( g_dest, INST_ATTR_VNET, new_id,
                 ( uintptr_t )v_net_new );
     }

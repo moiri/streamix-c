@@ -23,38 +23,6 @@ net_con_t* net_con_create( instrec_t* inst )
 }
 
 /******************************************************************************/
-virt_net_t* virt_net_copy_flatten( virt_net_t* v_net, instrec_t* inst )
-{
-    virt_net_t* v_net_new = NULL;
-    virt_port_list_t*  ports_new = virt_ports_copy_net( v_net->ports, inst,
-            false );
-    v_net_new = virt_net_create_struct( ports_new, NULL, inst, v_net->type );
-    return v_net_new;
-}
-
-/******************************************************************************/
-virt_net_t* virt_net_create_struct( virt_port_list_t* ports, net_con_t* con,
-        instrec_t* inst, virt_net_type_t type )
-{
-    virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
-    v_net->inst = inst;
-    v_net->ports = ports;
-    v_net->con = con;
-    v_net->type = type;
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-    printf( "virt_net_create: " );
-    if( ( v_net->inst == NULL ) && ( v_net->type == VNET_SERIAL ) )
-        printf( "serial: " );
-    else if( ( v_net->inst == NULL ) && ( v_net->type == VNET_PARALLEL ) )
-        printf( "parallel: " );
-    else if( v_net->inst != NULL )
-        printf( "%s(%d): ", v_net->inst->name, v_net->inst->id );
-    debug_print_vports( v_net );
-#endif // DEBUG_CONNECT
-    return v_net;
-}
-
-/******************************************************************************/
 virt_net_t* virt_net_create_box( symrec_t* rec, instrec_t* inst )
 {
     virt_net_t* v_net = NULL;
@@ -66,58 +34,21 @@ virt_net_t* virt_net_create_box( symrec_t* rec, instrec_t* inst )
 }
 
 /******************************************************************************/
-virt_net_t* virt_net_create_net( virt_net_t* v_net, instrec_t* inst,
-        virt_net_type_t type )
+virt_net_t* virt_net_create_flatten( virt_net_t* v_net, instrec_t* inst )
 {
     virt_net_t* v_net_new = NULL;
-    virt_port_list_t* ports = virt_ports_copy_net( v_net->ports, inst, true );
-    net_con_t* con = net_con_create( inst );
-    v_net_new = virt_net_create_struct( ports, con, inst, type );
-
+    virt_port_list_t*  ports = virt_ports_copy_net( v_net->ports, inst, false );
+    v_net_new = virt_net_create_struct( ports, NULL, inst, v_net->type );
     return v_net_new;
 }
 
 /******************************************************************************/
-virt_net_t* virt_net_create_sync( instrec_t* inst, virt_port_t* port1,
-        virt_port_t* port2 )
-{
-    virt_net_t* v_net = NULL;
-    virt_port_list_t* ports = malloc( sizeof( virt_port_list_t ) );
-    ports->idx = 0;
-    ports->port = port1;
-    ports->next = malloc( sizeof( virt_port_list_t ) );
-    ports->next->idx = 0;
-    ports->next->port = port2;
-    ports->next->next = NULL;
-    v_net = virt_net_create_struct( ports, NULL, inst, VNET_SYNC );
-
-    return v_net;
-}
-
-/******************************************************************************/
-virt_net_t* virt_net_create_sync_merge( virt_net_t* v_net1, virt_net_t* v_net2,
-        instrec_t* inst )
-{
-    virt_net_t* v_net = NULL;
-    virt_port_list_t* ports1 = NULL;
-    virt_port_list_t* ports2 = NULL;
-
-    // alter ports
-    ports1 = virt_port_assign( v_net1->ports, NULL, inst );
-    ports2 = virt_port_assign( v_net2->ports, ports1, inst );
-    v_net = virt_net_create_struct( ports2, NULL, inst, VNET_SERIAL );
-
-    return v_net;
-}
-
-/******************************************************************************/
-virt_net_t* virt_net_create_vnet( virt_port_list_t* ports, instrec_t* inst,
-        virt_net_type_t type )
+virt_net_t* virt_net_create_net( virt_net_t* v_net, instrec_t* inst )
 {
     virt_net_t* v_net_new = NULL;
-    virt_port_list_t*  ports_new = virt_port_assign( ports, NULL, NULL );
+    virt_port_list_t* ports = virt_ports_copy_net( v_net->ports, inst, true );
     net_con_t* con = net_con_create( inst );
-    v_net_new = virt_net_create_struct( ports_new, con, inst, type );
+    v_net_new = virt_net_create_struct( ports, con, inst, VNET_NET );
 
     return v_net_new;
 }
@@ -163,6 +94,72 @@ virt_net_t* virt_net_create_serial( virt_net_t* v_net1, virt_net_t* v_net2 )
 }
 
 /******************************************************************************/
+virt_net_t* virt_net_create_struct( virt_port_list_t* ports, net_con_t* con,
+        instrec_t* inst, virt_net_type_t type )
+{
+    virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
+    v_net->inst = inst;
+    v_net->ports = ports;
+    v_net->con = con;
+    v_net->type = type;
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+    printf( "virt_net_create: " );
+    if( ( v_net->inst == NULL ) && ( v_net->type == VNET_SERIAL ) )
+        printf( "serial: " );
+    else if( ( v_net->inst == NULL ) && ( v_net->type == VNET_PARALLEL ) )
+        printf( "parallel: " );
+    else if( v_net->inst != NULL )
+        printf( "%s(%d): ", v_net->inst->name, v_net->inst->id );
+    debug_print_vports( v_net );
+#endif // DEBUG_CONNECT
+    return v_net;
+}
+
+/******************************************************************************/
+virt_net_t* virt_net_create_sync( instrec_t* inst, virt_port_t* port1,
+        virt_port_t* port2 )
+{
+    virt_net_t* v_net = NULL;
+    virt_port_list_t* ports = malloc( sizeof( virt_port_list_t ) );
+    ports->idx = 0;
+    ports->port = port1;
+    ports->next = malloc( sizeof( virt_port_list_t ) );
+    ports->next->idx = 0;
+    ports->next->port = port2;
+    ports->next->next = NULL;
+    v_net = virt_net_create_struct( ports, NULL, inst, VNET_SYNC );
+
+    return v_net;
+}
+
+/******************************************************************************/
+virt_net_t* virt_net_create_sync_merge( virt_net_t* v_net1, virt_net_t* v_net2,
+        instrec_t* inst )
+{
+    virt_net_t* v_net = NULL;
+    virt_port_list_t* ports1 = NULL;
+    virt_port_list_t* ports2 = NULL;
+
+    // alter ports
+    ports1 = virt_port_assign( v_net1->ports, NULL, inst );
+    ports2 = virt_port_assign( v_net2->ports, ports1, inst );
+    v_net = virt_net_create_struct( ports2, NULL, inst, VNET_SERIAL );
+
+    return v_net;
+}
+
+/******************************************************************************/
+virt_net_t* virt_net_create_wrap( virt_net_t* v_net, instrec_t* inst )
+{
+    virt_net_t* v_net_new = NULL;
+    virt_port_list_t* ports = virt_ports_copy_net( v_net->ports, inst, true );
+    net_con_t* con = net_con_create( inst );
+    v_net_new = virt_net_create_struct( ports, con, inst, VNET_WRAP );
+
+    return v_net_new;
+}
+
+/******************************************************************************/
 void virt_net_destroy( virt_net_t* v_net, bool shallow )
 {
     virt_port_list_t* ports = NULL;
@@ -198,12 +195,11 @@ void virt_net_update_class( virt_net_t* v_net, port_class_t port_class )
             list->port->attr_class = port_class;
         list = list->next;
     }
-
 }
 
 /******************************************************************************/
 virt_port_t* virt_port_add( virt_net_t* v_net, port_class_t port_class,
-        port_mode_t port_mode, instrec_t* port_inst, char* name,
+        port_mode_t port_mode, instrec_t* port_inst, const char* name,
         symrec_t* symb )
 {
     virt_port_t* new_port = NULL;
@@ -261,7 +257,7 @@ virt_port_list_t* virt_port_assign( virt_port_list_t* old,
 
 /******************************************************************************/
 virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
-        instrec_t* port_inst, char* name, symrec_t* symb )
+        instrec_t* port_inst, const char* name, symrec_t* symb )
 {
     virt_port_t* new_port = NULL;
 
@@ -273,15 +269,6 @@ virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
     new_port->symb = symb;
     new_port->state = VPORT_STATE_OPEN;
 
-    return new_port;
-}
-
-/******************************************************************************/
-virt_port_t* virt_port_copy( virt_port_t* port )
-{
-    virt_port_t* new_port = virt_port_create( port->attr_class, port->attr_mode,
-                port->inst, port->name, port->symb );
-    new_port->state = port->state;
     return new_port;
 }
 
@@ -353,30 +340,6 @@ virt_port_t* virt_port_get_equivalent( virt_net_t* v_net, virt_port_t* port,
         ports = ports->next;
     }
     return NULL;
-}
-
-/******************************************************************************/
-void virt_port_remove( virt_net_t* v_net, virt_port_t* port )
-{
-    virt_port_list_t* list_last = NULL;
-    virt_port_list_t* list = v_net->ports;
-
-    while( list != NULL ) {
-        if( list->port == port ) {
-            if( list_last == NULL ) v_net->ports = list->next;
-            else list_last->next = list->next;
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-            printf( "virt_port_remove: Remove port %s of inst %s(%d)\n",
-                    list->port->name, list->port->inst->name,
-                    list->port->inst->id );
-#endif // DEBUG_CONNECT
-            free( list->port );
-            free( list );
-            break;
-        }
-        list_last = list;
-        list = list->next;
-    }
 }
 
 /******************************************************************************/
