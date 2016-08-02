@@ -1,6 +1,0 @@
-A1 = box A( out a1 )
-A2 = box A( out a2 )
-B1 = box B( in a1 )
-B2 = box B( in a2 )
-
-connect (A1|A2).(B1|B2)

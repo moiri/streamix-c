@@ -1,3 +1,0 @@
-A = box A( out a )
-B = box B( down in a )
-A.B.A

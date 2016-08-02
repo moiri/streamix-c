@@ -1,0 +1,8 @@
+/**
+ * A serial connection where the port of B can only be connected to one side.
+ * The missing connection on the other side will cause an error.
+ */
+
+A = box fA( out a )
+B = box fB( in a )
+A.B.A

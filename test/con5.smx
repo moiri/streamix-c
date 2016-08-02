@@ -1,3 +1,7 @@
+/**
+ * A parallel combination followed by a serial combination
+ */
+
 A = box A(in a)
 B = box B(in b)
 C = box C(out a, out b)

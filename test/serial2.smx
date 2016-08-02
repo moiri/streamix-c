@@ -1,3 +1,0 @@
-A = box A( out a )
-B = box B( up in a, down in a )
-connect A.B.A

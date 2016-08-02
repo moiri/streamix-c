@@ -1,3 +1,7 @@
+/**
+ * A bi-directional serial combination
+ */
+
 A = box A( out a, in b )
 B = box B( in a, out b )
 connect A.B

@@ -1,0 +1,11 @@
+/**
+ * A parallel combination followed by a serial combination
+ * using port classes
+ */
+
+A = box fA(in a, in b)
+B = box fB(up out a, down in a)
+C = box fC(up out b, down in b)
+D = box fD(out a, out b)
+
+connect A.(B|C).D

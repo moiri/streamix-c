@@ -1,0 +1,12 @@
+/**
+ * Using serial and parallel combinators without respecting the connection
+ * semantics of Steramix: Here, A1 only connects to B1 and A2 only connects to
+ * B2. A connection between A1 and B2 and A2 and B1 is missing!
+ */
+
+A1 = box A( out a1 )
+A2 = box A( out a2 )
+B1 = box B( in a1 )
+B2 = box B( in a2 )
+
+connect (A1|A2).(B1|B2)
