@@ -119,13 +119,18 @@ virt_net_t* virt_net_create_struct( virt_port_list_t* ports, net_con_t* con,
 virt_net_t* virt_net_create_sync( instrec_t* inst, virt_port_t* port1,
         virt_port_t* port2 )
 {
+    virt_port_t* new_port;
     virt_net_t* v_net = NULL;
     virt_port_list_t* ports = malloc( sizeof( virt_port_list_t ) );
     ports->idx = 0;
-    ports->port = port1;
+    new_port = virt_port_create( port1->attr_class, port1->attr_mode,
+                inst, port1->name, port1->symb );
+    ports->port = new_port;
     ports->next = malloc( sizeof( virt_port_list_t ) );
     ports->next->idx = 0;
-    ports->next->port = port2;
+    new_port = virt_port_create( port2->attr_class, port2->attr_mode,
+                inst, port2->name, port2->symb );
+    ports->next->port = new_port;
     ports->next->next = NULL;
     v_net = virt_net_create_struct( ports, NULL, inst, VNET_SYNC );
 
@@ -160,14 +165,18 @@ virt_net_t* virt_net_create_wrap( virt_net_t* v_net, instrec_t* inst )
 }
 
 /******************************************************************************/
-void virt_net_destroy( virt_net_t* v_net, bool shallow )
+void virt_net_destroy( virt_net_t* v_net, bool deep )
 {
+    if( v_net == NULL ) return;
+
     virt_port_list_t* ports = NULL;
+    // free instance
+    if( v_net->inst != NULL ) instrec_destroy( v_net->inst );
     // free ports
     while( v_net->ports != NULL ) {
         ports = v_net->ports;
         v_net->ports = v_net->ports->next;
-        if( !shallow && ( ports->port != NULL ) ) free( ports->port );
+        if( deep && ( ports->port != NULL ) ) free( ports->port );
         free( ports );
     }
     // free connection vectors
@@ -182,7 +191,7 @@ void virt_net_destroy( virt_net_t* v_net, bool shallow )
 /******************************************************************************/
 void virt_net_destroy_shallow( virt_net_t* v_net )
 {
-    virt_net_destroy( v_net, true );
+    virt_net_destroy( v_net, false );
 }
 
 /******************************************************************************/

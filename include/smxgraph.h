@@ -38,6 +38,13 @@ void dgraph_append( igraph_t*, igraph_t*, bool );
 int dgraph_edge_add( igraph_t*, virt_port_t*, virt_port_t* );
 
 /**
+ * @brief   destroy a graph and its vertex attributes
+ *
+ * @param g graph to be destroyed
+ */
+void dgraph_destroy( igraph_t* );
+
+/**
  * @brief   Flatten a hierarchical graph
  *
  * Flatten a hierarchical graph by creating new instances of each occurence
@@ -156,6 +163,16 @@ virt_net_t* dgraph_vertex_add_wrap( igraph_t*, symrec_t*, int );
  *                  if false a shallow copy of the attributes is done
  */
 instrec_t* dgraph_vertex_copy( igraph_t*, igraph_t*, int, bool );
+
+/**
+ * @brief   destroy the instance and the virtual net attributes of a vertex
+ *
+ * @param g     graph object containing the vertex
+ * @param id    id of the vertex
+ * @param deep  if true destroy all ports of the virtual net
+ *              if false only destroy the port list structure
+ */
+void dgraph_vertex_destroy_attr( igraph_t*, int, bool );
 
 /**
  * @brief   Merge two vertices into one

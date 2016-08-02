@@ -67,6 +67,24 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest )
 }
 
 /******************************************************************************/
+void dgraph_destroy( igraph_t* g )
+{
+    igraph_vs_t vs;
+    igraph_vit_t vit;
+
+    vs = igraph_vss_all();
+    igraph_vit_create( g, vs, &vit );
+    // iterate through all net instances of the graph
+    while( !IGRAPH_VIT_END( vit ) ) {
+        dgraph_vertex_destroy_attr( g, IGRAPH_VIT_GET( vit ), true );
+        IGRAPH_VIT_NEXT( vit );
+    }
+    igraph_vit_destroy( &vit );
+    igraph_vs_destroy( &vs );
+    igraph_destroy( g );
+}
+
+/******************************************************************************/
 void dgraph_flatten( igraph_t* g_new, igraph_t* g )
 {
     igraph_vs_t vs;
@@ -102,6 +120,7 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
     dgraph_append( g_new, g, false );
+    igraph_destroy( &g_in );
 }
 
 /******************************************************************************/
@@ -139,6 +158,7 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, int net_id )
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
     printf( "dgraph_flatten_net: remove vertice with id = %d\n", net_id );
 #endif // DEBUG_FLATTEN_GRAPH
+    dgraph_vertex_destroy_attr( g_new, net_id, true );
     vs = igraph_vss_1( net_id );
     igraph_delete_vertices( g_new, vs );
     igraph_vs_destroy( &vs );
@@ -316,6 +336,16 @@ instrec_t* dgraph_vertex_copy( igraph_t* g_src, igraph_t* g_dest, int id,
                 ( uintptr_t )v_net_new );
     }
     return inst_new;
+}
+
+/******************************************************************************/
+void dgraph_vertex_destroy_attr( igraph_t* g, int id, bool deep )
+{
+    virt_net_t* v_net;
+
+    v_net = ( virt_net_t* )( uintptr_t ) igraph_cattribute_VAN( g,
+            INST_ATTR_VNET, id );
+    virt_net_destroy( v_net, deep );
 }
 
 /******************************************************************************/

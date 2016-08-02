@@ -2,6 +2,7 @@
 #include "streamix.tab.h"
 #include "context.h"
 #include "smxerr.h"
+#include "smxgraph.h"
 #ifdef DOT_AST
     #include "smxdot.h"
 #endif // DOT_AST
@@ -35,16 +36,14 @@ int main( int argc, char **argv ) {
     // set flex to read from it instead of defaulting to STDIN    yyin = myfile;
     yyin = src_smx;
 
-    /* con_graph = fopen(CON_DOT_PATH, "w"); */
     // parse through the input until there is no more:
     do {
         yyparse( &ast );
     } while( !feof( yyin ) );
     fclose( src_smx );
 
-    /* cgraph_init( ast ); */
-    ast_flatten( ast );
     igraph_empty( &g, 0, true );
+    ast_flatten( ast );
     check_context( ast, &symtab, &g );
     dest_gml = fopen( "streamix.gml", "w" );
     igraph_write_graph_gml( &g, dest_gml, NULL, "StreamixC" );
@@ -53,14 +52,13 @@ int main( int argc, char **argv ) {
     igraph_write_graph_dot( &g, dest_gml );
     fclose( dest_gml );
 
-    /* fclose(con_graph); */
     if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );
 #ifdef DOT_AST
     draw_ast_graph( ast );
 #endif // DOT_AST
 
     // cleanup
-    igraph_destroy( &g );
+    dgraph_destroy( &g );
     ast_destroy( ast );
     symrec_del_all( &symtab );
     yylex_destroy();

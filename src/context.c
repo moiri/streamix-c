@@ -682,8 +682,6 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             v_net2 = install_nets( symtab, scope_stack, ast->op->right, g );
             if( v_net2 == NULL ) return NULL;
             v_net = virt_net_create_parallel( v_net1, v_net2 );
-            /* virt_net_destroy_shallow( v_net1 ); */
-            /* virt_net_destroy_shallow( v_net2 ); */
             cpsync_connects( v_net, true, g );
             break;
         case AST_SERIAL:
@@ -697,8 +695,6 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             virt_net_update_class( v_net2, PORT_CLASS_DOWN );
             check_connection_missing( v_net1, v_net2, g );
             v_net = virt_net_create_serial( v_net1, v_net2 );
-            /* virt_net_destroy_shallow( v_net1 ); */
-            /* virt_net_destroy_shallow( v_net2 ); */
             cpsync_connects( v_net, false, g );
             break;
         case AST_ID:
@@ -706,7 +702,6 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             rec = symrec_get( symtab, scope_stack, ast->symbol->name,
                     ast->symbol->line, 0 );
             if( rec == NULL ) return NULL;
-
             // check type of the record
             switch( rec->type ) {
                 case SYMREC_BOX:
@@ -730,5 +725,11 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
         default:
             ;
     }
+    if( ( v_net1 != NULL ) && ( ( v_net1->type == VNET_SERIAL )
+                || ( v_net1->type == VNET_PARALLEL ) ) )
+        virt_net_destroy_shallow( v_net1 );
+    if( ( v_net2 != NULL ) && ( ( v_net2->type == VNET_SERIAL )
+                || ( v_net2->type == VNET_PARALLEL ) ) )
+        virt_net_destroy_shallow( v_net2 );
     return v_net;
 }
