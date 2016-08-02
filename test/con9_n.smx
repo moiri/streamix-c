@@ -1,0 +1,10 @@
+/**
+ * Serial combination with a missing connection from A to B, much like
+ * tc con8_n.smx but this time forcing a connection for the right hand
+ * side.
+ */
+
+A = box A( up out a )
+B = box B( down in a )
+
+connect A.B.A
