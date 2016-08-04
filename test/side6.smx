@@ -1,0 +1,8 @@
+/**
+ * Perform a side port connection on a parallel combination
+ */
+
+A = box A( side in p )
+B = box B( side in p )
+
+connect A|B
