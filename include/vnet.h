@@ -42,7 +42,6 @@ enum virt_net_type_e
  */
 enum virt_port_state_e
 {
-    VPORT_STATE_DISABLED,   /**< port can not be used anymore */
     VPORT_STATE_OPEN,       /**< port is ready to be connected */
     VPORT_STATE_CONNECTED   /**< port is connected */
 };
@@ -174,11 +173,10 @@ virt_net_t* virt_net_create_struct( virt_port_list_t*, net_con_t*,
  * @breif   Create a virtual net of a copy synchronizer
  *
  * @param inst  pointer to the instance of the copy synchronizer
- * @param port1 pointer to a virtual port
- * @param port2 pointer to a virtual port
+ * @param port  pointer to a virtual port
  * @return      pointer to the newly created virtual net
  */
-virt_net_t* virt_net_create_sync( instrec_t*, virt_port_t*, virt_port_t* );
+virt_net_t* virt_net_create_sync( instrec_t*, virt_port_t* );
 
 /**
  * @brief   Create a new synchronizer by mergin two

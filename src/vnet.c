@@ -116,22 +116,13 @@ virt_net_t* virt_net_create_struct( virt_port_list_t* ports, net_con_t* con,
 }
 
 /******************************************************************************/
-virt_net_t* virt_net_create_sync( instrec_t* inst, virt_port_t* port1,
-        virt_port_t* port2 )
+virt_net_t* virt_net_create_sync( instrec_t* inst, virt_port_t* port )
 {
-    virt_port_t* new_port;
     virt_net_t* v_net = NULL;
     virt_port_list_t* ports = malloc( sizeof( virt_port_list_t ) );
     ports->idx = 0;
-    new_port = virt_port_create( port1->attr_class, port1->attr_mode,
-                inst, port1->name, port1->symb );
-    ports->port = new_port;
-    ports->next = malloc( sizeof( virt_port_list_t ) );
-    ports->next->idx = 0;
-    new_port = virt_port_create( port2->attr_class, port2->attr_mode,
-                inst, port2->name, port2->symb );
-    ports->next->port = new_port;
-    ports->next->next = NULL;
+    ports->port = port;
+    ports->next = NULL;
     v_net = virt_net_create_struct( ports, NULL, inst, VNET_SYNC );
 
     return v_net;
@@ -337,7 +328,6 @@ virt_port_t* virt_port_get_equivalent( virt_net_t* v_net, virt_port_t* port,
     virt_port_list_t* ports = v_net->ports;
     while( ports != NULL ) {
         if( ( port->symb == ports->port->symb )
-                /* && ( ports->port->state != VPORT_STATE_DISABLED ) */
                 && ( all || ( ports->port->state == VPORT_STATE_OPEN ) ) ) {
 #if defined(DEBUG) || defined(DEBUG_SEARCH_PORT)
             printf( "Found port: " );
@@ -355,7 +345,6 @@ virt_port_t* virt_port_get_equivalent( virt_net_t* v_net, virt_port_t* port,
 void debug_print_vport( virt_port_t* port )
 {
     if( port->state == VPORT_STATE_CONNECTED ) printf("+");
-    if( port->state == VPORT_STATE_DISABLED ) printf("!");
     printf( "%s(%d)", port->inst->name, port->inst->id );
     if( port->attr_class == PORT_CLASS_DOWN ) printf( "_" );
     else if( port->attr_class == PORT_CLASS_UP ) printf( "^" );

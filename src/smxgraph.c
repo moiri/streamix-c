@@ -210,8 +210,13 @@ virt_port_t* dgraph_port_search_child( igraph_t* g, virt_port_t* port )
         port_inst = virt_port_get_equivalent( v_net, port, false );
         if( port_inst != NULL ) {
             port_res = port_inst;
-            if( port_inst->inst->type == INSTREC_SYNC )
+            if( port_inst->inst->type == INSTREC_SYNC ) {
+                // remove the cp sync to not search for it a second time
+                vs = igraph_vss_1( id_inst );
+                igraph_delete_vertices( g, vs );
+                igraph_vs_destroy( &vs );
                 break;
+            }
         }
         IGRAPH_VIT_NEXT( vit );
     }
@@ -269,12 +274,11 @@ virt_net_t* dgraph_vertex_add_net( igraph_t* g, symrec_t* symb, int line )
 }
 
 /******************************************************************************/
-virt_net_t* dgraph_vertex_add_sync( igraph_t* g, virt_port_t* port1,
-        virt_port_t* port2 )
+virt_net_t* dgraph_vertex_add_sync( igraph_t* g, virt_port_t* port )
 {
     int id = dgraph_vertex_add( g, TEXT_CP );
     instrec_t* inst = instrec_create( TEXT_CP, id, -1, INSTREC_SYNC );
-    virt_net_t* v_net = virt_net_create_sync( inst, port1, port2 );
+    virt_net_t* v_net = virt_net_create_sync( inst, port );
     dgraph_vertex_add_attr( g, id, NULL, NULL, inst, v_net, NULL );
     return v_net;
 }
@@ -369,14 +373,16 @@ int dgraph_vertex_merge( igraph_t* g, int id1, int id2 )
             id_new++;
         }
     }
-    igraph_attribute_combination( &comb, INST_ATTR_LABEL,
-            IGRAPH_ATTRIBUTE_COMBINE_FIRST, INST_ATTR_FUNC,
-            IGRAPH_ATTRIBUTE_COMBINE_FIRST, INST_ATTR_INST,
-            IGRAPH_ATTRIBUTE_COMBINE_FIRST, INST_ATTR_SYMB,
-            IGRAPH_ATTRIBUTE_COMBINE_FIRST, INST_ATTR_VNET,
-            IGRAPH_ATTRIBUTE_COMBINE_FIRST, INST_ATTR_GRAPH,
-            IGRAPH_ATTRIBUTE_COMBINE_FIRST, IGRAPH_NO_MORE_ATTRIBUTES );
+    igraph_attribute_combination( &comb,
+            INST_ATTR_LABEL, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            INST_ATTR_FUNC, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            INST_ATTR_INST, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            INST_ATTR_SYMB, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            INST_ATTR_VNET, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            INST_ATTR_GRAPH, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            IGRAPH_NO_MORE_ATTRIBUTES );
     igraph_contract_vertices( g, &v_new, &comb );
+    igraph_attribute_combination_destroy( &comb );
     igraph_vector_destroy( &v_new );
 
     // id of deleted element

@@ -105,8 +105,6 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
             printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
             // merge copy synchronizers
-            port_l->state = VPORT_STATE_DISABLED;
-            port_r->state = VPORT_STATE_DISABLED;
             cpsync_merge( port_l, port_r, g );
             res = true;
         }
@@ -477,7 +475,6 @@ void cpsync_connect( virt_net_t* v_net, virt_port_t* port1,
     if( ( inst1->type == INSTREC_SYNC )
             && ( inst2->type == INSTREC_SYNC ) ) {
         // merge copy synchronizers
-        port2->state = VPORT_STATE_DISABLED;
         cpsync_merge( port1, port2, g );
     }
     else if( ( inst1->type == INSTREC_SYNC )
@@ -486,11 +483,6 @@ void cpsync_connect( virt_net_t* v_net, virt_port_t* port1,
     }
     else {
         // create copy synchronizer instance and update the graph
-        v_net_sync = dgraph_vertex_add_sync( g, port1, port2 );
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-        printf( "Create copy-synchronizer %s(%d)\n", v_net_sync->inst->name,
-                v_net_sync->inst->id );
-#endif // DEBUG_CONNECT
         if( port1->attr_class == port2->attr_class )
             port_class = port1->attr_class;
         else port_class = PORT_CLASS_NONE;
@@ -498,8 +490,9 @@ void cpsync_connect( virt_net_t* v_net, virt_port_t* port1,
             port_mode = port1->attr_mode;
         else port_mode = PORT_MODE_BI;
         port_new = virt_port_add( v_net, port_class, port_mode,
-                v_net_sync->inst, port1->name, port1->symb );
-        virt_port_append( v_net_sync, port_new );
+                NULL, port1->name, port1->symb );
+        v_net_sync = dgraph_vertex_add_sync( g, port_new );
+        port_new->inst = v_net_sync->inst;
         connect_ports( port_new, port1, g, false );
         connect_ports( port_new, port2, g, false );
     }
@@ -540,38 +533,31 @@ instrec_t* cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
 {
     int id_del;
     instrec_t *res;
-    virt_net_t* v_net1;
-    virt_net_t* v_net2;
-    instrec_t* inst1 = port1->inst;
-    instrec_t* inst2 = port2->inst;
+    virt_net_t* v_net1 = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
+            INST_ATTR_VNET, port1->inst->id );
+    virt_net_t* v_net2 = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
+            INST_ATTR_VNET, port2->inst->id );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-    printf( "Merge %s(%d) and %s(%d)", inst1->name, inst1->id, inst2->name,
-            inst2->id );
+    printf( "Merge %s(%d) and %s(%d)", port1->inst->name, port1->inst->id,
+            port2->inst->name, port2->inst->id );
 #endif // DEBUG_CONNECT
-    v_net1 = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
-            INST_ATTR_VNET, inst1->id );
-    v_net2 = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
-            INST_ATTR_VNET, inst2->id );
-    id_del = dgraph_vertex_merge( g, inst1->id, inst2->id );
+    id_del = dgraph_vertex_merge( g, port1->inst->id, port2->inst->id );
     // delete one copy synchronizer
-    if( id_del == inst1->id ) {
-        instrec_destroy( inst1 );
-        res = port1->inst = inst2;
+    if( id_del == port1->inst->id ) {
+        virt_net_destroy_shallow( v_net1 );
+        res = port1->inst = port2->inst;
+        virt_port_append( v_net2, port1 );
     }
     else {
-        instrec_destroy( inst2 );
-        res = port2->inst = inst1;
+        virt_net_destroy_shallow( v_net2 );
+        res = port2->inst = port1->inst;
+        virt_port_append( v_net1, port2 );
     }
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
     printf( " into %s(%d)\n", res->name, res->id );
 #endif // DEBUG_CONNECT
     // adjust all ids starting from the id of the deleted record
     dgraph_vertex_update_ids( g, id_del );
-    // update v_net
-    igraph_cattribute_VAN_set( g, INST_ATTR_VNET, res->id,
-            ( uintptr_t )virt_net_create_sync_merge( v_net1, v_net2, res ) );
-    virt_net_destroy_shallow( v_net1 );
-    virt_net_destroy_shallow( v_net2 );
 
     return res;
 }
