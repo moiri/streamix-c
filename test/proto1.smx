@@ -1,3 +1,7 @@
+/**
+ * Create a net out of a serial combination and prototype it
+ */
+
 A = box funcA(in a, out b)
 B = box funcB(in b, out c)
 X = box funcX(out a)
