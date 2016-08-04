@@ -1,3 +1,7 @@
+/**
+ * Same as net2 but with a cp sync on both sides of the net
+ */
+
 A = box funcA(in a, out b)
 X = box funcX(out a)
 Z = box funcY(in b)

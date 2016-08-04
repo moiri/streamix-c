@@ -1,3 +1,8 @@
+/**
+ * Use a net top perform a stright serial connection
+ * Nothing is used twice
+ */
+
 A = box funcA(in a, out b)
 B = box funcB(in b, out c)
 X = box funcX(out a)

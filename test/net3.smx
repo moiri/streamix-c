@@ -1,3 +1,7 @@
+/**
+ * Connect to a net with multiple ports (Y to Z connection)
+ */
+
 A = box funcA(in a, out b)
 B = box funcB(in b, out c)
 C = box funcB(in b, out d)

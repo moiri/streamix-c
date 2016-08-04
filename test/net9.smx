@@ -1,3 +1,7 @@
+/**
+ * Perform multiple port connections from a net to independant boxes
+ */
+
 A = box funcA(in a, out b)
 B = box funcB(in b, out c)
 C = box funcB(in b, out d)

@@ -1,3 +1,8 @@
+/**
+ * Create a net where a copy sync is spawned and connect it with a serial
+ * combination
+ */
+
 A = box funcA(in a, out b)
 B = box funcB(in b, out c)
 X = box funcX(out a)

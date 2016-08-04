@@ -1,3 +1,8 @@
+/**
+ * Merge cp sync when two nets connect
+ * Use 3 hierarchical levels
+ */
+
 A = box funcA(out a)
 B = box funcB(in a, out b)
 C = box funcC(in b)

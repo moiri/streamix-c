@@ -1,3 +1,7 @@
+/**
+ * Merge cp sync when connecting two nets
+ */
+
 A = box funcA(out a)
 B = box funcB(in a, out b)
 C = box funcC(in b)

@@ -1,3 +1,7 @@
+/**
+ * Like net6 but simpler (only the right side of the net is connected)
+ */
+
 A = box funcA( out b)
 Z = box funcY(in b)
 

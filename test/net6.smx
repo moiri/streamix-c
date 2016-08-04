@@ -1,3 +1,7 @@
+/**
+ * Merge cp sync on both sides of the net when connected in the parent garph
+ */
+
 A = box funcA(in a, out b)
 X = box funcX(out a)
 Z = box funcY(in b)

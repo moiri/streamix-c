@@ -1,3 +1,8 @@
+/**
+ * Merge cp sync when connecting two nets
+ * Instanciate the same net multiple times
+ */
+
 A = box funcA(up in a, down out a)
 X = box funcX(out a)
 Z = box funcY(in a)

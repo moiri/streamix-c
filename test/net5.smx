@@ -1,3 +1,7 @@
+/**
+ * Same as net3 but with multiple port connections on both sides of the net
+ */
+
 A = box funcA(in a1, out a2)
 B = box funcB(in b1, out b2)
 X = box funcX(out a1, out b1)

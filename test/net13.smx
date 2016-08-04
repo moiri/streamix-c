@@ -1,3 +1,8 @@
+/**
+ * Instanciate the same net multiple times
+ * Make a net out of a box (no combinators are used)
+ */
+
 A = box funcA(up in a, down out a)
 X = box funcX(out a)
 Z = box funcZ(in a)
