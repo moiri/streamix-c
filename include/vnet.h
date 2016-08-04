@@ -179,16 +179,6 @@ virt_net_t* virt_net_create_struct( virt_port_list_t*, net_con_t*,
 virt_net_t* virt_net_create_sync( instrec_t*, virt_port_t* );
 
 /**
- * @brief   Create a new synchronizer by mergin two
- *
- * @param v_net1    pointer to the virtual net of a synchronizer
- * @param v_net2    pointer to the virtual net of a synchronizer
- * @param inst      pointer to the instance of the new synchronizer
- * @return          pointer to the newly created synchroinzer
- */
-virt_net_t* virt_net_create_sync_merge( virt_net_t*, virt_net_t*, instrec_t* );
-
-/**
  * @brief   Create a new virtual net out of virtial net of a wrapper
  *
  * @param ports pointer to the initial virtual net

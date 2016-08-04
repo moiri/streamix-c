@@ -129,22 +129,6 @@ virt_net_t* virt_net_create_sync( instrec_t* inst, virt_port_t* port )
 }
 
 /******************************************************************************/
-virt_net_t* virt_net_create_sync_merge( virt_net_t* v_net1, virt_net_t* v_net2,
-        instrec_t* inst )
-{
-    virt_net_t* v_net = NULL;
-    virt_port_list_t* ports1 = NULL;
-    virt_port_list_t* ports2 = NULL;
-
-    // alter ports
-    ports1 = virt_port_assign( v_net1->ports, NULL, inst );
-    ports2 = virt_port_assign( v_net2->ports, ports1, inst );
-    v_net = virt_net_create_struct( ports2, NULL, inst, VNET_SERIAL );
-
-    return v_net;
-}
-
-/******************************************************************************/
 virt_net_t* virt_net_create_wrap( virt_net_t* v_net, instrec_t* inst )
 {
     virt_net_t* v_net_new = NULL;
@@ -226,9 +210,10 @@ void virt_port_append( virt_net_t* v_net, virt_port_t* port )
     list_new->port = port;
     list_new->idx = idx;
     list_new->next = NULL;
-    list_last->next = list_new;
+    if( list_last != NULL ) list_last->next = list_new;
+    else v_net->ports = list_new;
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-    printf( "virt_port_add: Add port %s of inst %s(%d)\n", port->name,
+    printf( "virt_port_append: Append port %s of inst %s(%d)\n", port->name,
             port->inst->name, port->inst->id );
 #endif // DEBUG_CONNECT
 }

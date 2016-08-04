@@ -490,7 +490,7 @@ void cpsync_connect( virt_net_t* v_net, virt_port_t* port1,
             port_mode = port1->attr_mode;
         else port_mode = PORT_MODE_BI;
         port_new = virt_port_add( v_net, port_class, port_mode,
-                NULL, port1->name, port1->symb );
+                port1->inst, port1->name, port1->symb );
         v_net_sync = dgraph_vertex_add_sync( g, port_new );
         port_new->inst = v_net_sync->inst;
         connect_ports( port_new, port1, g, false );
@@ -516,6 +516,7 @@ void cpsync_connects( virt_net_t* v_net, bool parallel, igraph_t* g )
         while( ports2 != NULL ) {
             if( ( ports1->idx != ports2->idx )
                     && ( ports1->idx < new_idx ) && ( ports2->idx < new_idx )
+                    && ( ports1->port->inst != ports2->port->inst )
                     && ( ports1->port->state == VPORT_STATE_OPEN )
                     && ( ports2->port->state == VPORT_STATE_OPEN )
                     && are_port_names_ok( ports1->port, ports2->port, parallel,
