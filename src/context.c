@@ -324,7 +324,7 @@ void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g )
     igraph_empty( &g_tmp, 0, IGRAPH_DIRECTED );
     dgraph_append( &g_tmp, &n_attr->g, true );
     dgraph_flatten( g, &g_tmp );
-    check_open_ports( g );
+    post_process( g );
 
     // cleanup
     igraph_destroy( &g_tmp );
@@ -527,38 +527,41 @@ bool check_prototype( symrec_list_t* r_ports, virt_net_t* v_net, char *name )
 }
 
 /******************************************************************************/
-void check_open_ports( igraph_t* g )
+void check_open_ports( virt_net_t* v_net )
 {
-    igraph_vs_t vs;
-    igraph_vit_t vit;
-    virt_net_t *v_net;
     virt_port_list_t* ports;
-    int inst_id;
     char error_msg[ CONST_ERROR_LEN ];
 
-    vs = igraph_vss_all();
-    igraph_vit_create( g, vs, &vit );
-    // iterate through all net instances of the graph
-    while( !IGRAPH_VIT_END( vit ) ) {
-        inst_id = IGRAPH_VIT_GET( vit );
-        v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
-                INST_ATTR_VNET, inst_id );
-        if( v_net->type == VNET_BOX ) {
-            ports = v_net->ports;
-            while( ports != NULL ) {
-                if( ports->port->state == VPORT_STATE_OPEN ) {
-                    sprintf( error_msg, ERROR_NO_PORT_CON, ERR_ERROR,
-                            ports->port->name, v_net->inst->name,
-                            v_net->inst->id );
-                    report_yyerror( error_msg, v_net->inst->line );
-                }
-                ports = ports->next;
-            }
+    ports = v_net->ports;
+    while( ports != NULL ) {
+        if( ports->port->state == VPORT_STATE_OPEN ) {
+            sprintf( error_msg, ERROR_NO_PORT_CON, ERR_ERROR, ports->port->name,
+                    v_net->inst->name, v_net->inst->id );
+            report_yyerror( error_msg, v_net->inst->line );
         }
-        IGRAPH_VIT_NEXT( vit );
+        ports = ports->next;
     }
-    igraph_vit_destroy( &vit );
-    igraph_vs_destroy( &vs );
+}
+
+/******************************************************************************/
+bool check_single_mode_cp( igraph_t* g, int id )
+{
+    bool res = true;
+    igraph_vector_t eids_in;
+    igraph_vector_t eids_out;
+    char error_msg[ CONST_ERROR_LEN ];
+
+    igraph_vector_init( &eids_in, 0 );
+    igraph_incident( g, &eids_in, id, IGRAPH_IN );
+    igraph_vector_init( &eids_out, 0 );
+    igraph_incident( g, &eids_out, id, IGRAPH_OUT );
+    if( ( igraph_vector_size( &eids_in ) == 0 )
+            || ( igraph_vector_size( &eids_out ) == 0 ) ) {
+        sprintf( error_msg, ERROR_SMODE_CP, ERR_ERROR, TEXT_CP, id );
+        report_yyerror( error_msg, 0 );
+        res = false;
+    }
+    return res;
 }
 
 /******************************************************************************/
@@ -629,6 +632,36 @@ instrec_t* cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
     // adjust all ids starting from the id of the deleted record
     dgraph_vertex_update_ids( g, id_del );
 
+    return res;
+}
+
+/******************************************************************************/
+bool cpsync_reduce( igraph_t* g, int id )
+{
+    bool res = false;
+    virt_port_t *p_src, *p_dest, *p_from, *p_to;
+    igraph_vector_t eids;
+
+    igraph_vector_init( &eids, 0 );
+    igraph_incident( g, &eids, id, IGRAPH_ALL );
+    if( igraph_vector_size( &eids ) == 2 ) {
+        p_src = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
+                PORT_ATTR_PSRC, VECTOR( eids )[ 0 ] );
+        p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
+                PORT_ATTR_PDST, VECTOR( eids )[ 0 ] );
+        // get id of the non net end of the edge
+        if( p_dest->inst->id != id ) p_to = p_dest;
+        else p_from = p_src;
+        p_src = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
+                PORT_ATTR_PSRC, VECTOR( eids )[ 1 ] );
+        p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
+                PORT_ATTR_PDST, VECTOR( eids )[ 1 ] );
+        // get id of the non net end of the edge
+        if( p_dest->inst->id != id ) p_to = p_dest;
+        else p_from = p_src;
+        dgraph_edge_add( g, p_from, p_to );
+        res = true;
+    }
     return res;
 }
 
@@ -788,4 +821,36 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
                 || ( v_net2->type == VNET_PARALLEL ) ) )
         virt_net_destroy_shallow( v_net2 );
     return v_net;
+}
+
+/******************************************************************************/
+void post_process( igraph_t* g )
+{
+    igraph_vs_t vs;
+    igraph_vit_t vit;
+    igraph_vector_t dids;
+    virt_net_t *v_net;
+    int inst_id;
+
+    vs = igraph_vss_all();
+    igraph_vit_create( g, vs, &vit );
+    igraph_vector_init( &dids, 0 );
+    // iterate through all net instances of the graph
+    while( !IGRAPH_VIT_END( vit ) ) {
+        inst_id = IGRAPH_VIT_GET( vit );
+        v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
+                INST_ATTR_VNET, inst_id );
+        if( v_net->type == VNET_BOX ) {
+            check_open_ports( v_net );
+        }
+        else if( v_net->type == VNET_SYNC ) {
+            if( check_single_mode_cp( g, inst_id ) )
+                if( cpsync_reduce( g, inst_id ) )
+                    igraph_vector_push_back( &dids, inst_id );
+        }
+        IGRAPH_VIT_NEXT( vit );
+    }
+    igraph_delete_vertices( g, igraph_vss_vector( &dids ) );
+    igraph_vit_destroy( &vit );
+    igraph_vs_destroy( &vs );
 }

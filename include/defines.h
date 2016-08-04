@@ -162,5 +162,6 @@ enum parse_attr_e
 #define ERROR_UNDEF_PORT    "%s: use of undeclared port '%s' in '%s'(%d)"
 #define ERROR_UNDEF_NET     "%s: undefined reference to net '%s'"
 #define ERROR_TYPE_CONFLICT "%s: conflicting types for '%s'"
+#define ERROR_SMODE_CP      "%s: single mode in synchroniser '%s'(%d)"
 
 #endif /* DEFINES_H */

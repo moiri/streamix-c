@@ -157,9 +157,18 @@ bool check_prototype( symrec_list_t*, virt_net_t*, char* );
 /**
  * @brief   check if all ports are connected
  *
- * @param g pointer to the dependency graph object
+ * @param v_net pointer to a virtual net
  */
-void check_open_ports( igraph_t* g );
+void check_open_ports( virt_net_t* );
+
+/**
+ * @brief   check whether synchronizers have only outgoing or incoming ports
+ *
+ * @param g     pointer to the flattened dependancy graph
+ * @param id    id of the node to check
+ * @return      true if cp is valid, false otherwise
+ */
+bool check_single_mode_cp( igraph_t*, int );
 
 /**
  * @brief   Connect two instances by a pirt of matching ports
@@ -199,6 +208,15 @@ instrec_t* cpsync_merge( virt_port_t*, virt_port_t*, igraph_t* );
  * @param g         pointer to the dependency graph
  */
 void cpsync_merge_ports( virt_port_t*, virt_port_t*, instrec_t*, igraph_t* );
+
+/**
+ * @brief   Replace cp syncs with only two pors by an edge
+ *
+ * @param g     pointer to the dependancy graph
+ * @param id    id of the synchronizer to check
+ * @return      true if the sync was replaced, false if not
+ */
+bool cpsync_reduce( igraph_t*, int );
 
 /**
  * @brief   Print debug information of a port of a port record list
@@ -265,5 +283,12 @@ virt_net_t* install_nets( symrec_t**, UT_array*, ast_node_t*, igraph_t* );
  *              false if the instances are not connected
  */
 bool is_connected( instrec_t*, instrec_t*, igraph_t* );
+
+/**
+ * @brief   perform post proecessing operations on the graph
+ *
+ * @param g pointer to the dependancy graph
+ */
+void post_process( igraph_t* );
 
 #endif // CONTEXT_H
