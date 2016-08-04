@@ -151,6 +151,7 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, int net_id )
         port_net_new = dgraph_port_search_child( g_child, port_net );
         // connect this port to the matching port of the virtual net
         check_connection( port_net_new, port, g_new, false );
+        cpsync_connect( NULL, port_net_new, port, g_new, false );
         IGRAPH_EIT_NEXT( eit );
     }
     igraph_eit_destroy( &eit );

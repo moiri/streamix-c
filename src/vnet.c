@@ -191,7 +191,7 @@ virt_port_t* virt_port_add( virt_net_t* v_net, port_class_t port_class,
 {
     virt_port_t* new_port = NULL;
     new_port = virt_port_create( port_class, port_mode, port_inst, name, symb );
-    virt_port_append( v_net, new_port );
+    if( v_net != NULL ) virt_port_append( v_net, new_port );
     return new_port;
 }
 

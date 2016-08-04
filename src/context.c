@@ -499,7 +499,7 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
 
 /******************************************************************************/
 void cpsync_connect( virt_net_t* v_net, virt_port_t* port1,
-        virt_port_t* port2, igraph_t* g )
+        virt_port_t* port2, igraph_t* g, bool parallel )
 {
     virt_net_t* v_net_sync = NULL;
     instrec_t* inst1 = port1->inst;
@@ -507,35 +507,53 @@ void cpsync_connect( virt_net_t* v_net, virt_port_t* port1,
     virt_port_t* port_new;
     port_class_t port_class;
     port_mode_t port_mode;
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+    printf( "cpsync_connect:\n " );
+    debug_print_vport( port1 );
+    printf( " and " );
+    debug_print_vport( port2 );
+#endif // DEBUG_CONNECT
     // if possible, set port class to anything but PORT_CLASS_NONE
     if( port1->attr_class == PORT_CLASS_NONE )
         port_class = port2->attr_class;
     else if( port2->attr_class == PORT_CLASS_NONE )
         port_class = port1->attr_class;
-    // connect ports and cerate copy synchronizer if necessary
-    if( ( inst1->type == INSTREC_SYNC )
-            && ( inst2->type == INSTREC_SYNC ) ) {
-        // merge copy synchronizers
-        cpsync_merge( port1, port2, g );
-    }
-    else if( ( inst1->type == INSTREC_SYNC )
-            || ( inst2->type == INSTREC_SYNC ) ) {
-        connect_ports( port1, port2, g, false );
+    if ( ( port1->state == VPORT_STATE_OPEN )
+            && ( port2->state == VPORT_STATE_OPEN )
+            && are_port_names_ok( port1, port2, parallel, !parallel, true ) ) {
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+        printf( "\n  => connection is valid\n" );
+#endif // DEBUG_CONNECT
+        // connect ports and cerate copy synchronizer if necessary
+        if( ( inst1->type == INSTREC_SYNC )
+                && ( inst2->type == INSTREC_SYNC ) ) {
+            // merge copy synchronizers
+            cpsync_merge( port1, port2, g );
+        }
+        else if( ( inst1->type == INSTREC_SYNC )
+                || ( inst2->type == INSTREC_SYNC ) ) {
+            connect_ports( port1, port2, g, false );
+        }
+        else {
+            // create copy synchronizer instance and update the graph
+            if( port1->attr_class == port2->attr_class )
+                port_class = port1->attr_class;
+            else port_class = PORT_CLASS_NONE;
+            if( port1->attr_mode == port2->attr_mode )
+                port_mode = port1->attr_mode;
+            else port_mode = PORT_MODE_BI;
+            port_new = virt_port_add( v_net, port_class, port_mode,
+                    port1->inst, port1->name, port1->symb );
+            v_net_sync = dgraph_vertex_add_sync( g, port_new );
+            port_new->inst = v_net_sync->inst;
+            connect_ports( port_new, port1, g, false );
+            connect_ports( port_new, port2, g, false );
+        }
     }
     else {
-        // create copy synchronizer instance and update the graph
-        if( port1->attr_class == port2->attr_class )
-            port_class = port1->attr_class;
-        else port_class = PORT_CLASS_NONE;
-        if( port1->attr_mode == port2->attr_mode )
-            port_mode = port1->attr_mode;
-        else port_mode = PORT_MODE_BI;
-        port_new = virt_port_add( v_net, port_class, port_mode,
-                port1->inst, port1->name, port1->symb );
-        v_net_sync = dgraph_vertex_add_sync( g, port_new );
-        port_new->inst = v_net_sync->inst;
-        connect_ports( port_new, port1, g, false );
-        connect_ports( port_new, port2, g, false );
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+        printf( "\n  => connection is invalid (no match)\n" );
+#endif // DEBUG_CONNECT
     }
 }
 
@@ -557,12 +575,9 @@ void cpsync_connects( virt_net_t* v_net, bool parallel, igraph_t* g )
         while( ports2 != NULL ) {
             if( ( ports1->idx != ports2->idx )
                     && ( ports1->idx < new_idx ) && ( ports2->idx < new_idx )
-                    && ( ports1->port->inst != ports2->port->inst )
-                    && ( ports1->port->state == VPORT_STATE_OPEN )
-                    && ( ports2->port->state == VPORT_STATE_OPEN )
-                    && are_port_names_ok( ports1->port, ports2->port, parallel,
-                        !parallel, true ) ) {
-                cpsync_connect( v_net, ports1->port, ports2->port, g );
+                    && ( ports1->port->inst != ports2->port->inst ) ) {
+                cpsync_connect( v_net, ports1->port, ports2->port, g,
+                        parallel );
             }
             ports2 = ports2->next;
         }

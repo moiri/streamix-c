@@ -144,7 +144,7 @@ void connect_ports( virt_port_t*, virt_port_t*, igraph_t*, bool );
  * @param g     pointer to a the dependancy graph to be updated
  * @return      pointer to a copy synchronizer
  */
-void cpsync_connect( virt_net_t*, virt_port_t*, virt_port_t*, igraph_t* );
+void cpsync_connect( virt_net_t*, virt_port_t*, virt_port_t*, igraph_t*, bool );
 
 /**
  * @brief   Connect copy synchronizers of two nets
