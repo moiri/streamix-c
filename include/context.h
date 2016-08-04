@@ -71,13 +71,21 @@ bool are_port_modes_ok( virt_port_t*, virt_port_t* );
 bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g, bool );
 
 /**
- * @brief    Check port connections of two nets and connect them
+ * @brief   Connect two ports of copy synchronizers
  *
- * @param v_net1    pointer to the virtual net of the left operator
- * @param v_net2    pointer to the virtual net of the right operator
- * @param g         pointer to a initialized igraph object
+ * Establish copy synchronizer connections between two ports of two virtual nets.
+ * This includes side ports as well as regular ports. The dependancy graph is
+ * updated.
+ *
+ * @param net       pointer to the virtuel net
+ * @param port1     pointer to the port of a virtual net of the left operator
+ * @param port2     pointer to the port of a virtual net of the right operator
+ * @param g         pointer to a the dependancy graph to be updated
+ * @param parallel  flag to indicate wheter cp syncs of paralle combinations are
+ *                  checker (true) or side ports in serial combinations (false)
  */
-void check_connections( virt_net_t*, virt_net_t*, igraph_t* );
+void check_connection_cp( virt_net_t*, virt_port_t*, virt_port_t*, igraph_t*,
+        bool );
 
 /**
  * @brief    Report missing connections
@@ -90,6 +98,28 @@ void check_connections( virt_net_t*, virt_net_t*, igraph_t* );
  * @param g         pointer to a initialized igraph object
  */
 void check_connection_missing( virt_net_t*, virt_net_t*, igraph_t* );
+
+/**
+ * @brief    Check port connections of two nets and connect them
+ *
+ * @param v_net1    pointer to the virtual net of the left operator
+ * @param v_net2    pointer to the virtual net of the right operator
+ * @param g         pointer to a initialized igraph object
+ */
+void check_connections( virt_net_t*, virt_net_t*, igraph_t* );
+
+/**
+ * @brief   Connect copy synchronizers of two nets
+ *
+ * Establish copy synchronizer connections between two virtual nets. This
+ * includes side ports as well as regular ports.
+ *
+ * @param v_net1    pointer to the virtual net
+ * @param parallel  flag to indicate wheter copy synchronizer connections
+ *                  in parallel operators are checked
+ * @param g         pointer to a initialized igraph object
+ */
+void check_connections_cp( virt_net_t*, bool, igraph_t* );
 
 /**
  * @brief    Check the context of all identifiers in the program
@@ -145,34 +175,6 @@ void check_open_ports( igraph_t* g );
  *                      performed
  */
 void connect_ports( virt_port_t*, virt_port_t*, igraph_t*, bool );
-
-/**
- * @brief   Connect two ports of copy synchronizers
- *
- * Establish copy synchronizer connections between two ports of two virtual nets.
- * This includes side ports as well as regular ports. The dependancy graph is
- * updated.
- *
- * @param net   pointer to the virtuel net
- * @param port1 pointer to the port of a virtual net of the left operator
- * @param port2 pointer to the port of a virtual net of the right operator
- * @param g     pointer to a the dependancy graph to be updated
- * @return      pointer to a copy synchronizer
- */
-void cpsync_connect( virt_net_t*, virt_port_t*, virt_port_t*, igraph_t*, bool );
-
-/**
- * @brief   Connect copy synchronizers of two nets
- *
- * Establish copy synchronizer connections between two virtual nets. This
- * includes side ports as well as regular ports.
- *
- * @param v_net1    pointer to the virtual net
- * @param parallel  flag to indicate wheter copy synchronizer connections
- *                  in parallel operators are checked
- * @param g         pointer to a initialized igraph object
- */
-void cpsync_connects( virt_net_t*, bool, igraph_t* );
 
 /**
  * @brief   Merge two copy synchronizer
