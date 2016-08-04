@@ -217,6 +217,11 @@ void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g )
     utarray_new( scope_stack, &ut_int_icd );
     utarray_push_back( scope_stack, &scope );
     n_attr = check_context_ast( symtab, scope_stack, ast );
+
+    utarray_free( scope_stack );
+    if( n_attr == NULL ) return;
+
+    // flatten graph and detect open ports
     igraph_empty( &g_tmp, 0, IGRAPH_DIRECTED );
     dgraph_append( &g_tmp, &n_attr->g, true );
     dgraph_flatten( g, &g_tmp );
@@ -224,8 +229,7 @@ void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g )
 
     // cleanup
     igraph_destroy( &g_tmp );
-    if( n_attr != NULL ) symrec_attr_destroy_net( n_attr );
-    utarray_free( scope_stack );
+    symrec_attr_destroy_net( n_attr );
 }
 
 /******************************************************************************/
@@ -324,6 +328,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             igraph_write_graph_dot( &g_net, stdout );
 #endif // DEBUG
             res = ( void* )n_attr;
+            if( v_net == NULL ) return NULL;
             break;
         case AST_WRAP:
             _scope++;
