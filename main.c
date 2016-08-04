@@ -42,6 +42,8 @@ int main( int argc, char **argv ) {
     } while( !feof( yyin ) );
     fclose( src_smx );
 
+    if( ast == NULL ) return -1;
+
     igraph_empty( &g, 0, true );
     ast_flatten( ast );
     check_context( ast, &symtab, &g );
