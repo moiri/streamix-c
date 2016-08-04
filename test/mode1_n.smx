@@ -1,0 +1,10 @@
+/**
+ * A serial connection with ports of wrong modes.
+ * Streamix cannot connect ports with the same mode unless the ports are side
+ * ports.
+ */
+
+A = box A( in a )
+B = box B( in a )
+
+connect A.B

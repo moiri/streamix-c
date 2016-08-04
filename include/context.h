@@ -110,6 +110,13 @@ void* check_context_ast( symrec_t**, UT_array*, ast_node_t* );
 bool check_prototype( symrec_list_t*, virt_net_t*, char* );
 
 /**
+ * @brief   check if all ports are connected
+ *
+ * @param g pointer to the dependency graph object
+ */
+void check_open_ports( igraph_t* g );
+
+/**
  * @brief   Connect two instances by a pirt of matching ports
  *
  * The dependancy graph is updated, port classes and states are set

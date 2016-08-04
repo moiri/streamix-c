@@ -37,7 +37,8 @@ virt_net_t* virt_net_create_box( symrec_t* rec, instrec_t* inst )
 virt_net_t* virt_net_create_flatten( virt_net_t* v_net, instrec_t* inst )
 {
     virt_net_t* v_net_new = NULL;
-    virt_port_list_t*  ports = virt_ports_copy_net( v_net->ports, inst, false );
+    virt_port_list_t*  ports = virt_ports_copy_net( v_net->ports, inst, false,
+            true );
     v_net_new = virt_net_create_struct( ports, NULL, inst, v_net->type );
     return v_net_new;
 }
@@ -46,7 +47,8 @@ virt_net_t* virt_net_create_flatten( virt_net_t* v_net, instrec_t* inst )
 virt_net_t* virt_net_create_net( virt_net_t* v_net, instrec_t* inst )
 {
     virt_net_t* v_net_new = NULL;
-    virt_port_list_t* ports = virt_ports_copy_net( v_net->ports, inst, true );
+    virt_port_list_t* ports = virt_ports_copy_net( v_net->ports, inst, true,
+            false );
     net_con_t* con = net_con_create( inst );
     v_net_new = virt_net_create_struct( ports, con, inst, VNET_NET );
 
@@ -132,7 +134,8 @@ virt_net_t* virt_net_create_sync( instrec_t* inst, virt_port_t* port )
 virt_net_t* virt_net_create_wrap( virt_net_t* v_net, instrec_t* inst )
 {
     virt_net_t* v_net_new = NULL;
-    virt_port_list_t* ports = virt_ports_copy_net( v_net->ports, inst, true );
+    virt_port_list_t* ports = virt_ports_copy_net( v_net->ports, inst, true,
+            false );
     net_con_t* con = net_con_create( inst );
     v_net_new = virt_net_create_struct( ports, con, inst, VNET_WRAP );
 
@@ -282,7 +285,7 @@ virt_port_list_t* virt_ports_copy_box( symrec_list_t* ports, instrec_t* inst )
 
 /******************************************************************************/
 virt_port_list_t* virt_ports_copy_net( virt_port_list_t* ports, instrec_t* inst,
-        bool check_status )
+        bool check_status, bool copy_status )
 {
     virt_port_t* new_port = NULL;
     virt_port_list_t* list_last = NULL;
@@ -295,6 +298,7 @@ virt_port_list_t* virt_ports_copy_net( virt_port_list_t* ports, instrec_t* inst,
             new_port = virt_port_create( ports->port->attr_class,
                     ports->port->attr_mode, inst, ports->port->name,
                     ports->port->symb );
+            if( copy_status ) new_port->state = ports->port->state;
             new_list->port = new_port;
             new_list->next = list_last;
             new_list->idx = idx;

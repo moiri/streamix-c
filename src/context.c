@@ -220,6 +220,7 @@ void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g )
     igraph_empty( &g_tmp, 0, IGRAPH_DIRECTED );
     dgraph_append( &g_tmp, &n_attr->g, true );
     dgraph_flatten( g, &g_tmp );
+    check_open_ports( g );
 
     // cleanup
     igraph_destroy( &g_tmp );
@@ -422,6 +423,41 @@ bool check_prototype( symrec_list_t* r_ports, virt_net_t* v_net, char *name )
 }
 
 /******************************************************************************/
+void check_open_ports( igraph_t* g )
+{
+    igraph_vs_t vs;
+    igraph_vit_t vit;
+    virt_net_t *v_net;
+    virt_port_list_t* ports;
+    int inst_id;
+    char error_msg[ CONST_ERROR_LEN ];
+
+    vs = igraph_vss_all();
+    igraph_vit_create( g, vs, &vit );
+    // iterate through all net instances of the graph
+    while( !IGRAPH_VIT_END( vit ) ) {
+        inst_id = IGRAPH_VIT_GET( vit );
+        v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
+                INST_ATTR_VNET, inst_id );
+        if( v_net->type == VNET_BOX ) {
+            ports = v_net->ports;
+            while( ports != NULL ) {
+                if( ports->port->state == VPORT_STATE_OPEN ) {
+                    sprintf( error_msg, ERROR_NO_PORT_CON, ERR_ERROR,
+                            ports->port->name, v_net->inst->name,
+                            v_net->inst->id );
+                    report_yyerror( error_msg, v_net->inst->line );
+                }
+                ports = ports->next;
+            }
+        }
+        IGRAPH_VIT_NEXT( vit );
+    }
+    igraph_vit_destroy( &vit );
+    igraph_vs_destroy( &vs );
+}
+
+/******************************************************************************/
 void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
         bool connect_sync )
 {
@@ -543,6 +579,8 @@ instrec_t* cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
             port2->inst->name, port2->inst->id );
 #endif // DEBUG_CONNECT
     id_del = dgraph_vertex_merge( g, port1->inst->id, port2->inst->id );
+    port1->state = VPORT_STATE_CONNECTED;
+    port2->state = VPORT_STATE_CONNECTED;
     // delete one copy synchronizer
     if( id_del == port1->inst->id ) {
         virt_net_destroy_shallow( v_net1 );

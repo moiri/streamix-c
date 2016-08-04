@@ -1,4 +1,0 @@
-A = box A( side in a )
-B = box B( side in a )
-
-connect A|B

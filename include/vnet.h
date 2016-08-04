@@ -275,9 +275,12 @@ virt_port_list_t* virt_ports_copy_box( symrec_list_t*, instrec_t* );
  * @param inst          a pointer to the instance the port belongs to
  * @param check_status  if true only copy open ports
  *                      if false copy all ports
+ * @param copy_status   if true the port status is copied
+ *                      if false the port status is set to PORT_STATE_OPEN
  * @return              pointer to the last element of the new list
  */
-virt_port_list_t* virt_ports_copy_net( virt_port_list_t*, instrec_t*, bool );
+virt_port_list_t* virt_ports_copy_net( virt_port_list_t*, instrec_t*, bool,
+        bool );
 
 /**
  * @brief   Get an equivalent port from a virtual net

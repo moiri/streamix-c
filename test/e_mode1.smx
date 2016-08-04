@@ -1,4 +1,0 @@
-A = box A( in a )
-B = box B( in a )
-
-connect A.B
