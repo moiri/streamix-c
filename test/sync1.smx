@@ -1,3 +1,8 @@
+/**
+ * Spawn a cp sync in a parallel combination and connect it in a serial
+ * combination with the cp sync on the right
+ */
+
 A = box A( out x )
 B = box B( in x )
 C = box C( in x )

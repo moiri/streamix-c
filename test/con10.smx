@@ -1,3 +1,7 @@
+/**
+ * Just some weird connection pattern to test port classes
+ */
+
 A = box A( up out x, down out x )
 B = box B( out x )
 C = box C( up in x, down in x )

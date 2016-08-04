@@ -1,3 +1,7 @@
+/**
+ * Same as with sync3 but with opposite port modes
+ */
+
 A = box A( in x )
 B = box B( in x )
 C = box C( out x )

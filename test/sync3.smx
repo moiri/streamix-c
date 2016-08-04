@@ -1,3 +1,8 @@
+/**
+ * Spawn a cp sync in two a parallel combinations and connect them in a serial
+ * combination. This forces a merge of the two cp sync.
+ */
+
 A = box A( out x )
 B = box B( out x )
 C = box C( in x )
