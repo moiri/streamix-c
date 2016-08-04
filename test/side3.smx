@@ -1,11 +1,8 @@
-wrapper W { in a } {
-    link { A, B }
-    link { this, A }
-    A = box A( in a, side out p1, out p2 )
-    B = box B( side in p1, in p2 )
+/**
+ * Perform a side port connection with merging a cp sync
+ */
 
-    connect A.B|A.B
-}
+A = box A( side out p1, out p2 )
+B = box B( side in p1, in p2 )
 
-B = box BS( out a )
-connect B.W
+connect A.B|A.B
