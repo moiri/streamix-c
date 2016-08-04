@@ -12,33 +12,22 @@
 #include "smxerr.h"
 
 /******************************************************************************/
-bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2, bool cpp, bool cps,
-        bool directed )
+bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2 )
 {
     // no, if port names do not match
+    if( strlen( p1->name ) != strlen( p2->name ) )
+        return false;
     if( strcmp( p1->name, p2->name ) != 0 )
         return false;
-    // are we checking copy synchronizer connections?
-    if( cps || cpp ) {
-        // we are good if both ports have the same class
-        if( p1->attr_class == p2->attr_class )
-            return true;
-        // are we checking parallel combinators?
-        if( cpp ) {
-            // we are good if one port has no class and the other is not a side
-            // port
-            if( ( p1->attr_class != PORT_CLASS_SIDE )
-                    && ( p2->attr_class == PORT_CLASS_NONE ) )
-                return true;
-            if( ( p1->attr_class == PORT_CLASS_NONE )
-                    && ( p2->attr_class != PORT_CLASS_SIDE ) )
-                return true;
-        }
-        // we came through here so none of the conditions matched
-        return false;
-    }
-    // or normal undirected connections?
-    else if( !directed ) {
+    // we came through here, so all is good, names match
+    return true;
+}
+
+/******************************************************************************/
+bool are_port_classes_ok( virt_port_t* p1, virt_port_t* p2, bool directed )
+{
+    // normal undirected connections?
+    if( !directed ) {
         // ok, if either of the ports has no class speciefied
         if( ( p1->attr_class == PORT_CLASS_NONE )
                 || ( p2->attr_class == PORT_CLASS_NONE ) )
@@ -70,6 +59,26 @@ bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2, bool cpp, bool cps,
 }
 
 /******************************************************************************/
+bool are_port_cp_classes_ok( virt_port_t* p1, virt_port_t* p2, bool cpp )
+{
+    // we are good if both ports have the same class
+    if( p1->attr_class == p2->attr_class )
+        return true;
+    // are we checking parallel combinators?
+    if( cpp ) {
+        // we are good if one port has no class and the other is not a side port
+        if( ( p1->attr_class != PORT_CLASS_SIDE )
+                && ( p2->attr_class == PORT_CLASS_NONE ) )
+            return true;
+        if( ( p1->attr_class == PORT_CLASS_NONE )
+                && ( p2->attr_class != PORT_CLASS_SIDE ) )
+            return true;
+    }
+    // we came through here so none of the conditions matched
+    return false;
+}
+
+/******************************************************************************/
 bool are_port_modes_ok( virt_port_t* p1, virt_port_t* p2 )
 {
     // yes, if modes are different
@@ -98,7 +107,8 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
 #endif // DEBUG_CONNECT
     inst_l = port_l->inst;
     inst_r = port_r->inst;
-    if( are_port_names_ok( port_l, port_r, false, false, directed ) ) {
+    if( are_port_names_ok( port_l, port_r )
+            && are_port_classes_ok( port_l, port_r, directed ) ) {
         if( ( inst_l->type == INSTREC_SYNC )
                 && ( inst_r->type == INSTREC_SYNC ) ) {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
@@ -520,7 +530,8 @@ void cpsync_connect( virt_net_t* v_net, virt_port_t* port1,
         port_class = port1->attr_class;
     if ( ( port1->state == VPORT_STATE_OPEN )
             && ( port2->state == VPORT_STATE_OPEN )
-            && are_port_names_ok( port1, port2, parallel, !parallel, true ) ) {
+            && are_port_names_ok( port1, port2 )
+            && are_port_cp_classes_ok( port1, port2, parallel ) ) {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
         printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
