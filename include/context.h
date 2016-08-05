@@ -53,9 +53,11 @@ bool are_port_cp_classes_ok( virt_port_t*, virt_port_t*, bool );
  *
  * @param p1    pointer the a port of a virtual net
  * @param p2    pointer the a port of a virtual net
+ * @param equal if set to true, the function checks wheter modes are equal
+ *              if set to false, the function checks wheter modes are differnt
  * @return      true if ports can connect, false if not
  */
-bool are_port_modes_ok( virt_port_t*, virt_port_t* );
+bool are_port_modes_ok( virt_port_t*, virt_port_t*, bool );
 
 /**
  * @brief    check port connections of two ports
@@ -120,6 +122,11 @@ void check_connections( virt_net_t*, virt_net_t*, igraph_t* );
  * @param g         pointer to a initialized igraph object
  */
 void check_connections_cp( virt_net_t*, bool, igraph_t* );
+
+/**
+ *
+ */
+virt_net_t* check_connections_wrap( virt_port_list_t*, virt_port_list_t* );
 
 /**
  * @brief    Check the context of all identifiers in the program
@@ -283,6 +290,11 @@ virt_net_t* install_nets( symrec_t**, UT_array*, ast_node_t*, igraph_t* );
  *              false if the instances are not connected
  */
 bool is_connected( instrec_t*, instrec_t*, igraph_t* );
+
+/**
+ *
+ */
+virt_port_list_t* port_list_merge( symrec_list_t*, virt_net_t* );
 
 /**
  * @brief   perform post proecessing operations on the graph

@@ -99,7 +99,7 @@ struct attr_net_s
  */
 struct attr_port_s
 {
-    char*           int_name;       /**< internal name or NULL */
+    symrec_list_t*  ports_int;      /**< internal name or NULL */
     port_mode_t     mode;           /**< input or output */
     port_class_t    collection;     /**< VAL_UP, VAL_DOWN, VAL_SIDE, VAL_NONE */
     bool            decoupled;      /**< port is non-triggering **/
@@ -120,7 +120,6 @@ struct attr_prot_s
 struct attr_wrap_s
 {
     bool            attr_static;/**< wrapper does no proliferation */
-    symrec_list_t*  ports;      /**< pointer to the port list of the net */
     virt_net_t*     v_net;      /**< pointer to a virtual net */
     igraph_t        g;
 };
@@ -148,15 +147,15 @@ attr_net_t* symrec_attr_create_net( virt_net_t*, igraph_t* );
 /**
  * @brief   Create a port attribute structure
  *
- * @param int_name      internal name of the port
+ * @param port_int      pointer to record list of port names
  * @param mode          direction of the port
  * @param collection    class of the port
  * @param decoupled     flag indicating whether a port is decoupled
  * @param sync_id       number to group synchronized ports together
  * @return              pointer to the new structure
  */
-attr_port_t* symrec_attr_create_port( char*, port_mode_t, port_class_t, bool,
-        int );
+attr_port_t* symrec_attr_create_port( symrec_list_t*, port_mode_t, port_class_t,
+        bool, int );
 
 /**
  * @brief   Create a net prototype attribute structure
@@ -170,11 +169,10 @@ attr_prot_t* symrec_attr_create_proto( symrec_list_t* );
  * @brief   Create a wrap attribute structure
  *
  * @param attr_static   flag incdicating whether a wrapper is static
- * @param ports         pointer to a port list
  * @param v_net         pointer to a virtual net
  * @return              pointer to the new structure
  */
-attr_wrap_t* symrec_attr_create_wrap( bool, symrec_list_t*, virt_net_t* );
+attr_wrap_t* symrec_attr_create_wrap( bool, virt_net_t*, igraph_t* );
 
 /**
  * @brief   Destroy attributes of a symbol table record

@@ -225,7 +225,8 @@ struct ast_prot_s
 struct ast_wrap_s
 {
     ast_node_t*   id;           /**< ::ast_symb_t */
-    ast_node_t*   ports;        /**< ::ast_list_t */
+    ast_node_t*   ports_wrap;   /**< ::ast_list_t */
+    ast_node_t*   ports_net;    /**< ::ast_list_t */
     ast_node_t*   stmts;        /**< ::ast_list_t */
     ast_node_t*   attr_static;  /**< ::ast_attr_t */
 };
@@ -349,13 +350,15 @@ ast_node_t* ast_add_symbol( char*, int, id_type_t );
 /**
  * @brief   Add a wrapper declaration to the AST.
  *
- * @param id        pointer to an ast node of type AST_ID
- * @param ports     pointer to the ports list AST node
- * @param stmts     pointer to the stmts list AST node
- * @param attr      pointer to the attr AST node
- * @return          a pointer to the location where the data was stored
+ * @param id            pointer to an ast node of type AST_ID
+ * @param ports_wrap    pointer to the ports list AST node
+ * @param ports_net     pointer to the ports list AST node
+ * @param stmts         pointer to the stmts list AST node
+ * @param attr          pointer to the attr AST node
+ * @return              pointer to the location where the data was stored
  */
-ast_node_t* ast_add_wrap( ast_node_t*, ast_node_t*, ast_node_t*, ast_node_t* );
+ast_node_t* ast_add_wrap( ast_node_t*, ast_node_t*, ast_node_t*, ast_node_t*,
+        ast_node_t* );
 
 /**
  * @brief   Destroy the AST

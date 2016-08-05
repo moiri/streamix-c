@@ -7,6 +7,6 @@ B = box funcB(in b, out c)
 X = box funcX(out a)
 Z = box funcY(in c)
 
-net Y{up in a, down out c}
+net Y(up in a, down out c)
 Y = A.B
 connect X.Y.Z

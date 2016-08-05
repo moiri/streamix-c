@@ -146,13 +146,14 @@ ast_node_t* ast_add_symbol( char* name, int line, id_type_t type )
 }
 
 /******************************************************************************/
-ast_node_t* ast_add_wrap( ast_node_t* id, ast_node_t* ports, ast_node_t* stmts,
-        ast_node_t* attr )
+ast_node_t* ast_add_wrap( ast_node_t* id, ast_node_t* ports_wrap,
+        ast_node_t* ports_net, ast_node_t* stmts, ast_node_t* attr )
 {
     ast_node_t *node = ast_add_node( AST_WRAP );
     node->wrap = malloc( sizeof( ast_wrap_t ) );
     node->wrap->id = id;
-    node->wrap->ports = ports;
+    node->wrap->ports_wrap = ports_wrap;
+    node->wrap->ports_net = ports_net;
     node->wrap->stmts = stmts;
     node->wrap->attr_static = attr;
     return node;
@@ -237,7 +238,8 @@ void ast_destroy( ast_node_t* ast )
             break;
         case AST_WRAP:
             ast_destroy( ast->wrap->id );
-            ast_destroy( ast->wrap->ports );
+            ast_destroy( ast->wrap->ports_wrap );
+            ast_destroy( ast->wrap->ports_net );
             ast_destroy( ast->wrap->stmts );
             ast_destroy( ast->wrap->attr_static );
             free( ast->wrap );
@@ -279,7 +281,8 @@ void* ast_flatten( ast_node_t* ast )
             ast_flatten( ast->program->stmts );
             break;
         case AST_WRAP:
-            ast_flatten( ast->wrap->ports );
+            ast_flatten( ast->wrap->ports_wrap );
+            ast_flatten( ast->wrap->ports_net );
             break;
         case AST_PORTS:
             list = ast->list;

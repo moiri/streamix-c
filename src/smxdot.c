@@ -32,16 +32,27 @@ char* node_label[] =
     "sync",
     "wrapper decl"
 };
-char* attr_label[] =
-{
+char* mode_label[] = {
+    "in",
+    "out"
+};
+char* class_label[] = {
     "none",
     "up",
     "down",
-    "side",
-    "in",
-    "out",
-    "decoupled",
+    "side"
+};
+char* coupling_label[] = {
+    "decoupled"
+};
+char* state_label[] = {
     "stateless"
+};
+char** attr_label[] = {
+    mode_label,
+    class_label,
+    coupling_label,
+    state_label
 };
 
 /******************************************************************************/
@@ -67,7 +78,7 @@ void draw_ast_graph_step( FILE* graph, ast_node_t* ptr )
             graph_add_node(
                     graph,
                     ptr->id,
-                    attr_label[ ptr->attr->val ],
+                    attr_label[ ptr->attr->type ][ ptr->attr->val ],
                     STYLE_N_AST_ATTR
             );
             break;
@@ -180,10 +191,16 @@ void draw_ast_graph_step( FILE* graph, ast_node_t* ptr )
             draw_ast_graph_step( graph, ptr->wrap->id );
             graph_add_edge( graph, ptr->id, ptr->wrap->id->id, NULL,
                     STYLE_E_DEFAULT );
-            // port list
-            if( ptr->wrap->ports != NULL ) {
-                draw_ast_graph_step( graph, ptr->wrap->ports );
-                graph_add_edge( graph, ptr->id, ptr->wrap->ports->id, NULL,
+            // wrapper port list
+            if( ptr->wrap->ports_wrap != NULL ) {
+                draw_ast_graph_step( graph, ptr->wrap->ports_wrap );
+                graph_add_edge( graph, ptr->id, ptr->wrap->ports_wrap->id, NULL,
+                        STYLE_E_DEFAULT );
+            }
+            // net port list
+            if( ptr->wrap->ports_net != NULL ) {
+                draw_ast_graph_step( graph, ptr->wrap->ports_net );
+                graph_add_edge( graph, ptr->id, ptr->wrap->ports_net->id, NULL,
                         STYLE_E_DEFAULT );
             }
             // stmt list

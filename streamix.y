@@ -48,19 +48,15 @@
 %type <nval> net_assign
 %type <nval> net_proto
 %type <nval> net_port_decl
-%type <nval> link_decl
-%type <nval> link_id_decl
 %type <nval> box_decl
 %type <nval> box_port_decl
 %type <nval> sync_port_decl
 %type <nval> wrap_decl
 %type <nval> wrap_port_decl
-%type <nval> int_port_decl
+%type <nval> alt_port_decl
 
 /* lists */
 %type <lval> net_decls
-%type <lval> link_list
-%type <lval> opt_link_list
 %type <lval> box_port_list
 %type <lval> opt_box_port_list
 %type <lval> sync_port_list
@@ -69,9 +65,10 @@
 %type <lval> opt_net_port_list
 %type <lval> wrap_port_list
 %type <lval> opt_wrap_port_list
-%type <lval> int_port_list
-%type <lval> opt_int_ports
-%type <lval> opt_int_port_list
+%type <lval> alt_port_list
+%type <lval> alt_ports
+%type <lval> opt_alt_ports
+%type <lval> opt_alt_port_list
 
 
 %left '|'
@@ -105,7 +102,6 @@ net_decl:
 |   net_assign { $$ = $1; }
 |   net_proto { $$ = $1; }
 |   wrap_decl { $$ = $1; }
-|   link_decl { $$ = $1; }
 ;
 
 /* box definition */
@@ -139,7 +135,7 @@ net:
 
 /* net prototyping */
 net_proto:
-    NET IDENTIFIER '{' net_port_list '}' {
+    NET IDENTIFIER '(' net_port_list ')' {
         $$ = ast_add_proto(
             ast_add_symbol( $2, @2.last_line, ID_NET ),
             ast_add_list( $4, AST_PORTS )
@@ -161,7 +157,7 @@ opt_net_port_list:
 ;
 
 net_port_decl:
-    kw_port_class kw_port_mode IDENTIFIER opt_int_ports {
+    kw_port_class kw_port_mode IDENTIFIER opt_alt_ports {
         $$ = ast_add_port(
             ast_add_symbol( $3, @3.last_line, ID_PORT ),
             ast_add_list( $4, AST_INT_PORTS ),
@@ -173,27 +169,38 @@ net_port_decl:
     }
 ;
 
-opt_int_ports:
-    %empty { $$ = ( ast_list_t* )0; }
-|   '{' int_port_list '}' { $$ = $2; }
+alt_ports:
+    '(' alt_port_list ')' { $$ = $2; }
 ;
 
-int_port_list:
-    int_port_decl opt_int_port_list {
+opt_alt_ports:
+    %empty { $$ = ( ast_list_t* )0; }
+|   alt_ports { $$ = $1; }
+;
+
+alt_port_list:
+    alt_port_decl opt_alt_port_list {
         $$ = ast_add_list_elem( $1, $2 );
     }
 ;
 
-opt_int_port_list:
+opt_alt_port_list:
     %empty { $$ = ( ast_list_t* )0; }
-|   ',' int_port_decl opt_int_port_list {
+|   ',' alt_port_decl opt_alt_port_list {
         $$ = ast_add_list_elem( $2, $3 );
     }
 ;
 
-int_port_decl:
+alt_port_decl:
     IDENTIFIER {
-        $$ = ast_add_symbol( $1, @1.last_line, ID_IPORT );
+        $$ = ast_add_port(
+            ast_add_symbol( $1, @1.last_line, ID_IPORT ),
+            ( ast_node_t* )0, // no internal id
+            ( ast_node_t* )0, // no class
+            ( ast_node_t* )0, // no mode
+            ( ast_node_t* )0, // no coupling
+            PORT_BOX
+        );
     }
 ;
 
@@ -265,10 +272,12 @@ sync_port_decl:
 
 /* wrapper declaration */
 wrap_decl:
-    kw_opt_static WRAPPER IDENTIFIER '{' wrap_port_list '}' '{' program '}' {
+    kw_opt_static WRAPPER IDENTIFIER '(' wrap_port_list ')' '{' program '}'
+    NET '(' net_port_list ')' {
         $$ = ast_add_wrap(
             ast_add_symbol( $3, @3.last_line, ID_WRAP ),
             ast_add_list( $5, AST_PORTS ),
+            ast_add_list( $12, AST_PORTS ),
             $8,
             $1
         );
@@ -289,7 +298,7 @@ opt_wrap_port_list:
 ;
 
 wrap_port_decl:
-    kw_opt_port_class kw_port_mode IDENTIFIER opt_int_ports {
+    kw_opt_port_class kw_port_mode IDENTIFIER opt_alt_ports {
         $$ = ast_add_port(
             ast_add_symbol( $3, @3.last_line, ID_PORT ),
             ast_add_list( $4, AST_INT_PORTS ),
@@ -299,48 +308,16 @@ wrap_port_decl:
             PORT_WRAP
         );
     }
-|   '{' int_port_list '}' {
+|   alt_ports {
         $$ = ast_add_port(
             // these internal ports are "turned off"
-            ast_add_symbol( TEXT_NULL, @2.last_line, ID_NPORT ),
-            ast_add_list( $2, AST_INT_PORTS ),
+            ast_add_symbol( TEXT_NULL, @1.last_line, ID_NPORT ),
+            ast_add_list( $1, AST_INT_PORTS ),
             ( ast_node_t* )0, // no collection
             ( ast_node_t* )0, // no mode
             ( ast_node_t* )0, // no coupling
             PORT_WRAP_NULL
         );
-    }
-;
-
-/* an explicit declaration of a connection of sideports or ports to the */
-/* wrapper interface */
-link_decl:
-    LINK '{' link_list '}' {
-        $$ = ast_add_list( $3, AST_LINKS );
-    }
-;
-
-link_list:
-    link_id_decl ',' link_id_decl opt_link_list {
-        $$ = ast_add_list_elem(
-            $1,
-            ast_add_list_elem( $3, $4 )
-        );
-    }
-;
-
-opt_link_list:
-    %empty {
-        $$ = ( ast_list_t* )0;
-    }
-|   ',' link_id_decl opt_link_list {
-        $$ = ast_add_list_elem( $2, $3 );
-    }
-;
-
-link_id_decl:
-    IDENTIFIER {
-        $$ = ast_add_symbol( $1, @1.last_line, ID_LNET );
     }
 ;
 

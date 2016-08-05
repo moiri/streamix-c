@@ -101,7 +101,7 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
         inst_id = IGRAPH_VIT_GET( vit );
         inst = ( instrec_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
                 INST_ATTR_INST, inst_id );
-        if( inst->type == INSTREC_NET ) {
+        if( ( inst->type == INSTREC_NET ) || ( inst->type == INSTREC_WRAP ) ) {
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
             printf( "Flatten instance '%s(%d)'\n", inst->name, inst->id );
 #endif // DEBUG_FLATTEN_GRAPH

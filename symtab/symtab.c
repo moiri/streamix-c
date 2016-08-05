@@ -39,11 +39,11 @@ attr_net_t* symrec_attr_create_net( virt_net_t* v_net, igraph_t* g )
 }
 
 /******************************************************************************/
-attr_port_t* symrec_attr_create_port( char* int_name, port_mode_t mode,
-        port_class_t collection, bool decoupled, int sync_id )
+attr_port_t* symrec_attr_create_port( symrec_list_t* ports_int,
+        port_mode_t mode, port_class_t collection, bool decoupled, int sync_id )
 {
     attr_port_t* new_attr = malloc( sizeof( attr_port_t ) );
-    new_attr->int_name = int_name;
+    new_attr->ports_int = ports_int;
     new_attr->mode = mode;
     new_attr->collection = collection;
     new_attr->decoupled = decoupled;
@@ -60,13 +60,13 @@ attr_prot_t* symrec_attr_create_proto( symrec_list_t* ports )
 }
 
 /******************************************************************************/
-attr_wrap_t* symrec_attr_create_wrap( bool attr_static, symrec_list_t* ports,
-        virt_net_t* v_net )
+attr_wrap_t* symrec_attr_create_wrap( bool attr_static, virt_net_t* v_net,
+        igraph_t* g )
 {
     attr_wrap_t* new_attr = malloc( sizeof( attr_wrap_t ) );
     new_attr->attr_static = attr_static;
-    new_attr->ports = ports;
     new_attr->v_net = v_net;
+    new_attr->g = *g;
     return new_attr;
 }
 
@@ -91,7 +91,7 @@ void symrec_attr_destroy_net( attr_net_t* attr )
 /******************************************************************************/
 void symrec_attr_destroy_port( attr_port_t* attr ) 
 {
-    free( attr->int_name );
+    symrec_list_del( attr->ports_int );
     free( attr );
 }
 
@@ -105,7 +105,6 @@ void symrec_attr_destroy_proto( attr_prot_t* attr )
 /******************************************************************************/
 void symrec_attr_destroy_wrap( attr_wrap_t* attr )
 {
-    symrec_list_del( attr->ports );
     if( ( attr->v_net != NULL ) && ( ( attr->v_net->type == VNET_SERIAL )
                 || ( attr->v_net->type ==  VNET_PARALLEL ) ) )
         virt_net_destroy_shallow( attr->v_net );
