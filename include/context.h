@@ -87,7 +87,7 @@ bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g, bool );
  *                  checker (true) or side ports in serial combinations (false)
  */
 void check_connection_cp( virt_net_t*, virt_port_t*, virt_port_t*, igraph_t*,
-        bool );
+        bool, bool );
 
 /**
  * @brief    Report missing connections
@@ -121,7 +121,7 @@ void check_connections( virt_net_t*, virt_net_t*, igraph_t* );
  *                  in parallel operators are checked
  * @param g         pointer to a initialized igraph object
  */
-void check_connections_cp( virt_net_t*, bool, igraph_t* );
+void check_connections_cp( virt_net_t*, bool, igraph_t*, bool );
 
 /**
  *
@@ -290,11 +290,6 @@ virt_net_t* install_nets( symrec_t**, UT_array*, ast_node_t*, igraph_t* );
  *              false if the instances are not connected
  */
 bool is_connected( instrec_t*, instrec_t*, igraph_t* );
-
-/**
- *
- */
-virt_port_list_t* port_list_merge( symrec_list_t*, virt_net_t* );
 
 /**
  * @brief   perform post proecessing operations on the graph

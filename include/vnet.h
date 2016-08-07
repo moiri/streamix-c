@@ -42,6 +42,7 @@ enum virt_net_type_e
  */
 enum virt_port_state_e
 {
+    VPORT_STATE_DISABLED,   /**< port is disabled */
     VPORT_STATE_OPEN,       /**< port is ready to be connected */
     VPORT_STATE_CONNECTED   /**< port is connected */
 };
@@ -181,12 +182,12 @@ virt_net_t* virt_net_create_sync( instrec_t*, virt_port_t* );
 /**
  * @brief   Create a new virtual net out of virtial net of a wrapper
  *
- * @param ports pointer to the initial virtual net
+ * @param symb  pointer to the symbol of the wrapper
  * @param inst  pointer to the instance to be referred to by the ports of the
  *              new virtual net and the virtual net itself
  * @return      pointer to the newly crated virtual net
  */
-virt_net_t* virt_net_create_wrap( virt_net_t*, instrec_t* );
+virt_net_t* virt_net_create_wrap( symrec_t*, instrec_t* );
 
 /**
  * @brief   Destroy a virtual net and its conent.
@@ -266,7 +267,7 @@ virt_port_t* virt_port_create( port_class_t, port_mode_t, instrec_t*,
  * @param inst  a pointer to the instance the port belongs to
  * @return      pointer to the last element of the new list
  */
-virt_port_list_t* virt_ports_copy_box( symrec_list_t*, instrec_t* );
+virt_port_list_t* virt_ports_copy_symb( symrec_list_t*, instrec_t* );
 
 /**
  * @brief   Make a copy of the port list of a symbol record
@@ -279,7 +280,7 @@ virt_port_list_t* virt_ports_copy_box( symrec_list_t*, instrec_t* );
  *                      if false the port status is set to PORT_STATE_OPEN
  * @return              pointer to the last element of the new list
  */
-virt_port_list_t* virt_ports_copy_net( virt_port_list_t*, instrec_t*, bool,
+virt_port_list_t* virt_ports_copy_vnet( virt_port_list_t*, instrec_t*, bool,
         bool );
 
 /**
@@ -291,6 +292,16 @@ virt_port_list_t* virt_ports_copy_net( virt_port_list_t*, instrec_t*, bool,
  *              if false search only for open ports
  */
 virt_port_t* virt_port_get_equivalent( virt_net_t*, virt_port_t*, bool );
+
+/**
+ *
+ */
+virt_port_t* virt_port_get_equivalent_by_name( virt_net_t*, const char* );
+
+/**
+ *
+ */
+virt_port_list_t* virt_ports_merge( symrec_list_t*, virt_net_t* );
 
 /**
  * @brief   Print debug information of a port of a virtual net

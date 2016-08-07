@@ -148,7 +148,7 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
 
 /******************************************************************************/
 void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
-        virt_port_t* port2, igraph_t* g, bool parallel )
+        virt_port_t* port2, igraph_t* g, bool parallel, bool ignore_class )
 {
     virt_net_t* v_net_sync = NULL;
     instrec_t* inst1 = port1->inst;
@@ -167,7 +167,7 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
         port_class = port2->attr_class;
     else if( port2->attr_class == PORT_CLASS_NONE )
         port_class = port1->attr_class;
-    if ( are_port_cp_classes_ok( port1, port2, parallel ) ) {
+    if ( ignore_class || are_port_cp_classes_ok( port1, port2, parallel ) ) {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
         printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
@@ -277,7 +277,8 @@ void check_connections( virt_net_t* v_net1, virt_net_t* v_net2, igraph_t* g )
 }
 
 /******************************************************************************/
-void check_connections_cp( virt_net_t* v_net, bool parallel, igraph_t* g )
+void check_connections_cp( virt_net_t* v_net, bool parallel, igraph_t* g,
+        bool ignore_class )
 {
     virt_port_list_t* ports1 = NULL;
     virt_port_list_t* ports2 = NULL;
@@ -294,12 +295,12 @@ void check_connections_cp( virt_net_t* v_net, bool parallel, igraph_t* g )
         while( ports2 != NULL ) {
             if( ( ports1->idx != ports2->idx )
                     && ( ports1->idx < new_idx ) && ( ports2->idx < new_idx )
-                    && ( ports1->port->inst != ports2->port->inst )
+                    /* && ( ports1->port->inst != ports2->port->inst ) */
                     && ( ports1->port->state == VPORT_STATE_OPEN )
                     && ( ports2->port->state == VPORT_STATE_OPEN )
                     && are_port_names_ok( ports1->port, ports2->port ) ) {
                 check_connection_cp( v_net, ports1->port, ports2->port, g,
-                        parallel );
+                        parallel, ignore_class );
             }
             ports2 = ports2->next;
         }
@@ -493,7 +494,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             utarray_pop_back( scope_stack );
 
             // prepare symbol attributes and create symbol
-            w_attr = symrec_attr_create_wrap( false, n_attr->v_net,
+            w_attr = symrec_attr_create_wrap( false, port_list, n_attr->v_net,
                     &n_attr->g );
             if( ast->wrap->attr_static != NULL ) w_attr->attr_static = true;
             rec = symrec_create_wrap( ast->wrap->id->symbol->name,
@@ -502,12 +503,14 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             if( check_prototype( port_list_net, w_attr->v_net, rec->name ) ) {
                 // create virtual port list of the prototyped net with instances
                 // of the real net
-                /* v_net = virt_net_create_struct( */
-                /*         port_list_merge( port_list_net, n_attr->v_net ), */
-                /*         NULL, NULL, VNET_NET ); */
-                rec->attr_wrap->v_net = check_connections_wrap(
-                        port_list_merge( port_list_net, n_attr->v_net ),
-                        virt_ports_copy_box( port_list, NULL ) );
+                v_net = virt_net_create_struct(
+                        virt_ports_merge( port_list_net, w_attr->v_net ),
+                        NULL, NULL, VNET_NET );
+                check_connections_cp( v_net, false, &w_attr->g, true );
+                rec->attr_wrap->v_net = v_net;
+                /* rec->attr_wrap->v_net = check_connections_wrap( */
+                /*         virt_ports_merge( port_list_net, n_attr->v_net ), */
+                /*         virt_ports_copy_box( port_list, NULL ) ); */
                 // install the wrapper symbol in the scope of its declaration
                 res = ( void* )symrec_put( symtab, rec );
             }
@@ -700,9 +703,9 @@ instrec_t* cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
         res = port2->inst = port1->inst;
         virt_port_append( v_net1, port2 );
     }
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-    printf( " into %s(%d)\n", res->name, res->id );
-#endif // DEBUG_CONNECT
+/* #if defined(DEBUG) || defined(DEBUG_CONNECT) */
+/*     printf( " into %s(%d)\n", res->name, res->id ); */
+/* #endif // DEBUG_CONNECT */
     // adjust all ids starting from the id of the deleted record
     dgraph_vertex_update_ids( g, id_del );
 
@@ -845,7 +848,7 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             v_net2 = install_nets( symtab, scope_stack, ast->op->right, g );
             if( v_net2 == NULL ) return NULL;
             v_net = virt_net_create_parallel( v_net1, v_net2 );
-            check_connections_cp( v_net, true, g );
+            check_connections_cp( v_net, true, g, false );
             break;
         case AST_SERIAL:
             v_net1 = install_nets( symtab, scope_stack, ast->op->left, g );
@@ -858,7 +861,7 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             virt_net_update_class( v_net2, PORT_CLASS_DOWN );
             check_connection_missing( v_net1, v_net2, g );
             v_net = virt_net_create_serial( v_net1, v_net2 );
-            check_connections_cp( v_net, false, g );
+            check_connections_cp( v_net, false, g, false );
             break;
         case AST_ID:
             // check the context of the symbol
@@ -895,62 +898,6 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
                 || ( v_net2->type == VNET_PARALLEL ) ) )
         virt_net_destroy_shallow( v_net2 );
     return v_net;
-}
-
-/******************************************************************************/
-virt_port_list_t* port_list_merge( symrec_list_t* sps_src, virt_net_t* v_net )
-{
-    virt_port_t* vp_new = NULL;
-    virt_port_t* vp_net = NULL;
-    virt_port_list_t* vps_last = NULL;
-    virt_port_list_t* vps_new = NULL;
-    virt_port_list_t* vps_net = v_net->ports;
-    symrec_list_t* sps_int = NULL;
-    int idx = 0, count = 0;
-
-    while( sps_src != NULL  ) {
-        // search for the port in the virtual net of the connection
-        vps_net = v_net->ports;
-        while( vps_net != NULL ) {
-            if( ( strlen( sps_src->rec->name )
-                        == strlen( vps_net->port->name ) )
-                    && ( strcmp( sps_src->rec->name,
-                            vps_net->port->name ) == 0 ) ) {
-                vp_net = vps_net->port;
-                break;
-            }
-            vps_net = vps_net->next;
-        }
-        // if there are internal ports, copy them to the new virtual port list
-        // use the alt name of the port but all other info from the net port
-        sps_int = sps_src->rec->attr_port->ports_int;
-        count = 0;
-        while( sps_int != NULL ) {
-            vps_new = malloc( sizeof( virt_port_list_t ) );
-            vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
-                    vp_net->inst, sps_int->rec->name, vp_net->symb );
-            sps_int = sps_int->next;
-            vps_new->port = vp_new;
-            vps_new->next = vps_last;
-            vps_new->idx = idx;
-            vps_last = vps_new;
-            idx++;
-            count++;
-        }
-        // there was no internal port, copy the regula port to the new list
-        if( count == 0 ) {
-            vps_new = malloc( sizeof( virt_port_list_t ) );
-            vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
-                    vp_net->inst, vp_net->name, vp_net->symb );
-            vps_new->port = vp_new;
-            vps_new->next = vps_last;
-            vps_new->idx = idx;
-            vps_last = vps_new;
-            idx++;
-        }
-        sps_src = sps_src->next;
-    }
-    return vps_last;
 }
 
 /******************************************************************************/

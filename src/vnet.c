@@ -26,7 +26,8 @@ net_con_t* net_con_create( instrec_t* inst )
 virt_net_t* virt_net_create_box( symrec_t* rec, instrec_t* inst )
 {
     virt_net_t* v_net = NULL;
-    virt_port_list_t* ports = virt_ports_copy_box( rec->attr_box->ports, inst );
+    virt_port_list_t* ports = virt_ports_copy_symb( rec->attr_box->ports,
+            inst );
     net_con_t* con = net_con_create( inst );
     v_net = virt_net_create_struct( ports, con, inst, VNET_BOX );
 
@@ -37,7 +38,7 @@ virt_net_t* virt_net_create_box( symrec_t* rec, instrec_t* inst )
 virt_net_t* virt_net_create_flatten( virt_net_t* v_net, instrec_t* inst )
 {
     virt_net_t* v_net_new = NULL;
-    virt_port_list_t*  ports = virt_ports_copy_net( v_net->ports, inst, false,
+    virt_port_list_t*  ports = virt_ports_copy_vnet( v_net->ports, inst, false,
             true );
     v_net_new = virt_net_create_struct( ports, NULL, inst, v_net->type );
     return v_net_new;
@@ -47,7 +48,7 @@ virt_net_t* virt_net_create_flatten( virt_net_t* v_net, instrec_t* inst )
 virt_net_t* virt_net_create_net( virt_net_t* v_net, instrec_t* inst )
 {
     virt_net_t* v_net_new = NULL;
-    virt_port_list_t* ports = virt_ports_copy_net( v_net->ports, inst, true,
+    virt_port_list_t* ports = virt_ports_copy_vnet( v_net->ports, inst, true,
             false );
     net_con_t* con = net_con_create( inst );
     v_net_new = virt_net_create_struct( ports, con, inst, VNET_NET );
@@ -131,11 +132,11 @@ virt_net_t* virt_net_create_sync( instrec_t* inst, virt_port_t* port )
 }
 
 /******************************************************************************/
-virt_net_t* virt_net_create_wrap( virt_net_t* v_net, instrec_t* inst )
+virt_net_t* virt_net_create_wrap( symrec_t* symb, instrec_t* inst )
 {
     virt_net_t* v_net_new = NULL;
-    virt_port_list_t* ports = virt_ports_copy_net( v_net->ports, inst, true,
-            false );
+    virt_port_list_t* ports = virt_ports_copy_symb( symb->attr_wrap->ports,
+            inst );
     net_con_t* con = net_con_create( inst );
     v_net_new = virt_net_create_struct( ports, con, inst, VNET_WRAP );
 
@@ -261,7 +262,7 @@ virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
 }
 
 /******************************************************************************/
-virt_port_list_t* virt_ports_copy_box( symrec_list_t* ports, instrec_t* inst )
+virt_port_list_t* virt_ports_copy_symb( symrec_list_t* ports, instrec_t* inst )
 {
     virt_port_t* new_port = NULL;
     virt_port_list_t* list_last = NULL;
@@ -284,8 +285,8 @@ virt_port_list_t* virt_ports_copy_box( symrec_list_t* ports, instrec_t* inst )
 }
 
 /******************************************************************************/
-virt_port_list_t* virt_ports_copy_net( virt_port_list_t* ports, instrec_t* inst,
-        bool check_status, bool copy_status )
+virt_port_list_t* virt_ports_copy_vnet( virt_port_list_t* ports,
+        instrec_t* inst, bool check_status, bool copy_status )
 {
     virt_port_t* new_port = NULL;
     virt_port_list_t* list_last = NULL;
@@ -316,8 +317,8 @@ virt_port_t* virt_port_get_equivalent( virt_net_t* v_net, virt_port_t* port,
 {
     virt_port_list_t* ports = v_net->ports;
     while( ports != NULL ) {
-        if( ( port->symb == ports->port->symb )
-                && ( all || ( ports->port->state == VPORT_STATE_OPEN ) ) ) {
+        if( ( port->symb == ports->port->symb ) && ( all
+                    || ( ports->port->state != VPORT_STATE_CONNECTED ) ) ) {
 #if defined(DEBUG) || defined(DEBUG_SEARCH_PORT)
             printf( "Found port: " );
             debug_print_vport( ports->port  );
@@ -331,9 +332,76 @@ virt_port_t* virt_port_get_equivalent( virt_net_t* v_net, virt_port_t* port,
 }
 
 /******************************************************************************/
+virt_port_t* virt_port_get_equivalent_by_name( virt_net_t* v_net,
+        const char* name )
+{
+    virt_port_t* vp_net = NULL;
+    virt_port_list_t* vps_net = v_net->ports;
+    vps_net = v_net->ports;
+    while( vps_net != NULL ) {
+        if( ( strlen( name ) == strlen( vps_net->port->name ) )
+                && ( strcmp( name, vps_net->port->name ) == 0 ) ) {
+            vp_net = vps_net->port;
+            break;
+        }
+        vps_net = vps_net->next;
+    }
+    return vp_net;
+}
+
+/******************************************************************************/
+virt_port_list_t* virt_ports_merge( symrec_list_t* sps_src, virt_net_t* v_net )
+{
+    virt_port_t* vp_new = NULL;
+    virt_port_t* vp_net = NULL;
+    virt_port_list_t* vps_last = NULL;
+    virt_port_list_t* vps_new = NULL;
+    symrec_list_t* sps_int = NULL;
+    int idx = 0;
+
+    while( sps_src != NULL  ) {
+        // search for the port in the virtual net of the connection
+        vp_net = virt_port_get_equivalent_by_name( v_net, sps_src->rec->name );
+        sps_int = sps_src->rec->attr_port->ports_int;
+        if( sps_int != NULL ) {
+            // if there are internal ports, copy them to the new virtual port
+            // list use the alt name of the port but all other info from the
+            // net port
+            while( sps_int != NULL ) {
+                vps_new = malloc( sizeof( virt_port_list_t ) );
+                vp_new = virt_port_create( vp_net->attr_class,
+                        vp_net->attr_mode, vp_net->inst, sps_int->rec->name,
+                        vp_net->symb );
+                sps_int = sps_int->next;
+                vp_net->state = VPORT_STATE_DISABLED;
+                vps_new->port = vp_new;
+                vps_new->next = vps_last;
+                vps_new->idx = idx;
+                vps_last = vps_new;
+                idx++;
+            }
+        }
+        else {
+            // there was no internal port, copy the regula port to the new list
+            vps_new = malloc( sizeof( virt_port_list_t ) );
+            vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
+                    vp_net->inst, vp_net->name, vp_net->symb );
+            vps_new->port = vp_new;
+            vps_new->next = vps_last;
+            vps_new->idx = idx;
+            vps_last = vps_new;
+            idx++;
+        }
+        sps_src = sps_src->next;
+    }
+    return vps_last;
+}
+
+/******************************************************************************/
 void debug_print_vport( virt_port_t* port )
 {
     if( port->state == VPORT_STATE_CONNECTED ) printf("+");
+    else if( port->state == VPORT_STATE_DISABLED ) printf("!");
     printf( "%s(%d)", port->inst->name, port->inst->id );
     if( port->attr_class == PORT_CLASS_DOWN ) printf( "_" );
     else if( port->attr_class == PORT_CLASS_UP ) printf( "^" );

@@ -90,6 +90,7 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
     igraph_vs_t vs;
     igraph_vit_t vit;
     instrec_t *inst;
+    symrec_t* symb;
     igraph_t g_child, g_in, *g_tmp;
     int inst_id;
 
@@ -101,7 +102,10 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
         inst_id = IGRAPH_VIT_GET( vit );
         inst = ( instrec_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
                 INST_ATTR_INST, inst_id );
+        symb = ( symrec_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
+                INST_ATTR_SYMB, inst_id );
         if( ( inst->type == INSTREC_NET ) || ( inst->type == INSTREC_WRAP ) ) {
+        /* if( inst->type == INSTREC_NET ) { */
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
             printf( "Flatten instance '%s(%d)'\n", inst->name, inst->id );
 #endif // DEBUG_FLATTEN_GRAPH
@@ -112,7 +116,7 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
             dgraph_append( &g_child, g_tmp, true );
             // recoursively flatten further net instances
             dgraph_flatten( g, &g_child );
-            dgraph_flatten_net( g, &g_child, inst->id );
+            dgraph_flatten_net( g, &g_child, symb, inst );
             igraph_destroy( &g_child );
         }
         IGRAPH_VIT_NEXT( vit );
@@ -124,7 +128,8 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
 }
 
 /******************************************************************************/
-void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, int net_id )
+void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, symrec_t* symb,
+        instrec_t* inst )
 {
     virt_port_t *p_src, *p_dest, *port, *port_net, *port_net_new;
     igraph_vs_t vs;
@@ -132,7 +137,7 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, int net_id )
     igraph_eit_t eit;
 
     // get all ports connecting to the net
-    igraph_es_incident( &es, net_id, IGRAPH_ALL );
+    igraph_es_incident( &es, inst->id, IGRAPH_ALL );
     igraph_eit_create( g_new, es, &eit );
     // for each edge connect to the actual nets form the graph
     while( !IGRAPH_EIT_END( eit ) ) {
@@ -143,15 +148,24 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, int net_id )
         // get id of the non net end of the edge
         port = p_src;
         port_net = p_dest;
-        if( p_dest->inst->id != net_id ) {
+        if( p_dest->inst->id != inst->id ) {
             port = p_dest;
             port_net = p_src;
         }
-        // get open port with same symbol pointer from child graph
-        port_net_new = dgraph_port_search_child( g_child, port_net );
+        if( inst->type == INSTREC_NET ) {
+            // get open port with same symbol pointer from child graph
+            port_net_new = dgraph_port_search_child( g_child, port_net );
+        }
+        else if( inst->type == INSTREC_WRAP ) {
+            // get port from net of the wrapper
+            port_net = dgraph_port_search_wrap( symb->attr_wrap->v_net,
+                    port_net );
+            // get open port with same symbol pointer from child graph
+            port_net_new = dgraph_port_search_child( g_child, port_net );
+        }
         // connect this port to the matching port of the virtual net
         check_connection( port_net_new, port, g_new, false );
-        check_connection_cp( NULL, port_net_new, port, g_new, false );
+        check_connection_cp( NULL, port_net_new, port, g_new, false, false );
         IGRAPH_EIT_NEXT( eit );
     }
     igraph_eit_destroy( &eit );
@@ -159,11 +173,11 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, int net_id )
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
     printf( "dgraph_flatten_net: remove vertice with id = %d\n", net_id );
 #endif // DEBUG_FLATTEN_GRAPH
-    dgraph_vertex_destroy_attr( g_new, net_id, true );
-    vs = igraph_vss_1( net_id );
+    dgraph_vertex_destroy_attr( g_new, inst->id, true );
+    vs = igraph_vss_1( inst->id );
     igraph_delete_vertices( g_new, vs );
     igraph_vs_destroy( &vs );
-    dgraph_vertex_update_ids( g_new, net_id );
+    dgraph_vertex_update_ids( g_new, inst->id );
 }
 
 /******************************************************************************/
@@ -176,7 +190,7 @@ virt_port_t* dgraph_port_search_neighbour( igraph_t* g, igraph_t* g_new,
     v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g_new,
             INST_ATTR_VNET, id_inst );
 #if defined(DEBUG) || defined(DEBUG_SEARCH_PORT)
-    printf( "Search port " );
+    printf( "dgraph_port_search_neighbour: Search port " );
     debug_print_vport( port );
     printf( "\n in virtual net: " );
     debug_print_vports( v_net );
@@ -192,9 +206,8 @@ virt_port_t* dgraph_port_search_child( igraph_t* g, virt_port_t* port )
     igraph_vs_t vs;
     igraph_vit_t vit;
     int id_inst;
-    // copy graph
 #if defined(DEBUG) || defined(DEBUG_SEARCH_PORT)
-    printf( "Search port " );
+    printf( "dgrap_port_search_child: Search port " );
     debug_print_vport( port );
     printf( "\n" );
 #endif // DEBUG
@@ -225,6 +238,34 @@ virt_port_t* dgraph_port_search_child( igraph_t* g, virt_port_t* port )
     igraph_vs_destroy( &vs );
 
     return port_res;
+}
+
+/******************************************************************************/
+virt_port_t* dgraph_port_search_wrap( virt_net_t* v_net, virt_port_t* port )
+{
+    // => find a namesake in the net interface of the wrapper
+#if defined(DEBUG) || defined(DEBUG_SEARCH_PORT)
+    printf( "dgrap_port_search_wrap: Search port " );
+    debug_print_vport( port );
+    printf( "\n in virtual net: " );
+    debug_print_vports( v_net );
+#endif // DEBUG
+    virt_port_t* port_net = NULL;
+    virt_port_list_t* ports = v_net->ports;
+    while( ports != NULL ) {
+        if( are_port_names_ok( ports->port, port )
+                && are_port_modes_ok( ports->port, port, true ) ) {
+            port_net = ports->port;
+#if defined(DEBUG) || defined(DEBUG_SEARCH_PORT)
+            printf( "Found port: " );
+            debug_print_vport( ports->port  );
+            printf( "\n" );
+#endif // DEBUG
+            break;
+        }
+        ports = ports->next;
+    }
+    return port_net;
 }
 
 /******************************************************************************/
@@ -289,7 +330,7 @@ virt_net_t* dgraph_vertex_add_wrap( igraph_t* g, symrec_t* symb, int line )
 {
     int id = dgraph_vertex_add( g, symb->name );
     instrec_t* inst = instrec_create( symb->name, id, line, INSTREC_WRAP );
-    virt_net_t* v_net = virt_net_create_wrap( symb->attr_wrap->v_net, inst );
+    virt_net_t* v_net = virt_net_create_wrap( symb, inst );
     dgraph_vertex_add_attr( g, id, NULL, symb, inst, v_net,
             &symb->attr_wrap->g );
     return v_net;

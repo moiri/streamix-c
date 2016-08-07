@@ -120,6 +120,7 @@ struct attr_prot_s
 struct attr_wrap_s
 {
     bool            attr_static;/**< wrapper does no proliferation */
+    symrec_list_t*  ports;      /**< pointer to the port list of the net */
     virt_net_t*     v_net;      /**< pointer to a virtual net */
     igraph_t        g;
 };
@@ -169,10 +170,13 @@ attr_prot_t* symrec_attr_create_proto( symrec_list_t* );
  * @brief   Create a wrap attribute structure
  *
  * @param attr_static   flag incdicating whether a wrapper is static
+ * @param ports         pointer to a port list
  * @param v_net         pointer to a virtual net
+ * @param g             pointer to a graph object
  * @return              pointer to the new structure
  */
-attr_wrap_t* symrec_attr_create_wrap( bool, virt_net_t*, igraph_t* );
+attr_wrap_t* symrec_attr_create_wrap( bool, symrec_list_t*, virt_net_t*,
+        igraph_t* );
 
 /**
  * @brief   Destroy attributes of a symbol table record

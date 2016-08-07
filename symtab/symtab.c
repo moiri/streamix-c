@@ -60,12 +60,13 @@ attr_prot_t* symrec_attr_create_proto( symrec_list_t* ports )
 }
 
 /******************************************************************************/
-attr_wrap_t* symrec_attr_create_wrap( bool attr_static, virt_net_t* v_net,
-        igraph_t* g )
+attr_wrap_t* symrec_attr_create_wrap( bool attr_static, symrec_list_t* ports,
+        virt_net_t* v_net, igraph_t* g )
 {
     attr_wrap_t* new_attr = malloc( sizeof( attr_wrap_t ) );
     new_attr->attr_static = attr_static;
     new_attr->v_net = v_net;
+    new_attr->ports = ports;
     new_attr->g = *g;
     return new_attr;
 }
@@ -105,6 +106,7 @@ void symrec_attr_destroy_proto( attr_prot_t* attr )
 /******************************************************************************/
 void symrec_attr_destroy_wrap( attr_wrap_t* attr )
 {
+    symrec_list_del( attr->ports );
     if( ( attr->v_net != NULL ) && ( ( attr->v_net->type == VNET_SERIAL )
                 || ( attr->v_net->type ==  VNET_PARALLEL ) ) )
         virt_net_destroy_shallow( attr->v_net );
