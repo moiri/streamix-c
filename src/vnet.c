@@ -350,54 +350,6 @@ virt_port_t* virt_port_get_equivalent_by_name( virt_net_t* v_net,
 }
 
 /******************************************************************************/
-virt_port_list_t* virt_ports_merge( symrec_list_t* sps_src, virt_net_t* v_net )
-{
-    virt_port_t* vp_new = NULL;
-    virt_port_t* vp_net = NULL;
-    virt_port_list_t* vps_last = NULL;
-    virt_port_list_t* vps_new = NULL;
-    symrec_list_t* sps_int = NULL;
-    int idx = 0;
-
-    while( sps_src != NULL  ) {
-        // search for the port in the virtual net of the connection
-        vp_net = virt_port_get_equivalent_by_name( v_net, sps_src->rec->name );
-        sps_int = sps_src->rec->attr_port->ports_int;
-        if( sps_int != NULL ) {
-            // if there are internal ports, copy them to the new virtual port
-            // list use the alt name of the port but all other info from the
-            // net port
-            while( sps_int != NULL ) {
-                vps_new = malloc( sizeof( virt_port_list_t ) );
-                vp_new = virt_port_create( vp_net->attr_class,
-                        vp_net->attr_mode, vp_net->inst, sps_int->rec->name,
-                        vp_net->symb );
-                sps_int = sps_int->next;
-                vp_net->state = VPORT_STATE_DISABLED;
-                vps_new->port = vp_new;
-                vps_new->next = vps_last;
-                vps_new->idx = idx;
-                vps_last = vps_new;
-                idx++;
-            }
-        }
-        else {
-            // there was no internal port, copy the regula port to the new list
-            vps_new = malloc( sizeof( virt_port_list_t ) );
-            vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
-                    vp_net->inst, vp_net->name, vp_net->symb );
-            vps_new->port = vp_new;
-            vps_new->next = vps_last;
-            vps_new->idx = idx;
-            vps_last = vps_new;
-            idx++;
-        }
-        sps_src = sps_src->next;
-    }
-    return vps_last;
-}
-
-/******************************************************************************/
 void debug_print_vport( virt_port_t* port )
 {
     if( port->state == VPORT_STATE_CONNECTED ) printf("+");

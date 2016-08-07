@@ -13,6 +13,74 @@
 #include "context.h"
 
 /******************************************************************************/
+virt_port_list_t* virt_ports_merge( igraph_t* g, symrec_list_t* sps_src,
+        virt_net_t* v_net )
+{
+    virt_port_t* vp_new = NULL;
+    virt_port_t* vp_net = NULL;
+    virt_port_list_t* vps_last = NULL;
+    virt_port_list_t* vps_new = NULL;
+    symrec_list_t* sps_int = NULL;
+    instrec_t* inst = NULL;
+    virt_net_t* v_net_sync = NULL;
+    int idx = 0, count = 0;
+
+    while( sps_src != NULL  ) {
+        // search for the port in the virtual net of the connection
+        vp_net = virt_port_get_equivalent_by_name( v_net, sps_src->rec->name );
+        inst = vp_net->inst;
+        sps_int = sps_src->rec->attr_port->ports_int;
+        // if there are internal ports, copy them to the new virtual port
+        // list use the alt name of the port but all other info from the
+        // net port
+        count = 0;
+        while( sps_int != NULL ) {
+            sps_int = sps_int->next;
+            count++;
+        }
+        if( count > 0 ) {
+            if( count > 1 ) {
+                // create a copy synchronizer
+                vp_new = virt_port_create( vp_net->attr_class,
+                        vp_net->attr_mode, vp_net->inst, vp_net->name,
+                        vp_net->symb );
+                v_net_sync = dgraph_vertex_add_sync( g, vp_new );
+                inst = vp_new->inst = v_net_sync->inst;
+                connect_ports( vp_new, vp_net, g, false );
+                vp_net = vp_new;
+            }
+            sps_int = sps_src->rec->attr_port->ports_int;
+            while( sps_int != NULL ) {
+                vps_new = malloc( sizeof( virt_port_list_t ) );
+                vp_new = virt_port_create( vp_net->attr_class,
+                        vp_net->attr_mode, inst, sps_int->rec->name,
+                        vp_net->symb );
+                sps_int = sps_int->next;
+                vp_net->state = VPORT_STATE_DISABLED;
+                vps_new->port = vp_new;
+                vps_new->next = vps_last;
+                vps_new->idx = idx;
+                vps_last = vps_new;
+                idx++;
+            }
+        }
+        else {
+            // there was no internal port, copy the regula port to the new list
+            vps_new = malloc( sizeof( virt_port_list_t ) );
+            vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
+                    vp_net->inst, vp_net->name, vp_net->symb );
+            vps_new->port = vp_new;
+            vps_new->next = vps_last;
+            vps_new->idx = idx;
+            vps_last = vps_new;
+            idx++;
+        }
+        sps_src = sps_src->next;
+    }
+    return vps_last;
+}
+
+/******************************************************************************/
 void dgraph_append( igraph_t* g, igraph_t* g_tpl, bool deep )
 {
     igraph_es_t es;
@@ -154,14 +222,14 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, symrec_t* symb,
         }
         if( inst->type == INSTREC_NET ) {
             // get open port with same symbol pointer from child graph
-            port_net_new = dgraph_port_search_child( g_child, port_net );
+            port_net_new = dgraph_port_search_child( g_child, port_net, true );
         }
         else if( inst->type == INSTREC_WRAP ) {
             // get port from net of the wrapper
             port_net = dgraph_port_search_wrap( symb->attr_wrap->v_net,
                     port_net );
             // get open port with same symbol pointer from child graph
-            port_net_new = dgraph_port_search_child( g_child, port_net );
+            port_net_new = dgraph_port_search_child( g_child, port_net, false );
         }
         // connect this port to the matching port of the virtual net
         check_connection( port_net_new, port, g_new, false );
@@ -199,7 +267,8 @@ virt_port_t* dgraph_port_search_neighbour( igraph_t* g, igraph_t* g_new,
 }
 
 /******************************************************************************/
-virt_port_t* dgraph_port_search_child( igraph_t* g, virt_port_t* port )
+virt_port_t* dgraph_port_search_child( igraph_t* g, virt_port_t* port,
+        bool clean )
 {
     virt_port_t *port_res = NULL, *port_inst = NULL;
     virt_net_t* v_net;
@@ -225,10 +294,12 @@ virt_port_t* dgraph_port_search_child( igraph_t* g, virt_port_t* port )
         if( port_inst != NULL ) {
             port_res = port_inst;
             if( port_inst->inst->type == INSTREC_SYNC ) {
-                // remove the cp sync to not search for it a second time
-                vs = igraph_vss_1( id_inst );
-                igraph_delete_vertices( g, vs );
-                igraph_vs_destroy( &vs );
+                if( clean ) {
+                    // remove the cp sync to not search for it a second time
+                    vs = igraph_vss_1( id_inst );
+                    igraph_delete_vertices( g, vs );
+                    igraph_vs_destroy( &vs );
+                }
                 break;
             }
         }

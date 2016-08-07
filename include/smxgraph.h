@@ -15,6 +15,11 @@
 #include "symtab.h"
 
 /**
+ *
+ */
+virt_port_list_t* virt_ports_merge( igraph_t*, symrec_list_t*, virt_net_t* );
+
+/**
  * @brief   Append a graph to another graph
  *
  * Append all elements to another graph. A deep or a shallow copy of the graph
@@ -88,7 +93,7 @@ virt_port_t* dgraph_port_search_neighbour( igraph_t*, igraph_t*, int, int,
  * @param g     child graph of a net
  * @param port  port template to be found
  */
-virt_port_t* dgraph_port_search_child( igraph_t*, virt_port_t* );
+virt_port_t* dgraph_port_search_child( igraph_t*, virt_port_t*, bool );
 virt_port_t* dgraph_port_search_wrap( virt_net_t*, virt_port_t* );
 
 /**

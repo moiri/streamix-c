@@ -123,7 +123,9 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
-            connect_ports( port_l, port_r, g, true );
+            // only change connected status if it is a regular connection and
+            // not one invoked from the flatten net
+            connect_ports( port_l, port_r, g, directed );
             port_l->attr_class = PORT_CLASS_DOWN;
             port_r->attr_class = PORT_CLASS_UP;
             res = true;
@@ -504,7 +506,8 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                 // create virtual port list of the prototyped net with instances
                 // of the real net
                 v_net = virt_net_create_struct(
-                        virt_ports_merge( port_list_net, w_attr->v_net ),
+                        virt_ports_merge( &w_attr->g, port_list_net,
+                            w_attr->v_net ),
                         NULL, NULL, VNET_NET );
                 check_connections_cp( v_net, false, &w_attr->g, true );
                 rec->attr_wrap->v_net = v_net;

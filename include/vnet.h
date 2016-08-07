@@ -299,11 +299,6 @@ virt_port_t* virt_port_get_equivalent( virt_net_t*, virt_port_t*, bool );
 virt_port_t* virt_port_get_equivalent_by_name( virt_net_t*, const char* );
 
 /**
- *
- */
-virt_port_list_t* virt_ports_merge( symrec_list_t*, virt_net_t* );
-
-/**
  * @brief   Print debug information of a port of a virtual net
  *
  * @param port  pointer to the port of a virtual net
