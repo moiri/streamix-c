@@ -203,9 +203,10 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, symrec_t* symb,
     igraph_vs_t vs;
     igraph_es_t es;
     igraph_eit_t eit;
+    int net_id = inst->id;
 
     // get all ports connecting to the net
-    igraph_es_incident( &es, inst->id, IGRAPH_ALL );
+    igraph_es_incident( &es, net_id, IGRAPH_ALL );
     igraph_eit_create( g_new, es, &eit );
     // for each edge connect to the actual nets form the graph
     while( !IGRAPH_EIT_END( eit ) ) {
@@ -216,7 +217,7 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, symrec_t* symb,
         // get id of the non net end of the edge
         port = p_src;
         port_net = p_dest;
-        if( p_dest->inst->id != inst->id ) {
+        if( p_dest->inst->id != net_id ) {
             port = p_dest;
             port_net = p_src;
         }
@@ -241,11 +242,11 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, symrec_t* symb,
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
     printf( "dgraph_flatten_net: remove vertice with id = %d\n", net_id );
 #endif // DEBUG_FLATTEN_GRAPH
-    dgraph_vertex_destroy_attr( g_new, inst->id, true );
-    vs = igraph_vss_1( inst->id );
+    dgraph_vertex_destroy_attr( g_new, net_id, true );
+    vs = igraph_vss_1( net_id );
     igraph_delete_vertices( g_new, vs );
     igraph_vs_destroy( &vs );
-    dgraph_vertex_update_ids( g_new, inst->id );
+    dgraph_vertex_update_ids( g_new, net_id );
 }
 
 /******************************************************************************/
