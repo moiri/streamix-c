@@ -54,6 +54,7 @@
 %type <nval> wrap_decl
 %type <nval> wrap_port_decl
 %type <nval> alt_port_decl
+%type <nval> opt_alt_ports
 
 /* lists */
 %type <lval> net_decls
@@ -67,7 +68,6 @@
 %type <lval> opt_wrap_port_list
 %type <lval> alt_port_list
 %type <lval> alt_ports
-%type <lval> opt_alt_ports
 %type <lval> opt_alt_port_list
 
 
@@ -160,7 +160,7 @@ net_port_decl:
     kw_port_class kw_port_mode IDENTIFIER opt_alt_ports {
         $$ = ast_add_port(
             ast_add_symbol( $3, @3.last_line, ID_PORT ),
-            ast_add_list( $4, AST_INT_PORTS ),
+            $4,
             $1,
             $2,
             ( ast_node_t* )0, // no coupling
@@ -169,13 +169,13 @@ net_port_decl:
     }
 ;
 
-alt_ports:
-    '(' alt_port_list ')' { $$ = $2; }
+opt_alt_ports:
+    %empty { $$ = ( ast_node_t* )0; }
+|   alt_ports { $$ = ast_add_list( $1, AST_INT_PORTS ); }
 ;
 
-opt_alt_ports:
-    %empty { $$ = ( ast_list_t* )0; }
-|   alt_ports { $$ = $1; }
+alt_ports:
+    '(' alt_port_list ')' { $$ = $2; }
 ;
 
 alt_port_list:
@@ -301,7 +301,7 @@ wrap_port_decl:
     kw_opt_port_class kw_port_mode IDENTIFIER opt_alt_ports {
         $$ = ast_add_port(
             ast_add_symbol( $3, @3.last_line, ID_PORT ),
-            ast_add_list( $4, AST_INT_PORTS ),
+            $4,
             $1,
             $2,
             ( ast_node_t* )0, // no coupling

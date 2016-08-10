@@ -21,15 +21,12 @@ virt_port_list_t* virt_ports_merge( igraph_t* g, symrec_list_t* sps_src,
     virt_port_list_t* vps_last = NULL;
     virt_port_list_t* vps_new = NULL;
     symrec_list_t* sps_int = NULL;
-    instrec_t* inst = NULL;
-    virt_net_t* v_net_sync = NULL;
     int idx = 0, count = 0;
 
     while( sps_src != NULL  ) {
         // search for the port in the virtual net of the connection
         vp_net = virt_port_get_equivalent_by_name( vps_net,
                 sps_src->rec->name );
-        inst = vp_net->inst;
         sps_int = sps_src->rec->attr_port->ports_int;
         // if there are internal ports, copy them to the new virtual port
         // list use the alt name of the port but all other info from the
@@ -45,8 +42,7 @@ virt_port_list_t* virt_ports_merge( igraph_t* g, symrec_list_t* sps_src,
                 vp_new = virt_port_create( vp_net->attr_class,
                         vp_net->attr_mode, vp_net->inst, vp_net->name,
                         vp_net->symb );
-                v_net_sync = dgraph_vertex_add_sync( g, vp_new );
-                inst = vp_new->inst = v_net_sync->inst;
+                dgraph_vertex_add_sync( g, vp_new );
                 check_connection( vp_new, vp_net, g, false, true );
                 vp_net = vp_new;
             }
@@ -54,7 +50,7 @@ virt_port_list_t* virt_ports_merge( igraph_t* g, symrec_list_t* sps_src,
             while( sps_int != NULL ) {
                 vps_new = malloc( sizeof( virt_port_list_t ) );
                 vp_new = virt_port_create( vp_net->attr_class,
-                        vp_net->attr_mode, inst, sps_int->rec->name,
+                        vp_net->attr_mode, vp_net->inst, sps_int->rec->name,
                         vp_net->symb );
                 sps_int = sps_int->next;
                 vp_net->state = VPORT_STATE_DISABLED;

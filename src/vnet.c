@@ -125,6 +125,7 @@ virt_net_t* virt_net_create_sync( instrec_t* inst, virt_port_t* port )
     virt_port_list_t* ports = malloc( sizeof( virt_port_list_t ) );
     ports->idx = 0;
     ports->port = port;
+    ports->port->inst = inst;
     ports->next = NULL;
     v_net = virt_net_create_struct( ports, NULL, inst, VNET_SYNC );
 
@@ -345,6 +346,16 @@ virt_port_t* virt_port_get_equivalent_by_name( virt_port_list_t* vps_net,
         vps_net = vps_net->next;
     }
     return vp_net;
+}
+
+/******************************************************************************/
+void virt_port_update_inst( virt_port_t* port, instrec_t* inst )
+{
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+    printf( "virt_port_update_inst: %s(%s(%d)->%s(%d))\n", port->name,
+            port->inst->name, port->inst->id, inst->name, inst->id );
+#endif // DEBUG
+    port->inst = inst;
 }
 
 /******************************************************************************/

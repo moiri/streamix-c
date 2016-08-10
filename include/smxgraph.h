@@ -16,6 +16,9 @@
 
 /**
  *
+ * @param g
+ * @param sps_src   symrec port list of the net prototype
+ * @param vps_net   virt port list of the network equations in the wrapper
  */
 virt_port_list_t* virt_ports_merge( igraph_t*, symrec_list_t*,
         virt_port_list_t* );

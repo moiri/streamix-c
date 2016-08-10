@@ -194,7 +194,12 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
             port_new = virt_port_add( v_net, port_class, port_mode,
                     port1->inst, port1->name, port1->symb );
             v_net_sync = dgraph_vertex_add_sync( g, port_new );
-            port_new->inst = v_net_sync->inst;
+            if( ignore_class ) {
+                // cp syncs in a wrapper require e deep port copy
+                v_net_sync->ports->port = virt_port_create( port_new->attr_class,
+                        port_new->attr_mode, port_new->inst, port_new->name,
+                        port_new->symb );
+            }
             connect_ports( port_new, port1, g, false );
             connect_ports( port_new, port2, g, false );
         }
@@ -505,16 +510,19 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             if( check_prototype( port_list_net, w_attr->v_net, rec->name ) ) {
                 // create virtual port list of the prototyped net with instances
                 // of the real net
-                rec->attr_wrap->v_net->ports = virt_ports_merge( &w_attr->g,
-                        port_list_net, n_attr->v_net->ports );
-                check_connections_cp( rec->attr_wrap->v_net, false,
-                        &rec->attr_wrap->g, true );
-                /* v_net = virt_net_create_struct( */
-                /*         virt_ports_merge( &w_attr->g, port_list_net, */
-                /*             w_attr->v_net ), */
-                /*         NULL, NULL, VNET_NET ); */
-                /* check_connections_cp( v_net, false, &w_attr->g, true ); */
-                /* rec->attr_wrap->v_net = v_net; */
+                /* w_attr->v_net->ports = virt_ports_merge( &w_attr->g, */
+                /*         port_list_net, n_attr->v_net->ports ); */
+                /* check_connections_cp( rec->attr_wrap->v_net, false, */
+                /*         &rec->attr_wrap->g, true ); */
+                v_net = virt_net_create_struct(
+                        virt_ports_merge( &w_attr->g, port_list_net,
+                            n_attr->v_net->ports ),
+                        NULL, NULL, VNET_NET );
+                check_connections_cp( v_net, false, &w_attr->g, true );
+                rec->attr_wrap->v_net = v_net;
+                virt_net_destroy_shallow( n_attr->v_net );
+                symrec_list_del( port_list_net );
+                free( n_attr );
                 /* rec->attr_wrap->v_net = check_connections_wrap( */
                 /*         virt_ports_merge( port_list_net, n_attr->v_net ), */
                 /*         virt_ports_copy_box( port_list, NULL ) ); */
@@ -645,6 +653,8 @@ bool check_single_mode_cp( igraph_t* g, int id )
         report_yyerror( error_msg, 0 );
         res = false;
     }
+    igraph_vector_destroy( &eids_in );
+    igraph_vector_destroy( &eids_out );
     return res;
 }
 
@@ -700,18 +710,22 @@ instrec_t* cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
             port2->inst->name, port2->inst->id );
 #endif // DEBUG_CONNECT
     id_del = dgraph_vertex_merge( g, port1->inst->id, port2->inst->id );
-    port1->state = VPORT_STATE_CONNECTED;
-    port2->state = VPORT_STATE_CONNECTED;
     // delete one copy synchronizer
     if( id_del == port1->inst->id ) {
-        virt_net_destroy_shallow( v_net1 );
-        res = port1->inst = port2->inst;
+        port1->state = VPORT_STATE_DISABLED;
+        port2->state = VPORT_STATE_CONNECTED;
+        res = port2->inst;
+        virt_port_update_inst( port1, port2->inst );
         virt_port_append( v_net2, port1 );
+        virt_net_destroy_shallow( v_net1 );
     }
     else {
-        virt_net_destroy_shallow( v_net2 );
-        res = port2->inst = port1->inst;
+        port1->state = VPORT_STATE_CONNECTED;
+        port2->state = VPORT_STATE_DISABLED;
+        res = port1->inst;
+        virt_port_update_inst( port2, port1->inst );
         virt_port_append( v_net1, port2 );
+        virt_net_destroy_shallow( v_net2 );
     }
 /* #if defined(DEBUG) || defined(DEBUG_CONNECT) */
 /*     printf( " into %s(%d)\n", res->name, res->id ); */
@@ -755,6 +769,7 @@ bool cpsync_reduce( igraph_t* g, int id )
         dgraph_edge_add( g, p_from, p_to, p_sync->name );
         res = true;
     }
+    igraph_vector_destroy( &eids );
     return res;
 }
 
@@ -946,4 +961,5 @@ void post_process( igraph_t* g )
     igraph_delete_vertices( g, igraph_vss_vector( &dids ) );
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
+    igraph_vector_destroy( &dids );
 }
