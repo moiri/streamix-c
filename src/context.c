@@ -953,8 +953,10 @@ void post_process( igraph_t* g )
         }
         else if( v_net->type == VNET_SYNC ) {
             if( check_single_mode_cp( g, inst_id ) )
-                if( cpsync_reduce( g, inst_id ) )
+                if( cpsync_reduce( g, inst_id ) ) {
                     igraph_vector_push_back( &dids, inst_id );
+                    dgraph_vertex_destroy_attr( g, inst_id, true );
+                }
         }
         IGRAPH_VIT_NEXT( vit );
     }
