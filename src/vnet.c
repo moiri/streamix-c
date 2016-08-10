@@ -332,12 +332,10 @@ virt_port_t* virt_port_get_equivalent( virt_net_t* v_net, virt_port_t* port,
 }
 
 /******************************************************************************/
-virt_port_t* virt_port_get_equivalent_by_name( virt_net_t* v_net,
+virt_port_t* virt_port_get_equivalent_by_name( virt_port_list_t* vps_net,
         const char* name )
 {
     virt_port_t* vp_net = NULL;
-    virt_port_list_t* vps_net = v_net->ports;
-    vps_net = v_net->ports;
     while( vps_net != NULL ) {
         if( ( strlen( name ) == strlen( vps_net->port->name ) )
                 && ( strcmp( name, vps_net->port->name ) == 0 ) ) {

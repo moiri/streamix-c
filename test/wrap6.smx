@@ -1,0 +1,13 @@
+/**
+ * Wrapper with copy sync at the net interface
+ */
+
+L = box L( out p1, out p2 )
+R = box R( in p3 )
+wrapper W( in p1, in p2, out p3 ) {
+    A = box A ( in a, out p_int )
+    B = box B ( in p_int, out b )
+    connect (A|A).(B|B)
+} net( up in a(p1, p2), down out b(p3) )
+
+connect L.W.R

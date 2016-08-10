@@ -14,7 +14,7 @@
 
 /******************************************************************************/
 virt_port_list_t* virt_ports_merge( igraph_t* g, symrec_list_t* sps_src,
-        virt_net_t* v_net )
+        virt_port_list_t* vps_net )
 {
     virt_port_t* vp_new = NULL;
     virt_port_t* vp_net = NULL;
@@ -27,7 +27,8 @@ virt_port_list_t* virt_ports_merge( igraph_t* g, symrec_list_t* sps_src,
 
     while( sps_src != NULL  ) {
         // search for the port in the virtual net of the connection
-        vp_net = virt_port_get_equivalent_by_name( v_net, sps_src->rec->name );
+        vp_net = virt_port_get_equivalent_by_name( vps_net,
+                sps_src->rec->name );
         inst = vp_net->inst;
         sps_int = sps_src->rec->attr_port->ports_int;
         // if there are internal ports, copy them to the new virtual port
@@ -46,7 +47,8 @@ virt_port_list_t* virt_ports_merge( igraph_t* g, symrec_list_t* sps_src,
                         vp_net->symb );
                 v_net_sync = dgraph_vertex_add_sync( g, vp_new );
                 inst = vp_new->inst = v_net_sync->inst;
-                connect_ports( vp_new, vp_net, g, false );
+                check_connection( vp_new, vp_net, g, false, true );
+                /* connect_ports( vp_new, vp_net, g, false ); */
                 vp_net = vp_new;
             }
             sps_int = sps_src->rec->attr_port->ports_int;
@@ -193,6 +195,9 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
     igraph_vs_destroy( &vs );
     dgraph_append( g_new, g, false );
     igraph_destroy( &g_in );
+#if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
+    igraph_write_graph_dot( g_new, stdout );
+#endif // DEBUG_FLATTEN_GRAPH
 }
 
 /******************************************************************************/
@@ -233,7 +238,7 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, symrec_t* symb,
             port_net_new = dgraph_port_search_child( g_child, port_net, false );
         }
         // connect this port to the matching port of the virtual net
-        check_connection( port_net_new, port, g_new, false );
+        check_connection( port_net_new, port, g_new, false, false );
         check_connection_cp( NULL, port_net_new, port, g_new, false, false );
         IGRAPH_EIT_NEXT( eit );
     }

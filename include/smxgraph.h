@@ -17,7 +17,8 @@
 /**
  *
  */
-virt_port_list_t* virt_ports_merge( igraph_t*, symrec_list_t*, virt_net_t* );
+virt_port_list_t* virt_ports_merge( igraph_t*, symrec_list_t*,
+        virt_port_list_t* );
 
 /**
  * @brief   Append a graph to another graph

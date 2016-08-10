@@ -96,7 +96,7 @@ bool are_port_modes_ok( virt_port_t* p1, virt_port_t* p2, bool equal )
 
 /******************************************************************************/
 bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
-        bool directed )
+        bool directed, bool ignore_class )
 {
     instrec_t *inst_l, *inst_r;
     bool res = false;
@@ -109,7 +109,7 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
 #endif // DEBUG_CONNECT
     inst_l = port_l->inst;
     inst_r = port_r->inst;
-    if( are_port_classes_ok( port_l, port_r, directed ) ) {
+    if( ignore_class || are_port_classes_ok( port_l, port_r, directed ) ) {
         if( ( inst_l->type == INSTREC_SYNC )
                 && ( inst_r->type == INSTREC_SYNC ) ) {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
@@ -269,7 +269,7 @@ void check_connections( virt_net_t* v_net1, virt_net_t* v_net2, igraph_t* g )
                     && ( ports_r->port->state == VPORT_STATE_OPEN )
                     && are_port_names_ok( ports_l->port, ports_r->port ) ) {
                 res = check_connection( ports_l->port, ports_r->port, g,
-                        true );
+                        true, false );
                 if( res ) break;
             }
             ports_r = ports_r->next;
@@ -505,12 +505,14 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             if( check_prototype( port_list_net, w_attr->v_net, rec->name ) ) {
                 // create virtual port list of the prototyped net with instances
                 // of the real net
-                v_net = virt_net_create_struct(
-                        virt_ports_merge( &w_attr->g, port_list_net,
-                            w_attr->v_net ),
-                        NULL, NULL, VNET_NET );
-                check_connections_cp( v_net, false, &w_attr->g, true );
-                rec->attr_wrap->v_net = v_net;
+                rec->attr_wrap->v_net->ports = virt_ports_merge( &w_attr->g,
+                        port_list_net, n_attr->v_net->ports );
+                /* v_net = virt_net_create_struct( */
+                /*         virt_ports_merge( &w_attr->g, port_list_net, */
+                /*             w_attr->v_net ), */
+                /*         NULL, NULL, VNET_NET ); */
+                /* check_connections_cp( v_net, false, &w_attr->g, true ); */
+                /* rec->attr_wrap->v_net = v_net; */
                 /* rec->attr_wrap->v_net = check_connections_wrap( */
                 /*         virt_ports_merge( port_list_net, n_attr->v_net ), */
                 /*         virt_ports_copy_box( port_list, NULL ) ); */
@@ -689,7 +691,7 @@ instrec_t* cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
     virt_net_t* v_net2 = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
             INST_ATTR_VNET, port2->inst->id );
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-    printf( "Merge %s(%d) and %s(%d)", port1->inst->name, port1->inst->id,
+    printf( "Merge %s(%d) and %s(%d)\n", port1->inst->name, port1->inst->id,
             port2->inst->name, port2->inst->id );
 #endif // DEBUG_CONNECT
     id_del = dgraph_vertex_merge( g, port1->inst->id, port2->inst->id );

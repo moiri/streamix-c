@@ -296,7 +296,7 @@ virt_port_t* virt_port_get_equivalent( virt_net_t*, virt_port_t*, bool );
 /**
  *
  */
-virt_port_t* virt_port_get_equivalent_by_name( virt_net_t*, const char* );
+virt_port_t* virt_port_get_equivalent_by_name( virt_port_list_t*, const char* );
 
 /**
  * @brief   Print debug information of a port of a virtual net
