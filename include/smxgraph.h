@@ -39,9 +39,10 @@ void dgraph_append( igraph_t*, igraph_t*, bool );
  * @param g         pointer to the dependancy graph
  * @param p_src     pointer to the source port
  * @param p_dest    pointer to the destination port
+ * @param name      name of the edge to add
  * @return          id of the new edge
  */
-int dgraph_edge_add( igraph_t*, virt_port_t*, virt_port_t* );
+int dgraph_edge_add( igraph_t*, virt_port_t*, virt_port_t*, const char* );
 
 /**
  * @brief   destroy a graph and its vertex attributes

@@ -48,7 +48,6 @@ virt_port_list_t* virt_ports_merge( igraph_t* g, symrec_list_t* sps_src,
                 v_net_sync = dgraph_vertex_add_sync( g, vp_new );
                 inst = vp_new->inst = v_net_sync->inst;
                 check_connection( vp_new, vp_net, g, false, true );
-                /* connect_ports( vp_new, vp_net, g, false ); */
                 vp_net = vp_new;
             }
             sps_int = sps_src->rec->attr_port->ports_int;
@@ -85,6 +84,7 @@ virt_port_list_t* virt_ports_merge( igraph_t* g, symrec_list_t* sps_src,
 /******************************************************************************/
 void dgraph_append( igraph_t* g, igraph_t* g_tpl, bool deep )
 {
+    const char* name;
     igraph_es_t es;
     igraph_vs_t vs;
     igraph_eit_t eit;
@@ -113,7 +113,9 @@ void dgraph_append( igraph_t* g, igraph_t* g_tpl, bool deep )
                 inst_map[ id_from ]->id, PORT_ATTR_PSRC );
         p_dest = dgraph_port_search_neighbour( g_tpl, g, id_edge,
                 inst_map[ id_to ]->id, PORT_ATTR_PDST );
-        dgraph_edge_add( g, p_src, p_dest );
+        name = p_src->name;
+        if( p_dest->inst->type == INSTREC_SYNC ) name = p_dest->name;
+        dgraph_edge_add( g, p_src, p_dest, name );
         IGRAPH_EIT_NEXT( eit );
     }
     igraph_eit_destroy( &eit );
@@ -122,15 +124,16 @@ void dgraph_append( igraph_t* g, igraph_t* g_tpl, bool deep )
 }
 
 /******************************************************************************/
-int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest )
+int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
+        const char* name )
 {
     int id = igraph_ecount( g );
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
-    printf( " add new edge %s(%d->%d)\n", p_src->name, p_src->inst->id,
+    printf( " add new edge %s(%d->%d)\n", name, p_src->inst->id,
             p_dest->inst->id );
 #endif // DEBUG_FLATTEN_GRAPH
     igraph_add_edge( g, p_src->inst->id, p_dest->inst->id );
-    igraph_cattribute_EAS_set( g, PORT_ATTR_LABEL, id, p_src->name );
+    igraph_cattribute_EAS_set( g, PORT_ATTR_LABEL, id, name );
     igraph_cattribute_EAN_set( g, PORT_ATTR_PSRC, id, ( uintptr_t )p_src );
     igraph_cattribute_EAN_set( g, PORT_ATTR_PDST, id, ( uintptr_t )p_dest );
     return id;

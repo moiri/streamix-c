@@ -119,7 +119,7 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
             cpsync_merge( port_l, port_r, g );
             res = true;
         }
-        else if( are_port_modes_ok( port_l, port_r, false ) ) {
+        else if( are_port_modes_ok( port_l, port_r, ignore_class ) ) {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
@@ -507,6 +507,8 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                 // of the real net
                 rec->attr_wrap->v_net->ports = virt_ports_merge( &w_attr->g,
                         port_list_net, n_attr->v_net->ports );
+                check_connections_cp( rec->attr_wrap->v_net, false,
+                        &rec->attr_wrap->g, true );
                 /* v_net = virt_net_create_struct( */
                 /*         virt_ports_merge( &w_attr->g, port_list_net, */
                 /*             w_attr->v_net ), */
@@ -650,6 +652,7 @@ bool check_single_mode_cp( igraph_t* g, int id )
 void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
         bool connect_sync )
 {
+    const char* name;
     virt_port_t *p_src, *p_dest;
     // set source and dest id
     if( ( ( port_l->inst->type == INSTREC_SYNC )
@@ -678,7 +681,9 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
     if( ( port_r->inst->type == INSTREC_BOX ) || connect_sync )
         port_r->state = VPORT_STATE_CONNECTED;
     // add edge to the graph and set attributes
-    dgraph_edge_add( g, p_src, p_dest );
+    name = p_src->name;
+    if( p_dest->inst->type == INSTREC_SYNC ) name = p_dest->name;
+    dgraph_edge_add( g, p_src, p_dest, name );
 }
 
 /******************************************************************************/
@@ -721,7 +726,7 @@ instrec_t* cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
 bool cpsync_reduce( igraph_t* g, int id )
 {
     bool res = false;
-    virt_port_t *p_src, *p_dest, *p_from, *p_to;
+    virt_port_t *p_src, *p_dest, *p_from, *p_to, *p_sync;
     igraph_vector_t eids;
 
     igraph_vector_init( &eids, 0 );
@@ -739,9 +744,15 @@ bool cpsync_reduce( igraph_t* g, int id )
         p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
                 PORT_ATTR_PDST, VECTOR( eids )[ 1 ] );
         // get id of the non net end of the edge
-        if( p_dest->inst->id != id ) p_to = p_dest;
-        else p_from = p_src;
-        dgraph_edge_add( g, p_from, p_to );
+        if( p_dest->inst->id != id ) {
+            p_to = p_dest;
+            p_sync = p_src;
+        }
+        else {
+            p_from = p_src;
+            p_sync = p_dest;
+        }
+        dgraph_edge_add( g, p_from, p_to, p_sync->name );
         res = true;
     }
     return res;

@@ -1,5 +1,5 @@
 /**
- * Wrapper with copy sync at the net interface
+ * Wrapper with copy sync at the border of the network equations of the wrapper
  */
 
 L = box L( out p1 )
