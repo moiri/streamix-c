@@ -337,10 +337,22 @@ virt_port_t* virt_port_get_equivalent_by_name( virt_port_list_t* vps_net,
         const char* name )
 {
     virt_port_t* vp_net = NULL;
+#if defined(DEBUG) || defined(DEBUG_SEARCH_PORT_WRAP)
+    virt_port_list_t* ports = vps_net;
+    printf( "virt_port_get_equivalent_by_name: Search port '%s'\n", name );
+    printf( " in virtual net: " );
+    while( ports != NULL ) {
+        debug_print_vport( ports->port );
+        printf(", ");
+        ports = ports->next;
+    }
+    printf("\n");
+#endif // DEBUG
     while( vps_net != NULL ) {
         if( ( strlen( name ) == strlen( vps_net->port->name ) )
                 && ( strcmp( name, vps_net->port->name ) == 0 ) ) {
             vp_net = vps_net->port;
+            /* if( vp_net->inst->type == INSTREC_SYNC ) break; */
             break;
         }
         vps_net = vps_net->next;

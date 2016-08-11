@@ -116,7 +116,8 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
             printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
             // merge copy synchronizers
-            cpsync_merge( port_l, port_r, g );
+            if( port_l->inst != port_r->inst )
+                cpsync_merge( port_l, port_r, g );
             res = true;
         }
         else if( are_port_modes_ok( port_l, port_r, ignore_class ) ) {
@@ -510,22 +511,20 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             if( check_prototype( port_list_net, w_attr->v_net, rec->name ) ) {
                 // create virtual port list of the prototyped net with instances
                 // of the real net
-                /* w_attr->v_net->ports = virt_ports_merge( &w_attr->g, */
-                /*         port_list_net, n_attr->v_net->ports ); */
-                /* check_connections_cp( rec->attr_wrap->v_net, false, */
-                /*         &rec->attr_wrap->g, true ); */
                 v_net = virt_net_create_struct(
-                        virt_ports_merge( &w_attr->g, port_list_net,
-                            n_attr->v_net->ports ),
+                        dgraph_merge_port_net( &w_attr->g, port_list_net,
+                                n_attr->v_net->ports ),
                         NULL, NULL, VNET_NET );
                 check_connections_cp( v_net, false, &w_attr->g, true );
+                v_net = virt_net_create_struct(
+                        dgraph_merge_port_wrap( &w_attr->g, port_list,
+                            v_net->ports ),
+                        NULL, NULL, VNET_NET );
                 rec->attr_wrap->v_net = v_net;
+                // cleanup net attr
                 virt_net_destroy_shallow( n_attr->v_net );
                 symrec_list_del( port_list_net );
                 free( n_attr );
-                /* rec->attr_wrap->v_net = check_connections_wrap( */
-                /*         virt_ports_merge( port_list_net, n_attr->v_net ), */
-                /*         virt_ports_copy_box( port_list, NULL ) ); */
                 // install the wrapper symbol in the scope of its declaration
                 res = ( void* )symrec_put( symtab, rec );
             }
@@ -662,7 +661,8 @@ bool check_single_mode_cp( igraph_t* g, int id )
 void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
         bool connect_sync )
 {
-    const char* name;
+    const char* name = port_l->name;
+    if( port_r->inst->type == INSTREC_SYNC ) name = port_r->name;
     virt_port_t *p_src, *p_dest;
     // set source and dest id
     if( ( ( port_l->inst->type == INSTREC_SYNC )
@@ -691,8 +691,6 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
     if( ( port_r->inst->type == INSTREC_BOX ) || connect_sync )
         port_r->state = VPORT_STATE_CONNECTED;
     // add edge to the graph and set attributes
-    name = p_src->name;
-    if( p_dest->inst->type == INSTREC_SYNC ) name = p_dest->name;
     dgraph_edge_add( g, p_src, p_dest, name );
 }
 

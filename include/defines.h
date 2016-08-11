@@ -20,6 +20,8 @@
 /* #define DEBUG_NET_GML */
 /* #define DEBUG_FLATTEN_GRAPH */
 /* #define DEBUG_SEARCH_PORT */
+/* #define DEBUG_SEARCH_PORT_WRAP */
+/* #define DEBUG_SEARCH_PORT_CHILD */
 /* #define DEBUG_LINK_DOT */
 #endif
 
