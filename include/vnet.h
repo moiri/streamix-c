@@ -42,9 +42,10 @@ enum virt_net_type_e
  */
 enum virt_port_state_e
 {
-    VPORT_STATE_DISABLED,   /**< port is disabled */
     VPORT_STATE_OPEN,       /**< port is ready to be connected */
-    VPORT_STATE_CONNECTED   /**< port is connected */
+    VPORT_STATE_CP_OPEN,    /**< port is already connected but is still open */
+    VPORT_STATE_CONNECTED,  /**< port is connected */
+    VPORT_STATE_DISABLED,   /**< port is disabled */
 };
 
 // STRUCTS --------------------------------------------------------------------

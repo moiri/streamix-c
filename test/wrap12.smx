@@ -1,5 +1,5 @@
 /**
- * Same as wrap6 but this time with multiple in- and outputs at the wrapper
+ * Same as wrap11 but this time with multiple in- and outputs at the wrapper
  * interface
  */
 
@@ -7,10 +7,10 @@ L1 = box L( out p1 )
 L2 = box L( out p2 )
 R1 = box R( in p3 )
 R2 = box R( in p4 )
-wrapper W( in p1, in p2, out p3, out p4 ) {
+wrapper W( in p1(a), in p2(a), out p3(b), out p4(b) ) {
     A = box A ( in a, out p_int )
     B = box B ( in p_int, out b )
     connect (A|A).(B|B)
-} net( up in a(p1, p2), down out b(p3, p4) )
+} net( up in a, down out b )
 
 connect (L1|L2).W.(R1|R2)

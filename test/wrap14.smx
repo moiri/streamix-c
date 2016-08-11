@@ -1,0 +1,13 @@
+/**
+ * Wrapper with multiple bypass connections on the wrapper
+ */
+
+L = box L( out l1, out l2, out l3 )
+R = box R( in r1, in r2, in r3 )
+wrapper W( in l1(a), in l2(x1), in l3(x2), out r1(b), out r2(x1), out r3(x2) ) {
+    A = box A ( in a, out p_int )
+    B = box B ( in p_int, out b )
+    connect A.B
+} net ( up in a, down out b )
+
+connect L.W.R

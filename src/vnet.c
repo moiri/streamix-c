@@ -319,7 +319,7 @@ virt_port_t* virt_port_get_equivalent( virt_net_t* v_net, virt_port_t* port,
     virt_port_list_t* ports = v_net->ports;
     while( ports != NULL ) {
         if( ( port->symb == ports->port->symb ) && ( all
-                    || ( ports->port->state != VPORT_STATE_CONNECTED ) ) ) {
+                    || ( ports->port->state <= VPORT_STATE_CP_OPEN ) ) ) {
 #if defined(DEBUG) || defined(DEBUG_SEARCH_PORT)
             printf( "Found port: " );
             debug_print_vport( ports->port  );
@@ -375,7 +375,8 @@ void debug_print_vport( virt_port_t* port )
 {
     if( port->state == VPORT_STATE_CONNECTED ) printf("+");
     else if( port->state == VPORT_STATE_DISABLED ) printf("!");
-    printf( "%s(%d)", port->inst->name, port->inst->id );
+    if( port->inst == NULL ) printf( "UNDEF" );
+    else printf( "%s(%d)", port->inst->name, port->inst->id );
     if( port->attr_class == PORT_CLASS_DOWN ) printf( "_" );
     else if( port->attr_class == PORT_CLASS_UP ) printf( "^" );
     else if( port->attr_class == PORT_CLASS_SIDE ) printf( "|" );

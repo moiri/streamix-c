@@ -515,11 +515,20 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                         dgraph_merge_port_net( &w_attr->g, port_list_net,
                                 n_attr->v_net->ports ),
                         NULL, NULL, VNET_NET );
+                /* printf(" wrap int vnet: "); */
+                /* debug_print_vports( v_net ); */
                 check_connections_cp( v_net, false, &w_attr->g, true );
+                /* printf(" wrap int cp vnet: "); */
+                /* debug_print_vports( v_net ); */
                 v_net = virt_net_create_struct(
                         dgraph_merge_port_wrap( &w_attr->g, port_list,
                             v_net->ports ),
                         NULL, NULL, VNET_NET );
+                /* printf(" wrap ext vnet: "); */
+                /* debug_print_vports( v_net ); */
+                check_connections_cp( v_net, false, &w_attr->g, true );
+                /* printf(" wrap ext cp vnet: "); */
+                /* debug_print_vports( v_net ); */
                 rec->attr_wrap->v_net = v_net;
                 // cleanup net attr
                 virt_net_destroy_shallow( n_attr->v_net );
@@ -711,14 +720,14 @@ instrec_t* cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
     // delete one copy synchronizer
     if( id_del == port1->inst->id ) {
         port1->state = VPORT_STATE_DISABLED;
-        port2->state = VPORT_STATE_CONNECTED;
+        port2->state = VPORT_STATE_CP_OPEN;
         res = port2->inst;
         virt_port_update_inst( port1, port2->inst );
         virt_port_append( v_net2, port1 );
         virt_net_destroy_shallow( v_net1 );
     }
     else {
-        port1->state = VPORT_STATE_CONNECTED;
+        port1->state = VPORT_STATE_CP_OPEN;
         port2->state = VPORT_STATE_DISABLED;
         res = port1->inst;
         virt_port_update_inst( port2, port1->inst );
