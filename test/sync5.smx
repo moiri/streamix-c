@@ -1,0 +1,9 @@
+/**
+ * A parallel merge of two copy synchronizers
+ */
+
+A = box A( out x )
+B = box B( in x )
+C = box C( in x )
+
+connect A.((B|B)|(C|C))

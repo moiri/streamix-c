@@ -374,6 +374,7 @@ void virt_port_update_inst( virt_port_t* port, instrec_t* inst )
 void debug_print_vport( virt_port_t* port )
 {
     if( port->state == VPORT_STATE_CONNECTED ) printf("+");
+    else if( port->state == VPORT_STATE_CP_OPEN ) printf("-");
     else if( port->state == VPORT_STATE_DISABLED ) printf("!");
     if( port->inst == NULL ) printf( "UNDEF" );
     else printf( "%s(%d)", port->inst->name, port->inst->id );

@@ -271,8 +271,8 @@ void check_connections( virt_net_t* v_net1, virt_net_t* v_net2, igraph_t* g )
     while( ports_l != NULL ) {
         ports_r = v_net2->ports;
         while( ports_r != NULL ) {
-            if( ( ports_l->port->state == VPORT_STATE_OPEN )
-                    && ( ports_r->port->state == VPORT_STATE_OPEN )
+            if( ( ports_l->port->state < VPORT_STATE_CONNECTED )
+                    && ( ports_r->port->state < VPORT_STATE_CONNECTED )
                     && are_port_names_ok( ports_l->port, ports_r->port ) ) {
                 res = check_connection( ports_l->port, ports_r->port, g,
                         true, false );
@@ -314,6 +314,10 @@ void check_connections_cp( virt_net_t* v_net, bool parallel, igraph_t* g,
         }
         ports1 = ports1->next;
     }
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+    printf( "check_connections_cp, updated v_net: " );
+    debug_print_vports( v_net );
+#endif // DEBUG
 }
 
 /******************************************************************************/
@@ -515,20 +519,12 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                         dgraph_merge_port_net( &w_attr->g, port_list_net,
                                 n_attr->v_net->ports ),
                         NULL, NULL, VNET_NET );
-                /* printf(" wrap int vnet: "); */
-                /* debug_print_vports( v_net ); */
                 check_connections_cp( v_net, false, &w_attr->g, true );
-                /* printf(" wrap int cp vnet: "); */
-                /* debug_print_vports( v_net ); */
                 v_net = virt_net_create_struct(
                         dgraph_merge_port_wrap( &w_attr->g, port_list,
                             v_net->ports ),
                         NULL, NULL, VNET_NET );
-                /* printf(" wrap ext vnet: "); */
-                /* debug_print_vports( v_net ); */
                 check_connections_cp( v_net, false, &w_attr->g, true );
-                /* printf(" wrap ext cp vnet: "); */
-                /* debug_print_vports( v_net ); */
                 rec->attr_wrap->v_net = v_net;
                 // cleanup net attr
                 virt_net_destroy_shallow( n_attr->v_net );
