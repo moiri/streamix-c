@@ -270,7 +270,7 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
 }
 
 /******************************************************************************/
-void dgraph_destroy( igraph_t* g )
+void dgraph_destroy_attr( igraph_t* g )
 {
     igraph_vs_t vs;
     igraph_vit_t vit;
@@ -284,7 +284,6 @@ void dgraph_destroy( igraph_t* g )
     }
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
-    igraph_destroy( g );
 }
 
 /******************************************************************************/

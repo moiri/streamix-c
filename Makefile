@@ -59,6 +59,7 @@ TEST_IN = smx
 TEST_SUSPENDED = sus
 TEST_OUT = res
 TEST_SOL = sol
+TEST_GML = gml
 TEST_PATH = test
 IN_FILE = cpa
 INPUT = $(TEST_PATH)/$(IN_FILE).$(TEST_IN)
@@ -163,6 +164,8 @@ run_test:
 	$(MAKE) -s graph
 	cp $(DOT_AST_FILE).pdf $(INPUT:.$(TEST_IN)=_ast.pdf)
 	cp $(DOT_P_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gp.pdf)
+	cp $(PROJECT).gml $(INPUT:.$(TEST_IN)=_$(TEST_GML).$(TEST_OUT))
+	@diff $(INPUT:.$(TEST_IN)=_$(TEST_GML).$(TEST_OUT)) $(INPUT:.$(TEST_IN)=_$(TEST_GML).$(TEST_SOL))
 	# cp $(DOT_N_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gn.pdf)
 
 run_test_all:
@@ -176,6 +179,8 @@ run_test_all:
 		$(MAKE) -s graph; \
 		cp $(DOT_AST_FILE).pdf $${file%.*}_ast.pdf; \
 		cp $(DOT_P_CON_FILE).pdf $${file%.*}_gp.pdf; \
+		cp $(PROJECT).gml $${file%.*}_$(TEST_GML).$(TEST_OUT); \
+		diff $${file%.*}_$(TEST_GML).$(TEST_OUT) $${file%.*}_$(TEST_GML).$(TEST_SOL) | tee -a $(TEST_PATH)/test.log; \
 		# cp $(DOT_N_CON_FILE).pdf $${file%.*}_gn.pdf; \
 	done
 	@printf "\nSuspended Tests:\n" | tee $(TEST_PATH)/test.log

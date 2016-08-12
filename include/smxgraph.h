@@ -14,6 +14,7 @@
 #include "vnet.h"
 #include "symtab.h"
 
+int dgraph_find_bp_port( igraph_vector_ptr_t*, const char* );
 /**
  *
  * @param g
@@ -50,11 +51,11 @@ void dgraph_append( igraph_t*, igraph_t*, bool );
 int dgraph_edge_add( igraph_t*, virt_port_t*, virt_port_t*, const char* );
 
 /**
- * @brief   destroy a graph and its vertex attributes
+ * @brief   destroy the vertex attributes of a graph
  *
- * @param g graph to be destroyed
+ * @param g graph where the attributes will be destroyed
  */
-void dgraph_destroy( igraph_t* );
+void dgraph_destroy_attr( igraph_t* );
 
 /**
  * @brief   Flatten a hierarchical graph

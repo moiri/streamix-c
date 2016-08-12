@@ -304,8 +304,10 @@ void check_connections_cp( virt_net_t* v_net, bool parallel, igraph_t* g,
             if( ( ports1->idx != ports2->idx )
                     && ( ports1->idx < new_idx ) && ( ports2->idx < new_idx )
                     /* && ( ports1->port->inst != ports2->port->inst ) */
-                    && ( ports1->port->state == VPORT_STATE_OPEN )
-                    && ( ports2->port->state == VPORT_STATE_OPEN )
+                    /* && ( ports1->port->state == VPORT_STATE_OPEN ) */
+                    /* && ( ports2->port->state == VPORT_STATE_OPEN ) */
+                    && ( ports1->port->state < VPORT_STATE_CONNECTED )
+                    && ( ports2->port->state < VPORT_STATE_CONNECTED )
                     && are_port_names_ok( ports1->port, ports2->port ) ) {
                 check_connection_cp( v_net, ports1->port, ports2->port, g,
                         parallel, ignore_class );
@@ -393,6 +395,7 @@ void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g )
     // cleanup
     igraph_destroy( &g_tmp );
     symrec_attr_destroy_net( n_attr );
+    dgraph_destroy_attr( g );
 }
 
 /******************************************************************************/
@@ -815,6 +818,7 @@ bool do_port_cnts_match( symrec_list_t* r_ports, virt_port_list_t* v_ports )
     }
 
     while( v_port_ptr != NULL  ) {
+        /* if( v_port_ptr->port->state < VPORT_STATE_CONNECTED ) v_count++; */
         if( v_port_ptr->port->state == VPORT_STATE_OPEN ) v_count++;
         v_port_ptr = v_port_ptr->next;
     }

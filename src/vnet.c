@@ -180,7 +180,7 @@ void virt_net_update_class( virt_net_t* v_net, port_class_t port_class )
     virt_port_list_t* list = v_net->ports;
     while( list != NULL ) {
         if( ( list->port->attr_class != PORT_CLASS_SIDE )
-                && ( list->port->state == VPORT_STATE_OPEN ) )
+                && ( list->port->state < VPORT_STATE_CONNECTED ) )
             list->port->attr_class = port_class;
         list = list->next;
     }
@@ -295,7 +295,8 @@ virt_port_list_t* virt_ports_copy_vnet( virt_port_list_t* ports,
     int idx = 0;
 
     while( ports != NULL ) {
-        if( !check_status || ( ports->port->state == VPORT_STATE_OPEN ) ) {
+        if( !check_status || ( ports->port->state < VPORT_STATE_CONNECTED ) ) {
+        /* if( !check_status || ( ports->port->state == VPORT_STATE_OPEN ) ) { */
             new_list = malloc( sizeof( virt_port_list_t ) );
             new_port = virt_port_create( ports->port->attr_class,
                     ports->port->attr_mode, inst, ports->port->name,

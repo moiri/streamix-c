@@ -47,6 +47,12 @@ int main( int argc, char **argv ) {
     igraph_empty( &g, 0, true );
     ast_flatten( ast );
     check_context( ast, &symtab, &g );
+    igraph_cattribute_remove_v( &g, INST_ATTR_INST );
+    igraph_cattribute_remove_v( &g, INST_ATTR_SYMB );
+    igraph_cattribute_remove_v( &g, INST_ATTR_GRAPH );
+    igraph_cattribute_remove_v( &g, INST_ATTR_VNET );
+    igraph_cattribute_remove_e( &g, PORT_ATTR_PDST );
+    igraph_cattribute_remove_e( &g, PORT_ATTR_PSRC );
     dest_gml = fopen( "streamix.gml", "w" );
     igraph_write_graph_gml( &g, dest_gml, NULL, "StreamixC" );
     fclose( dest_gml );
@@ -60,7 +66,7 @@ int main( int argc, char **argv ) {
 #endif // DOT_AST
 
     // cleanup
-    dgraph_destroy( &g );
+    igraph_destroy( &g );
     ast_destroy( ast );
     symrec_del_all( &symtab );
     yylex_destroy();

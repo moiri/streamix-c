@@ -85,7 +85,8 @@ void symrec_attr_destroy_net( attr_net_t* attr )
     if( ( attr->v_net != NULL ) && ( ( attr->v_net->type == VNET_SERIAL )
                 || ( attr->v_net->type ==  VNET_PARALLEL ) ) )
         virt_net_destroy_shallow( attr->v_net );
-    dgraph_destroy( &attr->g );
+    dgraph_destroy_attr( &attr->g );
+    igraph_destroy( &attr->g );
     free( attr );
 }
 
@@ -108,7 +109,8 @@ void symrec_attr_destroy_wrap( attr_wrap_t* attr )
 {
     symrec_list_del( attr->ports );
     virt_net_destroy( attr->v_net, true );
-    dgraph_destroy( &attr->g );
+    dgraph_destroy_attr( &attr->g );
+    igraph_destroy( &attr->g );
     free( attr );
 }
 
