@@ -1,3 +1,7 @@
+/**
+ * A net prototype with a non matching declaration
+ */
+
 A = box funcA(in a, out b)
 B = box funcB(in b, out c)
 X = box funcX(out a)

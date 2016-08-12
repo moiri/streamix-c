@@ -1,3 +1,7 @@
+/**
+ * A Prototype of a net without its definition
+ */
+
 X = box funcX(out a)
 Z = box funcY(in c)
 net Y(up in a, down out c)
