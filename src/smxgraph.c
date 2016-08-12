@@ -284,6 +284,13 @@ void dgraph_destroy_attr( igraph_t* g )
     }
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
+
+    dgraph_destroy_attr_v( g, INST_ATTR_INST );
+    dgraph_destroy_attr_v( g, INST_ATTR_SYMB );
+    dgraph_destroy_attr_v( g, INST_ATTR_GRAPH );
+    dgraph_destroy_attr_v( g, INST_ATTR_VNET );
+    dgraph_destroy_attr_e( g, PORT_ATTR_PDST );
+    dgraph_destroy_attr_e( g, PORT_ATTR_PSRC );
 }
 
 /******************************************************************************/
