@@ -1,26 +1,24 @@
+/**
+ * Test a hierarchical structure where wrappers are used inside wrappers
+ */
+
 A = box A ( out a1, out a2 )
 B = box B ( in b1, in b2 )
-wrapper C { in a1 {ca1}, in a2 {ca2}, out b1 {cb1}, out b2 {cb2} } {
-    link { this, CA }
-    link { this, CC }
-    link { this, CB }
-    link { this, CD }
+wrapper C ( in a1 (ca1), in a2 (ca2), out b1 (cb1), out b2 (cb2) ) {
 
     CA = box CA ( in ca1, out cb_int1 )
 
-    wrapper CB { in cb_int1 {cba}, out cb1 {cbc} } {
-        link { this, CBA }
-        link { this, CBB }
+    wrapper CB ( in cb_int1 (cba), out cb1 (cbc) ) {
         CBA = box CBA ( in cba, out cbb )
         CBB = box CBB ( in cbb, out cbc )
 
         connect CBA.CBB
-    }
+    } net ( up in cpa, down out cbc )
 
     CC = box CC ( in ca2, out cb_int2 )
     CD = box CD ( in cb_int2, out cb2 )
 
     connect CA.CB | CC.CD
 
-}
+} net ( up in ca1, up in ca2, down out cb1, down out cb2 )
 connect A.C.B
