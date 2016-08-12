@@ -109,7 +109,7 @@ graph
   [
     source 8
     target 1
-    label "p4"
+    label "p3"
   ]
   edge
   [
@@ -121,12 +121,12 @@ graph
   [
     source 0
     target 5
-    label "p1"
+    label "p2"
   ]
   edge
   [
     source 0
     target 5
-    label "p2"
+    label "p1"
   ]
 ]

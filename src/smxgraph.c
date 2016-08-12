@@ -244,7 +244,7 @@ void dgraph_append( igraph_t* g, igraph_t* g_tpl, bool deep )
         p_dest = dgraph_port_search_neighbour( g_tpl, g, id_edge,
                 inst_map[ id_to ]->id, PORT_ATTR_PDST );
         name = p_src->name;
-        if( p_dest->inst->type == INSTREC_SYNC ) name = p_dest->name;
+        if( p_dest->inst->type != INSTREC_SYNC ) name = p_dest->name;
         dgraph_edge_add( g, p_src, p_dest, name );
         IGRAPH_EIT_NEXT( eit );
     }
@@ -258,10 +258,10 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
         const char* name )
 {
     int id = igraph_ecount( g );
-#if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
+#if defined(DEBUG) || defined(DEBUG_CONNECT_GRAPH)
     printf( " add new edge %s(%d->%d)\n", name, p_src->inst->id,
             p_dest->inst->id );
-#endif // DEBUG_FLATTEN_GRAPH
+#endif // DEBUG
     igraph_add_edge( g, p_src->inst->id, p_dest->inst->id );
     igraph_cattribute_EAS_set( g, PORT_ATTR_LABEL, id, name );
     igraph_cattribute_EAN_set( g, PORT_ATTR_PSRC, id, ( uintptr_t )p_src );
@@ -504,9 +504,9 @@ int dgraph_vertex_add( igraph_t* g, const char* name )
     int id = igraph_vcount( g );
     igraph_add_vertices( g, 1, NULL );
     igraph_cattribute_VAS_set( g, INST_ATTR_LABEL, id, name );
-#if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
+#if defined(DEBUG) || defined(DEBUG_CONNECT_GRAPH)
     printf( "dgraph_vertex_add: '%s(%d)'\n", name, id );
-#endif // DEBUG_FLATTEN_GRAPH
+#endif // DEBUG
     return id;
 }
 

@@ -55,12 +55,12 @@ graph
   [
     source 0
     target 4
-    label "p1"
+    label "p2"
   ]
   edge
   [
     source 0
     target 4
-    label "p2"
+    label "p1"
   ]
 ]

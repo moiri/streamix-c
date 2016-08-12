@@ -670,7 +670,7 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
         bool connect_sync )
 {
     const char* name = port_l->name;
-    if( port_r->inst->type == INSTREC_SYNC ) name = port_r->name;
+    if( port_r->inst->type != INSTREC_SYNC ) name = port_r->name;
     virt_port_t *p_src, *p_dest;
     // set source and dest id
     if( ( ( port_l->inst->type == INSTREC_SYNC )
