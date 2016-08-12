@@ -223,7 +223,7 @@ void cpsync_merge_ports( virt_port_t*, virt_port_t*, instrec_t*, igraph_t* );
  * @param id    id of the synchronizer to check
  * @return      true if the sync was replaced, false if not
  */
-bool cpsync_reduce( igraph_t*, int );
+bool cpsync_reduce( igraph_t*, int, symrec_t* );
 
 /**
  * @brief   Print debug information of a port of a port record list

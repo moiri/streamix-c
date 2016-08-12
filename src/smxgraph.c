@@ -68,6 +68,8 @@ virt_port_list_t* dgraph_merge_port_wrap( igraph_t* g, symrec_list_t* sps_src,
                     bp_vnet = dgraph_vertex_add_sync( g, vp_new );
                     vp_new->symb = symrec_create( sps_int->rec->name, 0,
                             SYMREC_PORT, 0, 0 );
+                    igraph_cattribute_VAN_set( g, INST_ATTR_SYMB,
+                            bp_vnet->inst->id, ( uintptr_t )vp_new->symb );
                     igraph_vector_ptr_push_back( &bp_insts, bp_vnet->inst );
                     igraph_vector_ptr_push_back( &bp_symbs, vp_new->symb );
                 }

@@ -746,11 +746,12 @@ instrec_t* cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
 }
 
 /******************************************************************************/
-bool cpsync_reduce( igraph_t* g, int id )
+bool cpsync_reduce( igraph_t* g, int id, symrec_t* symb )
 {
     bool res = false;
-    virt_port_t *p_src, *p_dest, *p_from, *p_to, *p_sync;
+    virt_port_t *p_src, *p_dest, *p_from, *p_to;
     igraph_vector_t eids;
+    const char* name;
 
     igraph_vector_init( &eids, 0 );
     igraph_incident( g, &eids, id, IGRAPH_ALL );
@@ -767,15 +768,12 @@ bool cpsync_reduce( igraph_t* g, int id )
         p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
                 PORT_ATTR_PDST, VECTOR( eids )[ 1 ] );
         // get id of the non net end of the edge
-        if( p_dest->inst->id != id ) {
-            p_to = p_dest;
-            p_sync = p_src;
-        }
-        else {
-            p_from = p_src;
-            p_sync = p_dest;
-        }
-        dgraph_edge_add( g, p_from, p_to, p_sync->name );
+        if( p_dest->inst->id != id ) { p_to = p_dest; }
+        else { p_from = p_src; }
+        // set name
+        if( symb != NULL ) name = symb->name;
+        else name = p_from->name;
+        dgraph_edge_add( g, p_from, p_to, name );
         res = true;
     }
     igraph_vector_destroy( &eids );
@@ -948,6 +946,7 @@ void post_process( igraph_t* g )
     igraph_vit_t vit;
     igraph_vector_t dids;
     virt_net_t *v_net;
+    symrec_t* symb;
     int inst_id;
 
     vs = igraph_vss_all();
@@ -958,12 +957,14 @@ void post_process( igraph_t* g )
         inst_id = IGRAPH_VIT_GET( vit );
         v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
                 INST_ATTR_VNET, inst_id );
+        symb = ( symrec_t* )( uintptr_t )igraph_cattribute_VAN( g,
+                INST_ATTR_SYMB, inst_id );
         if( v_net->type == VNET_BOX ) {
             check_open_ports( v_net );
         }
         else if( v_net->type == VNET_SYNC ) {
             if( check_single_mode_cp( g, inst_id ) )
-                if( cpsync_reduce( g, inst_id ) ) {
+                if( cpsync_reduce( g, inst_id, symb ) ) {
                     igraph_vector_push_back( &dids, inst_id );
                     dgraph_vertex_destroy_attr( g, inst_id, true );
                 }
