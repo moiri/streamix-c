@@ -1,9 +1,12 @@
+/**
+ * Test a redefinition of boxes in a different scope
+ */
+
 A = box A( out a )
 B = box B( in a, out p )
-wrapper W{ in p{p_int} }{
-    link { this, A }
+wrapper W( in p(p_int) ){
     A = box A( in p_int, out b )
     B = box B( in b )
     connect A.B
-}
+} net( up in p_int )
 connect A.B.W

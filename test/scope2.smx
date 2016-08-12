@@ -1,10 +1,14 @@
+/**
+ * Test redefinition of boxes with the same name in a different scope
+ * Also use the wrapper name as a new box name inside the wrapper itself
+ */
+
 A = box A( out a )
 B = box B( in a, out p )
-wrapper W{ in p{ p_int } }{
-    link { this, A }
+wrapper W( in p( p_int ) ){
     A = box A( in p_int, out b )
     B = box B( in b, out c )
     W = box W( in c )
     connect A.B.W
-}
+} net ( up in p_int )
 connect A.B.W

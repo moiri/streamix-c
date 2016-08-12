@@ -1,14 +1,16 @@
+/**
+ * Similar to scope1 and scope2 but this time with tree hierarchical levels
+ */
+
 A = box A( out a )
 B = box B( in a, out p )
-wrapper W{ in p{ p_int } }{
-    link { this, A }
+wrapper W( in p( p_int ) ){
     A = box A( in p_int, out b )
     B = box B( in b, out c )
-    wrapper W{ in c{w} } {
-        link { this, W }
+    wrapper W( in c(w) ) {
         W = box W(in w)
         connect W|W
-    }
+    } net( up in w )
     connect A.B.W
-}
+} net( up in p_int )
 connect A.B.W
