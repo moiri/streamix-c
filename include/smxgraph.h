@@ -56,6 +56,8 @@ int dgraph_edge_add( igraph_t*, virt_port_t*, virt_port_t*, const char* );
  * @param g graph where the attributes will be destroyed
  */
 void dgraph_destroy_attr( igraph_t* );
+void dgraph_destroy_attr_v( igraph_t*, const char* );
+void dgraph_destroy_attr_e( igraph_t*, const char* );
 
 /**
  * @brief   Flatten a hierarchical graph
@@ -111,7 +113,7 @@ virt_port_t* dgraph_port_search_wrap( virt_net_t*, virt_port_t* );
  * @param name  name of the vertex to be added
  * @return      id of the added vertex
  */
-int dgraph_vertex_add( igraph_t*, const char* name );
+int dgraph_vertex_add( igraph_t*, const char* );
 
 /**
  * @brief   Add attributes to a vertex

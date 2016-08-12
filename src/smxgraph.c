@@ -287,6 +287,20 @@ void dgraph_destroy_attr( igraph_t* g )
 }
 
 /******************************************************************************/
+void dgraph_destroy_attr_e( igraph_t* g, const char* attr )
+{
+    if( igraph_cattribute_has_attr( g, IGRAPH_ATTRIBUTE_EDGE, attr ) )
+        igraph_cattribute_remove_e( g, attr );
+}
+
+/******************************************************************************/
+void dgraph_destroy_attr_v( igraph_t* g, const char* attr )
+{
+    if( igraph_cattribute_has_attr( g, IGRAPH_ATTRIBUTE_VERTEX, attr ) )
+        igraph_cattribute_remove_v( g, attr );
+}
+
+/******************************************************************************/
 void dgraph_flatten( igraph_t* g_new, igraph_t* g )
 {
     igraph_vs_t vs;
