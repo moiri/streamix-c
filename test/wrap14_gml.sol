@@ -35,6 +35,12 @@ graph
   ]
   edge
   [
+    source 3
+    target 1
+    label "r1"
+  ]
+  edge
+  [
     source 0
     target 2
     label "l1"
@@ -50,11 +56,5 @@ graph
     source 0
     target 1
     label "x1"
-  ]
-  edge
-  [
-    source 3
-    target 1
-    label "r1"
   ]
 ]

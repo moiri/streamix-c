@@ -35,14 +35,14 @@ graph
   ]
   edge
   [
-    source 0
-    target 2
-    label "p1"
-  ]
-  edge
-  [
     source 3
     target 1
     label "p2"
+  ]
+  edge
+  [
+    source 0
+    target 2
+    label "p1"
   ]
 ]

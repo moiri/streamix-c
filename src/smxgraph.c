@@ -88,7 +88,8 @@ virt_port_list_t* dgraph_merge_port_wrap( igraph_t* g, symrec_list_t* sps_src,
                 vp_new = virt_port_create( sps_src->rec->attr_port->collection,
                         sps_src->rec->attr_port->mode, vp_net->inst,
                         sps_src->rec->name, vp_net->symb );
-                check_connection( vp_new, vp_net, g, false, true );
+                // unknown direction, ignore class, modes have to be equal
+                check_connection( vp_new, vp_net, g, false, true, true );
                 /* vp_net->state = VPORT_STATE_CONNECTED; */
                 vps_new->port = vp_new;
                 vps_new->next = vps_last;
@@ -116,7 +117,8 @@ virt_port_list_t* dgraph_merge_port_wrap( igraph_t* g, symrec_list_t* sps_src,
                 // search for the port in the virtual net of the connection
                 vp_net = virt_port_get_equivalent_by_name( vps_net,
                         sps_int->rec->name );
-                check_connection( vp_new, vp_net, g, false, true );
+                // unknown direction, ignore class, modes have to be equal
+                check_connection( vp_new, vp_net, g, false, true, true );
                 sps_int = sps_int->next;
                 /* vp_net->state = VPORT_STATE_CONNECTED; */
             }
@@ -180,7 +182,8 @@ virt_port_list_t* dgraph_merge_port_net( igraph_t* g, symrec_list_t* sps_src,
                     vp_net->attr_mode, vp_net->inst, vp_net->name,
                     vp_net->symb );
             dgraph_vertex_add_sync( g, vp_new );
-            check_connection( vp_new, vp_net, g, false, true );
+            // unknown direction, ignore class, modes have to be equal
+            check_connection( vp_new, vp_net, g, false, true, true );
             vp_net = vp_new;
             sps_int = sps_src->rec->attr_port->ports_int;
             while( sps_int != NULL ) {
@@ -389,9 +392,11 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, symrec_t* symb,
                     port_net );
             // get open port with same symbol pointer from child graph
             port_net_new = dgraph_port_search_child( g_child, port_net, false );
+            port_net_new->name = port_net->name;
         }
         // connect this port to the matching port of the virtual net
-        check_connection( port_net_new, port, g_new, false, false );
+        // unknown direction, class matters, modes have to be different
+        check_connection( port_net_new, port, g_new, false, false, false );
         check_connection_cp( NULL, port_net_new, port, g_new, false, false );
         IGRAPH_EIT_NEXT( eit );
     }

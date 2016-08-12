@@ -96,7 +96,7 @@ bool are_port_modes_ok( virt_port_t* p1, virt_port_t* p2, bool equal )
 
 /******************************************************************************/
 bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
-        bool directed, bool ignore_class )
+        bool directed, bool ignore_class, bool mode_equal )
 {
     instrec_t *inst_l, *inst_r;
     bool res = false;
@@ -120,15 +120,17 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
                 cpsync_merge( port_l, port_r, g );
             res = true;
         }
-        else if( are_port_modes_ok( port_l, port_r, ignore_class ) ) {
+        else if( are_port_modes_ok( port_l, port_r, mode_equal ) ) {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
             // only change connected status if it is a regular connection and
             // not one invoked from the flatten net
             connect_ports( port_l, port_r, g, directed );
-            port_l->attr_class = PORT_CLASS_DOWN;
-            port_r->attr_class = PORT_CLASS_UP;
+            if( !ignore_class ) {
+                port_l->attr_class = PORT_CLASS_DOWN;
+                port_r->attr_class = PORT_CLASS_UP;
+            }
             res = true;
         }
         else {
@@ -274,8 +276,9 @@ void check_connections( virt_net_t* v_net1, virt_net_t* v_net2, igraph_t* g )
             if( ( ports_l->port->state < VPORT_STATE_CONNECTED )
                     && ( ports_r->port->state < VPORT_STATE_CONNECTED )
                     && are_port_names_ok( ports_l->port, ports_r->port ) ) {
+                // direction matters, class matters, modes have to be different
                 res = check_connection( ports_l->port, ports_r->port, g,
-                        true, false );
+                        true, false, false );
                 if( res ) break;
             }
             ports_r = ports_r->next;

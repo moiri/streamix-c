@@ -70,7 +70,7 @@ bool are_port_modes_ok( virt_port_t*, virt_port_t*, bool );
  * @param g         pointer to a initialized igraph object
  * @return          true if connection was ok, false if no connection
  */
-bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g, bool, bool );
+bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g, bool, bool, bool );
 
 /**
  * @brief   Connect two ports of copy synchronizers
