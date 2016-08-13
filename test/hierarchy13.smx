@@ -1,0 +1,19 @@
+/**
+ * Hierarchical wrapper structure where the right side of the wrappers is not
+ * connected until scope 0. With port renaming on the wrapper interface
+ */
+
+B = box B( in b )
+
+wrapper W1( out b(b1) ) {
+    wrapper W2( out b1(b2) ) {
+        wrapper W3( out b2(b3) ) {
+            A3 = box A3( out b3 )
+            connect A3
+        } net( down out b3 )
+        connect W3
+    } net( down out b2 )
+    connect W2
+} net( down out b1 )
+
+connect W1.B
