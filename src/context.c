@@ -539,8 +539,8 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                 /* symrec_list_del( port_list_net ); */
                 /* free( n_attr ); */
                 // install the wrapper symbol in the scope of its declaration
-                res = ( void* )symrec_put( symtab, rec );
             }
+            res = ( void* )symrec_put( symtab, rec );
 
             if( res == NULL ) {
                 symrec_attr_destroy_wrap( rec->attr_wrap );
