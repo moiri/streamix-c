@@ -18,48 +18,6 @@
 #include "utarray.h"
 
 /**
- * @brief   Checkes whether port names match
- *
- * @param p1    pointer the a port of a virtual net
- * @param p2    pointer the a port of a virtual net
- * @return      true if ports can connect, false if not
- */
-bool are_port_names_ok( virt_port_t*, virt_port_t* );
-
-/**
- * @brief   Checkes whether port classes for normal connections match
- *
- * @param p1        pointer the a port of a virtual net
- * @param p2        pointer the a port of a virtual net
- * @param directed  flag to indicate wheter the direction needs to be taken
- *                  into account
- * @return          true if ports can connect, false if not
- */
-bool are_port_classes_ok( virt_port_t*, virt_port_t*, bool );
-
-/**
- * @brief   Checkes port classes for copy synchronizer connections
- *
- * @param p1    pointer the a port of a virtual net
- * @param p2    pointer the a port of a virtual net
- * @param cpp   flag to indicate wheter copy synchronizer connections in
- *              parallel operators are checked
- * @return      true if ports can connect, false if not
- */
-bool are_port_cp_classes_ok( virt_port_t*, virt_port_t*, bool );
-
-/**
- * @brief    Checkes whether port modes match
- *
- * @param p1    pointer the a port of a virtual net
- * @param p2    pointer the a port of a virtual net
- * @param equal if set to true, the function checks wheter modes are equal
- *              if set to false, the function checks wheter modes are differnt
- * @return      true if ports can connect, false if not
- */
-bool are_port_modes_ok( virt_port_t*, virt_port_t*, bool );
-
-/**
  * @brief    check port connections of two ports
  *
  * Check the connection of two ports from virtual nets and connect them.

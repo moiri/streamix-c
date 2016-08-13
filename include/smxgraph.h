@@ -70,7 +70,7 @@ void dgraph_destroy_attr_e( igraph_t*, const char* );
  *              graph
  * @param g     The graph to be flattened. Use a deep copy of a net graph here
  */
-void dgraph_flatten( igraph_t*, igraph_t*, virt_net_t* );
+void dgraph_flatten( igraph_t*, igraph_t* );
 
 /**
  * @brief   Helper function to flatten the graph
@@ -104,7 +104,6 @@ virt_port_t* dgraph_port_search_neighbour( igraph_t*, igraph_t*, int, int,
  * @param port  port template to be found
  */
 virt_port_t* dgraph_port_search_child( igraph_t*, virt_port_t*, bool );
-virt_port_t* dgraph_port_search_wrap( virt_net_t*, virt_port_t* );
 
 /**
  * @brief   Add a vertex to a graph

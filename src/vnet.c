@@ -12,6 +12,89 @@
 #include "ast.h"
 
 /******************************************************************************/
+bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2 )
+{
+    // no, if port names do not match
+    if( strlen( p1->name ) != strlen( p2->name ) )
+        return false;
+    if( strcmp( p1->name, p2->name ) != 0 )
+        return false;
+    // we came through here, so all is good, names match
+    return true;
+}
+
+/******************************************************************************/
+bool are_port_classes_ok( virt_port_t* p1, virt_port_t* p2, bool directed )
+{
+    // normal undirected connections?
+    if( !directed ) {
+        // ok, if either of the ports has no class speciefied
+        if( ( p1->attr_class == PORT_CLASS_NONE )
+                || ( p2->attr_class == PORT_CLASS_NONE ) )
+            return true;
+        // ok if one port has class DOWN and one UP
+        if( ( p1->attr_class == PORT_CLASS_DOWN )
+                && ( p2->attr_class == PORT_CLASS_UP ) )
+            return true;
+        // ok if one port has class UP and one DOWN
+        if( ( p1->attr_class == PORT_CLASS_UP )
+                && ( p2->attr_class == PORT_CLASS_DOWN ) )
+            return true;
+        // we came through here so none of the conditions matched
+        return false;
+    }
+    // or normal directed connections?
+    else {
+        // no, if the left port is in another class than DS
+        if( ( p1->attr_class != PORT_CLASS_DOWN )
+                && ( p1->attr_class != PORT_CLASS_NONE ) )
+            return false;
+        // no, if the right port is in another class than US
+        if( ( p2->attr_class != PORT_CLASS_UP )
+                && ( p2->attr_class != PORT_CLASS_NONE ) )
+            return false;
+    }
+    // we came through here, so all is good, names match
+    return true;
+}
+
+/******************************************************************************/
+bool are_port_cp_classes_ok( virt_port_t* p1, virt_port_t* p2, bool cpp )
+{
+    // we are good if both ports have the same class
+    if( p1->attr_class == p2->attr_class )
+        return true;
+    // are we checking parallel combinators?
+    if( cpp ) {
+        // we are good if one port has no class and the other is not a side port
+        if( ( p1->attr_class != PORT_CLASS_SIDE )
+                && ( p2->attr_class == PORT_CLASS_NONE ) )
+            return true;
+        if( ( p1->attr_class == PORT_CLASS_NONE )
+                && ( p2->attr_class != PORT_CLASS_SIDE ) )
+            return true;
+    }
+    // we came through here so none of the conditions matched
+    return false;
+}
+
+/******************************************************************************/
+bool are_port_modes_ok( virt_port_t* p1, virt_port_t* p2, bool equal )
+{
+    // yes, we are checking whether modes are different and they are
+    if( !equal && ( p1->attr_mode != p2->attr_mode ) ) return true;
+    // yes, we are checking whether modes are equal and they are
+    if( equal && ( p1->attr_mode == p2->attr_mode ) ) return true;
+    // yes, if the left port is a copy synchronizer port
+    if( p1->attr_mode == PORT_MODE_BI ) return true;
+    // yes, if the right port is a copy synchronizer port
+    if( p2->attr_mode == PORT_MODE_BI ) return true;
+
+    // we came through here, so port modes are not compatible
+    return false;
+}
+
+/******************************************************************************/
 net_con_t* net_con_create( instrec_t* inst )
 {
     net_con_t* con = malloc( sizeof( net_con_t ) );
@@ -26,7 +109,7 @@ net_con_t* net_con_create( instrec_t* inst )
 virt_net_t* virt_net_create_box( symrec_t* rec, instrec_t* inst )
 {
     virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
-    v_net->ports = virt_ports_copy_symb( rec->attr_box->ports, v_net );
+    v_net->ports = virt_ports_copy_symb( rec->attr_box->ports, v_net, NULL );
     v_net->con = net_con_create( inst );
     v_net->inst = inst;
     v_net->type = VNET_BOX;
@@ -140,7 +223,8 @@ virt_net_t* virt_net_create_sync( instrec_t* inst, virt_port_t* port )
 virt_net_t* virt_net_create_wrap( symrec_t* symb, instrec_t* inst )
 {
     virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
-    v_net->ports = virt_ports_copy_symb( symb->attr_wrap->ports, v_net );
+    v_net->ports = virt_ports_copy_symb( symb->attr_wrap->ports, v_net,
+            symb->attr_wrap->v_net );
     v_net->con = net_con_create( inst );
     v_net->inst = inst;
     v_net->type = VNET_WRAP;
@@ -271,9 +355,10 @@ virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
 
 /******************************************************************************/
 virt_port_list_t* virt_ports_copy_symb( symrec_list_t* ports,
-        virt_net_t* v_net )
+        virt_net_t* v_net, virt_net_t* v_net_i )
 {
     virt_port_t* new_port = NULL;
+    virt_port_t* port_net = NULL;
     virt_port_list_t* list_last = NULL;
     virt_port_list_t* vports = NULL;
     int idx = 0;
@@ -283,6 +368,10 @@ virt_port_list_t* virt_ports_copy_symb( symrec_list_t* ports,
         new_port = virt_port_create( ports->rec->attr_port->collection,
                 ports->rec->attr_port->mode, v_net, ports->rec->name,
                 ports->rec );
+        if( v_net_i != NULL ) {
+            port_net = dgraph_port_search_wrap( v_net_i, new_port );
+            new_port->symb = port_net->symb;
+        }
         vports->port = new_port;
         vports->next = list_last;
         vports->idx = idx;
@@ -367,6 +456,34 @@ virt_port_t* virt_port_get_equivalent_by_name( virt_port_list_t* vps_net,
         vps_net = vps_net->next;
     }
     return vp_net;
+}
+
+/******************************************************************************/
+virt_port_t* dgraph_port_search_wrap( virt_net_t* v_net, virt_port_t* port )
+{
+    // => find a namesake in the net interface of the wrapper
+#if defined(DEBUG) || defined(DEBUG_SEARCH_PORT_WRAP)
+    printf( "dgrap_port_search_wrap: Search port " );
+    debug_print_vport( port );
+    printf( "\n in net interface of wrapper: " );
+    debug_print_vports( v_net );
+#endif // DEBUG
+    virt_port_t* port_net = NULL;
+    virt_port_list_t* ports = v_net->ports;
+    while( ports != NULL ) {
+        if( are_port_names_ok( ports->port, port )
+                && are_port_modes_ok( ports->port, port, true ) ) {
+            port_net = ports->port;
+#if defined(DEBUG) || defined(DEBUG_SEARCH_PORT_WRAP)
+            printf( "Found port: " );
+            debug_print_vport( ports->port  );
+            printf( "\n" );
+#endif // DEBUG
+            if( port_net->v_net->inst->type == INSTREC_SYNC ) break;
+        }
+        ports = ports->next;
+    }
+    return port_net;
 }
 
 /******************************************************************************/

@@ -96,6 +96,49 @@ struct virt_port_s
 };
 
 // FUNCTIONS ------------------------------------------------------------------
+
+/**
+ * @brief   Checkes whether port names match
+ *
+ * @param p1    pointer the a port of a virtual net
+ * @param p2    pointer the a port of a virtual net
+ * @return      true if ports can connect, false if not
+ */
+bool are_port_names_ok( virt_port_t*, virt_port_t* );
+
+/**
+ * @brief   Checkes whether port classes for normal connections match
+ *
+ * @param p1        pointer the a port of a virtual net
+ * @param p2        pointer the a port of a virtual net
+ * @param directed  flag to indicate wheter the direction needs to be taken
+ *                  into account
+ * @return          true if ports can connect, false if not
+ */
+bool are_port_classes_ok( virt_port_t*, virt_port_t*, bool );
+
+/**
+ * @brief   Checkes port classes for copy synchronizer connections
+ *
+ * @param p1    pointer the a port of a virtual net
+ * @param p2    pointer the a port of a virtual net
+ * @param cpp   flag to indicate wheter copy synchronizer connections in
+ *              parallel operators are checked
+ * @return      true if ports can connect, false if not
+ */
+bool are_port_cp_classes_ok( virt_port_t*, virt_port_t*, bool );
+
+/**
+ * @brief    Checkes whether port modes match
+ *
+ * @param p1    pointer the a port of a virtual net
+ * @param p2    pointer the a port of a virtual net
+ * @param equal if set to true, the function checks wheter modes are equal
+ *              if set to false, the function checks wheter modes are differnt
+ * @return      true if ports can connect, false if not
+ */
+bool are_port_modes_ok( virt_port_t*, virt_port_t*, bool );
+
 /**
  * @brief   Create a net connection structure initialised with one instance
  *
@@ -267,7 +310,8 @@ virt_port_t* virt_port_create( port_class_t, port_mode_t, virt_net_t*,
  * @param inst  a pointer to the instance the port belongs to
  * @return      pointer to the last element of the new list
  */
-virt_port_list_t* virt_ports_copy_symb( symrec_list_t*, virt_net_t* );
+virt_port_list_t* virt_ports_copy_symb( symrec_list_t*, virt_net_t*,
+        virt_net_t* );
 
 /**
  * @brief   Make a copy of the port list of a symbol record
@@ -297,6 +341,7 @@ virt_port_t* virt_port_get_equivalent( virt_net_t*, virt_port_t*, bool );
  *
  */
 virt_port_t* virt_port_get_equivalent_by_name( virt_port_list_t*, const char* );
+virt_port_t* dgraph_port_search_wrap( virt_net_t*, virt_port_t* );
 void virt_port_update_inst( virt_port_t*, virt_net_t* );
 
 /**

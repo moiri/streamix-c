@@ -12,89 +12,6 @@
 #include "smxerr.h"
 
 /******************************************************************************/
-bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2 )
-{
-    // no, if port names do not match
-    if( strlen( p1->name ) != strlen( p2->name ) )
-        return false;
-    if( strcmp( p1->name, p2->name ) != 0 )
-        return false;
-    // we came through here, so all is good, names match
-    return true;
-}
-
-/******************************************************************************/
-bool are_port_classes_ok( virt_port_t* p1, virt_port_t* p2, bool directed )
-{
-    // normal undirected connections?
-    if( !directed ) {
-        // ok, if either of the ports has no class speciefied
-        if( ( p1->attr_class == PORT_CLASS_NONE )
-                || ( p2->attr_class == PORT_CLASS_NONE ) )
-            return true;
-        // ok if one port has class DOWN and one UP
-        if( ( p1->attr_class == PORT_CLASS_DOWN )
-                && ( p2->attr_class == PORT_CLASS_UP ) )
-            return true;
-        // ok if one port has class UP and one DOWN
-        if( ( p1->attr_class == PORT_CLASS_UP )
-                && ( p2->attr_class == PORT_CLASS_DOWN ) )
-            return true;
-        // we came through here so none of the conditions matched
-        return false;
-    }
-    // or normal directed connections?
-    else {
-        // no, if the left port is in another class than DS
-        if( ( p1->attr_class != PORT_CLASS_DOWN )
-                && ( p1->attr_class != PORT_CLASS_NONE ) )
-            return false;
-        // no, if the right port is in another class than US
-        if( ( p2->attr_class != PORT_CLASS_UP )
-                && ( p2->attr_class != PORT_CLASS_NONE ) )
-            return false;
-    }
-    // we came through here, so all is good, names match
-    return true;
-}
-
-/******************************************************************************/
-bool are_port_cp_classes_ok( virt_port_t* p1, virt_port_t* p2, bool cpp )
-{
-    // we are good if both ports have the same class
-    if( p1->attr_class == p2->attr_class )
-        return true;
-    // are we checking parallel combinators?
-    if( cpp ) {
-        // we are good if one port has no class and the other is not a side port
-        if( ( p1->attr_class != PORT_CLASS_SIDE )
-                && ( p2->attr_class == PORT_CLASS_NONE ) )
-            return true;
-        if( ( p1->attr_class == PORT_CLASS_NONE )
-                && ( p2->attr_class != PORT_CLASS_SIDE ) )
-            return true;
-    }
-    // we came through here so none of the conditions matched
-    return false;
-}
-
-/******************************************************************************/
-bool are_port_modes_ok( virt_port_t* p1, virt_port_t* p2, bool equal )
-{
-    // yes, we are checking whether modes are different and they are
-    if( !equal && ( p1->attr_mode != p2->attr_mode ) ) return true;
-    // yes, we are checking whether modes are equal and they are
-    if( equal && ( p1->attr_mode == p2->attr_mode ) ) return true;
-    // yes, if the left port is a copy synchronizer port
-    if( p1->attr_mode == PORT_MODE_BI ) return true;
-    // yes, if the right port is a copy synchronizer port
-    if( p2->attr_mode == PORT_MODE_BI ) return true;
-
-    // we came through here, so port modes are not compatible
-    return false;
-}
-
-/******************************************************************************/
 bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
         bool directed, bool ignore_class, bool mode_equal )
 {
@@ -366,7 +283,7 @@ void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g )
     // flatten graph and detect open ports
     igraph_empty( &g_tmp, 0, IGRAPH_DIRECTED );
     dgraph_append( &g_tmp, &n_attr->g, true );
-    dgraph_flatten( g, &g_tmp, n_attr->v_net );
+    dgraph_flatten( g, &g_tmp );
     post_process( g );
 
     // cleanup

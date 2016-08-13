@@ -311,32 +311,12 @@ void dgraph_destroy_attr_v( igraph_t* g, const char* attr )
         igraph_cattribute_remove_v( g, attr );
 }
 
-void dgraph_update_portlist( virt_net_t* v_net_w, virt_net_t* v_net_p,
-        virt_net_t* v_net_n )
-{
-    virt_port_t *port_net;
-    virt_port_t *port_wrap;
-    virt_port_t *port_net_p;
-    virt_port_list_t* ports = v_net_w->ports;
-    while( ports != NULL ) {
-        port_wrap = ports->port;
-        port_net = dgraph_port_search_wrap( v_net_n, port_wrap );
-        port_wrap->symb = port_net->symb;
-        port_net_p = dgraph_port_search_wrap( v_net_p, port_wrap );
-        // if we cant find the port the parent net is no wrapper
-        if( port_net_p != NULL ) port_net_p->symb = port_net->symb;
-        ports = ports->next;
-    }
-}
-
 /******************************************************************************/
-void dgraph_flatten( igraph_t* g_new, igraph_t* g, virt_net_t* v_net_p )
+void dgraph_flatten( igraph_t* g_new, igraph_t* g )
 {
     igraph_vs_t vs;
     igraph_vit_t vit;
     virt_net_t* v_net_i;
-    virt_net_t* v_net_n;
-    symrec_t* symb;
     igraph_t g_child, g_in, *g_tmp;
     int inst_id;
 
@@ -346,8 +326,6 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g, virt_net_t* v_net_p )
     // iterate through all net instances of the graph
     while( !IGRAPH_VIT_END( vit ) ) {
         inst_id = IGRAPH_VIT_GET( vit );
-        symb = ( symrec_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
-                INST_ATTR_SYMB, inst_id );
         v_net_i = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
                 INST_ATTR_VNET, inst_id );
         if( ( v_net_i->type == VNET_NET ) || ( v_net_i->type == VNET_WRAP ) ) {
@@ -362,12 +340,7 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g, virt_net_t* v_net_p )
             igraph_empty( &g_child, 0, IGRAPH_DIRECTED );
             dgraph_append( &g_child, g_tmp, true );
             // recoursively flatten further net instances
-            if( v_net_i->type == VNET_WRAP ) v_net_n = symb->attr_wrap->v_net;
-            else v_net_n = symb->attr_net->v_net;
-            dgraph_flatten( g, &g_child, v_net_n );
-            if( v_net_i->type == VNET_WRAP )
-                dgraph_update_portlist( v_net_i, v_net_p,
-                        symb->attr_wrap->v_net );
+            dgraph_flatten( g, &g_child );
             dgraph_flatten_net( g, &g_child, v_net_i );
             dgraph_vertex_remove( g, v_net_i->inst->id );
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
@@ -417,8 +390,8 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, virt_net_t* v_net )
         else if( v_net->type == VNET_WRAP ) {
             // get open port with same symbol pointer from child graph
             port_net_new = dgraph_port_search_child( g_child, port_net, false );
-            port_net_new->name = port_net->name;
         }
+        port_net_new->name = port_net->name;
         // connect this port to the matching port of the virtual net
         // unknown direction, class matters, modes have to be different
         check_connection( port_net_new, port, g_new, false, false, false );
@@ -490,34 +463,6 @@ virt_port_t* dgraph_port_search_child( igraph_t* g, virt_port_t* port,
     igraph_vs_destroy( &vs );
 
     return port_res;
-}
-
-/******************************************************************************/
-virt_port_t* dgraph_port_search_wrap( virt_net_t* v_net, virt_port_t* port )
-{
-    // => find a namesake in the net interface of the wrapper
-#if defined(DEBUG) || defined(DEBUG_SEARCH_PORT_WRAP)
-    printf( "dgrap_port_search_wrap: Search port " );
-    debug_print_vport( port );
-    printf( "\n in net interface of wrapper: " );
-    debug_print_vports( v_net );
-#endif // DEBUG
-    virt_port_t* port_net = NULL;
-    virt_port_list_t* ports = v_net->ports;
-    while( ports != NULL ) {
-        if( are_port_names_ok( ports->port, port )
-                && are_port_modes_ok( ports->port, port, true ) ) {
-            port_net = ports->port;
-#if defined(DEBUG) || defined(DEBUG_SEARCH_PORT_WRAP)
-            printf( "Found port: " );
-            debug_print_vport( ports->port  );
-            printf( "\n" );
-#endif // DEBUG
-            if( port_net->v_net->inst->type == INSTREC_SYNC ) break;
-        }
-        ports = ports->next;
-    }
-    return port_net;
 }
 
 /******************************************************************************/
