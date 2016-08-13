@@ -6,12 +6,13 @@ DC = box DC(
     in abs,
     in cpa,
     side in dist,
-    out dc
+    up out dc,
+    down out dc
 )
 CPA = box CPA(
     sync {
         decoupled side in dist,
-        up in dc
+        in dc
     },
     out cpa,
     side in car_l_in,
@@ -22,25 +23,23 @@ CPA = box CPA(
 ABS = box ABS (
     in speed,
     in break_cmd,
-    down in dc,
+    in dc,
     out break_abs,
     out block,
     out abs
 )
 
-wrapper Car{
-        down out car_next {car_l_out},
-        up in car_next {car_r_in},
-        down in car_prev {car_l_in},
-        up out car_prev {car_r_out} }
+wrapper Car(
+        down out car_next( car_r_out ),
+        down in car_prev( car_r_in ),
+        up in car_next( car_l_in ),
+        up out car_prev(car_l_out) )
 {
-    link { this, CPA }
-    link { DS, DC, CPA }
-
     connect DS | ( RS | B | MB ).ABS.DC.CPA
-}
+} net( side in dist, side in car_l_in, side out car_l_out, side in car_r_in,
+        side out car_r_out )
 
 CarS = box CarS( out car_next, in car_prev )
 CarE = box CarE( in car_next, out car_prev )
 
-connect CarS.Car.Car.Car.CarE
+connect CarS.Car.CarE
