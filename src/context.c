@@ -366,7 +366,7 @@ void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g )
     // flatten graph and detect open ports
     igraph_empty( &g_tmp, 0, IGRAPH_DIRECTED );
     dgraph_append( &g_tmp, &n_attr->g, true );
-    dgraph_flatten( g, &g_tmp );
+    dgraph_flatten( g, &g_tmp, n_attr->v_net );
     post_process( g );
 
     // cleanup

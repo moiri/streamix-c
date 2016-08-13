@@ -70,7 +70,7 @@ void dgraph_destroy_attr_e( igraph_t*, const char* );
  *              graph
  * @param g     The graph to be flattened. Use a deep copy of a net graph here
  */
-void dgraph_flatten( igraph_t*, igraph_t* );
+void dgraph_flatten( igraph_t*, igraph_t*, virt_net_t* );
 
 /**
  * @brief   Helper function to flatten the graph

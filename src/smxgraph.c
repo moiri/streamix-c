@@ -311,23 +311,31 @@ void dgraph_destroy_attr_v( igraph_t* g, const char* attr )
         igraph_cattribute_remove_v( g, attr );
 }
 
-void dgraph_update_portlist( virt_net_t* v_net_w, virt_net_t* v_net_n )
+void dgraph_update_portlist( virt_net_t* v_net_w, virt_net_t* v_net_p,
+        virt_net_t* v_net_n )
 {
     virt_port_t *port_net;
+    virt_port_t *port_wrap;
+    virt_port_t *port_net_p;
     virt_port_list_t* ports = v_net_w->ports;
     while( ports != NULL ) {
-        port_net = dgraph_port_search_wrap( v_net_n, ports->port );
-        ports->port->symb = port_net->symb;
+        port_wrap = ports->port;
+        port_net = dgraph_port_search_wrap( v_net_n, port_wrap );
+        port_wrap->symb = port_net->symb;
+        port_net_p = dgraph_port_search_wrap( v_net_p, port_wrap );
+        // if we cant find the port the parent net is no wrapper
+        if( port_net_p != NULL ) port_net_p->symb = port_net->symb;
         ports = ports->next;
     }
 }
 
 /******************************************************************************/
-void dgraph_flatten( igraph_t* g_new, igraph_t* g )
+void dgraph_flatten( igraph_t* g_new, igraph_t* g, virt_net_t* v_net_p )
 {
     igraph_vs_t vs;
     igraph_vit_t vit;
-    virt_net_t* v_net;
+    virt_net_t* v_net_i;
+    virt_net_t* v_net_n;
     symrec_t* symb;
     igraph_t g_child, g_in, *g_tmp;
     int inst_id;
@@ -340,13 +348,13 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
         inst_id = IGRAPH_VIT_GET( vit );
         symb = ( symrec_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
                 INST_ATTR_SYMB, inst_id );
-        v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
+        v_net_i = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
                 INST_ATTR_VNET, inst_id );
-        if( ( v_net->type == VNET_NET ) || ( v_net->type == VNET_WRAP ) ) {
+        if( ( v_net_i->type == VNET_NET ) || ( v_net_i->type == VNET_WRAP ) ) {
         /* if( inst->type == INSTREC_NET ) { */
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
-            printf( "\nFlatten instance '%s(%d)' start\n", v_net->inst->name,
-                    v_net->inst->id );
+            printf( "\nFlatten instance '%s(%d)' start\n", v_net_i->inst->name,
+                    v_net_i->inst->id );
 #endif // DEBUG_FLATTEN_GRAPH
             g_tmp = ( igraph_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
                     INST_ATTR_GRAPH, inst_id );
@@ -354,11 +362,14 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
             igraph_empty( &g_child, 0, IGRAPH_DIRECTED );
             dgraph_append( &g_child, g_tmp, true );
             // recoursively flatten further net instances
-            dgraph_flatten( g, &g_child );
-            if( v_net->type == VNET_WRAP )
-                dgraph_update_portlist( v_net, symb->attr_wrap->v_net );
-            dgraph_flatten_net( g, &g_child, v_net );
-            dgraph_vertex_remove( g, v_net->inst->id );
+            if( v_net_i->type == VNET_WRAP ) v_net_n = symb->attr_wrap->v_net;
+            else v_net_n = symb->attr_net->v_net;
+            dgraph_flatten( g, &g_child, v_net_n );
+            if( v_net_i->type == VNET_WRAP )
+                dgraph_update_portlist( v_net_i, v_net_p,
+                        symb->attr_wrap->v_net );
+            dgraph_flatten_net( g, &g_child, v_net_i );
+            dgraph_vertex_remove( g, v_net_i->inst->id );
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
             printf( "Flatten instance end\n\n" );
 #endif // DEBUG_FLATTEN_GRAPH
