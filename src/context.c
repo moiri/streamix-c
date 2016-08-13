@@ -107,8 +107,8 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
     printf( " and " );
     debug_print_vport( port_r );
 #endif // DEBUG_CONNECT
-    inst_l = port_l->inst;
-    inst_r = port_r->inst;
+    inst_l = port_l->v_net->inst;
+    inst_r = port_r->v_net->inst;
     if( ignore_class || are_port_classes_ok( port_l, port_r, directed ) ) {
         if( ( inst_l->type == INSTREC_SYNC )
                 && ( inst_r->type == INSTREC_SYNC ) ) {
@@ -116,7 +116,7 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
             printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
             // merge copy synchronizers
-            if( port_l->inst != port_r->inst )
+            if( inst_l != inst_r )
                 cpsync_merge( port_l, port_r, g );
             res = true;
         }
@@ -139,8 +139,8 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
 #endif // DEBUG_CONNECT
             sprintf( error_msg, ERROR_BAD_MODE, ERR_ERROR, port_l->name,
                     inst_l->name, inst_l->id, inst_r->name, inst_r->id,
-                    port_r->inst->line );
-            report_yyerror( error_msg, port_r->inst->line );
+                    inst_r->line );
+            report_yyerror( error_msg, inst_r->line );
         }
     }
     else {
@@ -156,8 +156,8 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
         virt_port_t* port2, igraph_t* g, bool parallel, bool ignore_class )
 {
     virt_net_t* v_net_sync = NULL;
-    instrec_t* inst1 = port1->inst;
-    instrec_t* inst2 = port2->inst;
+    instrec_t* inst1 = port1->v_net->inst;
+    instrec_t* inst2 = port2->v_net->inst;
     virt_port_t* port_new;
     port_class_t port_class;
     port_mode_t port_mode;
@@ -194,14 +194,16 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
             if( port1->attr_mode == port2->attr_mode )
                 port_mode = port1->attr_mode;
             else port_mode = PORT_MODE_BI;
+            // TODO: to my future self: when ports still held instances, here
+            // port1->inst was passed. Now it gets the v_net of the cp_sync
             port_new = virt_port_add( v_net, port_class, port_mode,
-                    port1->inst, port1->name, port1->symb );
+                    port1->name, port1->symb );
             v_net_sync = dgraph_vertex_add_sync( g, port_new );
             if( ignore_class ) {
                 // cp syncs in a wrapper require e deep port copy
-                v_net_sync->ports->port = virt_port_create( port_new->attr_class,
-                        port_new->attr_mode, port_new->inst, port_new->name,
-                        port_new->symb );
+                v_net_sync->ports->port = virt_port_create(
+                        port_new->attr_class, port_new->attr_mode,
+                        port_new->v_net, port_new->name, port_new->symb );
             }
             connect_ports( port_new, port1, g, false );
             connect_ports( port_new, port2, g, false );
@@ -347,34 +349,6 @@ bool check_connection_wrap( symrec_t* pw, symrec_t* pn,
 }
 
 /******************************************************************************/
-virt_net_t* check_connections_wrap( virt_port_list_t* ports_n,
-        virt_port_list_t* ports_w )
-{
-    virt_port_list_t* ports_tmp = ports_n;
-    /* virt_net_t* v_net_n = symb->attr_wrap->v_net; */
-    /* virt_port_list_t* ports_w = v_net_w->ports; */
-    /* virt_port_list_t* ports_n = v_net_n->ports; */
-    // create a new empty virtual net
-    virt_net_t* v_net = virt_net_create_struct( NULL, NULL, NULL, VNET_NET );
-    // create cp sync for ports of the same name
-    // connect ports of the same name and same mode
-    while( ports_w != NULL ) {
-        ports_n = ports_tmp;
-        while( ports_n != NULL ) {
-            if( are_port_names_ok( ports_w->port, ports_n->port )
-                    && are_port_modes_ok( ports_w->port, ports_n->port, true ) )
-                virt_port_add( v_net, ports_n->port->attr_class,
-                        ports_n->port->attr_mode, ports_n->port->inst,
-                        ports_w->port->name, ports_n->port->symb );
-
-            ports_n = ports_n->next;
-        }
-        ports_w = ports_w->next;
-    }
-    return v_net;
-}
-
-/******************************************************************************/
 void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g )
 {
     UT_array* scope_stack = NULL; // stack to handle the scope
@@ -417,6 +391,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
     symrec_list_t* port_list = NULL;
     symrec_list_t* port_list_net = NULL;
     virt_net_t* v_net;
+    virt_port_list_t* v_ports;
     void* res = NULL;
     static int _scope = 0;
     igraph_t g_net;
@@ -521,15 +496,16 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             if( check_prototype( port_list_net, w_attr->v_net, rec->name ) ) {
                 // create virtual port list of the prototyped net with instances
                 // of the real net
-                v_net = virt_net_create_struct(
-                        dgraph_merge_port_net( &w_attr->g, port_list_net,
-                                n_attr->v_net->ports ),
-                        NULL, NULL, VNET_NET );
+                v_net = malloc( sizeof( virt_net_t ) );
+                v_net->type = VNET_NET;
+                v_net->inst = NULL;
+                v_net->con = NULL;
+                v_ports = dgraph_merge_port_net( &w_attr->g, port_list_net,
+                                n_attr->v_net->ports );
+                v_net->ports = v_ports;
                 check_connections_cp( v_net, false, &w_attr->g, true );
-                v_net = virt_net_create_struct(
-                        dgraph_merge_port_wrap( &w_attr->g, port_list,
-                            v_net->ports ),
-                        NULL, NULL, VNET_NET );
+                v_net->ports = dgraph_merge_port_wrap( &w_attr->g, port_list,
+                            v_ports ),
                 check_connections_cp( v_net, false, &w_attr->g, true );
                 rec->attr_wrap->v_net = v_net;
                 // cleanup net attr
@@ -675,21 +651,23 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
         bool connect_sync )
 {
     const char* name = port_l->name;
-    if( port_r->inst->type != INSTREC_SYNC ) name = port_r->name;
+    instrec_type_t inst_type_l = port_l->v_net->inst->type;
+    instrec_type_t inst_type_r = port_r->v_net->inst->type;
+    if( inst_type_r != INSTREC_SYNC ) name = port_r->name;
     virt_port_t *p_src, *p_dest;
     // set source and dest id
-    if( ( ( port_l->inst->type == INSTREC_SYNC )
+    if( ( ( inst_type_l == INSTREC_SYNC )
                 && ( port_r->attr_mode == PORT_MODE_OUT ) )
-            || ( ( port_r->inst->type == INSTREC_SYNC )
+            || ( ( inst_type_r == INSTREC_SYNC )
                 && ( port_l->attr_mode == PORT_MODE_IN ) )
             || ( ( port_l->attr_mode == PORT_MODE_IN )
                 && ( port_r->attr_mode == PORT_MODE_OUT ) ) ) {
         p_dest = port_l;
         p_src = port_r;
     }
-    else if( ( ( port_l->inst->type == INSTREC_SYNC )
+    else if( ( ( inst_type_l == INSTREC_SYNC )
                 && ( port_r->attr_mode == PORT_MODE_IN ) )
-            || ( ( port_r->inst->type == INSTREC_SYNC )
+            || ( ( inst_type_r == INSTREC_SYNC )
                 && ( port_l->attr_mode == PORT_MODE_OUT ) )
             || ( ( port_l->attr_mode == PORT_MODE_OUT )
                 && ( port_r->attr_mode == PORT_MODE_IN ) ) ) {
@@ -699,42 +677,37 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
     else return;
 
     // set port state
-    if( ( port_l->inst->type == INSTREC_BOX ) || connect_sync )
+    if( ( inst_type_l == INSTREC_BOX ) || connect_sync )
         port_l->state = VPORT_STATE_CONNECTED;
-    if( ( port_r->inst->type == INSTREC_BOX ) || connect_sync )
+    if( ( inst_type_r == INSTREC_BOX ) || connect_sync )
         port_r->state = VPORT_STATE_CONNECTED;
     // add edge to the graph and set attributes
     dgraph_edge_add( g, p_src, p_dest, name );
 }
 
 /******************************************************************************/
-instrec_t* cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
+void cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
 {
     int id_del;
-    instrec_t *res;
-    virt_net_t* v_net1 = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
-            INST_ATTR_VNET, port1->inst->id );
-    virt_net_t* v_net2 = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
-            INST_ATTR_VNET, port2->inst->id );
+    virt_net_t *v_net1 = port1->v_net;
+    virt_net_t *v_net2 = port2->v_net;
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-    printf( "Merge %s(%d) and %s(%d)\n", port1->inst->name, port1->inst->id,
-            port2->inst->name, port2->inst->id );
+    printf( "Merge %s(%d) and %s(%d)\n", inst1->name, inst1->id,
+            inst2->name, inst2->id );
 #endif // DEBUG_CONNECT
-    id_del = dgraph_vertex_merge( g, port1->inst->id, port2->inst->id );
+    id_del = dgraph_vertex_merge( g, v_net1->inst->id, v_net2->inst->id );
     // delete one copy synchronizer
-    if( id_del == port1->inst->id ) {
+    if( id_del == v_net1->inst->id ) {
         port1->state = VPORT_STATE_DISABLED;
         port2->state = VPORT_STATE_CP_OPEN;
-        res = port2->inst;
-        virt_port_update_inst( port1, port2->inst );
+        virt_port_update_inst( port1, v_net2 );
         virt_port_append( v_net2, port1 );
         virt_net_destroy_shallow( v_net1 );
     }
     else {
         port1->state = VPORT_STATE_CP_OPEN;
         port2->state = VPORT_STATE_DISABLED;
-        res = port1->inst;
-        virt_port_update_inst( port2, port1->inst );
+        virt_port_update_inst( port2, v_net1 );
         virt_port_append( v_net1, port2 );
         virt_net_destroy_shallow( v_net2 );
     }
@@ -743,8 +716,6 @@ instrec_t* cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
 /* #endif // DEBUG_CONNECT */
     // adjust all ids starting from the id of the deleted record
     dgraph_vertex_update_ids( g, id_del );
-
-    return res;
 }
 
 /******************************************************************************/
@@ -763,14 +734,14 @@ bool cpsync_reduce( igraph_t* g, int id, symrec_t* symb )
         p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
                 PORT_ATTR_PDST, VECTOR( eids )[ 0 ] );
         // get id of the non net end of the edge
-        if( p_dest->inst->id != id ) p_to = p_dest;
+        if( p_dest->v_net->inst->id != id ) p_to = p_dest;
         else p_from = p_src;
         p_src = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
                 PORT_ATTR_PSRC, VECTOR( eids )[ 1 ] );
         p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
                 PORT_ATTR_PDST, VECTOR( eids )[ 1 ] );
         // get id of the non net end of the edge
-        if( p_dest->inst->id != id ) { p_to = p_dest; }
+        if( p_dest->v_net->inst->id != id ) { p_to = p_dest; }
         else { p_from = p_src; }
         // set name
         if( symb != NULL ) name = symb->name;

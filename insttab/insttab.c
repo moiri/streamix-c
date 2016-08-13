@@ -33,7 +33,8 @@ instrec_t* instrec_create( char* name, int id, int line, instrec_type_t type )
 void instrec_destroy( instrec_t* rec )
 {
 #if defined(DEBUG) || defined(DEBUG_INST)
-    printf( "instrec_destroy: delete instance %s(%d)\n", rec->name, rec->id );
+    printf( "instrec_destroy: delete instance %s(%p,%d)\n", rec->name, rec,
+            rec->id );
 #endif // DEBUG
     free( rec->name );
     free( rec );

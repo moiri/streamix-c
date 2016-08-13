@@ -126,7 +126,7 @@ int dgraph_vertex_add( igraph_t*, const char* );
  * @param v_net pointer to the virtual net or NULL
  * @param g_net pointer to teh graph or NULL
  */
-void dgraph_vertex_add_attr( igraph_t*, int, const char*, symrec_t*, instrec_t*,
+void dgraph_vertex_add_attr( igraph_t*, int, const char*, symrec_t*,
         virt_net_t*, igraph_t* );
 
 /**

@@ -87,7 +87,7 @@ struct virt_port_list_s
  */
 struct virt_port_s
 {
-    instrec_t*          inst;       /**< pointer to net instance */
+    virt_net_t*         v_net;      /**< pointer to net instance */
     symrec_t*           symb;       /**< pointer to the port symbol */
     const char*         name;       /**< pointer to the name (not allocated) */
     int                 attr_class; /**< updated class */
@@ -168,8 +168,7 @@ virt_net_t* virt_net_create_serial( virt_net_t*, virt_net_t* );
  * @param type  type of the virtual net to be created
  * @return      pointer to the newly created virtual net
  */
-virt_net_t* virt_net_create_struct( virt_port_list_t*, net_con_t*,
-        instrec_t*, virt_net_type_t );
+virt_net_t* virt_net_create_struct( net_con_t*, instrec_t*, virt_net_type_t );
 
 /**
  * @breif   Create a virtual net of a copy synchronizer
@@ -224,7 +223,7 @@ void virt_net_update_class( virt_net_t*, port_class_t );
  * @param symb          a pointer to the symbol of the port
  * @return              a pointer to the newly created port
  */
-virt_port_t* virt_port_add( virt_net_t*, port_class_t, port_mode_t, instrec_t*,
+virt_port_t* virt_port_add( virt_net_t*, port_class_t, port_mode_t,
         const char*, symrec_t* );
 
 /**
@@ -246,7 +245,7 @@ void virt_port_append( virt_net_t*, virt_port_t* );
  * @return          a pointer to the new port list
  */
 virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t*,
-        instrec_t* );
+        virt_net_t* );
 
 /**
  * @brief   Create a new virtual port
@@ -258,7 +257,7 @@ virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t*,
  * @param symb          a pointer to the symbol of the port
  * @return              a pointer to the newly created port
  */
-virt_port_t* virt_port_create( port_class_t, port_mode_t, instrec_t*,
+virt_port_t* virt_port_create( port_class_t, port_mode_t, virt_net_t*,
         const char*, symrec_t* );
 
 /**
@@ -268,7 +267,7 @@ virt_port_t* virt_port_create( port_class_t, port_mode_t, instrec_t*,
  * @param inst  a pointer to the instance the port belongs to
  * @return      pointer to the last element of the new list
  */
-virt_port_list_t* virt_ports_copy_symb( symrec_list_t*, instrec_t* );
+virt_port_list_t* virt_ports_copy_symb( symrec_list_t*, virt_net_t* );
 
 /**
  * @brief   Make a copy of the port list of a symbol record
@@ -281,7 +280,7 @@ virt_port_list_t* virt_ports_copy_symb( symrec_list_t*, instrec_t* );
  *                      if false the port status is set to PORT_STATE_OPEN
  * @return              pointer to the last element of the new list
  */
-virt_port_list_t* virt_ports_copy_vnet( virt_port_list_t*, instrec_t*, bool,
+virt_port_list_t* virt_ports_copy_vnet( virt_port_list_t*, virt_net_t*, bool,
         bool );
 
 /**
@@ -298,7 +297,7 @@ virt_port_t* virt_port_get_equivalent( virt_net_t*, virt_port_t*, bool );
  *
  */
 virt_port_t* virt_port_get_equivalent_by_name( virt_port_list_t*, const char* );
-void virt_port_update_inst( virt_port_t*, instrec_t* );
+void virt_port_update_inst( virt_port_t*, virt_net_t* );
 
 /**
  * @brief   Print debug information of a port of a virtual net

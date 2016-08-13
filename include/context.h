@@ -204,7 +204,7 @@ void connect_ports( virt_port_t*, virt_port_t*, igraph_t*, bool );
  * @param g     pointer to a initialized igraph object
  * @return      pointer to the merged copy synchronizer
  */
-instrec_t* cpsync_merge( virt_port_t*, virt_port_t*, igraph_t* );
+void cpsync_merge( virt_port_t*, virt_port_t*, igraph_t* );
 
 /**
  * @brief   update ports of a virtual net after merging two copy synchrpnizers
