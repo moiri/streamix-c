@@ -2,21 +2,21 @@
  * Test a hierarchical structure where wrappers are used inside wrappers
  */
 
-A = box A ( out a1, out a2 )
-B = box B ( in b1, in b2 )
-wrapper C ( in a1 (ca1), in a2 (ca2), out b1 (cb1), out b2 (cb2) ) {
+A = box A( out a1, out a2 )
+B = box B( in b1, in b2 )
+wrapper C( in a1(ca1), in a2(ca2), out b1(cb1), out b2(cb2) ) {
 
-    CA = box CA ( in ca1, out cb_int1 )
+    CA = box CA( in ca1, out cb_int1 )
 
-    wrapper CB ( in cb_int1 (cba), out cb1 (cbc) ) {
-        CBA = box CBA ( in cba, out cbb )
-        CBB = box CBB ( in cbb, out cbc )
+    wrapper CB( in cb_int1(cba), out cb1(cbc) ) {
+        CBA = box CBA( in cba, out cbb )
+        CBB = box CBB( in cbb, out cbc )
 
         connect CBA.CBB
-    } net ( up in cba, down out cbc )
+    } net( up in cba, down out cbc )
 
-    CC = box CC ( in ca2, out cb_int2 )
-    CD = box CD ( in cb_int2, out cb2 )
+    CC = box CC( in ca2, out cb_int2 )
+    CD = box CD( in cb_int2, out cb2 )
 
     connect CA.CB | CC.CD
 
