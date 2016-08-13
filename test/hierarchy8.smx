@@ -1,0 +1,19 @@
+/**
+ * Hierarchical wrapper structure with serial connections, with port renaming
+ * on the wrapper interface
+ */
+
+A = box A( out a )
+
+wrapper W1( in a(a_int) ) {
+    A11 = box A1( up in a_int, down out b )
+    A12 = box A1( up in b, down out c )
+    wrapper W2( in c(c_int) ) {
+        A21 = box A2( in c_int, out d )
+        A22 = box A2( in d )
+        connect A21.A22
+    } net( up in c_int )
+    connect A11.A12.W2
+} net( up in a_int )
+
+connect A.W1
