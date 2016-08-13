@@ -82,7 +82,7 @@ void dgraph_flatten( igraph_t*, igraph_t* );
  * @param g_child   graph of the net instance
  * @param net_id    id of the net instance
  */
-void dgraph_flatten_net( igraph_t*, igraph_t*, symrec_t*, instrec_t* );
+void dgraph_flatten_net( igraph_t*, igraph_t*, symrec_t*, virt_net_t* );
 
 /**
  * @brief   Search an equivalent port in a similar virtual net

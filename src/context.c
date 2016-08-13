@@ -533,9 +533,11 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                 check_connections_cp( v_net, false, &w_attr->g, true );
                 rec->attr_wrap->v_net = v_net;
                 // cleanup net attr
-                virt_net_destroy_shallow( n_attr->v_net );
-                symrec_list_del( port_list_net );
-                free( n_attr );
+                // THIS IS COMMENTED BECAUSE OF AN ERROR WITH WRAPPERS HOLDING
+                // ONLY ONE BOX
+                /* virt_net_destroy_shallow( n_attr->v_net ); */
+                /* symrec_list_del( port_list_net ); */
+                /* free( n_attr ); */
                 // install the wrapper symbol in the scope of its declaration
                 res = ( void* )symrec_put( symtab, rec );
             }

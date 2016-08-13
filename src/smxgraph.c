@@ -317,7 +317,7 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
 {
     igraph_vs_t vs;
     igraph_vit_t vit;
-    instrec_t *inst;
+    virt_net_t* v_net;
     symrec_t* symb;
     igraph_t g_child, g_in, *g_tmp;
     int inst_id;
@@ -328,14 +328,15 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
     // iterate through all net instances of the graph
     while( !IGRAPH_VIT_END( vit ) ) {
         inst_id = IGRAPH_VIT_GET( vit );
-        inst = ( instrec_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
-                INST_ATTR_INST, inst_id );
         symb = ( symrec_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
                 INST_ATTR_SYMB, inst_id );
-        if( ( inst->type == INSTREC_NET ) || ( inst->type == INSTREC_WRAP ) ) {
+        v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
+                INST_ATTR_VNET, inst_id );
+        if( ( v_net->type == VNET_NET ) || ( v_net->type == VNET_WRAP ) ) {
         /* if( inst->type == INSTREC_NET ) { */
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
-            printf( "Flatten instance '%s(%d)'\n", inst->name, inst->id );
+            printf( "\nFlatten instance '%s(%d)' start\n", v_net->inst->name,
+                    v_net->inst->id );
 #endif // DEBUG_FLATTEN_GRAPH
             g_tmp = ( igraph_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
                     INST_ATTR_GRAPH, inst_id );
@@ -344,7 +345,10 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
             dgraph_append( &g_child, g_tmp, true );
             // recoursively flatten further net instances
             dgraph_flatten( g, &g_child );
-            dgraph_flatten_net( g, &g_child, symb, inst );
+            dgraph_flatten_net( g, &g_child, symb, v_net );
+#if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
+            printf( "Flatten instance end\n\n" );
+#endif // DEBUG_FLATTEN_GRAPH
             igraph_destroy( &g_child );
         }
         IGRAPH_VIT_NEXT( vit );
@@ -360,13 +364,13 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
 
 /******************************************************************************/
 void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, symrec_t* symb,
-        instrec_t* inst )
+        virt_net_t* v_net )
 {
     virt_port_t *p_src, *p_dest, *port, *port_net, *port_net_new;
     igraph_vs_t vs;
     igraph_es_t es;
     igraph_eit_t eit;
-    int net_id = inst->id;
+    int net_id = v_net->inst->id;
 
     // get all ports connecting to the net
     igraph_es_incident( &es, net_id, IGRAPH_ALL );
@@ -384,11 +388,11 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, symrec_t* symb,
             port = p_dest;
             port_net = p_src;
         }
-        if( inst->type == INSTREC_NET ) {
+        if( v_net->type == VNET_NET ) {
             // get open port with same symbol pointer from child graph
             port_net_new = dgraph_port_search_child( g_child, port_net, true );
         }
-        else if( inst->type == INSTREC_WRAP ) {
+        else if( v_net->type == VNET_WRAP ) {
             // get port from net of the wrapper
             port_net = dgraph_port_search_wrap( symb->attr_wrap->v_net,
                     port_net );

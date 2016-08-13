@@ -1,0 +1,11 @@
+/**
+ * A simple wrapper consisting of only one box
+ */
+
+A = box A( out a )
+wrapper W( in a ) {
+    A1 = box A1( in a )
+    connect A1
+} net( up in a )
+
+connect A.W
