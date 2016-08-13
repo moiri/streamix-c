@@ -1,0 +1,14 @@
+/**
+ * Wrapper with rerouting from side ports to up and down stream with external
+ * names taht are equal
+ */
+
+A = box A( down out a )
+B = box B( up in a )
+C = box C( side in x1, side out x2 )
+
+wrapper W( up in a(x1), down out a(x2) ) {
+    connect C
+} net( side in x1, side out x2 )
+
+connect A.W.B
