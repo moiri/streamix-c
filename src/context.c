@@ -692,8 +692,8 @@ void cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
     virt_net_t *v_net1 = port1->v_net;
     virt_net_t *v_net2 = port2->v_net;
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-    printf( "Merge %s(%d) and %s(%d)\n", inst1->name, inst1->id,
-            inst2->name, inst2->id );
+    printf( "Merge %s(%d) and %s(%d)\n", v_net1->inst->name, v_net1->inst->id,
+            v_net2->inst->name, v_net2->inst->id );
 #endif // DEBUG_CONNECT
     id_del = dgraph_vertex_merge( g, v_net1->inst->id, v_net2->inst->id );
     // delete one copy synchronizer

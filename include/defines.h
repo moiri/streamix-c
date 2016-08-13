@@ -13,6 +13,7 @@
 /* #define DEBUG */
 /* #define DEBUG_INST */
 /* #define DEBUG_SYMB */
+/* #define DEBUG_VNET */
 /* #define DEBUG_CONNECT */
 /* #define DEBUG_CONNECT_GRAPH */
 /* #define DEBUG_CONNECT_MISSING */

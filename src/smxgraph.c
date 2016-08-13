@@ -311,6 +311,17 @@ void dgraph_destroy_attr_v( igraph_t* g, const char* attr )
         igraph_cattribute_remove_v( g, attr );
 }
 
+void dgraph_update_portlist( virt_net_t* v_net_w, virt_net_t* v_net_n )
+{
+    virt_port_t *port_net;
+    virt_port_list_t* ports = v_net_w->ports;
+    while( ports != NULL ) {
+        port_net = dgraph_port_search_wrap( v_net_n, ports->port );
+        ports->port->symb = port_net->symb;
+        ports = ports->next;
+    }
+}
+
 /******************************************************************************/
 void dgraph_flatten( igraph_t* g_new, igraph_t* g )
 {
@@ -344,7 +355,10 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
             dgraph_append( &g_child, g_tmp, true );
             // recoursively flatten further net instances
             dgraph_flatten( g, &g_child );
-            dgraph_flatten_net( g, &g_child, symb, v_net );
+            if( v_net->type == VNET_WRAP )
+                dgraph_update_portlist( v_net, symb->attr_wrap->v_net );
+            dgraph_flatten_net( g, &g_child, v_net );
+            dgraph_vertex_remove( g, v_net->inst->id );
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
             printf( "Flatten instance end\n\n" );
 #endif // DEBUG_FLATTEN_GRAPH
@@ -362,11 +376,9 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
 }
 
 /******************************************************************************/
-void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, symrec_t* symb,
-        virt_net_t* v_net )
+void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, virt_net_t* v_net )
 {
     virt_port_t *p_src, *p_dest, *port, *port_net, *port_net_new;
-    igraph_vs_t vs;
     igraph_es_t es;
     igraph_eit_t eit;
     int net_id = v_net->inst->id;
@@ -392,9 +404,6 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, symrec_t* symb,
             port_net_new = dgraph_port_search_child( g_child, port_net, true );
         }
         else if( v_net->type == VNET_WRAP ) {
-            // get port from net of the wrapper
-            port_net = dgraph_port_search_wrap( symb->attr_wrap->v_net,
-                    port_net );
             // get open port with same symbol pointer from child graph
             port_net_new = dgraph_port_search_child( g_child, port_net, false );
             port_net_new->name = port_net->name;
@@ -407,14 +416,6 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, symrec_t* symb,
     }
     igraph_eit_destroy( &eit );
     igraph_es_destroy( &es );
-#if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
-    printf( "dgraph_flatten_net: remove vertice with id = %d\n", net_id );
-#endif // DEBUG_FLATTEN_GRAPH
-    dgraph_vertex_destroy_attr( g_new, net_id, true );
-    vs = igraph_vss_1( net_id );
-    igraph_delete_vertices( g_new, vs );
-    igraph_vs_destroy( &vs );
-    dgraph_vertex_update_ids( g_new, net_id );
 }
 
 /******************************************************************************/
@@ -487,7 +488,7 @@ virt_port_t* dgraph_port_search_wrap( virt_net_t* v_net, virt_port_t* port )
 #if defined(DEBUG) || defined(DEBUG_SEARCH_PORT_WRAP)
     printf( "dgrap_port_search_wrap: Search port " );
     debug_print_vport( port );
-    printf( "\n in virtual net: " );
+    printf( "\n in net interface of wrapper: " );
     debug_print_vports( v_net );
 #endif // DEBUG
     virt_port_t* port_net = NULL;
@@ -659,6 +660,20 @@ int dgraph_vertex_merge( igraph_t* g, int id1, int id2 )
 
     // id of deleted element
     return id_high;
+}
+
+/******************************************************************************/
+void dgraph_vertex_remove( igraph_t* g, int id )
+{
+    igraph_vs_t vs;
+#if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
+    printf( "dgraph_remove_vertex: id = %d\n", id );
+#endif // DEBUG_FLATTEN_GRAPH
+    dgraph_vertex_destroy_attr( g, id, true );
+    vs = igraph_vss_1( id );
+    igraph_delete_vertices( g, vs );
+    igraph_vs_destroy( &vs );
+    dgraph_vertex_update_ids( g, id );
 }
 
 /******************************************************************************/

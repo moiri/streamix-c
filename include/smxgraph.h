@@ -82,7 +82,7 @@ void dgraph_flatten( igraph_t*, igraph_t* );
  * @param g_child   graph of the net instance
  * @param net_id    id of the net instance
  */
-void dgraph_flatten_net( igraph_t*, igraph_t*, symrec_t*, virt_net_t* );
+void dgraph_flatten_net( igraph_t*, igraph_t*, virt_net_t* );
 
 /**
  * @brief   Search an equivalent port in a similar virtual net
@@ -198,6 +198,7 @@ void dgraph_vertex_destroy_attr( igraph_t*, int, bool );
  * @return      id of the removed vertex
  */
 int dgraph_vertex_merge( igraph_t*, int, int );
+void dgraph_vertex_remove( igraph_t*, int );
 
 /**
  * @brief   decrement the instance id of all vertices in a graph

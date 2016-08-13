@@ -374,8 +374,8 @@ void virt_port_update_inst( virt_port_t* port, virt_net_t* v_net )
 {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
     printf( "virt_port_update_inst: %s(%s(%d)->%s(%d))\n", port->name,
-            port->v_net->inst->name, port->v_net->inst->id, inst->name,
-            inst->id );
+            port->v_net->inst->name, port->v_net->inst->id, v_net->inst->name,
+            v_net->inst->id );
 #endif // DEBUG
     port->v_net = v_net;
 }
