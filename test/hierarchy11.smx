@@ -1,5 +1,6 @@
 /**
- * Hierarchical wrapper structure with serial connections, no port renaming
+ * Hierarchical wrapper structure where the left side of the wrappers is not
+ * connected until scope 0. No port renaming. 2 hierchical levels.
  */
 
 A = box A( out a )
