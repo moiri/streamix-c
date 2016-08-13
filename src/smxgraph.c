@@ -383,19 +383,23 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, virt_net_t* v_net )
             port = p_dest;
             port_net = p_src;
         }
+        // connect this port to the matching port of the virtual net
         if( v_net->type == VNET_NET ) {
             // get open port with same symbol pointer from child graph
             port_net_new = dgraph_port_search_child( g_child, port_net, true );
+            // connect this port to the matching port of the virtual net
+            // unknown direction, class matters, modes have to be different
+            check_connection( port_net_new, port, g_new, false, false, false );
+            check_connection_cp( NULL, port_net_new, port, g_new, false, false );
         }
         else if( v_net->type == VNET_WRAP ) {
             // get open port with same symbol pointer from child graph
             port_net_new = dgraph_port_search_child( g_child, port_net, false );
+            // unknown direction, ignore class, modes have to be different
+            check_connection( port_net_new, port, g_new, false, true, false );
+            /* check_connection_cp( NULL, port_net_new, port, g_new, false, true ); */
         }
         port_net_new->name = port_net->name;
-        // connect this port to the matching port of the virtual net
-        // unknown direction, class matters, modes have to be different
-        check_connection( port_net_new, port, g_new, false, false, false );
-        check_connection_cp( NULL, port_net_new, port, g_new, false, false );
         IGRAPH_EIT_NEXT( eit );
     }
     igraph_eit_destroy( &eit );

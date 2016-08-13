@@ -28,7 +28,8 @@
  * @param g         pointer to a initialized igraph object
  * @return          true if connection was ok, false if no connection
  */
-bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g, bool, bool, bool );
+bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g, bool, bool,
+        bool );
 
 /**
  * @brief   Connect two ports of copy synchronizers
@@ -80,11 +81,6 @@ void check_connections( virt_net_t*, virt_net_t*, igraph_t* );
  * @param g         pointer to a initialized igraph object
  */
 void check_connections_cp( virt_net_t*, bool, igraph_t*, bool );
-
-/**
- *
- */
-virt_net_t* check_connections_wrap( virt_port_list_t*, virt_port_list_t* );
 
 /**
  * @brief    Check the context of all identifiers in the program

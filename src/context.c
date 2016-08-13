@@ -245,27 +245,6 @@ void check_connections_cp( virt_net_t* v_net, bool parallel, igraph_t* g,
 }
 
 /******************************************************************************/
-bool check_connection_wrap( symrec_t* pw, symrec_t* pn,
-        virt_net_t* v_net )
-{
-    virt_port_list_t* ports = v_net->ports;
-    if( ( strlen( pw->name ) == strlen( pn->name ) )
-            && ( strcmp( pw->name, pn->name ) == 0 )
-            && ( pw->attr_port->mode == pn->attr_port->mode ) ) {
-        ports = v_net->ports;
-        while( ports != NULL ) {
-            if( ( strlen( pn->name ) == strlen( ports->port->name ) )
-                    && ( strcmp( pn->name, ports->port->name ) == 0 ) ) {
-                return true;
-                break;
-            }
-            ports = ports->next;
-        }
-    }
-    return false;
-}
-
-/******************************************************************************/
 void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g )
 {
     UT_array* scope_stack = NULL; // stack to handle the scope
