@@ -5,10 +5,10 @@
 
 A = box A( down out a )
 B = box B( up in a )
-C = box C( side in x1, side out x2 )
+C = box C( side in x1, side out x2, side out x3 )
 
-wrapper W( up in a(x1), down out a(x2) ) {
+wrapper W( up in a(x1), down out a(x2, x3) ) {
     connect C
-} net( side in x1, side out x2 )
+} net( side in x1, side out x2, side out x3 )
 
 connect A.W.B
