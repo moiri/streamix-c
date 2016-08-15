@@ -136,7 +136,6 @@ virt_net_t* virt_net_create_flatten( virt_net_t* v_net_n, instrec_t* inst )
     return v_net;
 }
 
-
 /******************************************************************************/
 virt_net_t* virt_net_create_net( virt_net_t* v_net_n, instrec_t* inst )
 {
@@ -201,17 +200,10 @@ virt_net_t* virt_net_create_serial( virt_net_t* v_net1, virt_net_t* v_net2 )
 }
 
 /******************************************************************************/
-virt_net_t* virt_net_create_sync( instrec_t* inst, virt_port_t* port )
+virt_net_t* virt_net_create_sync( instrec_t* inst )
 {
     virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
     v_net->ports = NULL;
-    if( port != NULL ) {
-        v_net->ports = malloc( sizeof( virt_port_list_t ) );
-        v_net->ports->idx = 0;
-        v_net->ports->next = NULL;
-        v_net->ports->port = port;
-        v_net->ports->port->v_net = v_net;
-    }
     v_net->inst = inst;
     v_net->con = NULL;
     v_net->type = VNET_SYNC;
@@ -278,17 +270,6 @@ void virt_net_update_class( virt_net_t* v_net, port_class_t port_class )
             list->port->attr_class = port_class;
         list = list->next;
     }
-}
-
-/******************************************************************************/
-virt_port_t* virt_port_add( virt_net_t* v_net, port_class_t port_class,
-        port_mode_t port_mode, const char* name,
-        symrec_t* symb )
-{
-    virt_port_t* new_port = NULL;
-    new_port = virt_port_create( port_class, port_mode, v_net, name, symb );
-    if( v_net != NULL ) virt_port_append( v_net, new_port );
-    return new_port;
 }
 
 /******************************************************************************/
@@ -386,9 +367,9 @@ virt_port_list_t* virt_ports_copy_symb( symrec_list_t* ports,
                 ports->rec->attr_port->mode, v_net, ports->rec->name,
                 ports->rec );
         if( v_net_i != NULL ) {
-            port_net = dgraph_port_search_wrap( v_net_i, new_port );
+            // for wrappers, propagate the port symbol of the child nets
+            port_net = virt_port_get_equivalent_in_wrap( v_net_i, new_port );
             new_port->symb = port_net->symb;
-            /* printf( "symbols: %p -> %p\n", ports->rec, port_net->symb ); */
         }
         vports->port = new_port;
         vports->next = list_last;
@@ -411,7 +392,6 @@ virt_port_list_t* virt_ports_copy_vnet( virt_port_list_t* ports,
 
     while( ports != NULL ) {
         if( !check_status || ( ports->port->state < VPORT_STATE_CONNECTED ) ) {
-        /* if( !check_status || ( ports->port->state == VPORT_STATE_OPEN ) ) { */
             new_list = malloc( sizeof( virt_port_list_t ) );
             new_port = virt_port_create( ports->port->attr_class,
                     ports->port->attr_mode, v_net, ports->port->name,
@@ -449,29 +429,25 @@ virt_port_t* virt_port_get_equivalent( virt_net_t* v_net, virt_port_t* port,
 }
 
 /******************************************************************************/
-virt_port_t* virt_port_get_equivalent_by_name( virt_port_list_t* vps_net,
+virt_port_t* virt_port_get_equivalent_by_name( virt_net_t* v_net,
         const char* name )
 {
     virt_port_t* vp_net = NULL;
+    virt_port_list_t* ports = v_net->ports;
 #if defined(DEBUG) || defined(DEBUG_SEARCH_PORT_WRAP)
     virt_port_list_t* ports = vps_net;
     printf( "virt_port_get_equivalent_by_name: Search port '%s'\n", name );
     printf( " in virtual net: " );
-    while( ports != NULL ) {
-        debug_print_vport( ports->port );
-        printf(", ");
-        ports = ports->next;
-    }
-    printf("\n");
+    debug_print_vports( v_net );
 #endif // DEBUG
-    while( vps_net != NULL ) {
-        if( ( strlen( name ) == strlen( vps_net->port->name ) )
-                && ( strcmp( name, vps_net->port->name ) == 0 ) ) {
-            vp_net = vps_net->port;
+    while( ports != NULL ) {
+        if( ( strlen( name ) == strlen( ports->port->name ) )
+                && ( strcmp( name, ports->port->name ) == 0 ) ) {
+            vp_net = ports->port;
             if( vp_net->v_net->type == VNET_SYNC ) break;
             /* break; */
         }
-        vps_net = vps_net->next;
+        ports = ports->next;
     }
 #if defined(DEBUG) || defined(DEBUG_SEARCH_PORT_WRAP)
     printf( "Found port: " );
@@ -482,7 +458,8 @@ virt_port_t* virt_port_get_equivalent_by_name( virt_port_list_t* vps_net,
 }
 
 /******************************************************************************/
-virt_port_t* dgraph_port_search_wrap( virt_net_t* v_net, virt_port_t* port )
+virt_port_t* virt_port_get_equivalent_in_wrap( virt_net_t* v_net,
+        virt_port_t* port )
 {
     // => find a namesake in the net interface of the wrapper
 #if defined(DEBUG) || defined(DEBUG_SEARCH_PORT_WRAP)

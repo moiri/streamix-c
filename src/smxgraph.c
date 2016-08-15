@@ -153,7 +153,7 @@ void debug_print_syncs( igraph_vector_ptr_t* syncs )
 
 /******************************************************************************/
 void wrap_sync_create_cp( igraph_t* g, igraph_vector_ptr_t* syncs,
-        virt_port_list_t* vps_net, virt_net_t* v_net )
+        virt_net_t* v_net_i, virt_net_t* v_net )
 {
     int i = 0, j = 0;
     sync_t* sync = NULL;
@@ -169,7 +169,7 @@ void wrap_sync_create_cp( igraph_t* g, igraph_vector_ptr_t* syncs,
             // there was no internal port, copy the regular port to the new list
             sp_src = VECTOR( sync->p_ext )[0];
             // search for the port in the virtual net of the connection
-            vp_net = virt_port_get_equivalent_by_name( vps_net, sp_src->name );
+            vp_net = virt_port_get_equivalent_by_name( v_net_i, sp_src->name );
             vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
                     vp_net->v_net, vp_net->name, vp_net->symb );
             virt_port_append( v_net, vp_new );
@@ -178,7 +178,7 @@ void wrap_sync_create_cp( igraph_t* g, igraph_vector_ptr_t* syncs,
             // create a copy synchronizer
             /* vp_new = virt_port_create( PORT_CLASS_NONE, PORT_MODE_BI, NULL, */
             /*         TEXT_CP_PORT, NULL ); */
-            cp_sync = dgraph_vertex_add_sync( g, NULL );
+            cp_sync = dgraph_vertex_add_sync( g );
             for( j = 0; j < igraph_vector_ptr_size( &sync->p_ext ); j++ ) {
                 sp_src = VECTOR( sync->p_ext )[j];
                 igraph_cattribute_VAN_set( g, INST_ATTR_SYMB, cp_sync->inst->id,
@@ -193,7 +193,7 @@ void wrap_sync_create_cp( igraph_t* g, igraph_vector_ptr_t* syncs,
             for( j = 0; j < igraph_vector_ptr_size( &sync->p_int ); j++ ) {
                 sp_int = VECTOR( sync->p_int )[j];
                 // search for the port in the virtual net of the connection
-                vp_net = virt_port_get_equivalent_by_name( vps_net,
+                vp_net = virt_port_get_equivalent_by_name( v_net_i,
                         sp_int->name );
                 // if the port cannot be found in the net its a bypass
                 if( vp_net == NULL ) {
@@ -237,204 +237,12 @@ virt_net_t* connect_wrap( symrec_t* wrap )
     v_net->ports = NULL;
     // create copy synchronizers
     wrap_sync_create_cp( &wrap->attr_wrap->g, &syncs,
-            wrap->attr_wrap->v_net->ports, v_net );
+            wrap->attr_wrap->v_net, v_net );
 
     // cleanup
     wrap_sync_destroy( &syncs );
 
     return v_net;
-}
-
-/******************************************************************************/
-virt_port_list_t* dgraph_merge_port_wrap( igraph_t* g, symrec_list_t* sps_src,
-        virt_port_list_t* vps_net )
-{
-    virt_port_t* vp_new = NULL;
-    virt_port_t* vp_net = NULL;
-    virt_port_list_t* vps_last = NULL;
-    virt_port_list_t* vps_new = NULL;
-    symrec_list_t* sps_int = NULL;
-    symrec_list_t* sps_bak = sps_src;
-    int idx = 0, count = 0;
-    igraph_vector_ptr_t bp_vnets;
-    igraph_vector_ptr_t bp_symbs;
-    virt_net_t* bp_vnet = NULL;
-    int bp_idx = 0;
-
-    igraph_vector_ptr_init( &bp_vnets, 0 );
-    igraph_vector_ptr_init( &bp_symbs, 0 );
-    sps_src = sps_bak;
-    while( sps_src != NULL ) {
-        sps_int = sps_src->rec->attr_port->ports_int;
-        // if there are internal ports, copy them to the new virtual port
-        // list use the alt name of the port but all other info from the
-        // net port
-        count = 0;
-        while( sps_int != NULL ) {
-            sps_int = sps_int->next;
-            count++;
-        }
-        if( count == 1 ) {
-            sps_int = sps_src->rec->attr_port->ports_int;
-            // search for the port in the virtual net of the connection
-            vp_net = virt_port_get_equivalent_by_name( vps_net,
-                    sps_int->rec->name );
-            if( vp_net == NULL ) {
-                // it is a bypass port
-                vp_new = virt_port_create( PORT_CLASS_NONE, PORT_MODE_BI,
-                        NULL, sps_src->rec->name, NULL );
-                bp_idx = dgraph_find_bp_port( &bp_symbs, sps_int->rec->name );
-                if( bp_idx < 0 ) {
-                    // create a copy synchronizer
-                    bp_vnet = dgraph_vertex_add_sync( g, vp_new );
-                    vp_new->symb = symrec_create( sps_int->rec->name, 0,
-                            SYMREC_PORT, 0, 0 );
-                    igraph_cattribute_VAN_set( g, INST_ATTR_SYMB,
-                            bp_vnet->inst->id, ( uintptr_t )vp_new->symb );
-                    igraph_vector_ptr_push_back( &bp_vnets, bp_vnet );
-                    igraph_vector_ptr_push_back( &bp_symbs, vp_new->symb );
-                }
-                else {
-                    vp_new->v_net = VECTOR( bp_vnets )[ bp_idx ];
-                    vp_new->symb = VECTOR( bp_symbs )[ bp_idx ];
-                }
-                vps_new = malloc( sizeof( virt_port_list_t ) );
-                vps_new->port = vp_new;
-                vps_new->next = vps_last;
-                vps_new->idx = idx;
-                vps_last = vps_new;
-                idx++;
-            }
-            else {
-                // it is not a bypass
-                vps_new = malloc( sizeof( virt_port_list_t ) );
-                vp_new = virt_port_create( sps_src->rec->attr_port->collection,
-                        sps_src->rec->attr_port->mode, vp_net->v_net,
-                        sps_src->rec->name, vp_net->symb );
-                // unknown direction, ignore class, modes have to be equal
-                check_connection( vp_new, vp_net, g, false, true, true );
-                /* vp_net->state = VPORT_STATE_CONNECTED; */
-                vps_new->port = vp_new;
-                vps_new->next = vps_last;
-                vps_new->idx = idx;
-                vps_last = vps_new;
-                idx++;
-            }
-        }
-        else if( count > 1 ) {
-            sps_int = sps_src->rec->attr_port->ports_int;
-            vp_net = virt_port_get_equivalent_by_name( vps_net,
-                    sps_int->rec->name );
-            // create a copy synchronizer
-            vp_new = virt_port_create( sps_src->rec->attr_port->collection,
-                    sps_src->rec->attr_port->mode, NULL, sps_src->rec->name,
-                    vp_net->symb );
-            dgraph_vertex_add_sync( g, vp_new );
-            vps_new = malloc( sizeof( virt_port_list_t ) );
-            vps_new->port = vp_new;
-            vps_new->next = vps_last;
-            vps_new->idx = idx;
-            vps_last = vps_new;
-            idx++;
-            while( sps_int != NULL ) {
-                // search for the port in the virtual net of the connection
-                vp_net = virt_port_get_equivalent_by_name( vps_net,
-                        sps_int->rec->name );
-                // unknown direction, ignore class, modes have to be equal
-                check_connection( vp_new, vp_net, g, false, true, true );
-                sps_int = sps_int->next;
-                /* vp_net->state = VPORT_STATE_CONNECTED; */
-            }
-        }
-        else {
-            // search for the port in the virtual net of the connection
-            vp_net = virt_port_get_equivalent_by_name( vps_net,
-                    sps_src->rec->name );
-            // there was no internal port, copy the regular port to the new list
-            vps_new = malloc( sizeof( virt_port_list_t ) );
-            vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
-                    vp_net->v_net, vp_net->name, vp_net->symb );
-            vps_new->port = vp_new;
-            vps_new->next = vps_last;
-            vps_new->idx = idx;
-            vps_last = vps_new;
-            idx++;
-        }
-        sps_src = sps_src->next;
-    }
-    return vps_last;
-}
-
-/******************************************************************************/
-virt_port_list_t* dgraph_merge_port_net( igraph_t* g, symrec_list_t* sps_src,
-        virt_port_list_t* vps_net )
-{
-    virt_port_t* vp_new = NULL;
-    virt_port_t* vp_net = NULL;
-    virt_port_list_t* vps_last = NULL;
-    virt_port_list_t* vps_new = NULL;
-    symrec_list_t* sps_int = NULL;
-    int idx = 0, count = 0;
-
-    while( sps_src != NULL  ) {
-        // search for the port in the virtual net of the connection
-        vp_net = virt_port_get_equivalent_by_name( vps_net,
-                sps_src->rec->name );
-        sps_int = sps_src->rec->attr_port->ports_int;
-        // if there are internal ports, copy them to the new virtual port
-        // list use the alt name of the port but all other info from the
-        // net port
-        count = 0;
-        while( sps_int != NULL ) {
-            sps_int = sps_int->next;
-            count++;
-        }
-        if( count == 1 ) {
-            sps_int = sps_src->rec->attr_port->ports_int;
-            vps_new = malloc( sizeof( virt_port_list_t ) );
-            vp_net->name = sps_int->rec->name;
-            vps_new->port = vp_net;
-            vps_new->next = vps_last;
-            vps_new->idx = idx;
-            vps_last = vps_new;
-            idx++;
-        }
-        else if( count > 1 ) {
-            // create a copy synchronizer
-            vp_new = virt_port_create( vp_net->attr_class,
-                    vp_net->attr_mode, vp_net->v_net, vp_net->name,
-                    vp_net->symb );
-            dgraph_vertex_add_sync( g, vp_new );
-            // unknown direction, ignore class, modes have to be equal
-            check_connection( vp_new, vp_net, g, false, true, true );
-            vp_net = vp_new;
-            sps_int = sps_src->rec->attr_port->ports_int;
-            while( sps_int != NULL ) {
-                vps_new = malloc( sizeof( virt_port_list_t ) );
-                vp_new = virt_port_create( vp_net->attr_class,
-                        vp_net->attr_mode, vp_net->v_net, sps_int->rec->name,
-                        vp_net->symb );
-                /* vp_net->state = VPORT_STATE_CONNECTED; */
-                vps_new->port = vp_new;
-                vps_new->next = vps_last;
-                vps_new->idx = idx;
-                vps_last = vps_new;
-                idx++;
-                sps_int = sps_int->next;
-            }
-        }
-        else {
-            // there was no internal port, copy the regula port to the new list
-            vps_new = malloc( sizeof( virt_port_list_t ) );
-            vps_new->port = vp_net;
-            vps_new->next = vps_last;
-            vps_new->idx = idx;
-            vps_last = vps_new;
-            idx++;
-        }
-        sps_src = sps_src->next;
-    }
-    return vps_last;
 }
 
 /******************************************************************************/
@@ -736,11 +544,11 @@ virt_net_t* dgraph_vertex_add_net( igraph_t* g, symrec_t* symb, int line )
 }
 
 /******************************************************************************/
-virt_net_t* dgraph_vertex_add_sync( igraph_t* g, virt_port_t* port )
+virt_net_t* dgraph_vertex_add_sync( igraph_t* g )
 {
     int id = dgraph_vertex_add( g, TEXT_CP );
     instrec_t* inst = instrec_create( TEXT_CP, id, -1, INSTREC_SYNC );
-    virt_net_t* v_net = virt_net_create_sync( inst, port );
+    virt_net_t* v_net = virt_net_create_sync( inst );
     dgraph_vertex_add_attr( g, id, NULL, NULL, v_net, NULL );
     return v_net;
 }

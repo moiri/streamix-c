@@ -204,23 +204,12 @@ virt_net_t* virt_net_create_parallel( virt_net_t*, virt_net_t* );
 virt_net_t* virt_net_create_serial( virt_net_t*, virt_net_t* );
 
 /**
- * @brief   Create a new virtual net structure
- *
- * @param ports pointer to a virtual port list
- * @param con   pointer to a net connection structure
- * @param type  type of the virtual net to be created
- * @return      pointer to the newly created virtual net
- */
-virt_net_t* virt_net_create_struct( net_con_t*, instrec_t*, virt_net_type_t );
-
-/**
  * @breif   Create a virtual net of a copy synchronizer
  *
  * @param inst  pointer to the instance of the copy synchronizer
- * @param port  pointer to a virtual port
  * @return      pointer to the newly created virtual net
  */
-virt_net_t* virt_net_create_sync( instrec_t*, virt_port_t* );
+virt_net_t* virt_net_create_sync( instrec_t* );
 
 /**
  * @brief   Create a new virtual net out of virtial net of a wrapper
@@ -256,26 +245,22 @@ void virt_net_destroy_shallow( virt_net_t* );
 void virt_net_update_class( virt_net_t*, port_class_t );
 
 /**
- * @brief   Add a new virtual port to a virtual net
- *
- * @param v_net         a pointer to a virtual net where the port will be added
- * @param port_class    the class of the new port
- * @param port_mode     the mode of the new port
- * @param port_inst     the instance the port is part of
- * @param name          a pointer to the name of the port
- * @param symb          a pointer to the symbol of the port
- * @return              a pointer to the newly created port
- */
-virt_port_t* virt_port_add( virt_net_t*, port_class_t, port_mode_t,
-        const char*, symrec_t* );
-
-/**
  * @brief   Append a port to the port list of a virtual net
  *
  * @param v_net pointer to the virtual net to appemd the port
  * @param port  pointer to the port to append
  */
 void virt_port_append( virt_net_t*, virt_port_t* );
+
+/**
+ * @brief   Append all ports of one virtual net to the port list of
+ * another virtual net
+ *
+ * @param v_net pointer to the virtual net to append the port
+ * @param v_net pointer to the source virtual net
+ * @param update_inst   if true update the instances of the source ports
+ *                      with the instance of v_net1
+ */
 void virt_port_append_all( virt_net_t*, virt_net_t*, bool );
 
 /**
@@ -286,6 +271,7 @@ void virt_port_append_all( virt_net_t*, virt_net_t*, bool );
  *
  * @param old       port list containing the ports to assign
  * @param last_list a pointer to a list which will be chained to the new list
+ * @param v_net     if not NULL, assign it to all ports
  * @return          a pointer to the new port list
  */
 virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t*,
@@ -296,7 +282,7 @@ virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t*,
  *
  * @param port_class    the class of the new port
  * @param port_mode     the mode of the new port
- * @param port_inst     the instance the port is part of
+ * @param vnet          the virtual net the port is part of
  * @param name          a pointer to the name of the port
  * @param symb          a pointer to the symbol of the port
  * @return              a pointer to the newly created port
@@ -307,9 +293,10 @@ virt_port_t* virt_port_create( port_class_t, port_mode_t, virt_net_t*,
 /**
  * @brief   Make a copy of the port list of a symbol record
  *
- * @param ports a pointer to the port list to be copied
- * @param inst  a pointer to the instance the port belongs to
- * @return      pointer to the last element of the new list
+ * @param ports     a pointer to the port list to be copied
+ * @param v_net     a pointer to the virtual net the port belongs to
+ * @param v_net_i   a pointer to the virtual net of the content of a wrapper
+ * @return          pointer to the last element of the new list
  */
 virt_port_list_t* virt_ports_copy_symb( symrec_list_t*, virt_net_t*,
         virt_net_t* );
@@ -335,14 +322,35 @@ virt_port_list_t* virt_ports_copy_vnet( virt_port_list_t*, virt_net_t*, bool,
  * @param port  port to search for
  * @param all   if ture search through ports of all states
  *              if false search only for open ports
+ * @return      pointer to the port, NULL if no port was found
  */
 virt_port_t* virt_port_get_equivalent( virt_net_t*, virt_port_t*, bool );
 
 /**
+ * @brief   Get a port from a virtual net port list by compairing names
  *
+ * @param v_net virtual net to search for the port
+ * @param name  name to search for
+ * @return      pointer to the port, NULL if no port was found
  */
-virt_port_t* virt_port_get_equivalent_by_name( virt_port_list_t*, const char* );
-virt_port_t* dgraph_port_search_wrap( virt_net_t*, virt_port_t* );
+virt_port_t* virt_port_get_equivalent_by_name( virt_net_t*, const char* );
+
+/**
+ * @brief   Get the namesake of a port out of a net interface of a wrapper
+ *          by compairing the names and the modes
+ *
+ * @param v_net     pointer to the virtual net
+ * @param port      pointer to the port of wich a namesake should be found
+ * @return          pointer to the port, NULL if no port was found
+ */
+virt_port_t* virt_port_get_equivalent_in_wrap( virt_net_t*, virt_port_t* );
+
+/**
+ * @brief   update the instance of a port
+ *
+ * @param port  port to update
+ * @param v_net virtual net to assign
+ */
 void virt_port_update_inst( virt_port_t*, virt_net_t* );
 
 /**

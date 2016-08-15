@@ -113,7 +113,7 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
             if( port1->attr_mode == port2->attr_mode )
                 port_mode = port1->attr_mode;
             else port_mode = PORT_MODE_BI;
-            v_net_sync = dgraph_vertex_add_sync( g, NULL );
+            v_net_sync = dgraph_vertex_add_sync( g );
             port_new = virt_port_create( port_class, port_mode, v_net_sync,
                     port1->name, port1->symb );
             virt_port_append( v_net_sync, port_new );

@@ -153,10 +153,9 @@ virt_net_t* dgraph_vertex_add_net( igraph_t*, symrec_t*, int );
  * @brief   Create a synchronizer instance and add it to the graph
  *
  * @param g     graph where the vertex will be added
- * @param port  pointer to a virtual port
  * @return      the virtual net of the synchronizer instance
  */
-virt_net_t* dgraph_vertex_add_sync( igraph_t*, virt_port_t* );
+virt_net_t* dgraph_vertex_add_sync( igraph_t* );
 
 /**
  * @brief   Create a wrapper instance and add it to the graph
