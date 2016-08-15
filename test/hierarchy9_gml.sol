@@ -53,6 +53,12 @@ graph
   ]
   edge
   [
+    source 0
+    target 1
+    label "a"
+  ]
+  edge
+  [
     source 5
     target 3
     label "e"
@@ -62,11 +68,5 @@ graph
     source 2
     target 4
     label "c"
-  ]
-  edge
-  [
-    source 0
-    target 1
-    label "a"
   ]
 ]

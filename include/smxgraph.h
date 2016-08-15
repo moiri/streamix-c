@@ -14,6 +14,7 @@
 #include "vnet.h"
 #include "symtab.h"
 
+virt_net_t* connect_wrap( symrec_t* );
 int dgraph_find_bp_port( igraph_vector_ptr_t*, const char* );
 /**
  *

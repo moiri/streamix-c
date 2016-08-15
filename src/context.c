@@ -37,7 +37,9 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
                 cpsync_merge( port_l, port_r, g );
             res = true;
         }
-        else if( are_port_modes_ok( port_l, port_r, mode_equal ) ) {
+        else if( ( inst_l->type == INSTREC_SYNC )
+                || ( inst_r->type == INSTREC_SYNC )
+                || are_port_modes_ok( port_l, port_r, mode_equal ) ) {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
@@ -113,15 +115,21 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
             else port_mode = PORT_MODE_BI;
             // TODO: to my future self: when ports still held instances, here
             // port1->inst was passed. Now it gets the v_net of the cp_sync
-            port_new = virt_port_add( v_net, port_class, port_mode,
+            /* port_new = virt_port_add( v_net, port_class, port_mode, */
+            /*         port1->name, port1->symb ); */
+            v_net_sync = dgraph_vertex_add_sync( g, NULL );
+            port_new = virt_port_create( port_class, port_mode, v_net_sync,
                     port1->name, port1->symb );
-            v_net_sync = dgraph_vertex_add_sync( g, port_new );
-            if( ignore_class ) {
-                // cp syncs in a wrapper require e deep port copy
-                v_net_sync->ports->port = virt_port_create(
-                        port_new->attr_class, port_new->attr_mode,
-                        port_new->v_net, port_new->name, port_new->symb );
-            }
+            virt_port_append( v_net_sync, port_new );
+            virt_port_append( v_net, port_new );
+            // TODO: I don't know why this was necessary (probably because of
+            // memory management)
+            /* if( ignore_class ) { */
+            /*     // cp syncs in a wrapper require e deep port copy */
+            /*     v_net_sync->ports->port = virt_port_create( */
+            /*             port_new->attr_class, port_new->attr_mode, */
+            /*             port_new->v_net, port_new->name, port_new->symb ); */
+            /* } */
             connect_ports( port_new, port1, g, false );
             connect_ports( port_new, port2, g, false );
         }
@@ -287,7 +295,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
     symrec_list_t* port_list = NULL;
     symrec_list_t* port_list_net = NULL;
     virt_net_t* v_net;
-    virt_port_list_t* v_ports;
+    /* virt_port_list_t* v_ports; */
     void* res = NULL;
     static int _scope = 0;
     igraph_t g_net;
@@ -378,8 +386,11 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             if( n_attr == NULL ) return NULL;
             port_list = ( symrec_list_t* )check_context_ast( symtab,
                     scope_stack, ast->wrap->ports_wrap );
+            _scope++;
+            utarray_push_back( scope_stack, &_scope );
             port_list_net = ( symrec_list_t* )check_context_ast( symtab,
                     scope_stack, ast->wrap->ports_net );
+            utarray_pop_back( scope_stack );
             utarray_pop_back( scope_stack );
 
             // prepare symbol attributes and create symbol
@@ -392,18 +403,23 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             if( check_prototype( port_list_net, w_attr->v_net, rec->name ) ) {
                 // create virtual port list of the prototyped net with instances
                 // of the real net
-                v_net = malloc( sizeof( virt_net_t ) );
-                v_net->type = VNET_NET;
-                v_net->inst = NULL;
-                v_net->con = NULL;
-                v_ports = dgraph_merge_port_net( &w_attr->g, port_list_net,
-                                n_attr->v_net->ports );
-                v_net->ports = v_ports;
-                check_connections_cp( v_net, false, &w_attr->g, true );
-                v_net->ports = dgraph_merge_port_wrap( &w_attr->g, port_list,
-                            v_ports ),
-                check_connections_cp( v_net, false, &w_attr->g, true );
+                /* v_net = malloc( sizeof( virt_net_t ) ); */
+                /* v_net->type = VNET_NET; */
+                /* v_net->inst = NULL; */
+                /* v_net->con = NULL; */
+                /* v_ports = dgraph_merge_port_net( &w_attr->g, port_list_net, */
+                /*                 n_attr->v_net->ports ); */
+                /* v_net->ports = v_ports; */
+                /* check_connections_cp( v_net, false, &w_attr->g, true ); */
+                /* v_net->ports = dgraph_merge_port_wrap( &w_attr->g, port_list, */
+                /*             v_ports ), */
+                /* check_connections_cp( v_net, false, &w_attr->g, true ); */
+                v_net = connect_wrap( rec );
                 rec->attr_wrap->v_net = v_net;
+#if defined(DEBUG) || defined(DEBUG_CONNECT_WRAP)
+                printf( "check_contect_ast: wrap: \n" );
+                debug_print_vports( v_net );
+#endif // DEBUG
                 // cleanup net attr
                 // THIS IS COMMENTED BECAUSE OF AN ERROR WITH WRAPPERS HOLDING
                 // ONLY ONE BOX
@@ -573,9 +589,9 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
     else return;
 
     // set port state
-    if( ( inst_type_l == INSTREC_BOX ) || connect_sync )
+    if( ( inst_type_l != INSTREC_SYNC ) || connect_sync )
         port_l->state = VPORT_STATE_CONNECTED;
-    if( ( inst_type_r == INSTREC_BOX ) || connect_sync )
+    if( ( inst_type_r != INSTREC_SYNC ) || connect_sync )
         port_r->state = VPORT_STATE_CONNECTED;
     // add edge to the graph and set attributes
     dgraph_edge_add( g, p_src, p_dest, name );
@@ -596,15 +612,15 @@ void cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
     if( id_del == v_net1->inst->id ) {
         port1->state = VPORT_STATE_DISABLED;
         port2->state = VPORT_STATE_CP_OPEN;
-        virt_port_update_inst( port1, v_net2 );
-        virt_port_append( v_net2, port1 );
+        /* virt_port_update_inst( port1, v_net2 ); */
+        virt_port_append_all( v_net2, v_net1, true );
         virt_net_destroy_shallow( v_net1 );
     }
     else {
         port1->state = VPORT_STATE_CP_OPEN;
         port2->state = VPORT_STATE_DISABLED;
-        virt_port_update_inst( port2, v_net1 );
-        virt_port_append( v_net1, port2 );
+        /* virt_port_update_inst( port2, v_net1 ); */
+        virt_port_append_all( v_net1, v_net2, true );
         virt_net_destroy_shallow( v_net2 );
     }
 /* #if defined(DEBUG) || defined(DEBUG_CONNECT) */

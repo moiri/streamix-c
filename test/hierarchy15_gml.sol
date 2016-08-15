@@ -59,21 +59,15 @@ graph
   ]
   edge
   [
-    source 2
-    target 5
-    label "cb_int1"
+    source 4
+    target 1
+    label "b2"
   ]
   edge
   [
     source 6
     target 1
     label "b1"
-  ]
-  edge
-  [
-    source 4
-    target 1
-    label "b2"
   ]
   edge
   [
@@ -86,5 +80,11 @@ graph
     source 0
     target 2
     label "a1"
+  ]
+  edge
+  [
+    source 2
+    target 5
+    label "cb_int1"
   ]
 ]

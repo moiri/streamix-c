@@ -17,6 +17,7 @@
 /* #define DEBUG_CONNECT */
 /* #define DEBUG_CONNECT_GRAPH */
 /* #define DEBUG_CONNECT_MISSING */
+/* #define DEBUG_CONNECT_WRAP */
 /* #define DEBUG_PROTO */
 /* #define DEBUG_NET_DOT */
 /* #define DEBUG_NET_GML */
@@ -66,7 +67,6 @@ enum parse_attr_e
     PARSE_ATTR_NET
 };
 
-#define TEXT_THIS    "this"
 #define TEXT_CP      "smx_cp"
 #define TEXT_NULL    "null"
 

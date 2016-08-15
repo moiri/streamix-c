@@ -12,25 +12,25 @@ graph
   node
   [
     id 1
-    label "A1"
-    func "A1"
+    label "B"
+    func "B"
   ]
   node
   [
     id 2
-    label "A2"
-    func "A2"
+    label "C"
+    func "C"
+  ]
+  edge
+  [
+    source 2
+    target 1
+    label "a2"
   ]
   edge
   [
     source 0
-    target 1
-    label "a"
-  ]
-  edge
-  [
-    source 1
     target 2
-    label "b"
+    label "a1"
   ]
 ]

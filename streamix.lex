@@ -44,7 +44,7 @@ wrapper         {yylval.ival = PARSE_ATTR_WRAP;return WRAPPER;}
 net             {yylval.ival = PARSE_ATTR_NET;return NET;}
 link            return LINK;
 connect         return CONNECT;
-stateless       {yylval.ival = PARSE_ATTR_STATELESS;return STATELESS;}
+pure            {yylval.ival = PARSE_ATTR_STATELESS;return STATELESS;}
 decoupled       {yylval.ival = PARSE_ATTR_DECOUPLED;return DECOUPLED;}
 static          {yylval.ival = PARSE_ATTR_STATIC;return STATIC;}
 sync            return SYNC;

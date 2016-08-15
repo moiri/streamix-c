@@ -1,6 +1,6 @@
-RS = stateless box RS( out speed )
-DS = stateless box DS( side out dist )
-B = stateless box B( in break_abs )
+RS = pure box RS( out speed )
+DS = pure box DS( side out dist )
+B = pure box B( in break_abs )
 MB = box MB( in block, out break_cmd )
 DC = box DC(
     in abs,
@@ -42,4 +42,4 @@ wrapper Car(
 CarS = box CarS( out car_next, in car_prev )
 CarE = box CarE( in car_next, out car_prev )
 
-connect CarS.Car.CarE
+connect CarS.Car.Car.Car.CarE

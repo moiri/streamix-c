@@ -276,6 +276,7 @@ virt_port_t* virt_port_add( virt_net_t*, port_class_t, port_mode_t,
  * @param port  pointer to the port to append
  */
 void virt_port_append( virt_net_t*, virt_port_t* );
+void virt_port_append_all( virt_net_t*, virt_net_t*, bool );
 
 /**
  * @brief   Assign ports to a virtual net

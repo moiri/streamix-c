@@ -1,12 +1,13 @@
-DS = stateless box DS ( side out dist)
-B = stateless box B (in break_abs)
-DC = box DC (
+DS = pure box DS( side out dist )
+B = pure box B( in break_abs )
+DC = box DC(
     in abs,
     in cpa,
     side in dist,
-    out dc
+    up out dc,
+    down out dc
 )
-CPA = box CPA (
+CPA = box CPA(
     sync {
         decoupled side in dist,
         in dc
@@ -19,44 +20,43 @@ CPA = box CPA (
 )
 
 /**
- * This is a comment to check wheter multiline comments work
+ * This is a comment to check whether multiline comments work
  * Below the wrapper 'Car' is defined
  */
-wrapper Car { up in car_next {car_l_in}, up out car_prev {car_l_out},
-        down in car_prev {car_r_in}, down out car_next {car_r_out} } {
-    link { ABS, DC, CPA }
-    link { this, CPA }
+wrapper Car( up in car_next( car_l_in ), up out car_prev( car_l_out ),
+        down in car_prev( car_r_in ), down out car_next( car_r_out ) )
+{
 
     // this is a single line comment
-    MB = box MB (in block, out break_cmd)
+    MB = box MB( in block, out break_cmd )
 
-    wrapper Sensors { out speed, in block, out break_cmd, in break_abs, side out dist } {
-        link { this, RS }
-        link { this, MB }
-        link { this, B }
-        link { this, DS }
-        RS = stateless box RS (out speed)
+    wrapper Sensors( out speed, in block, out break_cmd, in break_abs,
+            side out dist )
+    {
+        RS = pure box RS( out speed )
 
         connect RS|B|MB|DS
-    }
+    } net( down out speed, down out break_cmd, down in break_abs,
+            down in block, side out dist )
 
-    wrapper ABS { in dc, out abs, side out dist } {
-        link { this, ABS }
-        link { this, Sensors }
-        ABS = box ABS (
+    wrapper ABS( in dc, out abs, side out dist )
+    {
+        ABS = box ABS(
             in speed,
             in break_cmd,
-            side in dc,
+            in dc,
             out break_abs,
             out block,
-            side out abs
+            out abs
         )
 
         connect Sensors.ABS
-    }
+    } net( down in dc, down out abs, side out dist )
 
     connect ABS.DC.CPA
-}
+} net( side in car_l_in, side out car_l_out, side in car_r_in,
+        side out car_r_out, side out dist )
+
 CarS = box CarS( out car_next, in car_prev )
 CarE = box CarE( in car_next, out car_prev )
 

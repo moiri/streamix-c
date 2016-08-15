@@ -204,11 +204,14 @@ virt_net_t* virt_net_create_serial( virt_net_t* v_net1, virt_net_t* v_net2 )
 virt_net_t* virt_net_create_sync( instrec_t* inst, virt_port_t* port )
 {
     virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
-    v_net->ports = malloc( sizeof( virt_port_list_t ) );
-    v_net->ports->idx = 0;
-    v_net->ports->next = NULL;
-    v_net->ports->port = port;
-    v_net->ports->port->v_net = v_net;
+    v_net->ports = NULL;
+    if( port != NULL ) {
+        v_net->ports = malloc( sizeof( virt_port_list_t ) );
+        v_net->ports->idx = 0;
+        v_net->ports->next = NULL;
+        v_net->ports->port = port;
+        v_net->ports->port->v_net = v_net;
+    }
     v_net->inst = inst;
     v_net->con = NULL;
     v_net->type = VNET_SYNC;
@@ -309,9 +312,23 @@ void virt_port_append( virt_net_t* v_net, virt_port_t* port )
     if( list_last != NULL ) list_last->next = list_new;
     else v_net->ports = list_new;
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
-    printf( "virt_port_append: Append port %s to inst %s(%d)\n", port->name,
-            port->v_net->inst->name, port->v_net->inst->id );
+    printf( "virt_port_append: Append port %s to", port->name );
+    if( ( v_net != NULL ) && ( v_net->inst != NULL ) )
+        printf( " inst %s(%d)\n", v_net->inst->name, v_net->inst->id );
+    else printf( " inner net\n" ) ;
 #endif // DEBUG_CONNECT
+}
+
+/******************************************************************************/
+void virt_port_append_all( virt_net_t* v_net1, virt_net_t* v_net2,
+        bool update_inst )
+{
+    virt_port_list_t* ports = v_net2->ports;
+    while( ports != NULL ) {
+        if( update_inst ) virt_port_update_inst( ports->port, v_net1 );
+        virt_port_append( v_net1, ports->port );
+        ports = ports->next;
+    }
 }
 
 /******************************************************************************/
@@ -371,6 +388,7 @@ virt_port_list_t* virt_ports_copy_symb( symrec_list_t* ports,
         if( v_net_i != NULL ) {
             port_net = dgraph_port_search_wrap( v_net_i, new_port );
             new_port->symb = port_net->symb;
+            /* printf( "symbols: %p -> %p\n", ports->rec, port_net->symb ); */
         }
         vports->port = new_port;
         vports->next = list_last;
@@ -450,11 +468,16 @@ virt_port_t* virt_port_get_equivalent_by_name( virt_port_list_t* vps_net,
         if( ( strlen( name ) == strlen( vps_net->port->name ) )
                 && ( strcmp( name, vps_net->port->name ) == 0 ) ) {
             vp_net = vps_net->port;
-            /* if( vp_net->inst->type == INSTREC_SYNC ) break; */
-            break;
+            if( vp_net->v_net->type == VNET_SYNC ) break;
+            /* break; */
         }
         vps_net = vps_net->next;
     }
+#if defined(DEBUG) || defined(DEBUG_SEARCH_PORT_WRAP)
+    printf( "Found port: " );
+    debug_print_vport( vp_net );
+    printf( "\n" );
+#endif // DEBUG
     return vp_net;
 }
 
