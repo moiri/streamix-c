@@ -26,6 +26,11 @@
  * @param ports_l   pointer to the port of a virtual net of the left operator
  * @param ports_r   pointer to the port of a virtual net of the right operator
  * @param g         pointer to a initialized igraph object
+ * @param directed  if true port_l is assumed to be left, port_r is assumed to
+ *                  be right. If false no assumption is taken
+ * @param ignore_class  if true, the port classes are ignored
+ * @param mode_equal    if true, port modes have to be equal
+ *                      if false, port modes have to be different
  * @return          true if connection was ok, false if no connection
  */
 bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g, bool, bool,
@@ -44,6 +49,7 @@ bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g, bool, bool,
  * @param g         pointer to a the dependancy graph to be updated
  * @param parallel  flag to indicate wheter cp syncs of paralle combinations are
  *                  checker (true) or side ports in serial combinations (false)
+ * @param ignore_class  if true, the port classes are ignored
  */
 void check_connection_cp( virt_net_t*, virt_port_t*, virt_port_t*, igraph_t*,
         bool, bool );
@@ -80,7 +86,7 @@ void check_connections( virt_net_t*, virt_net_t*, igraph_t* );
  *                  in parallel operators are checked
  * @param g         pointer to a initialized igraph object
  */
-void check_connections_cp( virt_net_t*, bool, igraph_t*, bool );
+void check_connections_cp( virt_net_t*, igraph_t*, bool );
 
 /**
  * @brief    Check the context of all identifiers in the program

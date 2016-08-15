@@ -113,23 +113,11 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
             if( port1->attr_mode == port2->attr_mode )
                 port_mode = port1->attr_mode;
             else port_mode = PORT_MODE_BI;
-            // TODO: to my future self: when ports still held instances, here
-            // port1->inst was passed. Now it gets the v_net of the cp_sync
-            /* port_new = virt_port_add( v_net, port_class, port_mode, */
-            /*         port1->name, port1->symb ); */
             v_net_sync = dgraph_vertex_add_sync( g, NULL );
             port_new = virt_port_create( port_class, port_mode, v_net_sync,
                     port1->name, port1->symb );
             virt_port_append( v_net_sync, port_new );
             virt_port_append( v_net, port_new );
-            // TODO: I don't know why this was necessary (probably because of
-            // memory management)
-            /* if( ignore_class ) { */
-            /*     // cp syncs in a wrapper require e deep port copy */
-            /*     v_net_sync->ports->port = virt_port_create( */
-            /*             port_new->attr_class, port_new->attr_mode, */
-            /*             port_new->v_net, port_new->name, port_new->symb ); */
-            /* } */
             connect_ports( port_new, port1, g, false );
             connect_ports( port_new, port2, g, false );
         }
@@ -215,8 +203,7 @@ void check_connections( virt_net_t* v_net1, virt_net_t* v_net2, igraph_t* g )
 }
 
 /******************************************************************************/
-void check_connections_cp( virt_net_t* v_net, bool parallel, igraph_t* g,
-        bool ignore_class )
+void check_connections_cp( virt_net_t* v_net, igraph_t* g, bool parallel )
 {
     virt_port_list_t* ports1 = NULL;
     virt_port_list_t* ports2 = NULL;
@@ -233,14 +220,11 @@ void check_connections_cp( virt_net_t* v_net, bool parallel, igraph_t* g,
         while( ports2 != NULL ) {
             if( ( ports1->idx != ports2->idx )
                     && ( ports1->idx < new_idx ) && ( ports2->idx < new_idx )
-                    /* && ( ports1->port->inst != ports2->port->inst ) */
-                    /* && ( ports1->port->state == VPORT_STATE_OPEN ) */
-                    /* && ( ports2->port->state == VPORT_STATE_OPEN ) */
                     && ( ports1->port->state < VPORT_STATE_CONNECTED )
                     && ( ports2->port->state < VPORT_STATE_CONNECTED )
                     && are_port_names_ok( ports1->port, ports2->port ) ) {
                 check_connection_cp( v_net, ports1->port, ports2->port, g,
-                        parallel, ignore_class );
+                        parallel, false );
             }
             ports2 = ports2->next;
         }
@@ -295,7 +279,6 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
     symrec_list_t* port_list = NULL;
     symrec_list_t* port_list_net = NULL;
     virt_net_t* v_net;
-    /* virt_port_list_t* v_ports; */
     void* res = NULL;
     static int _scope = 0;
     igraph_t g_net;
@@ -403,31 +386,15 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             if( check_prototype( port_list_net, w_attr->v_net, rec->name ) ) {
                 // create virtual port list of the prototyped net with instances
                 // of the real net
-                /* v_net = malloc( sizeof( virt_net_t ) ); */
-                /* v_net->type = VNET_NET; */
-                /* v_net->inst = NULL; */
-                /* v_net->con = NULL; */
-                /* v_ports = dgraph_merge_port_net( &w_attr->g, port_list_net, */
-                /*                 n_attr->v_net->ports ); */
-                /* v_net->ports = v_ports; */
-                /* check_connections_cp( v_net, false, &w_attr->g, true ); */
-                /* v_net->ports = dgraph_merge_port_wrap( &w_attr->g, port_list, */
-                /*             v_ports ), */
-                /* check_connections_cp( v_net, false, &w_attr->g, true ); */
                 v_net = connect_wrap( rec );
                 rec->attr_wrap->v_net = v_net;
 #if defined(DEBUG) || defined(DEBUG_CONNECT_WRAP)
                 printf( "check_contect_ast: wrap: \n" );
                 debug_print_vports( v_net );
 #endif // DEBUG
-                // cleanup net attr
-                // THIS IS COMMENTED BECAUSE OF AN ERROR WITH WRAPPERS HOLDING
-                // ONLY ONE BOX
-                /* virt_net_destroy_shallow( n_attr->v_net ); */
-                /* symrec_list_del( port_list_net ); */
-                /* free( n_attr ); */
-                // install the wrapper symbol in the scope of its declaration
+                // TODO: cleanup net attr
             }
+            // install the wrapper symbol in the scope of its declaration
             res = ( void* )symrec_put( symtab, rec );
 
             if( res == NULL ) {
@@ -623,9 +590,6 @@ void cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
         virt_port_append_all( v_net1, v_net2, true );
         virt_net_destroy_shallow( v_net2 );
     }
-/* #if defined(DEBUG) || defined(DEBUG_CONNECT) */
-/*     printf( " into %s(%d)\n", res->name, res->id ); */
-/* #endif // DEBUG_CONNECT */
     // adjust all ids starting from the id of the deleted record
     dgraph_vertex_update_ids( g, id_del );
 }
@@ -704,7 +668,6 @@ bool do_port_cnts_match( symrec_list_t* r_ports, virt_port_list_t* v_ports )
     }
 
     while( v_port_ptr != NULL  ) {
-        /* if( v_port_ptr->port->state < VPORT_STATE_CONNECTED ) v_count++; */
         if( v_port_ptr->port->state == VPORT_STATE_OPEN ) v_count++;
         v_port_ptr = v_port_ptr->next;
     }
@@ -772,7 +735,7 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             v_net2 = install_nets( symtab, scope_stack, ast->op->right, g );
             if( v_net2 == NULL ) return NULL;
             v_net = virt_net_create_parallel( v_net1, v_net2 );
-            check_connections_cp( v_net, true, g, false );
+            check_connections_cp( v_net, g, true );
             break;
         case AST_SERIAL:
             v_net1 = install_nets( symtab, scope_stack, ast->op->left, g );
@@ -785,7 +748,7 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             virt_net_update_class( v_net2, PORT_CLASS_DOWN );
             check_connection_missing( v_net1, v_net2, g );
             v_net = virt_net_create_serial( v_net1, v_net2 );
-            check_connections_cp( v_net, false, g, false );
+            check_connections_cp( v_net, g, false );
             break;
         case AST_ID:
             // check the context of the symbol
