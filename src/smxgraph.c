@@ -13,239 +13,6 @@
 #include "context.h"
 
 /******************************************************************************/
-int dgraph_find_bp_port( igraph_vector_ptr_t* bp_symbs, const char* name )
-{
-    int i;
-    const char* symb_name;
-    for( i = 0; i < igraph_vector_ptr_size( bp_symbs ); i++ ) {
-        symb_name = ( ( symrec_t* )VECTOR( *bp_symbs )[i] )->name;
-        if( strcmp( name, symb_name ) == 0 ) return i;
-    }
-    return -1;
-}
-
-typedef struct sync_s sync_t;
-struct sync_s{
-    igraph_vector_ptr_t p_int;
-    igraph_vector_ptr_t p_ext;
-};
-
-/******************************************************************************/
-void wrap_sync_init( igraph_vector_ptr_t* syncs, symrec_t* wrap ) {
-    symrec_list_t* sps_src = wrap->attr_wrap->ports;
-    symrec_list_t* sps_int = NULL;
-    sync_t* sync = NULL;
-
-    while( sps_src != NULL ) {
-        sps_int = sps_src->rec->attr_port->ports_int;
-        sync = malloc( sizeof( sync_t ) );
-        igraph_vector_ptr_init( &sync->p_ext, 1 );
-        VECTOR( sync->p_ext )[0] = sps_src->rec;
-        igraph_vector_ptr_init( &sync->p_int, 0 );
-        igraph_vector_ptr_push_back( syncs, sync );
-        while( sps_int != NULL ) {
-            igraph_vector_ptr_push_back( &sync->p_int, sps_int->rec );
-            sps_int = sps_int->next;
-        }
-        sps_src = sps_src->next;
-    }
-}
-
-/******************************************************************************/
-void wrap_sync_destroy( igraph_vector_ptr_t* syncs )
-{
-    sync_t* sync = NULL;
-    int i = 0;
-    for( i = 0; i < igraph_vector_ptr_size( syncs ); i++ ) {
-        sync = VECTOR( *syncs )[i];
-        igraph_vector_ptr_destroy( &sync->p_ext );
-        igraph_vector_ptr_destroy( &sync->p_int );
-        free( sync );
-    }
-    igraph_vector_ptr_destroy( syncs );
-}
-
-/******************************************************************************/
-bool is_wrap_sync_merge_int( igraph_vector_ptr_t* v1, igraph_vector_ptr_t* v2 )
-{
-    symrec_t* p1 = NULL;
-    symrec_t* p2 = NULL;
-    int i = 0, j = 0;
-    for( i = 0; i < igraph_vector_ptr_size( v1 ); i++ ) {
-        p1 = VECTOR( *v1 )[i];
-        for( j = 0; j < igraph_vector_ptr_size( v2 ); j++ ) {
-            p2 = VECTOR( *v2 )[j];
-            if( strcmp( p1->name, p2->name ) == 0 ) return true;
-        }
-    }
-    return false;
-}
-
-/******************************************************************************/
-void wrap_sync_merge_port( igraph_vector_ptr_t* v1, igraph_vector_ptr_t* v2,
-        bool check_name )
-{
-    symrec_t* p1 = NULL;
-    symrec_t* p2 = NULL;
-    bool add = true;
-    int i = 0, j = 0;
-    for( i = 0; i < igraph_vector_ptr_size( v2 ); i++ ) {
-        add = true;
-        p2 = VECTOR( *v2 )[i];
-        for( j = 0; j < igraph_vector_ptr_size( v1 ); j++ ) {
-            p1 = VECTOR( *v1 )[j];
-            if( check_name && ( strcmp( p1->name, p2->name ) == 0 ) ) {
-                add = false;
-                break;
-            }
-        }
-        if( add ) igraph_vector_ptr_push_back( v1, p2 );
-    }
-}
-
-/******************************************************************************/
-void wrap_sync_merge( igraph_vector_ptr_t* syncs )
-{
-    sync_t* sync1 = NULL;
-    sync_t* sync2 = NULL;
-    int i = 0, j = 0;
-    for( i = 0; i < igraph_vector_ptr_size( syncs ); i++ ) {
-        /* printf( "i = %d\n", i ); */
-        sync1 = VECTOR( *syncs )[i];
-        for( j = i + 1; j < igraph_vector_ptr_size( syncs ); j++ ) {
-            /* printf( "j = %d\n", j ); */
-            sync2 = VECTOR( *syncs )[j];
-            if( is_wrap_sync_merge_int( &sync1->p_int, &sync2->p_int ) ) {
-                wrap_sync_merge_port( &sync1->p_int, &sync2->p_int, true );
-                wrap_sync_merge_port( &sync1->p_ext, &sync2->p_ext, false );
-                igraph_vector_ptr_remove( syncs, j );
-                igraph_vector_ptr_destroy( &sync2->p_int );
-                igraph_vector_ptr_destroy( &sync2->p_ext );
-                free( sync2 );
-                if( i > 0 ) i--;
-                /* if( i >= igraph_vector_ptr_size( syncs ) ) return; */
-            }
-        }
-    }
-}
-
-/******************************************************************************/
-void debug_print_syncs( igraph_vector_ptr_t* syncs )
-{
-    sync_t* sync = NULL;
-    symrec_t* port = NULL;
-    int i = 0, j = 0;
-    for( i = 0; i < igraph_vector_ptr_size( syncs ); i++ ) {
-        sync = VECTOR( *syncs )[i];
-        printf( " cp%d: [ ", i );
-        for( j = 0; j < igraph_vector_ptr_size( &sync->p_ext ); j++ ) {
-            port = VECTOR( sync->p_ext )[j];
-            printf( "%s, ", port->name );
-        }
-        printf( "][ " );
-        for( j = 0; j < igraph_vector_ptr_size( &sync->p_int ); j++ ) {
-            port = VECTOR( sync->p_int )[j];
-            printf( "%s, ", port->name );
-        }
-        printf( "]\n" );
-    }
-}
-
-/******************************************************************************/
-void wrap_sync_create_cp( igraph_t* g, igraph_vector_ptr_t* syncs,
-        virt_net_t* v_net_i, virt_net_t* v_net )
-{
-    int i = 0, j = 0;
-    sync_t* sync = NULL;
-    virt_port_t* vp_new = NULL;
-    virt_port_t* vp_net = NULL;
-    symrec_t* sp_src = NULL;
-    symrec_t* sp_int = NULL;
-    virt_net_t* cp_sync = NULL;
-
-    for( i = 0; i < igraph_vector_ptr_size( syncs ); i++ ) {
-        sync = VECTOR( *syncs )[i];
-        if( igraph_vector_ptr_size( &sync->p_int ) == 0 ) {
-            // there was no internal port, copy the regular port to the new list
-            sp_src = VECTOR( sync->p_ext )[0];
-            // search for the port in the virtual net of the connection
-            vp_net = virt_port_get_equivalent_by_name( v_net_i, sp_src->name );
-            vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
-                    vp_net->v_net, vp_net->name, vp_net->symb );
-            virt_port_append( v_net, vp_new );
-        }
-        else {
-            // create a copy synchronizer
-            /* vp_new = virt_port_create( PORT_CLASS_NONE, PORT_MODE_BI, NULL, */
-            /*         TEXT_CP_PORT, NULL ); */
-            cp_sync = dgraph_vertex_add_sync( g );
-            for( j = 0; j < igraph_vector_ptr_size( &sync->p_ext ); j++ ) {
-                sp_src = VECTOR( sync->p_ext )[j];
-                igraph_cattribute_VAN_set( g, INST_ATTR_SYMB, cp_sync->inst->id,
-                        ( uintptr_t )sp_src );
-                // create a new external virtual port
-                vp_net = virt_port_create( sp_src->attr_port->collection,
-                        sp_src->attr_port->mode, cp_sync, sp_src->name,
-                        sp_src );
-                virt_port_append( v_net, vp_net );
-                virt_port_append( cp_sync, vp_net );
-            }
-            for( j = 0; j < igraph_vector_ptr_size( &sync->p_int ); j++ ) {
-                sp_int = VECTOR( sync->p_int )[j];
-                // search for the port in the virtual net of the connection
-                vp_net = virt_port_get_equivalent_by_name( v_net_i,
-                        sp_int->name );
-                // if the port cannot be found in the net its a bypass
-                if( vp_net == NULL ) {
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-                    printf( "wrap_sync_create_cp: bypass\n" );
-#endif // DEBUG_CONNECT
-                    igraph_cattribute_VAN_set( g, INST_ATTR_SYMB,
-                            cp_sync->inst->id, ( uintptr_t )sp_int );
-                    break;
-                }
-                vp_new = virt_port_create( vp_net->attr_class,
-                        vp_net->attr_mode, cp_sync, vp_net->name,
-                        vp_net->symb );
-                virt_port_append( cp_sync, vp_new );
-                // unknown direction, ignore class, modes have to be equal
-                check_connection( vp_new, vp_net, g, false, true, true );
-            }
-        }
-    }
-}
-
-/******************************************************************************/
-virt_net_t* connect_wrap( symrec_t* wrap )
-{
-    igraph_vector_ptr_t syncs;
-    virt_net_t* v_net;
-
-    // group ports in order to create copy synchronizers
-    igraph_vector_ptr_init( &syncs, 0 );
-    wrap_sync_init( &syncs, wrap );
-    wrap_sync_merge( &syncs );
-#if defined(DEBUG) || defined(DEBUG_CONNECT_WRAP)
-    printf( "connect_wrap:\n" );
-    debug_print_syncs( &syncs );
-#endif // DEBUG
-
-    v_net = malloc( sizeof( virt_net_t ) );
-    v_net->type = VNET_NET;
-    v_net->inst = NULL;
-    v_net->con = NULL;
-    v_net->ports = NULL;
-    // create copy synchronizers
-    wrap_sync_create_cp( &wrap->attr_wrap->g, &syncs,
-            wrap->attr_wrap->v_net, v_net );
-
-    // cleanup
-    wrap_sync_destroy( &syncs );
-
-    return v_net;
-}
-
-/******************************************************************************/
 void dgraph_append( igraph_t* g, igraph_t* g_tpl, bool deep )
 {
     const char* name;
@@ -686,5 +453,216 @@ void dgraph_vptr_to_v( igraph_vector_ptr_t* vptr, igraph_vector_t* v )
     for( i = 0; i < igraph_vector_ptr_size( vptr ); i++ ) {
         inst = ( instrec_t* )igraph_vector_ptr_e( vptr, i );
         VECTOR( *v )[i] = inst->id;
+    }
+}
+
+/******************************************************************************/
+void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
+        virt_net_t* v_net_i, virt_net_t* v_net )
+{
+    int i = 0, j = 0;
+    sync_t* sync = NULL;
+    virt_port_t* vp_new = NULL;
+    virt_port_t* vp_net = NULL;
+    symrec_t* sp_src = NULL;
+    symrec_t* sp_int = NULL;
+    virt_net_t* cp_sync = NULL;
+
+    for( i = 0; i < igraph_vector_ptr_size( syncs ); i++ ) {
+        sync = VECTOR( *syncs )[i];
+        if( igraph_vector_ptr_size( &sync->p_int ) == 0 ) {
+            // there was no internal port, copy the regular port to the new list
+            sp_src = VECTOR( sync->p_ext )[0];
+            // search for the port in the virtual net of the connection
+            vp_net = virt_port_get_equivalent_by_name( v_net_i, sp_src->name );
+            vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
+                    vp_net->v_net, vp_net->name, vp_net->symb );
+            virt_port_append( v_net, vp_new );
+        }
+        else {
+            // create a copy synchronizer
+            cp_sync = dgraph_vertex_add_sync( g );
+            for( j = 0; j < igraph_vector_ptr_size( &sync->p_ext ); j++ ) {
+                sp_src = VECTOR( sync->p_ext )[j];
+                igraph_cattribute_VAN_set( g, INST_ATTR_SYMB, cp_sync->inst->id,
+                        ( uintptr_t )sp_src );
+                // create a new external virtual port
+                vp_net = virt_port_create( sp_src->attr_port->collection,
+                        sp_src->attr_port->mode, cp_sync, sp_src->name,
+                        sp_src );
+                virt_port_append( v_net, vp_net );
+                virt_port_append( cp_sync, vp_net );
+            }
+            for( j = 0; j < igraph_vector_ptr_size( &sync->p_int ); j++ ) {
+                sp_int = VECTOR( sync->p_int )[j];
+                // search for the port in the virtual net of the connection
+                vp_net = virt_port_get_equivalent_by_name( v_net_i,
+                        sp_int->name );
+                // if the port cannot be found in the net its a bypass
+                if( vp_net == NULL ) {
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+                    printf( "wrap_sync_create_cp: bypass\n" );
+#endif // DEBUG_CONNECT
+                    igraph_cattribute_VAN_set( g, INST_ATTR_SYMB,
+                            cp_sync->inst->id, ( uintptr_t )sp_int );
+                    break;
+                }
+                vp_new = virt_port_create( vp_net->attr_class,
+                        vp_net->attr_mode, cp_sync, vp_net->name,
+                        vp_net->symb );
+                virt_port_append( cp_sync, vp_new );
+                // unknown direction, ignore class, modes have to be equal
+                check_connection( vp_new, vp_net, g, false, true, true );
+            }
+        }
+    }
+}
+
+/******************************************************************************/
+bool is_wrap_sync_merge_int( igraph_vector_ptr_t* v1, igraph_vector_ptr_t* v2 )
+{
+    symrec_t* p1 = NULL;
+    symrec_t* p2 = NULL;
+    int i = 0, j = 0;
+    for( i = 0; i < igraph_vector_ptr_size( v1 ); i++ ) {
+        p1 = VECTOR( *v1 )[i];
+        for( j = 0; j < igraph_vector_ptr_size( v2 ); j++ ) {
+            p2 = VECTOR( *v2 )[j];
+            if( strcmp( p1->name, p2->name ) == 0 ) return true;
+        }
+    }
+    return false;
+}
+
+/******************************************************************************/
+virt_net_t* wrap_connect_int( symrec_t* wrap )
+{
+    igraph_vector_ptr_t syncs;
+    virt_net_t* v_net;
+
+    // group ports in order to create copy synchronizers
+    igraph_vector_ptr_init( &syncs, 0 );
+    wrap_sync_init( &syncs, wrap );
+    wrap_sync_merge( &syncs );
+#if defined(DEBUG) || defined(DEBUG_CONNECT_WRAP)
+    printf( "connect_wrap:\n" );
+    debug_print_syncs( &syncs );
+#endif // DEBUG
+
+    v_net = malloc( sizeof( virt_net_t ) );
+    v_net->type = VNET_NET;
+    v_net->inst = NULL;
+    v_net->con = NULL;
+    v_net->ports = NULL;
+    // create copy synchronizers
+    dgraph_wrap_sync_create( &wrap->attr_wrap->g, &syncs,
+            wrap->attr_wrap->v_net, v_net );
+
+    // cleanup
+    wrap_sync_destroy( &syncs );
+
+    return v_net;
+}
+
+/******************************************************************************/
+void wrap_sync_destroy( igraph_vector_ptr_t* syncs )
+{
+    sync_t* sync = NULL;
+    int i = 0;
+    for( i = 0; i < igraph_vector_ptr_size( syncs ); i++ ) {
+        sync = VECTOR( *syncs )[i];
+        igraph_vector_ptr_destroy( &sync->p_ext );
+        igraph_vector_ptr_destroy( &sync->p_int );
+        free( sync );
+    }
+    igraph_vector_ptr_destroy( syncs );
+}
+
+/******************************************************************************/
+void wrap_sync_init( igraph_vector_ptr_t* syncs, symrec_t* wrap )
+{
+    symrec_list_t* sps_src = wrap->attr_wrap->ports;
+    symrec_list_t* sps_int = NULL;
+    sync_t* sync = NULL;
+
+    while( sps_src != NULL ) {
+        sps_int = sps_src->rec->attr_port->ports_int;
+        sync = malloc( sizeof( sync_t ) );
+        igraph_vector_ptr_init( &sync->p_ext, 1 );
+        VECTOR( sync->p_ext )[0] = sps_src->rec;
+        igraph_vector_ptr_init( &sync->p_int, 0 );
+        igraph_vector_ptr_push_back( syncs, sync );
+        while( sps_int != NULL ) {
+            igraph_vector_ptr_push_back( &sync->p_int, sps_int->rec );
+            sps_int = sps_int->next;
+        }
+        sps_src = sps_src->next;
+    }
+}
+
+/******************************************************************************/
+void wrap_sync_merge( igraph_vector_ptr_t* syncs )
+{
+    sync_t* sync1 = NULL;
+    sync_t* sync2 = NULL;
+    int i = 0, j = 0;
+    for( i = 0; i < igraph_vector_ptr_size( syncs ); i++ ) {
+        sync1 = VECTOR( *syncs )[i];
+        for( j = i + 1; j < igraph_vector_ptr_size( syncs ); j++ ) {
+            sync2 = VECTOR( *syncs )[j];
+            if( is_wrap_sync_merge_int( &sync1->p_int, &sync2->p_int ) ) {
+                wrap_sync_merge_port( &sync1->p_int, &sync2->p_int, true );
+                wrap_sync_merge_port( &sync1->p_ext, &sync2->p_ext, false );
+                igraph_vector_ptr_remove( syncs, j );
+                igraph_vector_ptr_destroy( &sync2->p_int );
+                igraph_vector_ptr_destroy( &sync2->p_ext );
+                free( sync2 );
+                if( i > 0 ) i--;
+            }
+        }
+    }
+}
+
+/******************************************************************************/
+void wrap_sync_merge_port( igraph_vector_ptr_t* v1, igraph_vector_ptr_t* v2,
+        bool check_name )
+{
+    symrec_t* p1 = NULL;
+    symrec_t* p2 = NULL;
+    bool add = true;
+    int i = 0, j = 0;
+    for( i = 0; i < igraph_vector_ptr_size( v2 ); i++ ) {
+        add = true;
+        p2 = VECTOR( *v2 )[i];
+        for( j = 0; j < igraph_vector_ptr_size( v1 ); j++ ) {
+            p1 = VECTOR( *v1 )[j];
+            if( check_name && ( strcmp( p1->name, p2->name ) == 0 ) ) {
+                add = false;
+                break;
+            }
+        }
+        if( add ) igraph_vector_ptr_push_back( v1, p2 );
+    }
+}
+
+/******************************************************************************/
+void debug_print_syncs( igraph_vector_ptr_t* syncs )
+{
+    sync_t* sync = NULL;
+    symrec_t* port = NULL;
+    int i = 0, j = 0;
+    for( i = 0; i < igraph_vector_ptr_size( syncs ); i++ ) {
+        sync = VECTOR( *syncs )[i];
+        printf( " cp%d: [ ", i );
+        for( j = 0; j < igraph_vector_ptr_size( &sync->p_ext ); j++ ) {
+            port = VECTOR( sync->p_ext )[j];
+            printf( "%s, ", port->name );
+        }
+        printf( "][ " );
+        for( j = 0; j < igraph_vector_ptr_size( &sync->p_int ); j++ ) {
+            port = VECTOR( sync->p_int )[j];
+            printf( "%s, ", port->name );
+        }
+        printf( "]\n" );
     }
 }

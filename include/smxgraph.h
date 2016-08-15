@@ -10,22 +10,25 @@
 #ifndef NGRAPH_H
 #define NGRAPH_H
 
+
+// TYPEDEFS -------------------------------------------------------------------
+typedef struct sync_s sync_t;
+
 #include <igraph.h>
 #include "vnet.h"
 #include "symtab.h"
 
-virt_net_t* connect_wrap( symrec_t* );
-int dgraph_find_bp_port( igraph_vector_ptr_t*, const char* );
+// STRUCTS --------------------------------------------------------------------
 /**
- *
- * @param g
- * @param sps_src   symrec port list of the net prototype
- * @param vps_net   virt port list of the network equations in the wrapper
+ * @brief   Helper structure to handle port renaming in a wrapper
  */
-virt_port_list_t* dgraph_merge_port_net( igraph_t*, symrec_list_t*,
-        virt_port_list_t* );
-virt_port_list_t* dgraph_merge_port_wrap( igraph_t*, symrec_list_t*,
-        virt_port_list_t* );
+struct sync_s
+{
+    igraph_vector_ptr_t p_int;  /**< list of alterantive port names */
+    igraph_vector_ptr_t p_ext;  /**< list of the external port names */
+};
+
+// FUNCTIONS ------------------------------------------------------------------
 
 /**
  * @brief   Append a graph to another graph
@@ -52,12 +55,26 @@ void dgraph_append( igraph_t*, igraph_t*, bool );
 int dgraph_edge_add( igraph_t*, virt_port_t*, virt_port_t*, const char* );
 
 /**
- * @brief   destroy the vertex attributes of a graph
+ * @brief   destroy the attributes of a graph
  *
  * @param g graph where the attributes will be destroyed
  */
 void dgraph_destroy_attr( igraph_t* );
+
+/**
+ * @brief   destroy the vertex attributes of a graph
+ *
+ * @param g     graph where the attributes will be destroyed
+ * @param attr  name of the attribute
+ */
 void dgraph_destroy_attr_v( igraph_t*, const char* );
+
+/**
+ * @brief   destroy the edge attributes of a graph
+ *
+ * @param g graph where the attributes will be destroyed
+ * @param attr  name of the attribute
+ */
 void dgraph_destroy_attr_e( igraph_t*, const char* );
 
 /**
@@ -81,7 +98,7 @@ void dgraph_flatten( igraph_t*, igraph_t* );
  *
  * @param g_new     resulting graph
  * @param g_child   graph of the net instance
- * @param net_id    id of the net instance
+ * @param v_net     pointer to the virtual net of the net instance
  */
 void dgraph_flatten_net( igraph_t*, igraph_t*, virt_net_t* );
 
@@ -122,7 +139,6 @@ int dgraph_vertex_add( igraph_t*, const char* );
  * @param int   id of the vertex
  * @param func  pointer to the implementation name or NULL
  * @param symb  pointer to the symbol or NULL
- * @param inst  pointer to the instance or NULL
  * @param v_net pointer to the virtual net or NULL
  * @param g_net pointer to teh graph or NULL
  */
@@ -197,14 +213,21 @@ void dgraph_vertex_destroy_attr( igraph_t*, int, bool );
  * @return      id of the removed vertex
  */
 int dgraph_vertex_merge( igraph_t*, int, int );
+
+/**
+ * @brief   remove a vertex from the graph and destroy its attributes
+ *
+ * @param g     pointer to the dependency graph
+ * @param id    vertex id to be removed
+ */
 void dgraph_vertex_remove( igraph_t*, int );
 
 /**
  * @brief   decrement the instance id of all vertices in a graph
  *
- * @param g         pointer to the graph
- * @param id_start  for this and all following vertices the id of the
- *                  corresponding instance is decremented by 1
+ * @param g     pointer to the graph
+ * @param id    for this and all following vertices the id of the
+ *              corresponding instance is decremented by 1
  */
 void dgraph_vertex_update_ids( igraph_t*, int );
 
@@ -216,5 +239,72 @@ void dgraph_vertex_update_ids( igraph_t*, int );
  *              resized and will hold the ids of teh instances
  */
 void dgraph_vptr_to_v( igraph_vector_ptr_t*, igraph_vector_t* );
+
+/**
+ * @brief   connect ports and add synchronizers to the graph
+ *
+ * @param g         pointer to the dependency graph
+ * @param syncs     pointer to the syncronizer vector
+ * @param v_net_i   pointer to the virtual net interface of the wrapper
+ * @param v_net     pointer to the virtual net of the wrapper
+ */
+void dgraph_wrap_sync_create( igraph_t*, igraph_vector_ptr_t*, virt_net_t*,
+        virt_net_t* );
+
+/**
+ * @brief   check wheather two sync structures can be merged
+ *
+ * @param v1            pointer to a port list vector
+ * @param v2            pointer to a port list vector
+ * @param check_name    if true dont add duplicates
+ * @return              true if they can be merged, false if not
+ */
+bool is_wrap_sync_merge_int( igraph_vector_ptr_t*, igraph_vector_ptr_t* );
+
+/**
+ * @brief   establish the internal wrapper connections
+ *
+ * @param wrap  pointer to the wrapper symbol record
+ * @return      pointer to a new virtial net interface
+ */
+virt_net_t* wrap_connect_int( symrec_t* );
+
+/**
+ * @brief   destroy the syncs vector and its helper structures
+ *
+ * @param syncs pointer to a vector object containing sync structure pointers
+ */
+void wrap_sync_destroy( igraph_vector_ptr_t* );
+
+/**
+ * @brief   initialise a vector with synchronizer structures
+ *
+ * @param syncs pointer to an initialised vector object
+ * @param wrap  pointer to the wrapper symbol record
+ */
+void wrap_sync_init( igraph_vector_ptr_t*, symrec_t* );
+
+/**
+ * @brief   merge the sync structures
+ *
+ * @param syncs pointer to a vector object containing sync structure pointers
+ */
+void wrap_sync_merge( igraph_vector_ptr_t* );
+
+/**
+ * @brief   merge ports of two sync structures
+ *
+ * @param v1            pointer to a port list vector
+ * @param v2            pointer to a port list vector
+ * @param check_name    if true dont add duplicates
+ */
+void wrap_sync_merge_port( igraph_vector_ptr_t*, igraph_vector_ptr_t*, bool );
+
+/**
+ * @brief   print debug information of the sync structures
+ *
+ * @param syncs pointer to a vector object containing sync structure pointers
+ */
+void debug_print_syncs( igraph_vector_ptr_t* );
 
 #endif // NGRAPH_H

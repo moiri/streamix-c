@@ -386,7 +386,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             if( check_prototype( port_list_net, w_attr->v_net, rec->name ) ) {
                 // create virtual port list of the prototyped net with instances
                 // of the real net
-                v_net = connect_wrap( rec );
+                v_net = wrap_connect_int( rec );
                 rec->attr_wrap->v_net = v_net;
 #if defined(DEBUG) || defined(DEBUG_CONNECT_WRAP)
                 printf( "check_contect_ast: wrap: \n" );
