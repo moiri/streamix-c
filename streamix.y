@@ -157,49 +157,14 @@ opt_net_port_list:
 ;
 
 net_port_decl:
-    kw_port_class kw_port_mode IDENTIFIER opt_alt_ports {
+    kw_port_class kw_port_mode IDENTIFIER {
         $$ = ast_add_port(
             ast_add_symbol( $3, @3.last_line, ID_PORT ),
-            $4,
+            ( ast_node_t* )0, // no internal ports
             $1,
             $2,
             ( ast_node_t* )0, // no coupling
             PORT_NET
-        );
-    }
-;
-
-opt_alt_ports:
-    %empty { $$ = ( ast_node_t* )0; }
-|   alt_ports { $$ = ast_add_list( $1, AST_INT_PORTS ); }
-;
-
-alt_ports:
-    '(' alt_port_list ')' { $$ = $2; }
-;
-
-alt_port_list:
-    alt_port_decl opt_alt_port_list {
-        $$ = ast_add_list_elem( $1, $2 );
-    }
-;
-
-opt_alt_port_list:
-    %empty { $$ = ( ast_list_t* )0; }
-|   ',' alt_port_decl opt_alt_port_list {
-        $$ = ast_add_list_elem( $2, $3 );
-    }
-;
-
-alt_port_decl:
-    IDENTIFIER {
-        $$ = ast_add_port(
-            ast_add_symbol( $1, @1.last_line, ID_IPORT ),
-            ( ast_node_t* )0, // no internal id
-            ( ast_node_t* )0, // no class
-            ( ast_node_t* )0, // no mode
-            ( ast_node_t* )0, // no coupling
-            PORT_BOX
         );
     }
 ;
@@ -317,6 +282,41 @@ wrap_port_decl:
             ( ast_node_t* )0, // no mode
             ( ast_node_t* )0, // no coupling
             PORT_WRAP_NULL
+        );
+    }
+;
+
+opt_alt_ports:
+    %empty { $$ = ( ast_node_t* )0; }
+|   alt_ports { $$ = ast_add_list( $1, AST_INT_PORTS ); }
+;
+
+alt_ports:
+    '(' alt_port_list ')' { $$ = $2; }
+;
+
+alt_port_list:
+    alt_port_decl opt_alt_port_list {
+        $$ = ast_add_list_elem( $1, $2 );
+    }
+;
+
+opt_alt_port_list:
+    %empty { $$ = ( ast_list_t* )0; }
+|   ',' alt_port_decl opt_alt_port_list {
+        $$ = ast_add_list_elem( $2, $3 );
+    }
+;
+
+alt_port_decl:
+    IDENTIFIER {
+        $$ = ast_add_port(
+            ast_add_symbol( $1, @1.last_line, ID_IPORT ),
+            ( ast_node_t* )0, // no internal id
+            ( ast_node_t* )0, // no class
+            ( ast_node_t* )0, // no mode
+            ( ast_node_t* )0, // no coupling
+            PORT_BOX
         );
     }
 ;
