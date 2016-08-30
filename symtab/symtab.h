@@ -184,7 +184,7 @@ attr_wrap_t* symrec_attr_create_wrap( bool, symrec_list_t*, virt_net_t*,
  * @param attr  pointer to the attribute
  */
 void symrec_attr_destroy_box( attr_box_t* );
-void symrec_attr_destroy_net( attr_net_t* );
+void symrec_attr_destroy_net( attr_net_t*, bool );
 void symrec_attr_destroy_port( attr_port_t* );
 void symrec_attr_destroy_proto( attr_prot_t* );
 void symrec_attr_destroy_wrap( attr_wrap_t* );

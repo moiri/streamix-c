@@ -535,14 +535,15 @@ bool is_wrap_sync_merge_int( igraph_vector_ptr_t* v1, igraph_vector_ptr_t* v2 )
 }
 
 /******************************************************************************/
-virt_net_t* wrap_connect_int( symrec_t* wrap )
+virt_net_t* wrap_connect_int( symrec_list_t* wrap_ports, virt_net_t* v_net_n,
+        igraph_t* g )
 {
     igraph_vector_ptr_t syncs;
     virt_net_t* v_net;
 
     // group ports in order to create copy synchronizers
     igraph_vector_ptr_init( &syncs, 0 );
-    wrap_sync_init( &syncs, wrap );
+    wrap_sync_init( &syncs, wrap_ports );
     wrap_sync_merge( &syncs );
 #if defined(DEBUG) || defined(DEBUG_CONNECT_WRAP)
     printf( "connect_wrap:\n" );
@@ -555,8 +556,7 @@ virt_net_t* wrap_connect_int( symrec_t* wrap )
     v_net->con = NULL;
     v_net->ports = NULL;
     // create copy synchronizers
-    dgraph_wrap_sync_create( &wrap->attr_wrap->g, &syncs,
-            wrap->attr_wrap->v_net, v_net );
+    dgraph_wrap_sync_create( g, &syncs, v_net_n, v_net );
 
     // cleanup
     wrap_sync_destroy( &syncs );
@@ -579,9 +579,8 @@ void wrap_sync_destroy( igraph_vector_ptr_t* syncs )
 }
 
 /******************************************************************************/
-void wrap_sync_init( igraph_vector_ptr_t* syncs, symrec_t* wrap )
+void wrap_sync_init( igraph_vector_ptr_t* syncs, symrec_list_t* sps_src )
 {
-    symrec_list_t* sps_src = wrap->attr_wrap->ports;
     symrec_list_t* sps_int = NULL;
     sync_t* sync = NULL;
 

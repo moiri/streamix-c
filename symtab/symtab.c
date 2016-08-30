@@ -67,7 +67,7 @@ attr_wrap_t* symrec_attr_create_wrap( bool attr_static, symrec_list_t* ports,
     new_attr->attr_static = attr_static;
     new_attr->v_net = v_net;
     new_attr->ports = ports;
-    new_attr->g = *g;
+    if( g != NULL ) new_attr->g = *g;
     return new_attr;
 }
 
@@ -80,12 +80,10 @@ void symrec_attr_destroy_box( attr_box_t* attr )
 }
 
 /******************************************************************************/
-void symrec_attr_destroy_net( attr_net_t* attr )
+void symrec_attr_destroy_net( attr_net_t* attr, bool deep )
 {
-    /* if( ( attr->v_net != NULL ) && ( ( attr->v_net->type == VNET_SERIAL ) */
-    /*             || ( attr->v_net->type ==  VNET_PARALLEL ) ) ) */
     virt_net_destroy_shallow( attr->v_net );
-    dgraph_destroy_attr( &attr->g );
+    if( deep ) dgraph_destroy_attr( &attr->g );
     igraph_destroy( &attr->g );
     free( attr );
 }
@@ -205,7 +203,7 @@ void symrec_del( symrec_t** symtab, symrec_t* rec )
             symrec_attr_destroy_box( rec->attr_box );
             break;
         case SYMREC_NET:
-            symrec_attr_destroy_net( rec->attr_net );
+            symrec_attr_destroy_net( rec->attr_net, true );
             break;
         case SYMREC_NET_PROTO:
             symrec_attr_destroy_proto( rec->attr_proto );

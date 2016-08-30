@@ -264,10 +264,12 @@ bool is_wrap_sync_merge_int( igraph_vector_ptr_t*, igraph_vector_ptr_t* );
 /**
  * @brief   establish the internal wrapper connections
  *
- * @param wrap  pointer to the wrapper symbol record
- * @return      pointer to a new virtial net interface
+ * @param wrap_ports    pointer to the wrapper symbol record port list
+ * @param v_net_n       pointer to the inner virtual net
+ * @param g             pointer to the inner dependency graph
+ * @return              pointer to a new virtial net interface
  */
-virt_net_t* wrap_connect_int( symrec_t* );
+virt_net_t* wrap_connect_int( symrec_list_t*, virt_net_t*, igraph_t* );
 
 /**
  * @brief   destroy the syncs vector and its helper structures
@@ -279,10 +281,10 @@ void wrap_sync_destroy( igraph_vector_ptr_t* );
 /**
  * @brief   initialise a vector with synchronizer structures
  *
- * @param syncs pointer to an initialised vector object
- * @param wrap  pointer to the wrapper symbol record
+ * @param syncs         pointer to an initialised vector object
+ * @param wrap_ports    pointer to the wrapper symbol record port list
  */
-void wrap_sync_init( igraph_vector_ptr_t*, symrec_t* );
+void wrap_sync_init( igraph_vector_ptr_t*, symrec_list_t* );
 
 /**
  * @brief   merge the sync structures

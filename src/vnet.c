@@ -238,6 +238,13 @@ virt_net_t* virt_net_create_wrap( symrec_t* symb, instrec_t* inst )
 void virt_net_destroy( virt_net_t* v_net, bool deep )
 {
     if( v_net == NULL ) return;
+#if defined(DEBUG) || defined(DEBUG_VNET)
+
+    printf( "virt_net_destroy (%d):\n ", deep );
+    if( v_net->inst != NULL )
+        printf( "%s(%d): ", v_net->inst->name, v_net->inst->id );
+    debug_print_vports( v_net );
+#endif // DEBUG_CONNECT
 
     virt_port_list_t* ports = NULL;
     // free instance

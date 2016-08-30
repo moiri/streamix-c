@@ -259,7 +259,7 @@ void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g )
 
     // cleanup
     igraph_destroy( &g_tmp );
-    symrec_attr_destroy_net( n_attr );
+    symrec_attr_destroy_net( n_attr, true );
     dgraph_destroy_attr( g );
 }
 
@@ -377,23 +377,24 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             utarray_pop_back( scope_stack );
 
             // prepare symbol attributes and create symbol
-            w_attr = symrec_attr_create_wrap( false, port_list, n_attr->v_net,
-                    &n_attr->g );
+            w_attr = symrec_attr_create_wrap( false, port_list, NULL, NULL );
             if( ast->wrap->attr_static != NULL ) w_attr->attr_static = true;
             rec = symrec_create_wrap( ast->wrap->id->symbol->name,
                     *utarray_back( scope_stack ), ast->wrap->id->symbol->line,
                     w_attr );
-            if( check_prototype( port_list_net, w_attr->v_net, rec->name ) ) {
+            if( check_prototype( port_list_net, n_attr->v_net, rec->name ) ) {
                 // create virtual port list of the prototyped net with instances
                 // of the real net
-                v_net = wrap_connect_int( rec );
+                igraph_copy( &g_net, &n_attr->g );
+                v_net = wrap_connect_int( port_list, n_attr->v_net, &g_net );
                 rec->attr_wrap->v_net = v_net;
+                rec->attr_wrap->g = g_net;
 #if defined(DEBUG) || defined(DEBUG_CONNECT_WRAP)
                 printf( "check_contect_ast: wrap: \n" );
                 debug_print_vports( v_net );
 #endif // DEBUG
                 // TODO: cleanup net attr
-                /* symrec_attr_destroy_net( n_attr ); */
+                symrec_attr_destroy_net( n_attr, false );
             }
             // install the wrapper symbol in the scope of its declaration
             res = ( void* )symrec_put( symtab, rec );
@@ -582,14 +583,14 @@ void cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
         port2->state = VPORT_STATE_CP_OPEN;
         /* virt_port_update_inst( port1, v_net2 ); */
         virt_port_append_all( v_net2, v_net1, true );
-        /* virt_net_destroy_shallow( v_net1 ); */
+        virt_net_destroy_shallow( v_net1 );
     }
     else {
         port1->state = VPORT_STATE_CP_OPEN;
         port2->state = VPORT_STATE_DISABLED;
         /* virt_port_update_inst( port2, v_net1 ); */
         virt_port_append_all( v_net1, v_net2, true );
-        /* virt_net_destroy_shallow( v_net2 ); */
+        virt_net_destroy_shallow( v_net2 );
     }
     // adjust all ids starting from the id of the deleted record
     dgraph_vertex_update_ids( g, id_del );
@@ -786,12 +787,6 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
         default:
             ;
     }
-    /* if( ( v_net1 != NULL ) && ( ( v_net1->type == VNET_SERIAL ) */
-    /*             || ( v_net1->type == VNET_PARALLEL ) ) ) */
-    /*     virt_net_destroy_shallow( v_net1 ); */
-    /* if( ( v_net2 != NULL ) && ( ( v_net2->type == VNET_SERIAL ) */
-    /*             || ( v_net2->type == VNET_PARALLEL ) ) ) */
-    /*     virt_net_destroy_shallow( v_net2 ); */
     return v_net;
 }
 
