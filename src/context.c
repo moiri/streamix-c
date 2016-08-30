@@ -393,6 +393,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                 debug_print_vports( v_net );
 #endif // DEBUG
                 // TODO: cleanup net attr
+                /* symrec_attr_destroy_net( n_attr ); */
             }
             // install the wrapper symbol in the scope of its declaration
             res = ( void* )symrec_put( symtab, rec );
@@ -581,14 +582,14 @@ void cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
         port2->state = VPORT_STATE_CP_OPEN;
         /* virt_port_update_inst( port1, v_net2 ); */
         virt_port_append_all( v_net2, v_net1, true );
-        virt_net_destroy_shallow( v_net1 );
+        /* virt_net_destroy_shallow( v_net1 ); */
     }
     else {
         port1->state = VPORT_STATE_CP_OPEN;
         port2->state = VPORT_STATE_DISABLED;
         /* virt_port_update_inst( port2, v_net1 ); */
         virt_port_append_all( v_net1, v_net2, true );
-        virt_net_destroy_shallow( v_net2 );
+        /* virt_net_destroy_shallow( v_net2 ); */
     }
     // adjust all ids starting from the id of the deleted record
     dgraph_vertex_update_ids( g, id_del );
@@ -735,6 +736,8 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             v_net2 = install_nets( symtab, scope_stack, ast->op->right, g );
             if( v_net2 == NULL ) return NULL;
             v_net = virt_net_create_parallel( v_net1, v_net2 );
+            virt_net_destroy_shallow( v_net1 );
+            virt_net_destroy_shallow( v_net2 );
             check_connections_cp( v_net, g, true );
             break;
         case AST_SERIAL:
@@ -748,6 +751,8 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             virt_net_update_class( v_net2, PORT_CLASS_DOWN );
             check_connection_missing( v_net1, v_net2, g );
             v_net = virt_net_create_serial( v_net1, v_net2 );
+            virt_net_destroy_shallow( v_net1 );
+            virt_net_destroy_shallow( v_net2 );
             check_connections_cp( v_net, g, false );
             break;
         case AST_ID:
@@ -759,12 +764,15 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             switch( rec->type ) {
                 case SYMREC_BOX:
                     v_net = dgraph_vertex_add_box( g, rec, ast->symbol->line );
+                    v_net = virt_net_create_parallel( v_net, NULL );
                     break;
                 case SYMREC_NET:
                     v_net = dgraph_vertex_add_net( g, rec, ast->symbol->line );
+                    v_net = virt_net_create_parallel( v_net, NULL );
                     break;
                 case SYMREC_WRAP:
                     v_net = dgraph_vertex_add_wrap( g, rec, ast->symbol->line );
+                    v_net = virt_net_create_parallel( v_net, NULL );
                     break;
                 case SYMREC_NET_PROTO:
                     // prototype -> net definition is missing
@@ -778,12 +786,12 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
         default:
             ;
     }
-    if( ( v_net1 != NULL ) && ( ( v_net1->type == VNET_SERIAL )
-                || ( v_net1->type == VNET_PARALLEL ) ) )
-        virt_net_destroy_shallow( v_net1 );
-    if( ( v_net2 != NULL ) && ( ( v_net2->type == VNET_SERIAL )
-                || ( v_net2->type == VNET_PARALLEL ) ) )
-        virt_net_destroy_shallow( v_net2 );
+    /* if( ( v_net1 != NULL ) && ( ( v_net1->type == VNET_SERIAL ) */
+    /*             || ( v_net1->type == VNET_PARALLEL ) ) ) */
+    /*     virt_net_destroy_shallow( v_net1 ); */
+    /* if( ( v_net2 != NULL ) && ( ( v_net2->type == VNET_SERIAL ) */
+    /*             || ( v_net2->type == VNET_PARALLEL ) ) ) */
+    /*     virt_net_destroy_shallow( v_net2 ); */
     return v_net;
 }
 

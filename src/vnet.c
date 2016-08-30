@@ -161,14 +161,18 @@ virt_net_t* virt_net_create_parallel( virt_net_t* v_net1, virt_net_t* v_net2 )
 
     // alter ports
     ports_tmp = virt_port_assign( v_net1->ports, NULL, NULL );
-    v_net->ports = virt_port_assign( v_net2->ports, ports_tmp, NULL );
+    if(v_net2 != NULL )
+        v_net->ports = virt_port_assign( v_net2->ports, ports_tmp, NULL );
+    else v_net->ports = ports_tmp;
 
     // create connection list
     v_net->con = malloc( sizeof( net_con_t ) );
     igraph_vector_ptr_copy( &v_net->con->left, &v_net1->con->left );
-    igraph_vector_ptr_append( &v_net->con->left, &v_net2->con->left );
+    if( v_net2 != NULL )
+        igraph_vector_ptr_append( &v_net->con->left, &v_net2->con->left );
     igraph_vector_ptr_copy( &v_net->con->right, &v_net1->con->right );
-    igraph_vector_ptr_append( &v_net->con->right, &v_net2->con->right );
+    if( v_net2 != NULL )
+        igraph_vector_ptr_append( &v_net->con->right, &v_net2->con->right );
 #if defined(DEBUG) || defined(DEBUG_VNET)
     printf( "virt_net_create_parallel:\n " );
     debug_print_vports( v_net );
