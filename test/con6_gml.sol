@@ -29,15 +29,15 @@ graph
   ]
   edge
   [
-    source 1
-    target 0
-    label "a"
-  ]
-  edge
-  [
     source 2
     target 0
     label "b"
+  ]
+  edge
+  [
+    source 1
+    target 0
+    label "a"
   ]
   edge
   [

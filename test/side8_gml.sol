@@ -41,27 +41,27 @@ graph
   ]
   edge
   [
-    source 1
-    target 2
-    label "s2"
-  ]
-  edge
-  [
     source 2
-    target 0
-    label "s2"
-  ]
-  edge
-  [
-    source 3
     target 1
     label "s1"
   ]
   edge
   [
     source 0
-    target 3
+    target 2
     label "s1"
+  ]
+  edge
+  [
+    source 1
+    target 3
+    label "s2"
+  ]
+  edge
+  [
+    source 3
+    target 0
+    label "s2"
   ]
   edge
   [
@@ -71,14 +71,14 @@ graph
   ]
   edge
   [
-    source 4
-    target 2
-    label "s2"
+    source 2
+    target 4
+    label "s1"
   ]
   edge
   [
-    source 3
-    target 4
-    label "s1"
+    source 4
+    target 3
+    label "s2"
   ]
 ]

@@ -71,9 +71,9 @@ graph
   ]
   edge
   [
-    source 5
-    target 7
-    label "c"
+    source 7
+    target 5
+    label "d"
   ]
   edge
   [
@@ -83,9 +83,9 @@ graph
   ]
   edge
   [
-    source 7
-    target 5
-    label "d"
+    source 5
+    target 7
+    label "c"
   ]
   edge
   [

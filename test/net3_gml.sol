@@ -59,15 +59,15 @@ graph
   ]
   edge
   [
-    source 4
-    target 1
-    label "d"
-  ]
-  edge
-  [
     source 3
     target 1
     label "c"
+  ]
+  edge
+  [
+    source 4
+    target 1
+    label "d"
   ]
   edge
   [

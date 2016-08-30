@@ -19,7 +19,7 @@ graph
   [
     source 1
     target 0
-    label "syn"
+    label "ack"
   ]
   edge
   [
@@ -31,6 +31,6 @@ graph
   [
     source 1
     target 0
-    label "ack"
+    label "syn"
   ]
 ]

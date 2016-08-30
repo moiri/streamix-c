@@ -29,26 +29,26 @@ graph
   ]
   edge
   [
-    source 2
-    target 1
-    label "a2"
-  ]
-  edge
-  [
     source 3
     target 1
     label "b2"
   ]
   edge
   [
-    source 0
-    target 3
-    label "b1"
+    source 2
+    target 1
+    label "a2"
   ]
   edge
   [
     source 0
     target 2
     label "a1"
+  ]
+  edge
+  [
+    source 0
+    target 3
+    label "b1"
   ]
 ]

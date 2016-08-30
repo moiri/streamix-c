@@ -59,27 +59,39 @@ graph
   ]
   edge
   [
-    source 3
-    target 4
-    label "p_int"
-  ]
-  edge
-  [
-    source 2
-    target 4
-    label "p_int"
-  ]
-  edge
-  [
-    source 5
+    source 4
     target 3
     label "a"
   ]
   edge
   [
-    source 5
+    source 4
     target 2
     label "a"
+  ]
+  edge
+  [
+    source 3
+    target 5
+    label "p_int"
+  ]
+  edge
+  [
+    source 2
+    target 5
+    label "p_int"
+  ]
+  edge
+  [
+    source 5
+    target 7
+    label "p_int"
+  ]
+  edge
+  [
+    source 5
+    target 6
+    label "p_int"
   ]
   edge
   [
@@ -95,15 +107,9 @@ graph
   ]
   edge
   [
-    source 4
-    target 7
-    label "p_int"
-  ]
-  edge
-  [
-    source 4
-    target 6
-    label "p_int"
+    source 8
+    target 1
+    label "p4"
   ]
   edge
   [
@@ -113,20 +119,14 @@ graph
   ]
   edge
   [
-    source 8
-    target 1
-    label "p4"
-  ]
-  edge
-  [
     source 0
-    target 5
-    label "p2"
-  ]
-  edge
-  [
-    source 0
-    target 5
+    target 4
     label "p1"
+  ]
+  edge
+  [
+    source 0
+    target 4
+    label "p2"
   ]
 ]

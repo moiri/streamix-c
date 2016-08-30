@@ -73,13 +73,13 @@ graph
   [
     source 0
     target 3
-    label "d"
+    label "b"
   ]
   edge
   [
     source 0
     target 3
-    label "b"
+    label "d"
   ]
   edge
   [

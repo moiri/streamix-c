@@ -77,18 +77,6 @@ graph
   ]
   edge
   [
-    source 7
-    target 5
-    label "b"
-  ]
-  edge
-  [
-    source 6
-    target 5
-    label "b"
-  ]
-  edge
-  [
     source 2
     target 7
     label "a"
@@ -98,5 +86,17 @@ graph
     source 2
     target 6
     label "a"
+  ]
+  edge
+  [
+    source 7
+    target 5
+    label "b"
+  ]
+  edge
+  [
+    source 6
+    target 5
+    label "b"
   ]
 ]

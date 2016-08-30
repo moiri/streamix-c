@@ -161,15 +161,15 @@ graph
   ]
   edge
   [
-    source 5
-    target 6
-    label "break_cmd"
-  ]
-  edge
-  [
     source 6
     target 5
     label "block"
+  ]
+  edge
+  [
+    source 5
+    target 6
+    label "break_cmd"
   ]
   edge
   [
@@ -185,27 +185,27 @@ graph
   ]
   edge
   [
-    source 6
-    target 7
-    label "abs"
-  ]
-  edge
-  [
     source 7
     target 6
     label "dc"
   ]
   edge
   [
-    source 7
-    target 8
-    label "dc"
+    source 6
+    target 7
+    label "abs"
   ]
   edge
   [
     source 8
     target 7
     label "cpa"
+  ]
+  edge
+  [
+    source 7
+    target 8
+    label "dc"
   ]
   edge
   [
@@ -227,15 +227,15 @@ graph
   ]
   edge
   [
-    source 13
-    target 14
-    label "break_cmd"
-  ]
-  edge
-  [
     source 14
     target 13
     label "block"
+  ]
+  edge
+  [
+    source 13
+    target 14
+    label "break_cmd"
   ]
   edge
   [
@@ -251,27 +251,27 @@ graph
   ]
   edge
   [
-    source 14
-    target 15
-    label "abs"
-  ]
-  edge
-  [
     source 15
     target 14
     label "dc"
   ]
   edge
   [
-    source 15
-    target 16
-    label "dc"
+    source 14
+    target 15
+    label "abs"
   ]
   edge
   [
     source 16
     target 15
     label "cpa"
+  ]
+  edge
+  [
+    source 15
+    target 16
+    label "dc"
   ]
   edge
   [
@@ -293,15 +293,15 @@ graph
   ]
   edge
   [
-    source 21
-    target 22
-    label "break_cmd"
-  ]
-  edge
-  [
     source 22
     target 21
     label "block"
+  ]
+  edge
+  [
+    source 21
+    target 22
+    label "break_cmd"
   ]
   edge
   [
@@ -317,27 +317,27 @@ graph
   ]
   edge
   [
-    source 22
-    target 23
-    label "abs"
-  ]
-  edge
-  [
     source 23
     target 22
     label "dc"
   ]
   edge
   [
-    source 23
-    target 24
-    label "dc"
+    source 22
+    target 23
+    label "abs"
   ]
   edge
   [
     source 24
     target 23
     label "cpa"
+  ]
+  edge
+  [
+    source 23
+    target 24
+    label "dc"
   ]
   edge
   [

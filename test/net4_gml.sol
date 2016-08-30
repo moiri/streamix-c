@@ -41,38 +41,38 @@ graph
   ]
   edge
   [
-    source 3
-    target 4
-    label "b"
-  ]
-  edge
-  [
-    source 2
-    target 4
-    label "b"
-  ]
-  edge
-  [
-    source 5
+    source 4
     target 3
     label "a"
   ]
   edge
   [
-    source 5
+    source 4
     target 2
     label "a"
   ]
   edge
   [
-    source 4
+    source 3
+    target 5
+    label "b"
+  ]
+  edge
+  [
+    source 2
+    target 5
+    label "b"
+  ]
+  edge
+  [
+    source 5
     target 1
     label "b"
   ]
   edge
   [
     source 0
-    target 5
+    target 4
     label "a"
   ]
 ]

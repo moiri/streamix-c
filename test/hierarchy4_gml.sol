@@ -47,44 +47,44 @@ graph
   ]
   edge
   [
-    source 2
-    target 3
-    label "b"
-  ]
-  edge
-  [
-    source 1
-    target 3
-    label "b"
-  ]
-  edge
-  [
-    source 4
+    source 3
     target 2
     label "a"
   ]
   edge
   [
-    source 4
+    source 3
     target 1
     label "a"
   ]
   edge
   [
-    source 3
+    source 2
+    target 4
+    label "b"
+  ]
+  edge
+  [
+    source 1
+    target 4
+    label "b"
+  ]
+  edge
+  [
+    source 4
     target 6
     label "b"
   ]
   edge
   [
-    source 3
+    source 4
     target 5
     label "b"
   ]
   edge
   [
     source 0
-    target 4
+    target 3
     label "a"
   ]
 ]

@@ -43,36 +43,36 @@ graph
   [
     source 4
     target 3
-    label "b"
+    label "a"
   ]
   edge
   [
     source 4
     target 2
-    label "b"
+    label "a"
   ]
   edge
   [
     source 5
     target 3
-    label "a"
+    label "b"
   ]
   edge
   [
     source 5
     target 2
-    label "a"
+    label "b"
   ]
   edge
   [
     source 1
-    target 4
+    target 5
     label "b"
   ]
   edge
   [
     source 0
-    target 5
+    target 4
     label "a"
   ]
 ]

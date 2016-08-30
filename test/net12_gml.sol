@@ -95,18 +95,6 @@ graph
   ]
   edge
   [
-    source 7
-    target 8
-    label "a"
-  ]
-  edge
-  [
-    source 6
-    target 8
-    label "a"
-  ]
-  edge
-  [
     source 2
     target 7
     label "a"
@@ -119,14 +107,14 @@ graph
   ]
   edge
   [
-    source 10
-    target 5
+    source 7
+    target 8
     label "a"
   ]
   edge
   [
-    source 9
-    target 5
+    source 6
+    target 8
     label "a"
   ]
   edge
@@ -139,6 +127,18 @@ graph
   [
     source 8
     target 9
+    label "a"
+  ]
+  edge
+  [
+    source 10
+    target 5
+    label "a"
+  ]
+  edge
+  [
+    source 9
+    target 5
     label "a"
   ]
 ]

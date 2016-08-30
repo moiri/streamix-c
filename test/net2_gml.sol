@@ -47,37 +47,37 @@ graph
   ]
   edge
   [
-    source 4
-    target 5
-    label "c"
-  ]
-  edge
-  [
-    source 3
-    target 5
-    label "c"
-  ]
-  edge
-  [
-    source 6
+    source 5
     target 4
     label "b"
   ]
   edge
   [
-    source 6
+    source 5
     target 3
     label "b"
   ]
   edge
   [
-    source 2
+    source 4
     target 6
+    label "c"
+  ]
+  edge
+  [
+    source 3
+    target 6
+    label "c"
+  ]
+  edge
+  [
+    source 2
+    target 5
     label "b"
   ]
   edge
   [
-    source 5
+    source 6
     target 1
     label "c"
   ]
