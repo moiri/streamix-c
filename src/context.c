@@ -249,16 +249,16 @@ void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g )
     n_attr = check_context_ast( symtab, scope_stack, ast );
 
     utarray_free( scope_stack );
-    if( n_attr == NULL ) return;
-
-    // flatten graph and detect open ports
-    igraph_empty( &g_tmp, 0, IGRAPH_DIRECTED );
-    dgraph_append( &g_tmp, &n_attr->g, true );
-    dgraph_flatten( g, &g_tmp );
-    post_process( g );
+    if( n_attr->v_net != NULL ) {
+        // flatten graph and detect open ports
+        igraph_empty( &g_tmp, 0, IGRAPH_DIRECTED );
+        dgraph_append( &g_tmp, &n_attr->g, true );
+        dgraph_flatten( g, &g_tmp );
+        post_process( g );
+        igraph_destroy( &g_tmp );
+    }
 
     // cleanup
-    igraph_destroy( &g_tmp );
     symrec_attr_destroy_net( n_attr, true );
     dgraph_destroy_attr( g );
 }
@@ -321,6 +321,9 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                     rec->attr_net = attr;
                     rec->line = ast->assign->id->symbol->line;
                 }
+                else {
+                    symrec_attr_destroy_net( attr, true );
+                }
             }
             if( ast->assign->type == AST_BOX ) {
                 rec = symrec_create_box( ast->assign->id->symbol->name,
@@ -360,7 +363,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             igraph_write_graph_dot( &g_net, stdout );
 #endif // DEBUG
             res = ( void* )n_attr;
-            if( v_net == NULL ) return NULL;
+            /* if( v_net == NULL ) return NULL; */
             break;
         case AST_WRAP:
             _scope++;
@@ -393,7 +396,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                 printf( "check_contect_ast: wrap: \n" );
                 debug_print_vports( v_net );
 #endif // DEBUG
-                // TODO: cleanup net attr
+                // cleanup net attr
                 symrec_attr_destroy_net( n_attr, false );
             }
             // install the wrapper symbol in the scope of its declaration
@@ -481,6 +484,10 @@ bool check_prototype( symrec_list_t* r_ports, virt_net_t* v_net, char *name )
         || !do_port_attrs_match( r_ports, v_net->ports ) ) {
         sprintf( error_msg, ERROR_TYPE_CONFLICT, ERR_ERROR, name );
         report_yyerror( error_msg, r_ports->rec->line );
+        printf( " net:       " );
+        debug_print_vports_s( v_net, false );
+        printf( " prototype: " );
+        debug_print_rports( r_ports, name );
         res = false;
     }
 
@@ -735,7 +742,10 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             v_net1 = install_nets( symtab, scope_stack, ast->op->left, g );
             if( v_net1 == NULL ) return NULL;
             v_net2 = install_nets( symtab, scope_stack, ast->op->right, g );
-            if( v_net2 == NULL ) return NULL;
+            if( v_net2 == NULL ) {
+                virt_net_destroy_shallow( v_net1 );
+                return NULL;
+            }
             v_net = virt_net_create_parallel( v_net1, v_net2 );
             virt_net_destroy_shallow( v_net1 );
             virt_net_destroy_shallow( v_net2 );
@@ -745,7 +755,10 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             v_net1 = install_nets( symtab, scope_stack, ast->op->left, g );
             if( v_net1 == NULL ) return NULL;
             v_net2 = install_nets( symtab, scope_stack, ast->op->right, g );
-            if( v_net2 == NULL ) return NULL;
+            if( v_net2 == NULL ) {
+                virt_net_destroy_shallow( v_net1 );
+                return NULL;
+            }
             // check connections and update virtual net
             check_connections( v_net1, v_net2, g );
             virt_net_update_class( v_net1, PORT_CLASS_UP );

@@ -361,9 +361,18 @@ void virt_port_update_inst( virt_port_t*, virt_net_t* );
 void debug_print_vport( virt_port_t* );
 
 /**
- * @brief   Print debug information of all ports in a virtual net
+ * @brief   Wrapper function for debug_print_vports_s( ... )
  *
  * @param v_net pointer to the virtual net
  */
 void debug_print_vports( virt_net_t* );
+
+/**
+ * @brief   Print debug information of all ports in a virtual net
+ *
+ * @param v_net pointer to the virtual net
+ * @param all   flag to indicate whether all ports or only the open ports
+ *              should be printed
+ */
+void debug_print_vports_s( virt_net_t*, bool );
 #endif // VNET_H

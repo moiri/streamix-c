@@ -515,26 +515,33 @@ void debug_print_vport( virt_port_t* port )
     else if( port->state == VPORT_STATE_CP_OPEN ) printf("-");
     else if( port->state == VPORT_STATE_DISABLED ) printf("!");
     if( port->v_net->inst == NULL ) printf( "UNDEF" );
-    else printf( "%s(%p,%d)", port->v_net->inst->name, port->v_net->inst,
-            port->v_net->inst->id );
+    else printf( "%s(%d)", port->v_net->inst->name, port->v_net->inst->id );
     if( port->attr_class == PORT_CLASS_DOWN ) printf( "_" );
     else if( port->attr_class == PORT_CLASS_UP ) printf( "^" );
     else if( port->attr_class == PORT_CLASS_SIDE ) printf( "|" );
     if( port->attr_mode == PORT_MODE_IN ) printf( "<--" );
     else if( port->attr_mode == PORT_MODE_OUT ) printf( "-->" );
     else printf( "<->" );
-    printf( "%s(%p)", port->name, port->symb );
+    printf( "%s", port->name );
 }
 
 /******************************************************************************/
 void debug_print_vports( virt_net_t* v_net )
 {
+    debug_print_vports_s( v_net, true );
+}
+
+/******************************************************************************/
+void debug_print_vports_s( virt_net_t* v_net, bool all )
+{
     virt_port_list_t* ports = NULL;
     if( v_net->ports != NULL )
         ports = v_net->ports;
     while( ports != NULL ) {
-        debug_print_vport( ports->port );
-        printf(", ");
+        if( all || ( ports->port->state < VPORT_STATE_CONNECTED ) ) {
+            debug_print_vport( ports->port );
+            printf(", ");
+        }
         ports = ports->next;
     }
     printf("\n");
