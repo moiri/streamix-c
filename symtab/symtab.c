@@ -89,7 +89,7 @@ void symrec_attr_destroy_net( attr_net_t* attr, bool deep )
 }
 
 /******************************************************************************/
-void symrec_attr_destroy_port( attr_port_t* attr ) 
+void symrec_attr_destroy_port( attr_port_t* attr )
 {
     symrec_list_del( attr->ports_int );
     free( attr );
@@ -106,7 +106,7 @@ void symrec_attr_destroy_proto( attr_prot_t* attr )
 void symrec_attr_destroy_wrap( attr_wrap_t* attr )
 {
     symrec_list_del( attr->ports );
-    virt_net_destroy( attr->v_net, true );
+    virt_net_destroy_shallow( attr->v_net );
     dgraph_destroy_attr( &attr->g );
     igraph_destroy( &attr->g );
     free( attr );

@@ -396,9 +396,10 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                 printf( "check_contect_ast: wrap: \n" );
                 debug_print_vports( v_net );
 #endif // DEBUG
-                // cleanup net attr
-                symrec_attr_destroy_net( n_attr, false );
             }
+            // cleanup
+            symrec_attr_destroy_net( n_attr, false );
+            symrec_list_del( port_list_net );
             // install the wrapper symbol in the scope of its declaration
             res = ( void* )symrec_put( symtab, rec );
 
