@@ -240,10 +240,18 @@ void virt_net_destroy( virt_net_t* v_net, bool deep )
     if( v_net == NULL ) return;
 #if defined(DEBUG) || defined(DEBUG_VNET)
 
-    printf( "virt_net_destroy (%d):\n ", deep );
+    printf( "virt_net_destroy" );
+    if( deep ) printf( "_deep:\n " );
+    else printf( "_shallow:\n " );
     if( v_net->inst != NULL )
-        printf( "%s(%d): ", v_net->inst->name, v_net->inst->id );
-    debug_print_vports( v_net );
+        printf( "%s(%d)", v_net->inst->name, v_net->inst->id );
+    else if( v_net->type ==  VNET_SERIAL ) printf( "serial" );
+    else if( v_net->type ==  VNET_PARALLEL ) printf( "parallel" );
+    if( deep ) {
+        printf( ": " );
+        debug_print_vports( v_net );
+    }
+    else printf( "\n" );
 #endif // DEBUG_CONNECT
 
     virt_port_list_t* ports = NULL;
@@ -363,6 +371,13 @@ virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
 }
 
 /******************************************************************************/
+virt_port_t* virt_port_copy( virt_port_t* port )
+{
+    return virt_port_create( port->attr_class, port->attr_mode, port->v_net,
+            port->name, port->symb );
+}
+
+/******************************************************************************/
 virt_port_list_t* virt_ports_copy_symb( symrec_list_t* ports,
         virt_net_t* v_net, virt_net_t* v_net_i )
 {
@@ -446,7 +461,6 @@ virt_port_t* virt_port_get_equivalent_by_name( virt_net_t* v_net,
     virt_port_t* vp_net = NULL;
     virt_port_list_t* ports = v_net->ports;
 #if defined(DEBUG) || defined(DEBUG_SEARCH_PORT_WRAP)
-    virt_port_list_t* ports = vps_net;
     printf( "virt_port_get_equivalent_by_name: Search port '%s'\n", name );
     printf( " in virtual net: " );
     debug_print_vports( v_net );

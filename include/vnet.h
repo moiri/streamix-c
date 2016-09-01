@@ -291,6 +291,16 @@ virt_port_t* virt_port_create( port_class_t, port_mode_t, virt_net_t*,
         const char*, symrec_t* );
 
 /**
+ * @brief   Create a copy of a virtual port
+ *
+ * The port status is set to VPORT_STATE_OPEN
+ *
+ * @param port  pointer to the virtual port to be copied
+ * @return      pointer to the new virtual port
+ */
+virt_port_t* virt_port_copy( virt_port_t* );
+
+/**
  * @brief   Make a copy of the port list of a symbol record
  *
  * @param ports     a pointer to the port list to be copied

@@ -106,7 +106,8 @@ void symrec_attr_destroy_proto( attr_prot_t* attr )
 void symrec_attr_destroy_wrap( attr_wrap_t* attr )
 {
     symrec_list_del( attr->ports );
-    virt_net_destroy_shallow( attr->v_net );
+    /* virt_net_destroy_shallow( attr->v_net ); */
+    virt_net_destroy( attr->v_net, true );
     dgraph_destroy_attr( &attr->g );
     igraph_destroy( &attr->g );
     free( attr );
@@ -224,6 +225,9 @@ void symrec_del( symrec_t** symtab, symrec_t* rec )
 void symrec_del_all( symrec_t** recs )
 {
     symrec_t *rec, *tmp;
+    HASH_ITER( hh, *recs, rec, tmp ) {
+        if( rec->type == SYMREC_NET ) symrec_del( recs, rec );
+    }
     HASH_ITER( hh, *recs, rec, tmp ) {
         symrec_del( recs, rec );
     }
