@@ -106,7 +106,6 @@ void symrec_attr_destroy_proto( attr_prot_t* attr )
 void symrec_attr_destroy_wrap( attr_wrap_t* attr )
 {
     symrec_list_del( attr->ports );
-    /* virt_net_destroy_shallow( attr->v_net ); */
     virt_net_destroy( attr->v_net, true );
     dgraph_destroy_attr( &attr->g );
     igraph_destroy( &attr->g );

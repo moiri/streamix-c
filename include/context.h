@@ -34,7 +34,7 @@
  * @return          true if connection was ok, false if no connection
  */
 bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g, bool, bool,
-        bool, bool );
+        bool );
 
 /**
  * @brief   Connect two ports of copy synchronizers
@@ -164,7 +164,7 @@ void connect_ports( virt_port_t*, virt_port_t*, igraph_t*, bool );
  * @param g     pointer to a initialized igraph object
  * @return      pointer to the merged copy synchronizer
  */
-void cpsync_merge( virt_port_t*, virt_port_t*, igraph_t*, bool );
+void cpsync_merge( virt_port_t*, virt_port_t*, igraph_t* );
 
 /**
  * @brief   update ports of a virtual net after merging two copy synchrpnizers

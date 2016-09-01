@@ -125,7 +125,6 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
         v_net_i = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
                 INST_ATTR_VNET, inst_id );
         if( ( v_net_i->type == VNET_NET ) || ( v_net_i->type == VNET_WRAP ) ) {
-        /* if( inst->type == INSTREC_NET ) { */
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
             printf( "\nFlatten instance '%s(%d)' start\n", v_net_i->inst->name,
                     v_net_i->inst->id );
@@ -180,19 +179,17 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, virt_net_t* v_net )
             port_net = p_src;
         }
         // get open port with same symbol pointer from child graph
-        port_net_new = dgraph_port_search_child( g_child, port_net, false );
+        port_net_new = dgraph_port_search_child( g_child, port_net );
         // connect this port to the matching port of the virtual net
         if( v_net->type == VNET_NET ) {
-            // connect this port to the matching port of the virtual net
             // unknown direction, class matters, modes have to be different
-            check_connection( port_net_new, port, g_new, false, false, false, true );
+            check_connection( port_net_new, port, g_new, false, false, false );
             check_connection_cp( NULL, port_net_new, port, g_new, false, false );
         }
         else if( v_net->type == VNET_WRAP ) {
             // unknown direction, ignore class, modes have to be different
-            check_connection( port_net_new, port, g_new, false, true, false, false );
+            check_connection( port_net_new, port, g_new, false, true, false );
         }
-        /* port_net_new->name = port_net->name; */
         IGRAPH_EIT_NEXT( eit );
     }
     igraph_eit_destroy( &eit );
@@ -218,8 +215,7 @@ virt_port_t* dgraph_port_search_neighbour( igraph_t* g, igraph_t* g_new,
 }
 
 /******************************************************************************/
-virt_port_t* dgraph_port_search_child( igraph_t* g, virt_port_t* port,
-        bool clean )
+virt_port_t* dgraph_port_search_child( igraph_t* g, virt_port_t* port )
 {
     virt_port_t *port_res = NULL, *port_inst = NULL;
     virt_net_t* v_net;
@@ -245,13 +241,6 @@ virt_port_t* dgraph_port_search_child( igraph_t* g, virt_port_t* port,
         if( port_inst != NULL ) {
             port_res = port_inst;
             if( port_inst->v_net->inst->type == INSTREC_SYNC ) {
-                // TODO: param clean is not used anymore, it is always false
-                if( clean ) {
-                    // remove the cp sync to not search for it a second time
-                    vs = igraph_vss_1( id_inst );
-                    igraph_delete_vertices( g, vs );
-                    igraph_vs_destroy( &vs );
-                }
                 break;
             }
         }
@@ -510,7 +499,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                         vp_net->symb );
                 virt_port_append( cp_sync, vp_new );
                 // unknown direction, ignore class, modes have to be equal
-                check_connection( vp_new, vp_net, g, false, true, true, true );
+                check_connection( vp_new, vp_net, g, false, true, true );
             }
         }
     }

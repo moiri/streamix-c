@@ -121,7 +121,7 @@ virt_port_t* dgraph_port_search_neighbour( igraph_t*, igraph_t*, int, int,
  * @param g     child graph of a net
  * @param port  port template to be found
  */
-virt_port_t* dgraph_port_search_child( igraph_t*, virt_port_t*, bool );
+virt_port_t* dgraph_port_search_child( igraph_t*, virt_port_t* );
 
 /**
  * @brief   Add a vertex to a graph
