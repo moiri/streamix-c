@@ -11,4 +11,5 @@ parser
 test/*.res
 test/*.pdf
 test/*.log
+test/*.valgrind
 *.gml
