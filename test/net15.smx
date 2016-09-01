@@ -1,0 +1,9 @@
+/**
+ * Test a pure side port connection on nets
+ */
+
+A = box A( side out x )
+B = box B( side in x )
+N1 = A
+N2 = B
+connect N1 | N1 | N2
