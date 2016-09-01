@@ -58,6 +58,9 @@ DOT_FLAGS += -DDOT_SYNC_FIRST
 TEST_IN = smx
 TEST_SUSPENDED = sus
 TEST_OUT = res
+TEST_VAL = valgrind
+MSG_VAL = "ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)"
+MEM = 0
 TEST_SOL = sol
 TEST_GML = gml
 TEST_PATH = test
@@ -166,6 +169,10 @@ run_test:
 	cp $(DOT_P_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gp.pdf)
 	cp $(PROJECT).gml $(INPUT:.$(TEST_IN)=_$(TEST_GML).$(TEST_OUT))
 	@diff $(INPUT:.$(TEST_IN)=_$(TEST_GML).$(TEST_OUT)) $(INPUT:.$(TEST_IN)=_$(TEST_GML).$(TEST_SOL))
+ifeq ($(MEM),1)
+	@valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -v ./$(PARSER) $(INPUT) &> $(INPUT:.$(TEST_IN)=.$(TEST_VAL))
+	@diff <(tail -n1 $(INPUT:.$(TEST_IN)=.$(TEST_VAL)) | sed 's/==[0-9]*== //g') <(echo $(MSG_VAL))
+endif
 	# cp $(DOT_N_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gn.pdf)
 
 run_test_all:
@@ -181,6 +188,10 @@ run_test_all:
 		cp $(DOT_P_CON_FILE).pdf $${file%.*}_gp.pdf; \
 		cp $(PROJECT).gml $${file%.*}_$(TEST_GML).$(TEST_OUT); \
 		diff $${file%.*}_$(TEST_GML).$(TEST_OUT) $${file%.*}_$(TEST_GML).$(TEST_SOL) | tee -a $(TEST_PATH)/test.log; \
+		if [ $(MEM) -eq 1 ]; then \
+			valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -v ./$(PARSER) $$file &> $${file%.*}.$(TEST_VAL); \
+			diff <(tail -n1 $${file%.*}.$(TEST_VAL) | sed 's/==[0-9]*== //g') <(echo $(MSG_VAL)); \
+		fi;\
 		# cp $(DOT_N_CON_FILE).pdf $${file%.*}_gn.pdf; \
 	done
 	@printf "\nSuspended Tests:\n" | tee $(TEST_PATH)/test.log
