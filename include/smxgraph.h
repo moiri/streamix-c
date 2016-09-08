@@ -145,7 +145,7 @@ int dgraph_vertex_add( igraph_t*, const char* );
  * @param attr_pure     boolean attribute
  */
 void dgraph_vertex_add_attr( igraph_t*, int, const char*, symrec_t*,
-        virt_net_t*, igraph_t*i, bool, bool );
+        virt_net_t*, igraph_t*, bool, bool );
 
 /**
  * @brief   Create a box instance and add it to the graph
@@ -225,7 +225,9 @@ int dgraph_vertex_merge( igraph_t*, int, int );
 void dgraph_vertex_remove( igraph_t*, int );
 
 /**
+ * @brief   set the attribute static to true for all vertices in g
  *
+ * @param g pointer to a graph object
  */
 void dgraph_vertex_set_attr_static( igraph_t* g );
 
