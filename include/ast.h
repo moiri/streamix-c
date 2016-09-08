@@ -38,9 +38,7 @@ enum attr_type_e
 {
     ATTR_PORT_MODE,
     ATTR_PORT_CLASS,
-    ATTR_PORT_COUPLING,
-    ATTR_BOX_STATE,
-    ATTR_WRAP_STATIC
+    ATTR_OTHER,
 };
 
 /**

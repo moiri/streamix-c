@@ -42,17 +42,15 @@ char* class_label[] = {
     "down",
     "side"
 };
-char* coupling_label[] = {
-    "decoupled"
-};
-char* state_label[] = {
-    "stateless"
+char* nattr_label[] = {
+    "decoupled",
+    "pure",
+    "static"
 };
 char** attr_label[] = {
     mode_label,
     class_label,
-    coupling_label,
-    state_label
+    nattr_label
 };
 
 /******************************************************************************/

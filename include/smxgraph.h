@@ -135,15 +135,17 @@ int dgraph_vertex_add( igraph_t*, const char* );
 /**
  * @brief   Add attributes to a vertex
  *
- * @param g     graph where the vertex resides
- * @param int   id of the vertex
- * @param func  pointer to the implementation name or NULL
- * @param symb  pointer to the symbol or NULL
- * @param v_net pointer to the virtual net or NULL
- * @param g_net pointer to teh graph or NULL
+ * @param g             graph where the vertex resides
+ * @param int           id of the vertex
+ * @param func          pointer to the implementation name or NULL
+ * @param symb          pointer to the symbol or NULL
+ * @param v_net         pointer to the virtual net or NULL
+ * @param g_net         pointer to the graph or NULL
+ * @param attr_static   boolean attribute
+ * @param attr_pure     boolean attribute
  */
 void dgraph_vertex_add_attr( igraph_t*, int, const char*, symrec_t*,
-        virt_net_t*, igraph_t* );
+        virt_net_t*, igraph_t*i, bool, bool );
 
 /**
  * @brief   Create a box instance and add it to the graph
@@ -186,11 +188,11 @@ virt_net_t* dgraph_vertex_add_wrap( igraph_t*, symrec_t*, int );
 /**
  * @brief   Copy the vertex of a graph to another graph
  *
- * @param g_src     pointer to the sorce graph
- * @param g_dest    pointer to the destination graph
- * @param id        id of the vertec to copy
- * @param deep      if true a deep copy of the attributes is done
- *                  if false a shallow copy of the attributes is done
+ * @param g_src         pointer to the sorce graph
+ * @param g_dest        pointer to the destination graph
+ * @param id            id of the vertec to copy
+ * @param deep          if true a deep copy of the attributes is done
+ *                      if false a shallow copy of the attributes is done
  */
 instrec_t* dgraph_vertex_copy( igraph_t*, igraph_t*, int, bool );
 
@@ -221,6 +223,11 @@ int dgraph_vertex_merge( igraph_t*, int, int );
  * @param id    vertex id to be removed
  */
 void dgraph_vertex_remove( igraph_t*, int );
+
+/**
+ *
+ */
+void dgraph_vertex_set_attr_static( igraph_t* g );
 
 /**
  * @brief   decrement the instance id of all vertices in a graph

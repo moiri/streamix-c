@@ -70,15 +70,19 @@ enum parse_attr_e
 #define TEXT_CP      "smx_cp"
 #define TEXT_NULL    "null"
 
-#define INST_ATTR_LABEL "label"
-#define INST_ATTR_FUNC  "func"
-#define INST_ATTR_SYMB  "symb"
-#define INST_ATTR_VNET  "vnet"
-#define INST_ATTR_GRAPH "igraph"
+#define INST_ATTR_LABEL     "label"
+#define INST_ATTR_FUNC      "func"
+#define INST_ATTR_SYMB      "symb"
+#define INST_ATTR_VNET      "vnet"
+#define INST_ATTR_GRAPH     "igraph"
+#define INST_ATTR_STATIC    "static"
+#define INST_ATTR_PURE      "pure"
 
 #define PORT_ATTR_LABEL "label"
 #define PORT_ATTR_PSRC  "p_src"
 #define PORT_ATTR_PDST  "p_dst"
+#define PORT_ATTR_DSRC  "d_src"
+#define PORT_ATTR_DDST  "d_dst"
 
 // drawing
 #define AST_DOT_PATH    "dot/ast_graph.dot"

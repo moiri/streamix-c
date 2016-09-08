@@ -8,53 +8,71 @@ graph
     id 0
     label "Z"
     func "funcY"
+    static 0
+    pure 0
   ]
   node
   [
     id 1
     label "Z"
     func "funcY"
+    static 0
+    pure 0
   ]
   node
   [
     id 2
     label "smx_cp"
     func "null"
+    static 0
+    pure 0
   ]
   node
   [
     id 3
     label "A"
     func "funcA"
+    static 0
+    pure 0
   ]
   node
   [
     id 4
     label "A"
     func "funcA"
+    static 0
+    pure 0
   ]
   edge
   [
     source 2
     target 1
     label "b"
+    dsrc 0
+    ddst 0
   ]
   edge
   [
     source 2
     target 0
     label "b"
+    dsrc 0
+    ddst 0
   ]
   edge
   [
     source 4
     target 2
     label "b"
+    dsrc 0
+    ddst 0
   ]
   edge
   [
     source 3
     target 2
     label "b"
+    dsrc 0
+    ddst 0
   ]
 ]

@@ -8,41 +8,55 @@ graph
     id 0
     label "X"
     func "funcX"
+    static 0
+    pure 0
   ]
   node
   [
     id 1
     label "Z"
     func "funcZ"
+    static 0
+    pure 0
   ]
   node
   [
     id 2
     label "A"
     func "funcA"
+    static 0
+    pure 0
   ]
   node
   [
     id 3
     label "A"
     func "funcA"
+    static 0
+    pure 0
   ]
   edge
   [
     source 0
     target 2
     label "a"
+    dsrc 0
+    ddst 0
   ]
   edge
   [
     source 3
     target 1
     label "a"
+    dsrc 0
+    ddst 0
   ]
   edge
   [
     source 2
     target 3
     label "a"
+    dsrc 0
+    ddst 0
   ]
 ]

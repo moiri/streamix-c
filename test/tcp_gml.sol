@@ -8,29 +8,39 @@ graph
     id 0
     label "A"
     func "a"
+    static 0
+    pure 0
   ]
   node
   [
     id 1
     label "B"
     func "b"
+    static 0
+    pure 0
   ]
   edge
   [
     source 1
     target 0
     label "ack"
+    dsrc 0
+    ddst 0
   ]
   edge
   [
     source 0
     target 1
     label "syn_ack"
+    dsrc 0
+    ddst 0
   ]
   edge
   [
     source 1
     target 0
     label "syn"
+    dsrc 0
+    ddst 0
   ]
 ]

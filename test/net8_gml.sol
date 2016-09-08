@@ -8,83 +8,111 @@ graph
     id 0
     label "C"
     func "funcC"
+    static 0
+    pure 0
   ]
   node
   [
     id 1
     label "A"
     func "funcA"
+    static 0
+    pure 0
   ]
   node
   [
     id 2
     label "A"
     func "funcA"
+    static 0
+    pure 0
   ]
   node
   [
     id 3
     label "smx_cp"
     func "null"
+    static 0
+    pure 0
   ]
   node
   [
     id 4
     label "B"
     func "funcB"
+    static 0
+    pure 0
   ]
   node
   [
     id 5
     label "B"
     func "funcB"
+    static 0
+    pure 0
   ]
   node
   [
     id 6
     label "smx_cp"
     func "null"
+    static 0
+    pure 0
   ]
   edge
   [
     source 2
     target 3
     label "a"
+    dsrc 0
+    ddst 0
   ]
   edge
   [
     source 1
     target 3
     label "a"
+    dsrc 0
+    ddst 0
   ]
   edge
   [
     source 3
     target 5
     label "a"
+    dsrc 0
+    ddst 0
   ]
   edge
   [
     source 3
     target 4
     label "a"
+    dsrc 0
+    ddst 0
   ]
   edge
   [
     source 5
     target 6
     label "b"
+    dsrc 0
+    ddst 0
   ]
   edge
   [
     source 4
     target 6
     label "b"
+    dsrc 0
+    ddst 0
   ]
   edge
   [
     source 6
     target 0
     label "b"
+    dsrc 0
+    ddst 0
   ]
 ]

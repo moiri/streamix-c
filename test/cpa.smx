@@ -39,7 +39,7 @@ wrapper Car( up in car_next( car_l_in ), up out car_prev( car_l_out ),
     } net( down out speed, down out break_cmd, down in break_abs,
             down in block, side out dist )
 
-    wrapper ABS( in dc, out abs, side out dist )
+    static wrapper ABS( in dc, out abs, side out dist )
     {
         ABS = box ABS(
             in speed,

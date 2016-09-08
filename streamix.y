@@ -324,12 +324,12 @@ alt_port_decl:
 /* keywords */
 kw_opt_state:
     %empty { $$ = 0; }
-|   STATELESS { $$ = ast_add_attr( $1, ATTR_BOX_STATE ); }
+|   STATELESS { $$ = ast_add_attr( $1, ATTR_OTHER ); }
 ;
 
 kw_opt_decoupled:
     %empty { $$ = 0; }
-|   DECOUPLED { $$ = ast_add_attr( $1, ATTR_PORT_COUPLING ); }
+|   DECOUPLED { $$ = ast_add_attr( $1, ATTR_OTHER ); }
 ;
 
 kw_port_mode:
@@ -350,7 +350,7 @@ kw_port_class:
 
 kw_opt_static:
     %empty { $$ = ( ast_node_t* )0; }
-|   STATIC { $$ = ast_add_attr( $1, ATTR_WRAP_STATIC ); }
+|   STATIC { $$ = ast_add_attr( $1, ATTR_OTHER ); }
 ;
 
 %%
