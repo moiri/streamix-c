@@ -50,11 +50,13 @@ int main( int argc, char **argv ) {
     dest_gml = fopen( "streamix.gml", "w" );
     igraph_write_graph_gml( &g, dest_gml, NULL, "StreamixC" );
     fclose( dest_gml );
+
+    if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );
+#ifdef DOT_CON
     dest_gml = fopen( P_CON_DOT_PATH, "w" );
     igraph_write_graph_dot( &g, dest_gml );
     fclose( dest_gml );
-
-    if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );
+#endif // DOT_CON
 #ifdef DOT_AST
     draw_ast_graph( ast );
 #endif // DOT_AST
