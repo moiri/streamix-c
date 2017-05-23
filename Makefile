@@ -194,7 +194,7 @@ run_test_all:
 		fi;\
 		# cp $(DOT_N_CON_FILE).pdf $${file%.*}_gn.pdf; \
 	done
-	@printf "\nSuspended Tests:\n" | tee $(TEST_PATH)/test.log
+	@printf "\nSuspended Tests:\n" | tee -a $(TEST_PATH)/test.log
 	@for file in $(TEST_PATH)/*.$(TEST_SUSPENDED); do \
 		echo $$file | tee -a $(TEST_PATH)/test.log;\
 	done
