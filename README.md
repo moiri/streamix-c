@@ -9,7 +9,7 @@ Compiler for the coordination language Streamix
 Requires
  - [`flex`](https://github.com/westes/flex) for lexing the Streamix code
  - [`bison`](https://www.gnu.org/software/bison/) for parsing the Streamix code
- - [`igraph`](http://igraph.org/c/) to build depedency graphs
+ - [`igraph`](http://igraph.org/c/) to build depedency graphs (make sure GraphML is enabled)
 
 ## Run Testcases
 
