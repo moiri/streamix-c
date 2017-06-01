@@ -145,10 +145,12 @@ $(DOT_P_CON_FILE).pdf: $(DOT_P_CON_FILE).dot
 clean:
 	rm -f $(PROJECT).tab.c
 	rm -f $(PROJECT).tab.h
+	rm -f $(PROJECT).output
 	rm -f $(PARSER)
 	rm -f lex.yy.c
 	rm -f $(DOT_PATH)/*
 	rm -f $(OBJECTS)
+	rm -f out.*
 
 install:
 	mkdir -p /usr/local/bin
@@ -166,13 +168,13 @@ run:
 
 run_test:
 	@touch $(INPUT:.$(TEST_IN)=.$(TEST_SOL))
-	@./$(PARSER) $(INPUT) > $(INPUT:.$(TEST_IN)=.$(TEST_OUT))
+	@./$(PARSER) -f gml -o $(PROJECT).gml $(INPUT) > $(INPUT:.$(TEST_IN)=.$(TEST_OUT))
 	@echo "testing $(INPUT)"
 	@diff <(sed -r 's/-?[0-9]+\)/*)/g' $(INPUT:.$(TEST_IN)=.$(TEST_OUT))) $(INPUT:.$(TEST_IN)=.$(TEST_SOL))
 	$(MAKE) -s graph
-	cp $(DOT_AST_FILE).pdf $(INPUT:.$(TEST_IN)=_ast.pdf)
-	cp $(DOT_P_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gp.pdf)
-	cp $(PROJECT).gml $(INPUT:.$(TEST_IN)=_$(TEST_GML).$(TEST_OUT))
+	mv $(DOT_AST_FILE).pdf $(INPUT:.$(TEST_IN)=_ast.pdf)
+	mv $(DOT_P_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gp.pdf)
+	mv $(PROJECT).gml $(INPUT:.$(TEST_IN)=_$(TEST_GML).$(TEST_OUT))
 	@diff $(INPUT:.$(TEST_IN)=_$(TEST_GML).$(TEST_OUT)) $(INPUT:.$(TEST_IN)=_$(TEST_GML).$(TEST_SOL))
 ifeq ($(MEM),1)
 	@valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -v ./$(PARSER) $(INPUT) &> $(INPUT:.$(TEST_IN)=.$(TEST_VAL))
@@ -186,12 +188,12 @@ run_test_all:
 	@printf "======================================\n" | tee -a $(TEST_PATH)/test.log
 	@for file in $(TEST_PATH)/*.$(TEST_IN); do \
 		echo $$file | tee -a $(TEST_PATH)/test.log; \
-		./$(PARSER) $$file > $${file%.*}.$(TEST_OUT); \
+		./$(PARSER) -f gml -o $(PROJECT).gml $$file > $${file%.*}.$(TEST_OUT); \
 		diff <(sed -r 's/-?[0-9]+\)/*)/g' $${file%.*}.$(TEST_OUT)) $${file%.*}.$(TEST_SOL) | tee -a $(TEST_PATH)/test.log; \
 		$(MAKE) -s graph; \
-		cp $(DOT_AST_FILE).pdf $${file%.*}_ast.pdf; \
-		cp $(DOT_P_CON_FILE).pdf $${file%.*}_gp.pdf; \
-		cp $(PROJECT).gml $${file%.*}_$(TEST_GML).$(TEST_OUT); \
+		mv $(DOT_AST_FILE).pdf $${file%.*}_ast.pdf; \
+		mv $(DOT_P_CON_FILE).pdf $${file%.*}_gp.pdf; \
+		mv $(PROJECT).gml $${file%.*}_$(TEST_GML).$(TEST_OUT); \
 		diff $${file%.*}_$(TEST_GML).$(TEST_OUT) $${file%.*}_$(TEST_GML).$(TEST_SOL) | tee -a $(TEST_PATH)/test.log; \
 		if [ $(MEM) -eq 1 ]; then \
 			valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -v ./$(PARSER) $$file &> $${file%.*}.$(TEST_VAL); \
