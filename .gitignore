@@ -7,7 +7,7 @@
 *.dot
 *.pdf
 dot/
-parser
+smxc
 test/*.res
 test/*.pdf
 test/*.log
