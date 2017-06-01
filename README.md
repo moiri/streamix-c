@@ -19,3 +19,14 @@ Requires
  - [`graphviz`](http://www.graphviz.org/) to plot results with the `dot` application
  - [`gs`](https://www.ghostscript.com/index.html) to combine seperate pdf files
  - ([`valgrind`](http://valgrind.org/) for memory checks)
+
+## Usage
+
+    ./smxc [OPTION...] FILE
+
+    Options:
+      -h            This message
+      -v            Version
+      -o 'path'     Path to store the generated file
+      -f 'format'   Format of the graph either 'gml' or 'graphml'
+
