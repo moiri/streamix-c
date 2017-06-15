@@ -79,10 +79,10 @@ enum parse_attr_e
 #define INST_ATTR_PURE      "pure"
 
 #define PORT_ATTR_LABEL "label"
-#define PORT_ATTR_PSRC  "p_src"
-#define PORT_ATTR_PDST  "p_dst"
-#define PORT_ATTR_DSRC  "d_src"
-#define PORT_ATTR_DDST  "d_dst"
+#define PORT_ATTR_PSRC  "psrc"
+#define PORT_ATTR_PDST  "pdst"
+#define PORT_ATTR_DSRC  "dsrc"
+#define PORT_ATTR_DDST  "ddst"
 
 // drawing
 #define AST_DOT_PATH    "dot/ast_graph.dot"
