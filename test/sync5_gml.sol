@@ -31,7 +31,7 @@ graph
   [
     id 3
     label "smx_cp"
-    func "null"
+    func "smx_cp"
     static 0
     pure 0
   ]

@@ -314,7 +314,7 @@ virt_net_t* dgraph_vertex_add_sync( igraph_t* g )
     int id = dgraph_vertex_add( g, TEXT_CP );
     instrec_t* inst = instrec_create( TEXT_CP, id, -1, INSTREC_SYNC );
     virt_net_t* v_net = virt_net_create_sync( inst );
-    dgraph_vertex_add_attr( g, id, NULL, NULL, v_net, NULL, false, false );
+    dgraph_vertex_add_attr( g, id, TEXT_CP, NULL, v_net, NULL, false, false );
     return v_net;
 }
 

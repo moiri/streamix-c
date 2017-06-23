@@ -371,6 +371,10 @@ void ast_destroy( ast_node_t* );
 /**
  * @brief   Flatten the AST
  *
+ * Remove port sync lists and move sync ports on the same hierarchical level as
+ * all other ports. Marke the synch ports with a sync id in order to assoziate
+ * them with a synchronizer
+ *
  * @param ast   pointer to the root node of the ast
  * @return      NULL
  */

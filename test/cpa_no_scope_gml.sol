@@ -79,7 +79,7 @@ graph
   [
     id 9
     label "smx_cp"
-    func "null"
+    func "smx_cp"
     static 0
     pure 0
   ]
@@ -143,7 +143,7 @@ graph
   [
     id 17
     label "smx_cp"
-    func "null"
+    func "smx_cp"
     static 0
     pure 0
   ]
@@ -207,7 +207,7 @@ graph
   [
     id 25
     label "smx_cp"
-    func "null"
+    func "smx_cp"
     static 0
     pure 0
   ]
