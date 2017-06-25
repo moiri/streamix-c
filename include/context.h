@@ -111,6 +111,20 @@ void check_context( ast_node_t*, symrec_t**, igraph_t* );
 void* check_context_ast( symrec_t**, UT_array*, ast_node_t* );
 
 /**
+ * @brief   check if a net has at least one triggering input
+ *
+ * @param ports pointer to a symbol port list
+ */
+void check_ports_decoupled( symrec_list_t* );
+
+/**
+ * @brief   check if all ports are connected
+ *
+ * @param v_net pointer to a virtual net
+ */
+void check_ports_open( virt_net_t* );
+
+/**
  * @brief   Check whether types of a prototype and a net match
  *
  * @param r_ports   port list from a symbol record
@@ -120,13 +134,6 @@ void* check_context_ast( symrec_t**, UT_array*, ast_node_t* );
  *                  false if there is no match
  */
 bool check_prototype( symrec_list_t*, virt_net_t*, char* );
-
-/**
- * @brief   check if all ports are connected
- *
- * @param v_net pointer to a virtual net
- */
-void check_open_ports( virt_net_t* );
 
 /**
  * @brief   check whether synchronizers have only outgoing or incoming ports

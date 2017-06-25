@@ -194,13 +194,13 @@ opt_box_port_list:
 ;
 
 box_port_decl:
-    kw_opt_port_class kw_port_mode IDENTIFIER {
+    kw_opt_decoupled kw_opt_port_class kw_port_mode IDENTIFIER {
         $$ = ast_add_port(
-            ast_add_symbol( $3, @3.last_line, ID_PORT ),
+            ast_add_symbol( $4, @3.last_line, ID_PORT ),
             ( ast_node_t* )0, // no internal id
-            $1,
             $2,
-            ( ast_node_t* )0, // no coupling
+            $3,
+            $1,
             PORT_BOX
         );
     }

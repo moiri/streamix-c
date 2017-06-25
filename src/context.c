@@ -440,6 +440,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                 port_list = ptr;
                 list = list->next;
             }
+            check_ports_decoupled( port_list );
             res = ( void* )port_list;   // return pointer to the port list
             break;
         case AST_PORT:
@@ -476,6 +477,47 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
 }
 
 /******************************************************************************/
+void check_ports_decoupled( symrec_list_t* ports )
+{
+    char error_msg[ CONST_ERROR_LEN ];
+    int input_cnt = 0;
+    int decoupled_cnt = 0;
+    int line;
+
+    while( ports != NULL ) {
+        if( ports->rec->attr_port->mode == PORT_MODE_IN ) {
+            input_cnt++;
+            if( ports->rec->attr_port->decoupled ) {
+                decoupled_cnt++;
+                line = ports->rec->line;
+            }
+        }
+        ports = ports->next;
+    }
+    if( input_cnt &&  ( input_cnt == decoupled_cnt ) ) {
+        sprintf( error_msg, ERROR_ALL_IN_DEC, ERR_ERROR );
+        report_yyerror( error_msg, line );
+    }
+}
+
+/******************************************************************************/
+void check_ports_open( virt_net_t* v_net )
+{
+    virt_port_list_t* ports;
+    char error_msg[ CONST_ERROR_LEN ];
+
+    ports = v_net->ports;
+    while( ports != NULL ) {
+        if( ports->port->state == VPORT_STATE_OPEN ) {
+            sprintf( error_msg, ERROR_NO_PORT_CON, ERR_ERROR, ports->port->name,
+                    v_net->inst->name, v_net->inst->id );
+            report_yyerror( error_msg, v_net->inst->line );
+        }
+        ports = ports->next;
+    }
+}
+
+/******************************************************************************/
 bool check_prototype( symrec_list_t* r_ports, virt_net_t* v_net, char *name )
 {
     char error_msg[ CONST_ERROR_LEN ];
@@ -500,23 +542,6 @@ bool check_prototype( symrec_list_t* r_ports, virt_net_t* v_net, char *name )
     }
 
     return res;
-}
-
-/******************************************************************************/
-void check_open_ports( virt_net_t* v_net )
-{
-    virt_port_list_t* ports;
-    char error_msg[ CONST_ERROR_LEN ];
-
-    ports = v_net->ports;
-    while( ports != NULL ) {
-        if( ports->port->state == VPORT_STATE_OPEN ) {
-            sprintf( error_msg, ERROR_NO_PORT_CON, ERR_ERROR, ports->port->name,
-                    v_net->inst->name, v_net->inst->id );
-            report_yyerror( error_msg, v_net->inst->line );
-        }
-        ports = ports->next;
-    }
 }
 
 /******************************************************************************/
@@ -830,7 +855,7 @@ void post_process( igraph_t* g )
         symb = ( symrec_t* )( uintptr_t )igraph_cattribute_VAN( g,
                 INST_ATTR_SYMB, inst_id );
         if( v_net->type == VNET_BOX ) {
-            check_open_ports( v_net );
+            check_ports_open( v_net );
         }
         else if( v_net->type == VNET_SYNC ) {
             if( check_single_mode_cp( g, inst_id ) )

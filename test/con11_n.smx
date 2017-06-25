@@ -1,0 +1,8 @@
+/**
+ * check for error if all input ports are decoupled
+ */
+
+A = box A( out x, out y )
+B = box B( decoupled in x, decoupled in y )
+
+connect A.B

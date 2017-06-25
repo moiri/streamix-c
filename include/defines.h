@@ -160,6 +160,7 @@ enum parse_attr_e
 #define ERR_WARNING "warning"
 #define ERR_ERROR   "error"
 
+#define ERROR_ALL_IN_DEC    "%s: all input ports are decoupled"
 #define ERROR_UNDEF_ID      "%s: use of undeclared identifier '%s'"
 #define ERROR_DUPLICATE_ID  "%s: redefinition of '%s'"
 #define ERROR_BAD_MODE      "%s: conflicting modes of ports '%s' in '%s'(%d) and '%s'(%d) (line %d)"
