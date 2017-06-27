@@ -171,7 +171,8 @@ clean:
 	rm -f lex.yy.c
 	rm -f $(DOT_PATH)/*
 	rm -f $(OBJECTS)
-	rm -f out.*
+	rm -f *.graphml
+	rm -f *.gml
 	rm -f $(SIA_LANG_DIR)/$(SIA_LANG).tab.c
 	rm -f $(SIA_LANG_DIR)/$(SIA_LANG).tab.h
 	rm -f $(SIA_LANG_DIR)/$(SIA_LANG).output
