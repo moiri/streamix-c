@@ -4,13 +4,23 @@ PARSER = smxc
 
 LOC_INC_DIR = include
 LOC_SRC_DIR = src
+SIA_LANG = sia2graph
+SIA_LANG_DIR = streamix-sia-lang
 
 SOURCES = main.c \
-		  $(LOC_SRC_DIR)/*
+		  $(LOC_SRC_DIR)/* \
+		  lex.yy.c \
+		  $(PROJECT).tab.c \
+		  $(SIA_LANG_DIR)/lex.zz.c \
+		  $(SIA_LANG_DIR)/$(SIA_LANG).tab.c \
+		  $(SIA_LANG_DIR)/$(LOC_SRC_DIR)/*
 
-INCLUDES = $(LOC_INC_DIR)/*
+INCLUDES = $(LOC_INC_DIR)/* \
+		   $(PROJECT).tab.h \
+		   $(SIA_LANG_DIR)/include/sia.h \
+		   $(SIA_LANG_DIR)/$(SIA_LANG).tab.h \
+		   $(SIA_LANG_DIR)/$(LOC_INC_DIR)/*
 
-SIA_LANG_DIR = streamix-sia-lang
 UTHASH_DIR = $(SIA_LANG_DIR)/uthash
 INSTTAB_DIR = insttab
 SYMTAB_DIR = symtab
@@ -18,17 +28,18 @@ SYMTAB_OBJ = $(SYMTAB_DIR)/symtab.o
 SYMTAB_SRC = $(SYMTAB_DIR)/symtab.c $(SYMTAB_DIR)/symtab.h
 INSTTAB_OBJ = $(INSTTAB_DIR)/insttab.o
 INSTTAB_SRC = $(INSTTAB_DIR)/insttab.c $(INSTTAB_DIR)/insttab.h
-OBJECTS = $(SYMTAB_OBJ) $(INSTTAB_OBJ)
+
+OBJECTS = $(SYMTAB_OBJ) $(INSTTAB_OBJ) $(SIA_LANG_OBJ)
 
 INCLUDES_DIR = -I$(UTHASH_DIR)/src \
 			   -I/usr/local/include/igraph \
 			   -I$(INSTTAB_DIR) \
 			   -I$(SYMTAB_DIR) \
 			   -I$(LOC_INC_DIR) \
+			   -I$(SIA_LANG_DIR)/$(LOC_INC_DIR) \
 			   -I.
 LINK_DIR = -L/usr/local/lib
-LINK_FILE = -lfl \
-			-ligraph
+LINK_FILE = -ligraph
 
 CFLAGS = -Wall
 DEBUG_FLAGS = -g -O0
@@ -100,8 +111,8 @@ test1: BFLAGS += $(BDEBUG_FLAGS)
 test1: clean $(PARSER) run_test
 
 # compile project
-$(PARSER): lex.yy.c $(PROJECT).tab.c $(PROJECT).tab.h $(SOURCES) $(INCLUDES) $(INSTTAB_OBJ)
-	$(CC) $(CFLAGS) $(SOURCES) $(PROJECT).tab.c lex.yy.c $(OBJECTS) $(INCLUDES_DIR) $(LINK_DIR) $(LINK_FILE) -o $(PARSER)
+$(PARSER): $(SOURCES) $(INCLUDES) $(INSTTAB_OBJ)
+	$(CC) $(CFLAGS) $(SOURCES) $(OBJECTS) $(INCLUDES_DIR) $(LINK_DIR) $(LINK_FILE) -o $(PARSER)
 
 # compile lexer (flex)
 lex.yy.c: $(PROJECT).lex $(PROJECT).tab.h
@@ -118,6 +129,14 @@ $(INSTTAB_OBJ): $(INSTTAB_SRC) $(SYMTAB_OBJ)
 # compile symtab libarary
 $(SYMTAB_OBJ): $(SYMTAB_SRC)
 	$(CC) $(CFLAGS) $< $(INCLUDES_DIR) -c -o $@
+
+# compile lexer (flex)
+$(SIA_LANG_DIR)/lex.zz.c: $(SIA_LANG_DIR)/$(SIA_LANG).lex $(SIA_LANG_DIR)/$(SIA_LANG).tab.h
+	flex -o $(SIA_LANG_DIR)/lex.zz.c $(SIA_LANG_DIR)/$(SIA_LANG).lex
+
+# compile parser (bison)
+$(SIA_LANG_DIR)/$(SIA_LANG).tab.c $(SIA_LANG_DIR)/$(SIA_LANG).tab.h: $(SIA_LANG_DIR)/$(SIA_LANG).y
+	bison $(BFLAGS) -o $(SIA_LANG_DIR)/$(SIA_LANG).tab.c $(SIA_LANG_DIR)/$(SIA_LANG).y
 
 # $(OBJECTS): $(OBJ_SRC)
 # 	$(CC) $(CFLAGS) $< $(INCLUDES_DIR) -c -o $@
@@ -153,6 +172,11 @@ clean:
 	rm -f $(DOT_PATH)/*
 	rm -f $(OBJECTS)
 	rm -f out.*
+	rm -f $(SIA_LANG_DIR)/$(SIA_LANG).tab.c
+	rm -f $(SIA_LANG_DIR)/$(SIA_LANG).tab.h
+	rm -f $(SIA_LANG_DIR)/$(SIA_LANG).output
+	rm -f $(SIA_LANG_DIR)/$(SIA_LANG)
+	rm -f $(SIA_LANG_DIR)/lex.zz.c
 
 install:
 	mkdir -p /usr/local/bin

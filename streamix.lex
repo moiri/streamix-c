@@ -16,6 +16,7 @@
 %option noinput
 %option nounput
 %option yylineno
+%option noyywrap
 
 %x comment
 %%
