@@ -10,6 +10,8 @@ SOURCES = main.c \
 
 INCLUDES = $(LOC_INC_DIR)/*
 
+SIA_LANG_DIR = streamix-sia-lang
+UTHASH_DIR = $(SIA_LANG_DIR)/uthash
 INSTTAB_DIR = insttab
 SYMTAB_DIR = symtab
 SYMTAB_OBJ = $(SYMTAB_DIR)/symtab.o
@@ -18,7 +20,7 @@ INSTTAB_OBJ = $(INSTTAB_DIR)/insttab.o
 INSTTAB_SRC = $(INSTTAB_DIR)/insttab.c $(INSTTAB_DIR)/insttab.h
 OBJECTS = $(SYMTAB_OBJ) $(INSTTAB_OBJ)
 
-INCLUDES_DIR = -Iuthash/src \
+INCLUDES_DIR = -I$(UTHASH_DIR)/src \
 			   -I/usr/local/include/igraph \
 			   -I$(INSTTAB_DIR) \
 			   -I$(SYMTAB_DIR) \
