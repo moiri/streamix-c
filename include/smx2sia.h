@@ -11,7 +11,7 @@
 
 #include "sia.h"
 #include "igraph.h"
-#include "symtab.h"
+#include "vnet.h"
 
 /**
  * @brief Generate SIAs for all boxes
@@ -37,19 +37,27 @@ void smx2sia( igraph_t*, sia_t**, sia_t** );
  * @brief Add a self loop to each vertex of a SIA graph
  *
  * @param igraph_t*     pointer to the SIA graph
- * @param symrec_t*     pointer to the port defining the action
+ * @param virt_port_t*  pointer to the port defining the action
  */
-void smx2sia_add_loops( igraph_t*, symrec_t* );
+void smx2sia_add_loops( igraph_t*, virt_port_t* );
 
 /**
  * @brief Add a transition to the SIA
  *
  * @param igraph_t*     pointer to the SIA graph
- * @param symrec_t*     pointer to the port defining the action
+ * @param virt_port_t*  pointer to the port defining the action
  * @param int           source id of the transition
  * @param int           destination id of the transition
  */
-void smx2sia_add_transition( igraph_t*, symrec_t*, int, int );
+void smx2sia_add_transition( igraph_t*, virt_port_t*, int, int );
+
+/**
+ * @brief Returns true if a port is decoupled
+ *
+ * @param virt_port_t*  pointer to the port in question
+ * @return bool         true if te port is decoupled, false otherwise
+ */
+bool smx2sia_is_decoupled( virt_port_t* );
 
 /**
  *
@@ -74,10 +82,10 @@ void smx2sia_set_name( sia_t*, symrec_t* );
  * ports and written to them. The generated SIA is deterministic and a circle
  * graph.
  *
- * @param symrec_list_t*    pointer to the list of ports of a box
+ * @param virt_port_list_t* pointer to the list of ports of a net
  * @return sia_t*           a new SIA structure
  */
-sia_t* smx2sia_state( symrec_list_t* );
+sia_t* smx2sia_state( virt_port_list_t* );
 
 /**
  * @brief destroy all sia structures and its corresponding sub structures

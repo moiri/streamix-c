@@ -59,6 +59,8 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
         const char* name )
 {
     int id = igraph_ecount( g );
+    p_src->edge_id = id;
+    p_dest->edge_id = id;
 #if defined(DEBUG) || defined(DEBUG_CONNECT_GRAPH)
     printf( " add new edge %s(%d->%d)\n", name, p_src->v_net->inst->id,
             p_dest->v_net->inst->id );

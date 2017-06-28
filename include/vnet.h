@@ -93,6 +93,7 @@ struct virt_port_s
     int                 attr_class; /**< updated class */
     int                 attr_mode;  /**< updated mode for cp-sync (VAL_BI) */
     virt_port_state_t   state;      /**< #virt_port_state_e */
+    int                 edge_id;    /**< id of the connecting channel */
 };
 
 // FUNCTIONS ------------------------------------------------------------------
