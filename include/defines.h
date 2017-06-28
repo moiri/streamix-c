@@ -14,6 +14,7 @@
 /* #define DEBUG_INST */
 /* #define DEBUG_SYMB */
 /* #define DEBUG_VNET */
+#define DEBUG_SIA
 /* #define DEBUG_CONNECT */
 /* #define DEBUG_CONNECT_GRAPH */
 /* #define DEBUG_CONNECT_MISSING */
@@ -85,10 +86,11 @@ enum parse_attr_e
 #define PORT_ATTR_DDST      "ddst"
 
 // drawing
-#define AST_DOT_PATH    "dot/ast_graph.dot"
-#define N_CON_DOT_PATH  "dot/net_connection_graph.dot"
-#define P_CON_DOT_PATH  "dot/port_connection_graph.dot"
-#define TEMP_DOT_PATH   "dot/graph.dot.tmp"
+#define DOT_FOLDER      "dot"
+#define AST_DOT_PATH    DOT_FOLDER "/ast_graph.dot"
+#define N_CON_DOT_PATH  DOT_FOLDER "/net_connection_graph.dot"
+#define P_CON_DOT_PATH  DOT_FOLDER "/port_connection_graph.dot"
+#define TEMP_DOT_PATH   DOT_FOLDER "/graph.dot.tmp"
 #define DOT_PATTERN     "// ===>"
 
 #define SHAPE_BOX       "box"

@@ -51,6 +51,7 @@ TEST_FLAGS = -DMAKE_TEST
 
 CC = gcc
 
+BUILD_PATH = build
 DOT_PATH = dot
 DOT_AST_FILE = $(DOT_PATH)/ast_graph
 DOT_N_CON_FILE = $(DOT_PATH)/net_connection_graph
@@ -169,10 +170,9 @@ clean:
 	rm -f $(PROJECT).output
 	rm -f $(PARSER)
 	rm -f lex.yy.c
-	rm -f $(DOT_PATH)/*
+	rm -rf $(DOT_PATH)
+	rm -rf $(BUILD_PATH)
 	rm -f $(OBJECTS)
-	rm -f *.graphml
-	rm -f *.gml
 	rm -f $(SIA_LANG_DIR)/$(SIA_LANG).tab.c
 	rm -f $(SIA_LANG_DIR)/$(SIA_LANG).tab.h
 	rm -f $(SIA_LANG_DIR)/$(SIA_LANG).output

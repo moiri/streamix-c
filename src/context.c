@@ -264,7 +264,6 @@ void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g )
 
     // cleanup
     symrec_attr_destroy_net( n_attr, true );
-    dgraph_destroy_attr( g );
     for( i = 0; i < igraph_vector_ptr_size( &__rm_cp ); i++ ) {
         virt_net_destroy( VECTOR( __rm_cp )[i], false );
     }
