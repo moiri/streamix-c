@@ -73,7 +73,7 @@ sia_t* smx2sia_pure( symrec_list_t*, const char* );
  * @param sia_t*    pointer to the sia where the name is set
  * @param symrec_t* pointer to the box symbol
  */
-void smx2sia_set_name( sia_t*, symrec_t* );
+void smx2sia_set_name_box( sia_t*, symrec_t* );
 
 /**
  * @brief Generate a SIA for a stateful box

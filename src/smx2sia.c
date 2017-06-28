@@ -38,7 +38,7 @@ void smx2sia( igraph_t* g, sia_t** smx_symbs, sia_t** desc_symbs )
             /* else */
             sia = smx2sia_state( ports );
         }
-        smx2sia_set_name( sia, rec );
+        smx2sia_set_name_box( sia, rec );
         HASH_ADD( hh_smx, *smx_symbs, smx_name, strlen( sia->smx_name ), sia );
         IGRAPH_VIT_NEXT( vit );
     }
@@ -72,18 +72,19 @@ void smx2sia_add_transition( igraph_t* g, virt_port_t* port, int id_src,
         int id_dst )
 {
     const char* mode_port;
-    char* name = malloc( strlen( port->name ) + strlen( SIA_PORT_INFIX )
-            + CONST_ID_LEN + 1 );
+    /* char* name = malloc( strlen( port->name ) + strlen( SIA_PORT_INFIX ) */
+    /*         + CONST_ID_LEN + 1 ); */
+    /* int id_edge = igraph_ecount( g ); */
+    /* sprintf( name, "%s%s%d", port->name, SIA_PORT_INFIX, port->edge_id ); */
     int id_edge = igraph_ecount( g );
-    sprintf( name, "%s%s%d", port->name, SIA_PORT_INFIX, port->edge_id );
     if( port->attr_mode == PORT_MODE_IN )
-        mode_port = "?";
+        mode_port = G_SIA_MODE_IN;
     else if( port->attr_mode == PORT_MODE_OUT )
-        mode_port = "!";
+        mode_port = G_SIA_MODE_OUT;
     igraph_add_edge( g, id_src, id_dst );
-    igraph_cattribute_EAS_set( g, "name", id_edge, name );
-    igraph_cattribute_EAS_set( g, "mode", id_edge, mode_port );
-    free( name );
+    igraph_cattribute_EAN_set( g, G_SIA_NAME, id_edge, port->edge_id );
+    igraph_cattribute_EAS_set( g, G_SIA_PNAME, id_edge, port->name );
+    igraph_cattribute_EAS_set( g, G_SIA_MODE, id_edge, mode_port );
 }
 
 /******************************************************************************/
@@ -103,7 +104,7 @@ bool smx2sia_is_decoupled( virt_port_t* port )
 }
 
 /******************************************************************************/
-void smx2sia_set_name( sia_t* sia, symrec_t* box )
+void smx2sia_set_name_box( sia_t* sia, symrec_t* box )
 {
     char* smx_name = malloc( strlen( box->name ) + strlen( SIA_BOX_INFIX )
             + strlen( box->attr_box->impl_name ) + 1 );

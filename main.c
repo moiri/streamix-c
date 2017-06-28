@@ -85,7 +85,7 @@ int main( int argc, char **argv ) {
         return -1;
     }
     __src_file_name = argv[ optind ];
-    if( format == NULL ) format = "graphml";
+    if( format == NULL ) format = G_FMT_GRAPHML;
     if( build_path == NULL ) build_path = "./build";
     mkdir( build_path, 0755 );
 
@@ -151,10 +151,10 @@ int main( int argc, char **argv ) {
     // WRITE OUT SMX
     dgraph_destroy_attr( &g );
 
-    if( strcmp( format, "gml" ) == 0 ) {
-        igraph_write_graph_gml( &g, out_file, NULL, "StreamixC" );
+    if( strcmp( format, G_FMT_GML ) == 0 ) {
+        igraph_write_graph_gml( &g, out_file, NULL, G_GML_HEAD );
     }
-    else if( strcmp( format, "graphml" ) == 0 ) {
+    else if( strcmp( format, G_FMT_GRAPHML ) == 0 ) {
         igraph_write_graph_graphml( &g, out_file, 0 );
     }
     else {
