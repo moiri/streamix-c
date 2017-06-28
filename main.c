@@ -25,7 +25,8 @@ int main( int argc, char **argv ) {
     void* ast = NULL;
     void* sias = NULL;
     symrec_t* symtab = NULL;        // hash table to store the symbols
-    sia_t* sia_symbols = NULL;
+    sia_t* sia_desc_symbols = NULL;
+    sia_t* sia_smx_symbols = NULL;
     char* out_file_path = NULL;
     const char* out_file_name = NULL;
     const char* format = NULL;
@@ -141,11 +142,11 @@ int main( int argc, char **argv ) {
         if( sias == NULL ) return -1;
 
         // CHECK SIA CONTEXT
-        sia_check( sias, &sia_symbols );
+        sia_check( sias, &sia_desc_symbols );
     }
 
     // CREATE SIAs WHERE NO DESCRIPTION EXISTS
-    smx2sia( &g, &sia_symbols );
+    smx2sia( &g, &sia_smx_symbols, &sia_desc_symbols );
 
     // WRITE OUT SMX
     dgraph_destroy_attr( &g );
@@ -164,11 +165,11 @@ int main( int argc, char **argv ) {
     fclose( out_file );
 
     // WRITE OUT SIAs
-    sia_write( &sia_symbols, build_path, format );
+    smx2sia_sias_write( &sia_smx_symbols, build_path, format );
 
     if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );
 #ifdef DOT_CON
-    mkdir( P_DOT_FOLDER, 0755 );
+    mkdir( DOT_FOLDER, 0755 );
     out_file = fopen( P_CON_DOT_PATH, "w" );
     igraph_write_graph_dot( &g, out_file );
     fclose( out_file );
@@ -178,8 +179,9 @@ int main( int argc, char **argv ) {
 #endif // DOT_AST
 
     // cleanup
+    free( out_file_path );
     igraph_destroy( &g );
-    sia_destroy( sias, &sia_symbols );
+    smx2sia_sias_destroy( sias, &sia_desc_symbols, &sia_smx_symbols );
     ast_destroy( ast );
     symrec_del_all( &symtab );
     yylex_destroy();

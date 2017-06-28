@@ -14,7 +14,6 @@
 /* #define DEBUG_INST */
 /* #define DEBUG_SYMB */
 /* #define DEBUG_VNET */
-#define DEBUG_SIA
 /* #define DEBUG_CONNECT */
 /* #define DEBUG_CONNECT_GRAPH */
 /* #define DEBUG_CONNECT_MISSING */
@@ -68,8 +67,10 @@ enum parse_attr_e
     PARSE_ATTR_NET
 };
 
-#define TEXT_CP      "smx_cp"
-#define TEXT_NULL    "null"
+#define TEXT_CP         "smx_cp"
+#define TEXT_NULL       "null"
+#define SIA_BOX_INFIX   "_"
+#define SIA_PORT_INFIX  "_"
 
 #define INST_ATTR_LABEL     "label"
 #define INST_ATTR_FUNC      "func"
