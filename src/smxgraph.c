@@ -67,6 +67,7 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
 #endif // DEBUG
     igraph_add_edge( g, p_src->v_net->inst->id, p_dest->v_net->inst->id );
     igraph_cattribute_EAS_set( g, PORT_ATTR_LABEL, id, name );
+    igraph_cattribute_EAN_set( g, PORT_ATTR_SIA, id, id );
     igraph_cattribute_EAN_set( g, PORT_ATTR_PSRC, id, ( uintptr_t )p_src );
     igraph_cattribute_EAN_set( g, PORT_ATTR_PDST, id, ( uintptr_t )p_dest );
     igraph_cattribute_EAN_set( g, PORT_ATTR_DSRC, id,

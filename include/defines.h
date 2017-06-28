@@ -81,6 +81,7 @@ enum parse_attr_e
 #define INST_ATTR_PURE      "pure"
 
 #define PORT_ATTR_LABEL     "label"
+#define PORT_ATTR_SIA       "sia"
 #define PORT_ATTR_PSRC      "psrc"
 #define PORT_ATTR_PDST      "pdst"
 #define PORT_ATTR_DSRC      "dsrc"
