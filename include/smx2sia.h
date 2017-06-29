@@ -37,8 +37,9 @@ void smx2sia( igraph_t*, sia_t**, sia_t** );
  * @param virt_port_t*  pointer to the port defining the action
  * @param int           source id of the transition
  * @param int           destination id of the transition
+ * @param int           unique id ( vertex id of the dependency graph)
  */
-void smx2sia_add_transition( igraph_t*, virt_port_t*, int, int );
+void smx2sia_add_transition( igraph_t*, virt_port_t*, int, int, int );
 
 /**
  *
@@ -66,9 +67,10 @@ void smx2sia_set_name_box( sia_t*, const char*, const char*, int );
  * graph.
  *
  * @param virt_port_list_t* pointer to the list of ports of a net
+ * @param int               unique id ( vertex id of the dependency graph)
  * @return sia_t*           a new SIA structure
  */
-sia_t* smx2sia_state( virt_port_list_t* );
+sia_t* smx2sia_state( virt_port_list_t*, int );
 
 /**
  * @brief destroy all sia structures and its corresponding sub structures
@@ -99,7 +101,8 @@ void smx2sia_sias_write( sia_t**, const char*, const char* );
  *
  * @param igraph_t*         pointer to the user defined SIA graph
  * @param virt_port_list_t* pointer to the signature of the box
+ * @param int               unique id ( vertex id of the dependency graph)
  */
-void smx2sia_update( igraph_t*, virt_port_list_t* );
+void smx2sia_update( igraph_t*, virt_port_list_t*, int );
 #endif // SMX2SIA_H
 

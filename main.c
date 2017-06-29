@@ -36,11 +36,12 @@ int main( int argc, char **argv ) {
     FILE* src_smx;
     FILE* src_sia;
     FILE* out_file;
+    bool skip_sia = false;
     igraph_i_set_attribute_table( &igraph_cattribute_table );
     igraph_t g;
     int c;
 
-    while( ( c = getopt( argc, argv, "hvs:p:o:f:" ) ) != -1 )
+    while( ( c = getopt( argc, argv, "hvs:Sp:o:f:" ) ) != -1 )
         switch( c ) {
             case 'h':
                 printf( "Usage:\n  %s [OPTION...] FILE\n\n", argv[0] );
@@ -48,6 +49,7 @@ int main( int argc, char **argv ) {
                 printf( "  -h            This message\n" );
                 printf( "  -v            Version\n" );
                 printf( "  -s 'path'     Path to input file with SIA descriptions\n" );
+                printf( "  -S            Skip the SIA generation\n" );
                 printf( "  -p 'path'     Build path to folder where the output files will be stored\n" );
                 printf( "  -o 'file'     Filename of the SMX graph output file\n" );
                 printf( "  -f 'format'   Format of the graph either 'gml' or 'graphml'\n" );
@@ -57,6 +59,9 @@ int main( int argc, char **argv ) {
                 return 0;
             case 's':
                 sia_desc_file = optarg;
+                break;
+            case 'S':
+                skip_sia = true;
                 break;
             case 'p':
                 build_path = optarg;
@@ -147,7 +152,13 @@ int main( int argc, char **argv ) {
     }
 
     // CREATE SIAs WHERE NO DESCRIPTION EXISTS
-    smx2sia( &g, &sia_smx_symbols, &sia_desc_symbols );
+    if( !skip_sia ) {
+        smx2sia( &g, &sia_smx_symbols, &sia_desc_symbols );
+        build_path_sia = malloc( strlen( build_path ) + 5 );
+        sprintf( build_path_sia, "%s/sia", build_path );
+        mkdir( build_path_sia, 0755 );
+        smx2sia_sias_write( &sia_smx_symbols, build_path_sia, format );
+    }
 
     // WRITE OUT SMX
     dgraph_destroy_attr( &g );
@@ -164,12 +175,6 @@ int main( int argc, char **argv ) {
     }
 
     fclose( out_file );
-
-    // WRITE OUT SIAs
-    build_path_sia = malloc( strlen( build_path ) + 5 );
-    sprintf( build_path_sia, "%s/sia", build_path );
-    mkdir( build_path_sia, 0755 );
-    smx2sia_sias_write( &sia_smx_symbols, build_path_sia, format );
 
     if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );
 #ifdef DOT_CON

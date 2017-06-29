@@ -73,7 +73,6 @@ enum parse_attr_e
 #define SIA_PORT_INFIX  "_"
 
 #define INST_ATTR_LABEL     "label"
-#define INST_ATTR_SIA       "sia"
 #define INST_ATTR_FUNC      "func"
 #define INST_ATTR_SYMB      "symb"
 #define INST_ATTR_VNET      "vnet"
@@ -82,7 +81,6 @@ enum parse_attr_e
 #define INST_ATTR_PURE      "pure"
 
 #define PORT_ATTR_LABEL     "label"
-#define PORT_ATTR_SIA       "sia"
 #define PORT_ATTR_PSRC      "psrc"
 #define PORT_ATTR_PDST      "pdst"
 #define PORT_ATTR_DSRC      "dsrc"

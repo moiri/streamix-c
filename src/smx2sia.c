@@ -39,10 +39,10 @@ void smx2sia( igraph_t* g, sia_t** smx_symbs, sia_t** desc_symbs )
                 /* if( rec->attr_box->attr_pure ) */
                 /*     sia = smx2sia_pure( ports, rec->attr_box->impl_name ); */
                 /* else */
-                sia = smx2sia_state( ports );
+                sia = smx2sia_state( ports, vid );
             }
             else {
-                smx2sia_update( &sia->g, ports );
+                smx2sia_update( &sia->g, ports, vid );
             }
             smx2sia_set_name_box( sia, name, impl_name, vid );
             HASH_ADD( hh_smx, *smx_symbs, smx_name, strlen( sia->smx_name ),
@@ -56,11 +56,10 @@ void smx2sia( igraph_t* g, sia_t** smx_symbs, sia_t** desc_symbs )
 
 /******************************************************************************/
 void smx2sia_add_transition( igraph_t* g, virt_port_t* port, int id_src,
-        int id_dst )
+        int id_dst, int vid )
 {
     const char* mode;
-    char* edge_id = malloc( CONST_ID_LEN + 1 );
-    sprintf( edge_id, "%d", port->edge_id );
+    char* edge_id = sia_create_sia_attr( vid, port->edge_id );
     if( port->attr_mode == PORT_MODE_IN )
         mode = G_SIA_MODE_IN;
     else if( port->attr_mode == PORT_MODE_OUT )
@@ -82,7 +81,7 @@ void smx2sia_set_name_box( sia_t* sia, const char* box_name,
 }
 
 /******************************************************************************/
-sia_t* smx2sia_state( virt_port_list_t* ports_rec )
+sia_t* smx2sia_state( virt_port_list_t* ports_rec, int vid )
 {
     virt_port_list_t* ports = ports_rec;
     int id_dst, id_src = 0;
@@ -94,7 +93,7 @@ sia_t* smx2sia_state( virt_port_list_t* ports_rec )
             igraph_add_vertices( &sia->g, 1, NULL );
             id_dst = id_src + 1;
         }
-        smx2sia_add_transition( &sia->g, ports->port, id_src, id_dst );
+        smx2sia_add_transition( &sia->g, ports->port, id_src, id_dst, vid );
         id_src++;
         ports = ports->next;
     }
@@ -130,7 +129,7 @@ void smx2sia_sias_write( sia_t** symbols, const char* out_path,
 }
 
 /******************************************************************************/
-void smx2sia_update( igraph_t* g, virt_port_list_t* ports_rec )
+void smx2sia_update( igraph_t* g, virt_port_list_t* ports_rec, int vid )
 {
     int eid;
     igraph_es_t es;
@@ -154,8 +153,7 @@ void smx2sia_update( igraph_t* g, virt_port_list_t* ports_rec )
         // search for a matching port in the signature
         while( ports != NULL ) {
             if( strcmp( name, ports->port->name ) == 0 ) {
-                edge_id = malloc( CONST_ID_LEN + 1 );
-                sprintf( edge_id, "%d", ports->port->edge_id );
+                edge_id = sia_create_sia_attr( vid, ports->port->edge_id );
                 igraph_cattribute_EAS_set( g, G_SIA_NAME, eid, edge_id );
                 free( edge_id );
                 match = true;

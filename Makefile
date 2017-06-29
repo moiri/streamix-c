@@ -195,7 +195,7 @@ run:
 
 run_test:
 	@touch $(INPUT:.$(TEST_IN)=.$(TEST_SOL))
-	@./$(PARSER) -f gml -o $(PROJECT).gml $(INPUT) > $(INPUT:.$(TEST_IN)=.$(TEST_OUT))
+	@./$(PARSER) -f gml -S -p ./ -o $(PROJECT).gml $(INPUT) > $(INPUT:.$(TEST_IN)=.$(TEST_OUT))
 	@echo "testing $(INPUT)"
 	@diff <(sed -r 's/-?[0-9]+\)/*)/g' $(INPUT:.$(TEST_IN)=.$(TEST_OUT))) $(INPUT:.$(TEST_IN)=.$(TEST_SOL))
 	$(MAKE) -s graph
@@ -215,7 +215,7 @@ run_test_all:
 	@printf "======================================\n" | tee -a $(TEST_PATH)/test.log
 	@for file in $(TEST_PATH)/*.$(TEST_IN); do \
 		echo $$file | tee -a $(TEST_PATH)/test.log; \
-		./$(PARSER) -f gml -o $(PROJECT).gml $$file > $${file%.*}.$(TEST_OUT); \
+		./$(PARSER) -f gml -S -p ./ -o $(PROJECT).gml $$file > $${file%.*}.$(TEST_OUT); \
 		diff <(sed -r 's/-?[0-9]+\)/*)/g' $${file%.*}.$(TEST_OUT)) $${file%.*}.$(TEST_SOL) | tee -a $(TEST_PATH)/test.log; \
 		$(MAKE) -s graph; \
 		mv $(DOT_AST_FILE).pdf $${file%.*}_ast.pdf; \
