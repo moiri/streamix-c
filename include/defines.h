@@ -87,6 +87,7 @@ enum parse_attr_e
 #define PORT_ATTR_DDST      "ddst"
 
 #define GRAPH_ATTR_SIA      "sia"
+#define GRAPH_ATTR_NAME     "name"
 
 // drawing
 #define DOT_FOLDER      "dot"

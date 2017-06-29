@@ -59,7 +59,7 @@ void smx2sia_add_transition( igraph_t* g, virt_port_t* port, int id_src,
         int id_dst, int vid )
 {
     const char* mode;
-    char* edge_id = sia_create_sia_attr( vid, port->edge_id );
+    char* edge_id = sia_create_action_name( vid, port->edge_id );
     if( port->attr_mode == PORT_MODE_IN )
         mode = G_SIA_MODE_IN;
     else if( port->attr_mode == PORT_MODE_OUT )
@@ -72,12 +72,15 @@ void smx2sia_add_transition( igraph_t* g, virt_port_t* port, int id_src,
 void smx2sia_set_name_box( sia_t* sia, const char* box_name,
         const char* impl_name, int id )
 {
+    char* vsmx_id = sia_create_net_name( id );
     char* smx_name = malloc( strlen( box_name ) + 2 * strlen( SIA_BOX_INFIX )
             + strlen( impl_name ) + CONST_ID_LEN + 1 );
     sprintf( smx_name, "%s%s%s%s%d", box_name, SIA_BOX_INFIX, impl_name,
             SIA_BOX_INFIX, id );
     sia->smx_name = smx_name;
-    igraph_cattribute_GAN_set( &sia->g, GRAPH_ATTR_SIA, id );
+    igraph_cattribute_GAS_set( &sia->g, GRAPH_ATTR_SIA, vsmx_id );
+    igraph_cattribute_GAS_set( &sia->g, GRAPH_ATTR_NAME, box_name );
+    free( vsmx_id );
 }
 
 /******************************************************************************/
@@ -153,7 +156,7 @@ void smx2sia_update( igraph_t* g, virt_port_list_t* ports_rec, int vid )
         // search for a matching port in the signature
         while( ports != NULL ) {
             if( strcmp( name, ports->port->name ) == 0 ) {
-                edge_id = sia_create_sia_attr( vid, ports->port->edge_id );
+                edge_id = sia_create_action_name( vid, ports->port->edge_id );
                 igraph_cattribute_EAS_set( g, G_SIA_NAME, eid, edge_id );
                 free( edge_id );
                 match = true;
