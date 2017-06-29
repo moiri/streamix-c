@@ -15,41 +15,58 @@ void smx2sia( igraph_t* g, sia_t** smx_symbs, sia_t** desc_symbs )
     int vid;
     igraph_vs_t vs;
     igraph_vit_t vit;
-    symrec_t* rec;
     virt_net_t* net;
     virt_port_list_t* ports;
     sia_t* sia;
-    char* name;
+    const char* impl_name;
+    const char* name;
 
     vs = igraph_vss_all();
     igraph_vit_create( g, vs, &vit );
     // iterate through all net instances of the graph
     while( !IGRAPH_VIT_END( vit ) ) {
         vid = IGRAPH_VIT_GET( vit );
-        rec = ( symrec_t* )( uintptr_t )igraph_cattribute_VAN( g,
-                INST_ATTR_SYMB, vid );
         net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
                 INST_ATTR_VNET, vid );
-        name = rec->attr_box->impl_name;
-        HASH_FIND_STR( *desc_symbs, name, sia );
+        impl_name = igraph_cattribute_VAS( g, INST_ATTR_FUNC, vid );
+        name = igraph_cattribute_VAS( g, INST_ATTR_LABEL, vid );
         ports = net->ports;
-        if( sia == NULL ) {
-            // no sia defined -> create a new one from box signature
-            /* if( rec->attr_box->attr_pure ) */
-            /*     sia = smx2sia_pure( ports, rec->attr_box->impl_name ); */
-            /* else */
-            sia = smx2sia_state( ports );
+        printf( "%s_%s_%d\n", name, impl_name, vid );
+        if( net->type == VNET_SYNC ) {
+            sia = smx2sia_cpsync( g, vid );
         }
-        else {
-            smx2sia_update( &sia->g, ports );
+        else if( net->type == VNET_BOX ) {
+            HASH_FIND_STR( *desc_symbs, impl_name, sia );
+            if( sia == NULL ) {
+                // no sia defined -> create a new one from box signature
+                /* if( rec->attr_box->attr_pure ) */
+                /*     sia = smx2sia_pure( ports, rec->attr_box->impl_name ); */
+                /* else */
+                sia = smx2sia_state( ports );
+            }
+            else {
+                smx2sia_update( &sia->g, ports );
+            }
         }
-        smx2sia_set_name_box( sia, rec );
+        else printf( "bad vertex type\n" );
+        smx2sia_set_name_box( sia, name, impl_name, vid );
         HASH_ADD( hh_smx, *smx_symbs, smx_name, strlen( sia->smx_name ), sia );
         IGRAPH_VIT_NEXT( vit );
     }
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
 
+}
+
+/******************************************************************************/
+void smx2sia_add_edge( igraph_t* g, int id_src, int id_dst, int smx_id,
+        const char* name, const char* mode )
+{
+    int id_edge = igraph_ecount( g );
+    igraph_add_edge( g, id_src, id_dst );
+    igraph_cattribute_EAN_set( g, G_SIA_NAME, id_edge, smx_id );
+    igraph_cattribute_EAS_set( g, G_SIA_PNAME, id_edge, name );
+    igraph_cattribute_EAS_set( g, G_SIA_MODE, id_edge, mode );
 }
 
 /******************************************************************************/
@@ -92,16 +109,53 @@ void smx2sia_add_loops( igraph_t* g, virt_port_t* port )
 void smx2sia_add_transition( igraph_t* g, virt_port_t* port, int id_src,
         int id_dst )
 {
-    const char* mode_port;
-    int id_edge = igraph_ecount( g );
+    const char* mode;
     if( port->attr_mode == PORT_MODE_IN )
-        mode_port = G_SIA_MODE_IN;
+        mode = G_SIA_MODE_IN;
     else if( port->attr_mode == PORT_MODE_OUT )
-        mode_port = G_SIA_MODE_OUT;
-    igraph_add_edge( g, id_src, id_dst );
-    igraph_cattribute_EAN_set( g, G_SIA_NAME, id_edge, port->edge_id );
-    igraph_cattribute_EAS_set( g, G_SIA_PNAME, id_edge, port->name );
-    igraph_cattribute_EAS_set( g, G_SIA_MODE, id_edge, mode_port );
+        mode = G_SIA_MODE_OUT;
+    smx2sia_add_edge( g, id_src, id_dst, port->edge_id, port->name, mode );
+}
+
+/******************************************************************************/
+sia_t* smx2sia_cpsync( igraph_t* nw, int vid )
+{
+    int eid, smx_id, id_dst, id_src = 1;
+    igraph_es_t e_sel;
+    igraph_eit_t e_it;
+    const char* name;
+    sia_t* sia = sia_create( NULL, NULL );
+    igraph_add_vertices( &sia->g, 2, NULL );
+
+    // handle all input actions
+    igraph_es_incident( &e_sel, vid, IGRAPH_IN );
+    igraph_eit_create( nw, e_sel, &e_it );
+    while( !IGRAPH_EIT_END( e_it ) ) {
+        eid = IGRAPH_EIT_GET( e_it );
+        smx_id = igraph_cattribute_EAN( nw, PORT_ATTR_SIA, eid );
+        name = igraph_cattribute_EAS( nw, PORT_ATTR_LABEL, eid );
+        smx2sia_add_edge( &sia->g, 0, 1, smx_id, name, G_SIA_MODE_IN );
+        IGRAPH_EIT_NEXT( e_it );
+    }
+
+    // handle all output actions
+    igraph_es_incident( &e_sel, vid, IGRAPH_OUT );
+    igraph_eit_create( nw, e_sel, &e_it );
+    igraph_add_vertices( &sia->g, IGRAPH_EIT_SIZE( e_it ) - 1, NULL );
+    while( !IGRAPH_EIT_END( e_it ) ) {
+        eid = IGRAPH_EIT_GET( e_it );
+        smx_id = igraph_cattribute_EAN( nw, PORT_ATTR_SIA, eid );
+        name = igraph_cattribute_EAS( nw, PORT_ATTR_LABEL, eid );
+        id_dst = id_src + 1;
+        if( id_dst == igraph_vcount( &sia->g ) ) id_dst = 0;
+        smx2sia_add_edge( &sia->g, id_src, id_dst, smx_id, name,
+                G_SIA_MODE_OUT );
+        id_src++;
+        IGRAPH_EIT_NEXT( e_it );
+    }
+    igraph_eit_destroy( &e_it );
+    igraph_es_destroy( &e_sel );
+    return sia;
 }
 
 /******************************************************************************/
@@ -121,12 +175,13 @@ bool smx2sia_is_decoupled( virt_port_t* port )
 }
 
 /******************************************************************************/
-void smx2sia_set_name_box( sia_t* sia, symrec_t* box )
+void smx2sia_set_name_box( sia_t* sia, const char* box_name,
+        const char* impl_name, int id )
 {
-    char* smx_name = malloc( strlen( box->name ) + strlen( SIA_BOX_INFIX )
-            + strlen( box->attr_box->impl_name ) + 1 );
-    sprintf( smx_name, "%s%s%s", box->name, SIA_BOX_INFIX,
-            box->attr_box->impl_name );
+    char* smx_name = malloc( strlen( box_name ) + 2 * strlen( SIA_BOX_INFIX )
+            + strlen( impl_name ) + CONST_ID_LEN + 1 );
+    sprintf( smx_name, "%s%s%s%s%d", box_name, SIA_BOX_INFIX, impl_name,
+            SIA_BOX_INFIX, id );
     sia->smx_name = smx_name;
 }
 
@@ -139,13 +194,14 @@ sia_t* smx2sia_state( virt_port_list_t* ports_rec )
     igraph_add_vertices( &sia->g, 1, NULL );
     while( ports != NULL ) {
         id_dst = 0;
-        if( smx2sia_is_decoupled( ports->port ) ) continue;
-        if( ports->next != NULL ) {
-            igraph_add_vertices( &sia->g, 1, NULL );
-            id_dst = id_src + 1;
+        if( !smx2sia_is_decoupled( ports->port ) ) {
+            if( ports->next != NULL ) {
+                igraph_add_vertices( &sia->g, 1, NULL );
+                id_dst = id_src + 1;
+            }
+            smx2sia_add_transition( &sia->g, ports->port, id_src, id_dst );
+            id_src++;
         }
-        smx2sia_add_transition( &sia->g, ports->port, id_src, id_dst );
-        id_src++;
         ports = ports->next;
     }
     ports = ports_rec;
