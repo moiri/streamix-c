@@ -268,6 +268,7 @@ int dgraph_vertex_add( igraph_t* g, const char* name )
     int id = igraph_vcount( g );
     igraph_add_vertices( g, 1, NULL );
     igraph_cattribute_VAS_set( g, INST_ATTR_LABEL, id, name );
+    igraph_cattribute_VAN_set( g, INST_ATTR_SIA, id, id );
 #if defined(DEBUG) || defined(DEBUG_CONNECT_GRAPH)
     printf( "dgraph_vertex_add: '%s(%d)'\n", name, id );
 #endif // DEBUG

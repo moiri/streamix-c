@@ -78,6 +78,7 @@ void smx2sia_set_name_box( sia_t* sia, const char* box_name,
     sprintf( smx_name, "%s%s%s%s%d", box_name, SIA_BOX_INFIX, impl_name,
             SIA_BOX_INFIX, id );
     sia->smx_name = smx_name;
+    igraph_cattribute_GAN_set( &sia->g, GRAPH_ATTR_SIA, id );
 }
 
 /******************************************************************************/
