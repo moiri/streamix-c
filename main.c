@@ -184,6 +184,7 @@ int main( int argc, char **argv ) {
 
     // cleanup
     free( out_file_path );
+    free( build_path_sia );
     igraph_destroy( &g );
     smx2sia_sias_destroy( sias, &sia_desc_symbols, &sia_smx_symbols );
     ast_destroy( ast );
