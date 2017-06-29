@@ -31,26 +31,6 @@
 void smx2sia( igraph_t*, sia_t**, sia_t** );
 
 /**
- * @add an edge to a SIA graph
- *
- * @param igraph_t*     pointer to the SIA graph
- * @param int           source vertex id
- * @param int           target vertex id
- * @param int           edge id of the dependency graph
- * @param const char*   name of the action
- * @param const char*   mode of the action
- */
-void smx2sia_add_edge( igraph_t*, int, int, int, const char*, const char* );
-
-/**
- * @brief Add a self loop to each vertex of a SIA graph
- *
- * @param igraph_t*     pointer to the SIA graph
- * @param virt_port_t*  pointer to the port defining the action
- */
-void smx2sia_add_loops( igraph_t*, virt_port_t* );
-
-/**
  * @brief Add a transition to the SIA
  *
  * @param igraph_t*     pointer to the SIA graph
@@ -59,23 +39,6 @@ void smx2sia_add_loops( igraph_t*, virt_port_t* );
  * @param int           destination id of the transition
  */
 void smx2sia_add_transition( igraph_t*, virt_port_t*, int, int );
-
-/**
- * @brief Generate a SIA for a cp-sync
- *
- * @param igraph_t* pointer to the dependency graph
- * @param int       vertex id of the current vertex on the dependency graph
- * @return sia_t*   pointer to the generated SIA structure
- */
-sia_t* smx2sia_cpsync( igraph_t*, int );
-
-/**
- * @brief Returns true if a port is decoupled
- *
- * @param virt_port_t*  pointer to the port in question
- * @return bool         true if te port is decoupled, false otherwise
- */
-bool smx2sia_is_decoupled( virt_port_t* );
 
 /**
  *
