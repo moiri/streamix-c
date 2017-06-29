@@ -32,6 +32,7 @@ int main( int argc, char **argv ) {
     const char* format = NULL;
     const char* sia_desc_file = NULL;
     const char* build_path = NULL;
+    char* build_path_sia = NULL;
     FILE* src_smx;
     FILE* src_sia;
     FILE* out_file;
@@ -165,7 +166,10 @@ int main( int argc, char **argv ) {
     fclose( out_file );
 
     // WRITE OUT SIAs
-    smx2sia_sias_write( &sia_smx_symbols, build_path, format );
+    build_path_sia = malloc( strlen( build_path ) + 5 );
+    sprintf( build_path_sia, "%s/sia", build_path );
+    mkdir( build_path_sia, 0755 );
+    smx2sia_sias_write( &sia_smx_symbols, build_path_sia, format );
 
     if( yynerrs > 0 ) printf( " Error count: %d\n", yynerrs );
 #ifdef DOT_CON
