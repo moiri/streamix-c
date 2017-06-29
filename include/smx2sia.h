@@ -22,10 +22,7 @@
  * The port mode defines the action mode: MODE_IN -> '?' and MODE_OUT -> '!'.
  *
  * I there exists alreadt a SIA definition for a box, the definition is checked
- * and altered according to the box declaration:
- *  - decoupled ports are added as self loops to each vertex
- *  - the SIA name is changed to <box_name><infix><box_implementation_name>
- *  - the action names are changed to <port_name><infix><edge_id>
+ * and altered according to the box declarationr.
  *
  * @param igraph_t*     pointer to the streamix graph
  * @param sia_t**       pointer to the SIA symbol table
@@ -105,5 +102,18 @@ void smx2sia_sias_destroy( sias_t*, sia_t**, sia_t** );
  */
 void smx2sia_sias_write( sia_t**, const char*, const char* );
 
+/**
+ * @brief Check and update user defined SIAs
+ *
+ * If a user defined SIA has actions that do not match the signature an error
+ * is produced. A user defined SIA is altered as follows:
+ *  - decoupled ports are added as self loops to each vertex
+ *  - the SIA name is changed to <box_name><infix><box_implementation_name>
+ *  - the action names are changed to <port_name><infix><edge_id>
+ *
+ * @param igraph_t*         pointer to the user defined SIA graph
+ * @param virt_port_list_t* pointer to the signature of the box
+ */
+void smx2sia_update( igraph_t*, virt_port_list_t* );
 #endif // SMX2SIA_H
 
