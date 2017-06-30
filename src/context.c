@@ -432,11 +432,13 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
         case AST_INT_PORTS:
             list = ast->list;
             while (list != NULL) {
-                ptr = ( symrec_list_t* )malloc( sizeof( symrec_list_t ) );
                 res = check_context_ast( symtab, scope_stack, list->node );
-                ptr->rec = ( symrec_t* )res;
-                ptr->next = port_list;
-                port_list = ptr;
+                if( res != NULL ) {
+                    ptr = ( symrec_list_t* )malloc( sizeof( symrec_list_t ) );
+                    ptr->rec = ( symrec_t* )res;
+                    ptr->next = port_list;
+                    port_list = ptr;
+                }
                 list = list->next;
             }
             check_ports_decoupled( port_list );

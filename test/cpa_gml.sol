@@ -231,7 +231,7 @@ graph
   [
     source 2
     target 4
-    label "dc"
+    label "dc_cpa"
     dsrc 0
     ddst 0
   ]
@@ -295,7 +295,7 @@ graph
   [
     source 2
     target 5
-    label "dc"
+    label "dc_abs"
     dsrc 0
     ddst 0
   ]
@@ -319,7 +319,7 @@ graph
   [
     source 10
     target 12
-    label "dc"
+    label "dc_cpa"
     dsrc 0
     ddst 0
   ]
@@ -383,7 +383,7 @@ graph
   [
     source 10
     target 13
-    label "dc"
+    label "dc_abs"
     dsrc 0
     ddst 0
   ]
@@ -407,7 +407,7 @@ graph
   [
     source 18
     target 20
-    label "dc"
+    label "dc_cpa"
     dsrc 0
     ddst 0
   ]
@@ -471,7 +471,7 @@ graph
   [
     source 18
     target 21
-    label "dc"
+    label "dc_abs"
     dsrc 0
     ddst 0
   ]

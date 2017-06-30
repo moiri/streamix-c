@@ -35,12 +35,4 @@ graph
     dsrc 0
     ddst 0
   ]
-  edge
-  [
-    source 2
-    target 1
-    label "a"
-    dsrc 0
-    ddst 0
-  ]
 ]

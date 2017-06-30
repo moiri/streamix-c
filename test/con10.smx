@@ -2,9 +2,9 @@
  * Just some weird connection pattern to test port classes
  */
 
-A = box A( up out x, down out x )
+A = box A( up out x, down out x2 )
 B = box B( out x )
-C = box C( up in x, down in x )
+C = box C( up in x2, down in x )
 D = box D( in x )
 
 connect D.A.C.B

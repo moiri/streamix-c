@@ -4,13 +4,13 @@ DC = box DC(
     in abs,
     in cpa,
     side in dist,
-    up out dc,
-    down out dc
+    out dc_cpa,
+    out dc_abs
 )
 CPA = box CPA(
     sync {
         decoupled side in dist,
-        in dc
+        in dc_cpa
     },
     out cpa,
     side in car_l_in,
@@ -39,19 +39,19 @@ wrapper Car( up in car_next( car_l_in ), up out car_prev( car_l_out ),
     } net( down out speed, down out break_cmd, down in break_abs,
             down in block, side out dist )
 
-    static wrapper ABS( in dc, out abs, side out dist )
+    static wrapper ABS( in dc_abs, out abs, side out dist )
     {
         ABS = box ABS(
             in speed,
             in break_cmd,
-            in dc,
+            in dc_abs,
             out break_abs,
             out block,
             out abs
         )
 
         connect Sensors.ABS
-    } net( down in dc, down out abs, side out dist )
+    } net( down in dc_abs, down out abs, side out dist )
 
     connect ABS.DC.CPA
 } net( side in car_l_in, side out car_l_out, side in car_r_in,

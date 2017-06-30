@@ -1,6 +1,7 @@
 /**
  * A serial connection using up and down stream port classes
  * Multiple instances of the same box
+ *  => not allowed, do (A|A).B or use a wrapper
  */
 
 A = box A( out a )

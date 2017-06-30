@@ -156,7 +156,7 @@ symrec_t* symrec_create_port( char* name, int scope, int line,
         attr_port_t* attr )
 {
     symrec_t* item = symrec_create( name, scope, SYMREC_PORT, line,
-            attr->collection + 1 );
+            attr->mode + 1 );
     item->attr_port = attr;
     return item;
 }

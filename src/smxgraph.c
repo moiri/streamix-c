@@ -82,6 +82,8 @@ void dgraph_destroy_attr( igraph_t* g )
     igraph_vs_t vs;
     igraph_vit_t vit;
 
+    if( igraph_vcount( g ) == 0 ) return;
+
     vs = igraph_vss_all();
     igraph_vit_create( g, vs, &vit );
     // iterate through all net instances of the graph
@@ -137,6 +139,11 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
 #endif // DEBUG_FLATTEN_GRAPH
             g_tmp = ( igraph_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
                     INST_ATTR_GRAPH, inst_id );
+            if( igraph_vcount( g_tmp ) == 0 ) {
+                // something went wrong
+                IGRAPH_VIT_NEXT( vit );
+                continue;
+            }
             // deep copy child graph to create new instances
             igraph_empty( &g_child, 0, IGRAPH_DIRECTED );
             dgraph_append( &g_child, g_tmp, true );
