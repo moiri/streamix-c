@@ -1,0 +1,8 @@
+/**
+ * Use a deterministic operator for a non-determinitic combination
+ */
+
+A = box fa( out x )
+B = box fb( in x )
+
+connect (A!A).B
