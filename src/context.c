@@ -790,6 +790,7 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
     virt_net_t* v_net1 = NULL;
     virt_net_t* v_net2 = NULL;
     char error_msg[ CONST_ERROR_LEN ];
+    bool force;
 
     if( ast == NULL ) return NULL;
 
@@ -809,6 +810,7 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             check_connections_cp( v_net, g, ast->type );
             break;
         case AST_SERIAL:
+        case AST_SERIAL_PROP:
             v_net1 = install_nets( symtab, scope_stack, ast->op->left, g );
             if( v_net1 == NULL ) return NULL;
             v_net2 = install_nets( symtab, scope_stack, ast->op->right, g );
@@ -818,16 +820,14 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             }
             // check connections and update virtual net
             check_connections( v_net1, v_net2, g );
-            virt_net_update_class( v_net1, PORT_CLASS_UP );
-            virt_net_update_class( v_net2, PORT_CLASS_DOWN );
+            force = ( ast->type == AST_SERIAL);
+            virt_net_update_class( v_net1, PORT_CLASS_UP, force );
+            virt_net_update_class( v_net2, PORT_CLASS_DOWN, force );
             check_connection_missing( v_net1, v_net2, g );
             v_net = virt_net_create_serial( v_net1, v_net2 );
             virt_net_destroy_shallow( v_net1 );
             virt_net_destroy_shallow( v_net2 );
             check_connections_cp( v_net, g, AST_SERIAL );
-            break;
-        case AST_SERIAL_PROP:
-            printf( "operator ':' not yet implemented" );
             break;
         case AST_ID:
             // check the context of the symbol
@@ -838,15 +838,15 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             switch( rec->type ) {
                 case SYMREC_BOX:
                     v_net = dgraph_vertex_add_box( g, rec, ast->symbol->line );
-                    v_net = virt_net_create_parallel( v_net, NULL );
+                    v_net = virt_net_create_symbol( v_net );
                     break;
                 case SYMREC_NET:
                     v_net = dgraph_vertex_add_net( g, rec, ast->symbol->line );
-                    v_net = virt_net_create_parallel( v_net, NULL );
+                    v_net = virt_net_create_symbol( v_net );
                     break;
                 case SYMREC_WRAP:
                     v_net = dgraph_vertex_add_wrap( g, rec, ast->symbol->line );
-                    v_net = virt_net_create_parallel( v_net, NULL );
+                    v_net = virt_net_create_symbol( v_net );
                     break;
                 case SYMREC_NET_PROTO:
                     // prototype -> net definition is missing

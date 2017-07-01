@@ -32,6 +32,7 @@ enum virt_net_type_e
     VNET_NET,
     VNET_FLATTEN,
     VNET_PARALLEL,
+    VNET_SYMBOL,
     VNET_SYNC,
     VNET_SERIAL,
     VNET_WRAP
@@ -205,6 +206,17 @@ virt_net_t* virt_net_create_parallel( virt_net_t*, virt_net_t* );
 virt_net_t* virt_net_create_serial( virt_net_t*, virt_net_t* );
 
 /**
+ * @brief   Create a virtual net from a single symbol (box, netw, wrap)
+ *
+ * Create a new virtial net from a symbol net. Make the net available on both
+ * connection sides
+ *
+ * @param v_net1    pointer to virtual net
+ * @return          pointer to the new virtual net
+ */
+virt_net_t* virt_net_create_symbol( virt_net_t* );
+
+/**
  * @breif   Create a virtual net of a copy synchronizer
  *
  * @param inst  pointer to the instance of the copy synchronizer
@@ -242,8 +254,9 @@ void virt_net_destroy_shallow( virt_net_t* );
  *
  * @param v_net         a pointer to a virtual net to update the ports
  * @param port_class    the class the ports will be updated to
+ * @param force         force the change or only update when class is none
  */
-void virt_net_update_class( virt_net_t*, port_class_t );
+void virt_net_update_class( virt_net_t*, port_class_t, bool );
 
 /**
  * @brief   Append a port to the port list of a virtual net

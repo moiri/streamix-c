@@ -10,6 +10,7 @@
 #include "vnet.h"
 #include "defines.h"
 #include "ast.h"
+#include "smxerr.h"
 
 /******************************************************************************/
 bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2 )
@@ -61,11 +62,15 @@ bool are_port_classes_ok( virt_port_t* p1, virt_port_t* p2, bool directed )
 /******************************************************************************/
 bool are_port_cp_classes_ok( virt_port_t* p1, virt_port_t* p2, bool cpp )
 {
-    // we are good if both ports have the same class
-    if( p1->attr_class == p2->attr_class )
+    // we are good if both ports are side ports
+    if( ( p1->attr_class == PORT_CLASS_SIDE )
+            && ( p2->attr_class == PORT_CLASS_SIDE ) )
         return true;
     // are we checking parallel combinators?
     if( cpp ) {
+        // we are good if both ports have the same class
+        if( p1->attr_class == p2->attr_class )
+            return true;
         // we are good if one port has no class and the other is not a side port
         if( ( p1->attr_class != PORT_CLASS_SIDE )
                 && ( p2->attr_class == PORT_CLASS_NONE ) )
@@ -204,6 +209,27 @@ virt_net_t* virt_net_create_serial( virt_net_t* v_net1, virt_net_t* v_net2 )
 }
 
 /******************************************************************************/
+virt_net_t* virt_net_create_symbol( virt_net_t* v_net1 )
+{
+    virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
+    v_net->inst = NULL;
+    v_net->type = VNET_SYMBOL;
+
+    // alter ports
+    v_net->ports = virt_port_assign( v_net1->ports, NULL, NULL );
+
+    // create connection list
+    v_net->con = malloc( sizeof( net_con_t ) );
+    igraph_vector_ptr_copy( &v_net->con->left, &v_net1->con->left );
+    igraph_vector_ptr_copy( &v_net->con->right, &v_net1->con->right );
+#if defined(DEBUG) || defined(DEBUG_VNET)
+    printf( "virt_net_create_symbol:\n " );
+    debug_print_vports( v_net );
+#endif // DEBUG_CONNECT
+    return v_net;
+}
+
+/******************************************************************************/
 virt_net_t* virt_net_create_sync( instrec_t* inst )
 {
     virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
@@ -280,13 +306,35 @@ void virt_net_destroy_shallow( virt_net_t* v_net )
 }
 
 /******************************************************************************/
-void virt_net_update_class( virt_net_t* v_net, port_class_t port_class )
+void virt_net_update_class( virt_net_t* v_net, port_class_t port_class,
+        bool force )
 {
     virt_port_list_t* list = v_net->ports;
+    char error_msg[ CONST_ERROR_LEN ];
+    char* class_label[] = {
+        PORT_CLASS_NONE_STR,
+        PORT_CLASS_UP_STR,
+        PORT_CLASS_DOWN_STR,
+        PORT_CLASS_SIDE_STR
+    };
     while( list != NULL ) {
         if( ( list->port->attr_class != PORT_CLASS_SIDE )
-                && ( list->port->state < VPORT_STATE_CONNECTED ) )
-            list->port->attr_class = port_class;
+                && ( list->port->v_net->type != VNET_SYNC )
+                && ( list->port->state < VPORT_STATE_CONNECTED ) ) {
+            if( ( list->port->attr_class == PORT_CLASS_NONE ) || force ) {
+                if( ( list->port->attr_class != PORT_CLASS_NONE )
+                        && ( list->port->attr_class != port_class ) ) {
+                    sprintf( error_msg, WARNING_ALTER_CLASS, ERR_WARNING,
+                            list->port->name,
+                            list->port->v_net->inst->name,
+                            list->port->v_net->inst->id,
+                            class_label[list->port->attr_class],
+                            class_label[port_class] );
+                    report_yyerror( error_msg, list->port->symb->line );
+                }
+                list->port->attr_class = port_class;
+            }
+        }
         list = list->next;
     }
 }

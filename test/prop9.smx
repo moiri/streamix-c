@@ -1,0 +1,16 @@
+/**
+ * Do some more complex bypassing
+ */
+
+A = box fa( out w, down out b )
+B = box fb( in w, out x )
+C = box fc( up in b, in x, out y, down out b )
+D = box fd( in y, out z )
+E1 = box fe( in z )
+E2 = box fep( in z, up in b )
+
+net N( down out x, down out b )
+
+N = A:B
+
+connect N.C:D:(E1|E2)

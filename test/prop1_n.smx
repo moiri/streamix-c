@@ -1,0 +1,9 @@
+/**
+ * Trying to bypass with using the locality enforcing operator
+ */
+
+A = box fa( out x, out y )
+B = box fb( in x, out z )
+C = box fc( in z, in y )
+
+connect A.B.C

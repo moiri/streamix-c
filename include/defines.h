@@ -90,6 +90,11 @@ enum parse_attr_e
 #define GRAPH_ATTR_SIA      "sia"
 #define GRAPH_ATTR_NAME     "name"
 
+#define PORT_CLASS_NONE_STR "none"
+#define PORT_CLASS_SIDE_STR "side"
+#define PORT_CLASS_UP_STR   "up"
+#define PORT_CLASS_DOWN_STR "down"
+
 // drawing
 #define DOT_FOLDER      "dot"
 #define AST_DOT_PATH    DOT_FOLDER "/ast_graph.dot"
@@ -180,5 +185,6 @@ enum parse_attr_e
 #define ERROR_SMODE_CP      "%s: single mode in synchroniser '%s'(%d)"
 #define ERROR_BAD_SIA_PORT  "%s: action '%s' does not match the box signature"
 #define ERROR_NONDET        "%s: nondeterminism on deterministic operation '%s!%s', use '|' instead"
+#define WARNING_ALTER_CLASS "%s: port class of port '%s' in '%s'(%d) changed from '%s' to '%s'"
 
 #endif /* DEFINES_H */

@@ -1,0 +1,11 @@
+/**
+ * This bypass works because here, in contrast to prop7_n.smx, port A.y is not
+ * assigned a new class as it is fixed to down. This can then later connect to
+ * the class-less port C.y
+ */
+
+A = box fa( out x, down out y )
+B = box fb( in x, out z )
+C = box fc( in z, in y )
+
+connect A:B:C

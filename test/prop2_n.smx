@@ -1,0 +1,10 @@
+/**
+ * Trying to bypass with using the locality enforcing operator
+ * and port classes
+ */
+
+A = box fa( out x, down out y )
+B = box fb( in x, out z )
+C = box fc( in z, up in y )
+
+connect A.B.C

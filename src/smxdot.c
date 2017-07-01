@@ -39,10 +39,10 @@ char* mode_label[] = {
     "out"
 };
 char* class_label[] = {
-    "none",
-    "up",
-    "down",
-    "side"
+    PORT_CLASS_NONE_STR,
+    PORT_CLASS_UP_STR,
+    PORT_CLASS_DOWN_STR,
+    PORT_CLASS_SIDE_STR
 };
 char* nattr_label[] = {
     "decoupled",

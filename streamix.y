@@ -71,8 +71,8 @@
 
 %left '|'
 %left '!'
-%left '.'
 %left ':'
+%left '.'
 %start start
 
 %%
@@ -129,7 +129,7 @@ net_assign:
 net:
     IDENTIFIER  { $$ = ast_add_symbol( $1, @1.last_line, ID_NET ); }
 |   net '.' net { $$ = ast_add_op( $1, $3, AST_SERIAL ); }
-|   net ':' net { $$ = ast_add_op( $1, $3, AST_SERIAL ); }
+|   net ':' net { $$ = ast_add_op( $1, $3, AST_SERIAL_PROP ); }
 |   net '|' net { $$ = ast_add_op( $1, $3, AST_PARALLEL ); }
 |   net '!' net { $$ = ast_add_op( $1, $3, AST_PARALLEL_DET ); }
 |   '(' net ')' { $$ = $2; }
