@@ -10,10 +10,8 @@ DC = box DC(
     out dc_abs
 )
 CPA = box CPA(
-    sync {
-        decoupled side in dist,
-        in dc_cpa
-    },
+    decoupled side in dist,
+    in dc_cpa,
     out cpa,
     side in car_l_in,
     side out car_l_out,

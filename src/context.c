@@ -447,7 +447,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
         case AST_PORT:
             // prepare symbol attributes and create symbol
             p_attr = symrec_attr_create_port( NULL, PORT_MODE_BI,
-                    PORT_CLASS_NONE, false, ast->port->sync_id );
+                    PORT_CLASS_NONE, false );
             if( ast->port->mode != NULL )
                 p_attr->mode = ast->port->mode->attr->val;
             if( ast->port->coupling != NULL ) p_attr->decoupled = true;

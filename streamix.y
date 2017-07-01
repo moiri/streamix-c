@@ -26,7 +26,7 @@
     struct ast_list_s* lval;
 };
 /* keywods */
-%token SYNC LINK CONNECT
+%token CONNECT
 %token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC
 
 /* optional and variable keyword tokens */
@@ -50,7 +50,6 @@
 %type <nval> net_port_decl
 %type <nval> box_decl
 %type <nval> box_port_decl
-%type <nval> sync_port_decl
 %type <nval> wrap_decl
 %type <nval> wrap_port_decl
 %type <nval> alt_port_decl
@@ -60,8 +59,6 @@
 %type <lval> net_decls
 %type <lval> box_port_list
 %type <lval> opt_box_port_list
-%type <lval> sync_port_list
-%type <lval> opt_sync_port_list
 %type <lval> net_port_list
 %type <lval> opt_net_port_list
 %type <lval> wrap_port_list
@@ -202,35 +199,6 @@ box_port_decl:
             $3,
             $1,
             PORT_BOX
-        );
-    }
-|   SYNC '{' sync_port_list '}' {
-        $$ = ast_add_list( $3, AST_SYNCS );
-    }
-;
-
-sync_port_list:
-    sync_port_decl opt_sync_port_list {
-        $$ = ast_add_list_elem( $1, $2 );
-    }
-;
-
-opt_sync_port_list:
-    %empty { $$ = ( ast_list_t* )0; }
-|   ',' sync_port_decl opt_sync_port_list {
-        $$ = ast_add_list_elem( $2, $3 );
-    }
-;
-
-sync_port_decl:
-    kw_opt_decoupled kw_opt_port_class IN IDENTIFIER {
-        $$ = ast_add_port(
-            ast_add_symbol( $4, @4.last_line, ID_PORT ),
-            (ast_node_t*)0, // no internal id
-            $2,
-            ast_add_attr( $3, ATTR_PORT_MODE ),
-            $1,
-            PORT_SYNC
         );
     }
 ;

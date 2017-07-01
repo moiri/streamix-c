@@ -125,7 +125,6 @@ int main( int argc, char **argv ) {
 
     // CHECK SMX CONTEXT
     igraph_empty( &g, 0, true );
-    ast_flatten( ast );
     check_context( ast, &symtab, &g );
 
     // PARSE SIA FILE

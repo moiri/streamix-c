@@ -43,12 +43,10 @@ out             {yylval.ival = PORT_MODE_OUT;return OUT;}
 box             {yylval.ival = PARSE_ATTR_BOX;return BOX;}
 wrapper         {yylval.ival = PARSE_ATTR_WRAP;return WRAPPER;}
 net             {yylval.ival = PARSE_ATTR_NET;return NET;}
-link            return LINK;
 connect         return CONNECT;
 pure            {yylval.ival = PARSE_ATTR_STATELESS;return STATELESS;}
 decoupled       {yylval.ival = PARSE_ATTR_DECOUPLED;return DECOUPLED;}
 static          {yylval.ival = PARSE_ATTR_STATIC;return STATIC;}
-sync            return SYNC;
 
     /* identifiers */
 [a-zA-Z_$][a-zA-Z_$0-9]* {

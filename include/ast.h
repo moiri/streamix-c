@@ -90,7 +90,6 @@ enum node_type_e
  */
 enum port_type_e
 {
-    PORT_SYNC,
     PORT_NET,
     PORT_WRAP,
     PORT_WRAP_NULL,
@@ -196,7 +195,6 @@ struct ast_port_s
     ast_node_t* collection; /**< ::ast_attr_t */
     ast_node_t* mode;       /**< ::ast_attr_t */
     ast_node_t* coupling;   /**< ::ast_attr_t */
-    int         sync_id;    /**< id used to group sync ports */
 };
 
 /**
@@ -367,17 +365,5 @@ ast_node_t* ast_add_wrap( ast_node_t*, ast_node_t*, ast_node_t*, ast_node_t*,
  * @param ast   pointer to the root node of the ast
  */
 void ast_destroy( ast_node_t* );
-
-/**
- * @brief   Flatten the AST
- *
- * Remove port sync lists and move sync ports on the same hierarchical level as
- * all other ports. Marke the synch ports with a sync id in order to assoziate
- * them with a synchronizer
- *
- * @param ast   pointer to the root node of the ast
- * @return      NULL
- */
-void* ast_flatten( ast_node_t* );
 
 #endif /* AST_H */
