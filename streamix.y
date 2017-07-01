@@ -27,7 +27,7 @@
 };
 /* keywods */
 %token CONNECT
-%token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC
+%token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC INT
 
 /* optional and variable keyword tokens */
 %type <nval> kw_opt_state
@@ -54,6 +54,7 @@
 %type <nval> wrap_port_decl
 %type <nval> alt_port_decl
 %type <nval> opt_alt_ports
+%type <ival> opt_channel_len
 
 /* lists */
 %type <lval> net_decls
@@ -161,6 +162,7 @@ net_port_decl:
             $1,
             $2,
             ( ast_node_t* )0, // no coupling
+            0, // no channel length
             PORT_NET
         );
     }
@@ -191,17 +193,22 @@ opt_box_port_list:
 ;
 
 box_port_decl:
-    kw_opt_decoupled kw_opt_port_class kw_port_mode IDENTIFIER {
+    kw_opt_decoupled kw_opt_port_class kw_port_mode IDENTIFIER opt_channel_len {
         $$ = ast_add_port(
             ast_add_symbol( $4, @3.last_line, ID_PORT ),
             ( ast_node_t* )0, // no internal id
             $2,
             $3,
             $1,
+            $5,
             PORT_BOX
         );
     }
 ;
+
+opt_channel_len:
+    %empty { $$ = 1; }
+|   '[' INT ']' { $$ = $2; }
 
 /* wrapper declaration */
 wrap_decl:
@@ -238,6 +245,7 @@ wrap_port_decl:
             $1,
             $2,
             ( ast_node_t* )0, // no coupling
+            0, // no channel length
             PORT_WRAP
         );
     }
@@ -249,6 +257,7 @@ wrap_port_decl:
             ( ast_node_t* )0, // no collection
             ( ast_node_t* )0, // no mode
             ( ast_node_t* )0, // no coupling
+            0, // no channel length
             PORT_WRAP_NULL
         );
     }
@@ -284,6 +293,7 @@ alt_port_decl:
             ( ast_node_t* )0, // no class
             ( ast_node_t* )0, // no mode
             ( ast_node_t* )0, // no coupling
+            0, // no channel length
             PORT_BOX
         );
     }

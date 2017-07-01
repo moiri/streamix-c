@@ -50,6 +50,7 @@ graph
     label "a"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -58,6 +59,7 @@ graph
     label "s1"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -66,6 +68,7 @@ graph
     label "s1"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -74,6 +77,7 @@ graph
     label "s2"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -82,6 +86,7 @@ graph
     label "s2"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -90,6 +95,7 @@ graph
     label "b"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -98,6 +104,7 @@ graph
     label "s1"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -106,5 +113,6 @@ graph
     label "s2"
     dsrc 0
     ddst 0
+    len 1
   ]
 ]

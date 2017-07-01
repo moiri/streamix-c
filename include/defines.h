@@ -85,6 +85,7 @@ enum parse_attr_e
 #define PORT_ATTR_PDST      "pdst"
 #define PORT_ATTR_DSRC      "dsrc"
 #define PORT_ATTR_DDST      "ddst"
+#define CH_ATTR_LEN         "len"
 
 #define GRAPH_ATTR_SIA      "sia"
 #define GRAPH_ATTR_NAME     "name"

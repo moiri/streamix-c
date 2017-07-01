@@ -26,6 +26,7 @@ graph
     label "ack"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -34,6 +35,7 @@ graph
     label "syn_ack"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -42,5 +44,6 @@ graph
     label "syn"
     dsrc 0
     ddst 0
+    len 1
   ]
 ]

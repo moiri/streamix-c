@@ -26,6 +26,7 @@ graph
     label "y"
     dsrc 0
     ddst 1
+    len 1
   ]
   edge
   [
@@ -34,5 +35,6 @@ graph
     label "x"
     dsrc 0
     ddst 1
+    len 1
   ]
 ]

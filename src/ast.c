@@ -99,7 +99,7 @@ ast_node_t* ast_add_op( ast_node_t* left, ast_node_t* right,
 /******************************************************************************/
 ast_node_t* ast_add_port( ast_node_t* id, ast_node_t* int_id,
         ast_node_t* collection, ast_node_t* mode, ast_node_t* coupling,
-        port_type_t type )
+        int channel_len, port_type_t type )
 {
     ast_node_t *node = ast_add_node( AST_PORT );
     node->port = malloc( sizeof( ast_port_t ) );
@@ -109,6 +109,7 @@ ast_node_t* ast_add_port( ast_node_t* id, ast_node_t* int_id,
     node->port->mode = mode;
     node->port->collection = collection;
     node->port->coupling = coupling;
+    node->port->ch_len = channel_len;
     return node;
 }
 

@@ -66,6 +66,7 @@ graph
     label "b"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -74,6 +75,7 @@ graph
     label "b"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -82,6 +84,7 @@ graph
     label "c"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -90,6 +93,7 @@ graph
     label "c"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -98,6 +102,7 @@ graph
     label "b"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -106,6 +111,7 @@ graph
     label "c"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -114,5 +120,6 @@ graph
     label "a"
     dsrc 0
     ddst 0
+    len 1
   ]
 ]

@@ -447,7 +447,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
         case AST_PORT:
             // prepare symbol attributes and create symbol
             p_attr = symrec_attr_create_port( NULL, PORT_MODE_BI,
-                    PORT_CLASS_NONE, false );
+                    PORT_CLASS_NONE, false, ast->port->ch_len );
             if( ast->port->mode != NULL )
                 p_attr->mode = ast->port->mode->attr->val;
             if( ast->port->coupling != NULL ) p_attr->decoupled = true;
@@ -843,7 +843,10 @@ void post_process( igraph_t* g )
     igraph_vector_t dids;
     virt_net_t *v_net;
     symrec_t* symb;
-    int inst_id;
+    int inst_id, ch_len, id_edge;
+    igraph_es_t es;
+    igraph_eit_t eit;
+    virt_port_t *p_src, *p_dest;
 
     vs = igraph_vss_all();
     igraph_vit_create( g, vs, &vit );
@@ -871,4 +874,37 @@ void post_process( igraph_t* g )
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
     igraph_vector_destroy( &dids );
+
+    es = igraph_ess_all( IGRAPH_EDGEORDER_ID );
+    igraph_eit_create( g, es, &eit );
+    while( !IGRAPH_EIT_END( eit ) ) {
+        id_edge = IGRAPH_EIT_GET( eit );
+        p_dest = ( virt_port_t* )( uintptr_t )igraph_cattribute_EAN( g,
+                PORT_ATTR_PDST, id_edge );
+        p_src = ( virt_port_t* )( uintptr_t )igraph_cattribute_EAN( g,
+                PORT_ATTR_PSRC, id_edge );
+        ch_len = get_ch_len( p_dest, p_src );
+        igraph_cattribute_EAN_set( g, CH_ATTR_LEN, id_edge, ch_len );
+        IGRAPH_EIT_NEXT( eit );
+    }
+    igraph_eit_destroy( &eit );
+    igraph_es_destroy( &es );
+}
+
+/******************************************************************************/
+int get_ch_len( virt_port_t* p1, virt_port_t* p2 )
+{
+    if( p1->v_net->type == VNET_SYNC )
+        return p2->symb->attr_port->ch_len;
+    else if( p2->v_net->type == VNET_SYNC )
+        return p1->symb->attr_port->ch_len;
+    else 
+        return max( p1->symb->attr_port->ch_len, p2->symb->attr_port->ch_len );
+}
+
+/******************************************************************************/
+int max( int num1, int num2 )
+{
+    if( num1 > num2 ) return num1;
+    else return num2;
 }

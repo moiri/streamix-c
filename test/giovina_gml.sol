@@ -85,14 +85,6 @@ graph
   ]
   edge
   [
-    source 4
-    target 5
-    label "d"
-    dsrc 0
-    ddst 0
-  ]
-  edge
-  [
     source 7
     target 5
     label "d"

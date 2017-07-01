@@ -98,6 +98,7 @@ graph
     label "p_int"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -106,6 +107,7 @@ graph
     label "p_int"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -114,6 +116,7 @@ graph
     label "p_int"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -122,6 +125,7 @@ graph
     label "p_int"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -130,6 +134,7 @@ graph
     label "p_int"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -138,6 +143,7 @@ graph
     label "p_int"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -146,6 +152,7 @@ graph
     label "b2"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -154,6 +161,7 @@ graph
     label "b1"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -162,6 +170,7 @@ graph
     label "a2"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -170,6 +179,7 @@ graph
     label "a1"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -178,6 +188,7 @@ graph
     label "p2"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -186,5 +197,6 @@ graph
     label "p1"
     dsrc 0
     ddst 0
+    len 1
   ]
 ]

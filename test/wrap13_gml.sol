@@ -42,6 +42,7 @@ graph
     label "p_int"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -50,6 +51,7 @@ graph
     label "x"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -58,6 +60,7 @@ graph
     label "r1"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -66,5 +69,6 @@ graph
     label "l1"
     dsrc 0
     ddst 0
+    len 1
   ]
 ]

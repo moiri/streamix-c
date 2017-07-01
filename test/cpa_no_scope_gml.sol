@@ -218,6 +218,7 @@ graph
     label "block"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -226,6 +227,7 @@ graph
     label "break_cmd"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -234,6 +236,7 @@ graph
     label "speed"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -242,6 +245,7 @@ graph
     label "break_abs"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -250,6 +254,7 @@ graph
     label "dc_abs"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -258,6 +263,7 @@ graph
     label "abs"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -266,6 +272,7 @@ graph
     label "cpa"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -274,6 +281,7 @@ graph
     label "dc_cpa"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -282,6 +290,7 @@ graph
     label "dist"
     dsrc 1
     ddst 1
+    len 1
   ]
   edge
   [
@@ -290,6 +299,7 @@ graph
     label "dist"
     dsrc 1
     ddst 0
+    len 1
   ]
   edge
   [
@@ -298,6 +308,7 @@ graph
     label "dist"
     dsrc 0
     ddst 1
+    len 1
   ]
   edge
   [
@@ -306,6 +317,7 @@ graph
     label "block"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -314,6 +326,7 @@ graph
     label "break_cmd"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -322,6 +335,7 @@ graph
     label "speed"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -330,6 +344,7 @@ graph
     label "break_abs"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -338,6 +353,7 @@ graph
     label "dc_abs"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -346,6 +362,7 @@ graph
     label "abs"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -354,6 +371,7 @@ graph
     label "cpa"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -362,6 +380,7 @@ graph
     label "dc_cpa"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -370,6 +389,7 @@ graph
     label "dist"
     dsrc 1
     ddst 1
+    len 1
   ]
   edge
   [
@@ -378,6 +398,7 @@ graph
     label "dist"
     dsrc 1
     ddst 0
+    len 1
   ]
   edge
   [
@@ -386,6 +407,7 @@ graph
     label "dist"
     dsrc 0
     ddst 1
+    len 1
   ]
   edge
   [
@@ -394,6 +416,7 @@ graph
     label "block"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -402,6 +425,7 @@ graph
     label "break_cmd"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -410,6 +434,7 @@ graph
     label "speed"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -418,6 +443,7 @@ graph
     label "break_abs"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -426,6 +452,7 @@ graph
     label "dc_abs"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -434,6 +461,7 @@ graph
     label "abs"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -442,6 +470,7 @@ graph
     label "cpa"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -450,6 +479,7 @@ graph
     label "dc_cpa"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -458,6 +488,7 @@ graph
     label "dist"
     dsrc 1
     ddst 1
+    len 1
   ]
   edge
   [
@@ -466,6 +497,7 @@ graph
     label "dist"
     dsrc 1
     ddst 0
+    len 1
   ]
   edge
   [
@@ -474,6 +506,7 @@ graph
     label "dist"
     dsrc 0
     ddst 1
+    len 1
   ]
   edge
   [
@@ -482,6 +515,7 @@ graph
     label "car_prev"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -490,6 +524,7 @@ graph
     label "car_next"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -498,6 +533,7 @@ graph
     label "car_prev"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -506,6 +542,7 @@ graph
     label "car_next"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -514,6 +551,7 @@ graph
     label "car_prev"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -522,6 +560,7 @@ graph
     label "car_next"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -530,6 +569,7 @@ graph
     label "car_prev"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -538,5 +578,6 @@ graph
     label "car_next"
     dsrc 0
     ddst 0
+    len 1
   ]
 ]

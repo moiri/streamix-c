@@ -50,6 +50,7 @@ graph
     label "p2"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -58,6 +59,7 @@ graph
     label "p1"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -66,6 +68,7 @@ graph
     label "p1"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -74,6 +77,7 @@ graph
     label "p2"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -82,6 +86,7 @@ graph
     label "p1"
     dsrc 0
     ddst 0
+    len 1
   ]
   edge
   [
@@ -90,5 +95,6 @@ graph
     label "p1"
     dsrc 0
     ddst 0
+    len 1
   ]
 ]

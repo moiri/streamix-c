@@ -54,8 +54,14 @@ static          {yylval.ival = PARSE_ATTR_STATIC;return STATIC;}
                 return IDENTIFIER;
 }
 
+    /* channel length */
+[1-9][0-9]* {
+                yylval.ival = atoi( yytext );
+                return INT;
+}
+
     /* operators */
-[.|(){}:,*=]     return *yytext;
+[.|(){}:,*=\[\]]     return *yytext;
 
     /* anything else is an error */
 .               yyerror( NULL, "invalid character" );

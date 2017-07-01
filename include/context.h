@@ -265,4 +265,22 @@ bool is_connected( instrec_t*, instrec_t*, igraph_t* );
  */
 void post_process( igraph_t* );
 
+/**
+ * @brief get the length of a channel given two port pointers
+ *
+ * @param virt_port_t*  pointer to a virtual port
+ * @param virt_port_t*  pointer to a virtual port
+ * @return int          length of the channel between the two ports
+ */
+int get_ch_len( virt_port_t*, virt_port_t* );
+
+/**
+ * @brief function returning the max between two numbers
+ *
+ * @param int n1
+ * @param int n2
+ * @return int max( n1, n2 )
+ */
+int max( int, int );
+
 #endif // CONTEXT_H

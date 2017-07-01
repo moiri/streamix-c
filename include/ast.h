@@ -195,6 +195,7 @@ struct ast_port_s
     ast_node_t* collection; /**< ::ast_attr_t */
     ast_node_t* mode;       /**< ::ast_attr_t */
     ast_node_t* coupling;   /**< ::ast_attr_t */
+    int         ch_len;     /**< length of the channel */
 };
 
 /**
@@ -309,11 +310,12 @@ ast_node_t* ast_add_op( ast_node_t*, ast_node_t*, node_type_t );
  * @param collection    pointer to the collection node
  * @param mode          pointer to the mode node
  * @param coupling      pointer to the coupling node
+ * @param channel_len   the length of the channel
  * @param type          PORT_BOX, PORT_NET, PORT_SYNC
  * @return              a pointer to the location where the data was stored
  */
 ast_node_t* ast_add_port( ast_node_t*, ast_node_t*, ast_node_t*, ast_node_t*,
-        ast_node_t*, port_type_t );
+        ast_node_t*, int, port_type_t );
 
 /**
  * @brief   Add a program node to the AST.
