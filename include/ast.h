@@ -63,7 +63,7 @@ enum id_type_e
 /**
  * @brief       all possible types of AST_NODE
  * @attention   the order of this enum matches the order of node names
- *              "node_label" in graph.c
+ *              "node_label" in smxdot.c
  */
 enum node_type_e
 {
@@ -74,10 +74,12 @@ enum node_type_e
     AST_NET,
     AST_NET_PROTO,
     AST_PARALLEL,
+    AST_PARALLEL_DET,
     AST_PORT,
     AST_PORTS,
     AST_PROGRAM,
     AST_SERIAL,
+    AST_SERIAL_PROP,
     AST_STMTS,
     AST_SYNCS,
     AST_WRAP,

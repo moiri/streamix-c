@@ -74,8 +74,11 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
 
 /******************************************************************************/
 void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
-        virt_port_t* port2, igraph_t* g, bool parallel, bool ignore_class )
+        virt_port_t* port2, igraph_t* g, node_type_t parallel )
 {
+    char error_msg[ CONST_ERROR_LEN ];
+    bool b_parallel = ( ( parallel == AST_PARALLEL )
+            || ( parallel == AST_PARALLEL_DET ) );
     virt_net_t* v_net_sync = NULL;
     instrec_t* inst1 = port1->v_net->inst;
     instrec_t* inst2 = port2->v_net->inst;
@@ -93,10 +96,31 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
         port_class = port2->attr_class;
     else if( port2->attr_class == PORT_CLASS_NONE )
         port_class = port1->attr_class;
-    if ( ignore_class || are_port_cp_classes_ok( port1, port2, parallel ) ) {
+    if ( are_port_cp_classes_ok( port1, port2, b_parallel ) ) {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
         printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
+        // check modes for parallel connection on non-sied-ports
+        if( ( port1->attr_class != PORT_CLASS_SIDE )
+                && ( port2->attr_class != PORT_CLASS_SIDE ) ) {
+            if( ( parallel == AST_PARALLEL )
+                    && are_port_modes_ok( port1, port2, false ) ) {
+                sprintf( error_msg, ERROR_BAD_MODE, ERR_ERROR, port1->name,
+                        port1->v_net->inst->name, port1->v_net->inst->id,
+                        port2->v_net->inst->name, port2->v_net->inst->id,
+                        port2->symb->line );
+                report_yyerror( error_msg, port1->symb->line );
+                return;
+            }
+            else if( ( parallel == AST_PARALLEL_DET )
+                && ( port1->attr_mode == PORT_MODE_OUT )
+                && ( port2->attr_mode == PORT_MODE_OUT ) ) {
+                sprintf( error_msg, ERROR_NONDET, ERR_ERROR,
+                        port2->v_net->inst->name, port1->v_net->inst->name );
+                report_yyerror( error_msg, port1->symb->line );
+                return;
+            }
+        }
         // connect ports and cerate copy synchronizer if necessary
         if( ( inst1->type == INSTREC_SYNC )
                 && ( inst2->type == INSTREC_SYNC ) ) {
@@ -205,32 +229,32 @@ void check_connections( virt_net_t* v_net1, virt_net_t* v_net2, igraph_t* g )
 }
 
 /******************************************************************************/
-void check_connections_cp( virt_net_t* v_net, igraph_t* g, bool parallel )
+void check_connections_cp( virt_net_t* v_net, igraph_t* g,
+        node_type_t parallel )
 {
     virt_port_list_t* ports1 = NULL;
     virt_port_list_t* ports2 = NULL;
     int new_idx = 0;
-    ports1 = v_net->ports;
-    while( ports1 != NULL ) {
-        new_idx++;
-        ports1 = ports1->next;
-    }
+    if( v_net->ports != NULL ) new_idx = v_net->ports->idx;
 
+    // in the list of ports, test each combination only once and do not compare
+    // a port with itself (we use the new_idx counter for this) not that the
+    // port indices ports->idx start from the highest value
     ports1 = v_net->ports;
     while( ports1 != NULL ) {
         ports2 = v_net->ports;
         while( ports2 != NULL ) {
-            if( ( ports1->idx != ports2->idx )
-                    && ( ports1->idx < new_idx ) && ( ports2->idx < new_idx )
+            if( ( ports2->idx < new_idx )
                     && ( ports1->port->state < VPORT_STATE_CONNECTED )
                     && ( ports2->port->state < VPORT_STATE_CONNECTED )
                     && are_port_names_ok( ports1->port, ports2->port ) ) {
                 check_connection_cp( v_net, ports1->port, ports2->port, g,
-                        parallel, false );
+                        parallel );
             }
             ports2 = ports2->next;
         }
         ports1 = ports1->next;
+        new_idx--;
     }
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
     printf( "check_connections_cp, updated v_net: " );
@@ -771,6 +795,7 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
 
     switch( ast->type ) {
         case AST_PARALLEL:
+        case AST_PARALLEL_DET:
             v_net1 = install_nets( symtab, scope_stack, ast->op->left, g );
             if( v_net1 == NULL ) return NULL;
             v_net2 = install_nets( symtab, scope_stack, ast->op->right, g );
@@ -781,7 +806,7 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             v_net = virt_net_create_parallel( v_net1, v_net2 );
             virt_net_destroy_shallow( v_net1 );
             virt_net_destroy_shallow( v_net2 );
-            check_connections_cp( v_net, g, true );
+            check_connections_cp( v_net, g, ast->type );
             break;
         case AST_SERIAL:
             v_net1 = install_nets( symtab, scope_stack, ast->op->left, g );
@@ -799,7 +824,10 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             v_net = virt_net_create_serial( v_net1, v_net2 );
             virt_net_destroy_shallow( v_net1 );
             virt_net_destroy_shallow( v_net2 );
-            check_connections_cp( v_net, g, false );
+            check_connections_cp( v_net, g, AST_SERIAL );
+            break;
+        case AST_SERIAL_PROP:
+            printf( "operator ':' not yet implemented" );
             break;
         case AST_ID:
             // check the context of the symbol

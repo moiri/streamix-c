@@ -24,10 +24,12 @@ char* node_label[] =
     "net",
     "net prototype",
     "parallel",
+    "parallel det",
     "port decl",
     "ports",
     "program",
     "serial",
+    "serial prop",
     "stmts",
     "sync",
     "wrapper decl"

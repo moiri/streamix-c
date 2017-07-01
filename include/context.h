@@ -47,12 +47,12 @@ bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g, bool, bool,
  * @param port1     pointer to the port of a virtual net of the left operator
  * @param port2     pointer to the port of a virtual net of the right operator
  * @param g         pointer to a the dependancy graph to be updated
- * @param parallel  flag to indicate wheter cp syncs of paralle combinations are
- *                  checker (true) or side ports in serial combinations (false)
- * @param ignore_class  if true, the port classes are ignored
+ * @param parallel  flag to indicate wheter cp syncs of parallel combinations
+ *                  are checked (AST_PARALLEL/AST_PARALLEL_DET) or side ports
+ *                  in serial combinations (0)
  */
 void check_connection_cp( virt_net_t*, virt_port_t*, virt_port_t*, igraph_t*,
-        bool, bool );
+        node_type_t );
 
 /**
  * @brief    Report missing connections
@@ -86,7 +86,7 @@ void check_connections( virt_net_t*, virt_net_t*, igraph_t* );
  *                  in parallel operators are checked
  * @param g         pointer to a initialized igraph object
  */
-void check_connections_cp( virt_net_t*, igraph_t*, bool );
+void check_connections_cp( virt_net_t*, igraph_t*, node_type_t );
 
 /**
  * @brief    Check the context of all identifiers in the program

@@ -200,7 +200,7 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, virt_net_t* v_net )
         if( v_net->type == VNET_NET ) {
             // unknown direction, class matters, modes have to be different
             check_connection( port_net_new, port, g_new, false, false, false );
-            check_connection_cp( NULL, port_net_new, port, g_new, false, false );
+            check_connection_cp( NULL, port_net_new, port, g_new, AST_NET );
         }
         else if( v_net->type == VNET_WRAP ) {
             // unknown direction, ignore class, modes have to be different

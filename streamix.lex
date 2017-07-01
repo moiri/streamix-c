@@ -61,7 +61,7 @@ static          {yylval.ival = PARSE_ATTR_STATIC;return STATIC;}
 }
 
     /* operators */
-[.|(){}:,*=\[\]]     return *yytext;
+[.:|!(){},*=\[\]]     return *yytext;
 
     /* anything else is an error */
 .               yyerror( NULL, "invalid character" );

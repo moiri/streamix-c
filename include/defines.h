@@ -179,5 +179,6 @@ enum parse_attr_e
 #define ERROR_TYPE_CONFLICT "%s: conflicting types for '%s'"
 #define ERROR_SMODE_CP      "%s: single mode in synchroniser '%s'(%d)"
 #define ERROR_BAD_SIA_PORT  "%s: action '%s' does not match the box signature"
+#define ERROR_NONDET        "%s: nondeterminism on deterministic operation '%s!%s', use '|' instead"
 
 #endif /* DEFINES_H */
