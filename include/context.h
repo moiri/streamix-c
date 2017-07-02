@@ -89,6 +89,16 @@ void check_connections( virt_net_t*, virt_net_t*, igraph_t* );
 void check_connections_cp( virt_net_t*, igraph_t*, node_type_t );
 
 /**
+ *
+ */
+void check_connections_open( virt_net_t*, virt_net_t* );
+
+/**
+ *
+ */
+void check_connections_self( igraph_t*, virt_net_t* );
+
+/**
  * @brief    Check the context of all identifiers in the program
  *
  * @param ast       pointer to the root ast node
@@ -191,22 +201,6 @@ void cpsync_merge_ports( virt_port_t*, virt_port_t*, instrec_t*, igraph_t* );
  * @return      true if the sync was replaced, false if not
  */
 bool cpsync_reduce( igraph_t*, int, symrec_t* );
-
-/**
- * @brief   Print debug information of a port of a port record list
- *
- * @param port  pointer to the port record
- * @param name  name of the net instance to port belongs to
- */
-void debug_print_rport( symrec_t*, char* );
-
-/**
- * @brief   Print debug information of all ports in a port record list
- *
- * @param rports    pointer to the port record list
- * @param name      name of the net instance to port belongs to
- */
-void debug_print_rports( symrec_list_t*, char* );
 
 /**
  * @brief   Check whether each list has the same number of elements

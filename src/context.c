@@ -695,31 +695,6 @@ bool cpsync_reduce( igraph_t* g, int id, symrec_t* symb )
 }
 
 /******************************************************************************/
-void debug_print_rport( symrec_t* port, char* name )
-{
-    printf( "%s", name );
-    if( port->attr_port->collection == PORT_CLASS_DOWN ) printf( "_" );
-    else if( port->attr_port->collection == PORT_CLASS_UP ) printf( "^" );
-    else if( port->attr_port->collection == PORT_CLASS_SIDE ) printf( "|" );
-    if( port->attr_port->mode == PORT_MODE_IN ) printf( "<--" );
-    else if( port->attr_port->mode == PORT_MODE_OUT ) printf( "-->" );
-    else printf( "<->" );
-    printf( "%s", port->name );
-}
-
-/******************************************************************************/
-void debug_print_rports( symrec_list_t* rports, char* name )
-{
-    symrec_list_t* ports = rports;
-    while( ports != NULL ) {
-        debug_print_rport( ports->rec, name );
-        printf(", ");
-        ports = ports->next;
-    }
-    printf("\n");
-}
-
-/******************************************************************************/
 bool do_port_cnts_match( symrec_list_t* r_ports, virt_port_list_t* v_ports )
 {
     symrec_list_t* r_port_ptr = r_ports;
@@ -782,6 +757,74 @@ bool do_port_attrs_match( symrec_list_t* r_ports, virt_port_list_t* v_ports )
 }
 
 /******************************************************************************/
+void check_connections_self( igraph_t* g, virt_net_t* v_net )
+{
+    virt_port_list_t* ports1 = NULL;
+    virt_port_list_t* ports2 = NULL;
+    int new_idx = 0;
+    if( v_net->ports != NULL ) new_idx = v_net->ports->idx;
+
+    // in the list of ports, test each combination only once and do not compare
+    // a port with itself (we use the new_idx counter for this) not that the
+    // port indices ports->idx start from the highest value
+    ports1 = v_net->ports;
+    while( ports1 != NULL ) {
+        ports2 = v_net->ports;
+        while( ports2 != NULL ) {
+            if( ( ports2->idx < new_idx )
+                    && ( ports1->port->state < VPORT_STATE_CONNECTED )
+                    && ( ports2->port->state < VPORT_STATE_CONNECTED )
+                    && ( ports1->port->attr_class == PORT_CLASS_NONE )
+                    && ( ports2->port->attr_class == PORT_CLASS_NONE )
+                    && are_port_modes_ok( ports1->port, ports2->port, false )
+                    && are_port_names_ok( ports1->port, ports2->port ) ) {
+                connect_ports( ports1->port, ports2->port, g, true );
+            }
+            ports2 = ports2->next;
+        }
+        ports1 = ports1->next;
+        new_idx--;
+    }
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+    printf( "check_connections_self, updated v_net: " );
+    debug_print_vports( v_net );
+#endif // DEBUG
+}
+
+/******************************************************************************/
+void check_connections_open( virt_net_t* vnet_l, virt_net_t* vnet_r )
+{
+    char error_msg[ CONST_ERROR_LEN ];
+    virt_port_list_t* ports = vnet_l->ports;
+    instrec_t *inst;
+    while( ports != NULL ) {
+        if( ( ports->port->state < VPORT_STATE_CONNECTED )
+                && ( ports->port->attr_class == PORT_CLASS_DOWN ) ) {
+            // a left opernad must have all ports with class down connected
+            inst = ports->port->v_net->inst;
+            sprintf( error_msg, ERROR_NO_PORT_CON_CLASS, ERR_ERROR,
+                    ports->port->name, inst->name, inst->id, inst->name, "*" );
+            report_yyerror( error_msg, ports->port->symb->line );
+            ports->port->state = VPORT_STATE_DISABLED;
+        }
+        ports = ports->next;
+    }
+    ports = vnet_r->ports;
+    while( ports != NULL ) {
+        if( ( ports->port->state < VPORT_STATE_CONNECTED )
+                && ( ports->port->attr_class == PORT_CLASS_UP ) ) {
+            // a right opernad must have all ports with class up connected
+            inst = ports->port->v_net->inst;
+            sprintf( error_msg, ERROR_NO_PORT_CON_CLASS, ERR_ERROR,
+                    ports->port->name, inst->name, inst->id, inst->name, "*" );
+            report_yyerror( error_msg, ports->port->symb->line );
+            ports->port->state = VPORT_STATE_DISABLED;
+        }
+        ports = ports->next;
+    }
+}
+
+/******************************************************************************/
 virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
         ast_node_t* ast, igraph_t* g )
 {
@@ -790,7 +833,6 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
     virt_net_t* v_net1 = NULL;
     virt_net_t* v_net2 = NULL;
     char error_msg[ CONST_ERROR_LEN ];
-    bool force;
 
     if( ast == NULL ) return NULL;
 
@@ -820,9 +862,12 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             }
             // check connections and update virtual net
             check_connections( v_net1, v_net2, g );
-            force = ( ast->type == AST_SERIAL);
-            virt_net_update_class( v_net1, PORT_CLASS_UP, force );
-            virt_net_update_class( v_net2, PORT_CLASS_DOWN, force );
+            /* force = ( ast->type == AST_SERIAL); */
+            if( ast->type == AST_SERIAL ) {
+                virt_net_update_class( v_net1, PORT_CLASS_UP );
+                virt_net_update_class( v_net2, PORT_CLASS_DOWN );
+                check_connections_open( v_net1, v_net2 );
+            }
             check_connection_missing( v_net1, v_net2, g );
             v_net = virt_net_create_serial( v_net1, v_net2 );
             virt_net_destroy_shallow( v_net1 );
@@ -839,6 +884,7 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
                 case SYMREC_BOX:
                     v_net = dgraph_vertex_add_box( g, rec, ast->symbol->line );
                     v_net = virt_net_create_symbol( v_net );
+                    check_connections_self( g, v_net );
                     break;
                 case SYMREC_NET:
                     v_net = dgraph_vertex_add_net( g, rec, ast->symbol->line );
@@ -847,6 +893,7 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
                 case SYMREC_WRAP:
                     v_net = dgraph_vertex_add_wrap( g, rec, ast->symbol->line );
                     v_net = virt_net_create_symbol( v_net );
+                    check_connections_self( g, v_net );
                     break;
                 case SYMREC_NET_PROTO:
                     // prototype -> net definition is missing

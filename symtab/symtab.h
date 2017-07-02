@@ -296,4 +296,20 @@ symrec_t* symrec_put( symrec_t**, symrec_t* );
  * */
 symrec_t* symrec_search( symrec_t**, UT_array*, char*, int );
 
+/**
+ * @brief   Print debug information of a port of a port record list
+ *
+ * @param port  pointer to the port record
+ * @param name  name of the net instance to port belongs to
+ */
+void debug_print_rport( symrec_t*, char* );
+
+/**
+ * @brief   Print debug information of all ports in a port record list
+ *
+ * @param rports    pointer to the port record list
+ * @param name      name of the net instance to port belongs to
+ */
+void debug_print_rports( symrec_list_t*, char* );
+
 #endif /* SYMTAB_H */

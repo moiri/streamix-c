@@ -1,6 +1,5 @@
 /**
- * Trying to bypass with using the propagation operator
- * but no port classes
+ * This bypass works because classes are automatically assigned
  */
 
 A = box fa( out x, out y )

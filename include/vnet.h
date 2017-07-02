@@ -254,9 +254,8 @@ void virt_net_destroy_shallow( virt_net_t* );
  *
  * @param v_net         a pointer to a virtual net to update the ports
  * @param port_class    the class the ports will be updated to
- * @param force         force the change or only update when class is none
  */
-void virt_net_update_class( virt_net_t*, port_class_t, bool );
+void virt_net_update_class( virt_net_t*, port_class_t );
 
 /**
  * @brief   Append a port to the port list of a virtual net
@@ -354,10 +353,10 @@ virt_port_t* virt_port_get_equivalent( virt_net_t*, virt_port_t*, bool );
  * @brief   Get a port from a virtual net port list by compairing names
  *
  * @param v_net virtual net to search for the port
- * @param name  name to search for
+ * @param port  pointer to the port symbol
  * @return      pointer to the port, NULL if no port was found
  */
-virt_port_t* virt_port_get_equivalent_by_name( virt_net_t*, const char* );
+virt_port_t* virt_port_get_equivalent_by_symb_attr( virt_net_t*, symrec_t* );
 
 /**
  * @brief   Get the namesake of a port out of a net interface of a wrapper

@@ -327,3 +327,28 @@ symrec_t* symrec_search( symrec_t** symtab, UT_array* scope_stack, char *name,
     }
     return item;
 }
+
+/******************************************************************************/
+void debug_print_rport( symrec_t* port, char* name )
+{
+    printf( "%s", name );
+    if( port->attr_port->collection == PORT_CLASS_DOWN ) printf( "_" );
+    else if( port->attr_port->collection == PORT_CLASS_UP ) printf( "^" );
+    else if( port->attr_port->collection == PORT_CLASS_SIDE ) printf( "|" );
+    if( port->attr_port->mode == PORT_MODE_IN ) printf( "<--" );
+    else if( port->attr_port->mode == PORT_MODE_OUT ) printf( "-->" );
+    else printf( "<->" );
+    printf( "%s", port->name );
+}
+
+/******************************************************************************/
+void debug_print_rports( symrec_list_t* rports, char* name )
+{
+    symrec_list_t* ports = rports;
+    while( ports != NULL ) {
+        debug_print_rport( ports->rec, name );
+        printf(", ");
+        ports = ports->next;
+    }
+    printf("\n");
+}

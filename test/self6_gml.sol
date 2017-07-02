@@ -6,8 +6,8 @@ graph
   node
   [
     id 0
-    label "A"
-    func "fa"
+    label "C"
+    func "fc"
     static 0
     pure 0
   ]
@@ -22,14 +22,23 @@ graph
   node
   [
     id 2
-    label "C"
-    func "fc"
+    label "A"
+    func "fa"
     static 0
     pure 0
   ]
   edge
   [
-    source 0
+    source 2
+    target 2
+    label "y"
+    dsrc 0
+    ddst 0
+    len 1
+  ]
+  edge
+  [
+    source 2
     target 1
     label "x"
     dsrc 0
@@ -38,9 +47,9 @@ graph
   ]
   edge
   [
-    source 1
+    source 0
     target 2
-    label "z"
+    label "x"
     dsrc 0
     ddst 0
     len 1

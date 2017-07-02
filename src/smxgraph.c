@@ -173,16 +173,30 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
 /******************************************************************************/
 void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, virt_net_t* v_net )
 {
-    virt_port_t *p_src, *p_dest, *port, *port_net, *port_net_new;
+    virt_port_t *p_src, *p_dest, *port, *port_net;
+    igraph_t g;
     igraph_es_t es;
     igraph_eit_t eit;
-    int net_id = v_net->inst->id;
+    int i, id_from, id_to, net_id = v_net->inst->id, eid;
+    int ecnt = igraph_ecount( g_new );
+    bool done[ecnt];
 
+    for( i=0; i<ecnt; i++ ) done[i] = false;
+
+    igraph_copy( &g, g_new );
     // get all ports connecting to the net
     igraph_es_incident( &es, net_id, IGRAPH_ALL );
-    igraph_eit_create( g_new, es, &eit );
+    igraph_eit_create( &g, es, &eit );
     // for each edge connect to the actual nets form the graph
     while( !IGRAPH_EIT_END( eit ) ) {
+        eid = IGRAPH_EIT_GET( eit );
+        if( done[eid] ) {
+            // do self loop sonly once
+            IGRAPH_EIT_NEXT( eit );
+            continue;
+        }
+        done[eid] = true;
+        igraph_edge( g_new, eid, &id_from, &id_to );
         p_src = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g_new,
                 PORT_ATTR_PSRC, IGRAPH_EIT_GET( eit ) );
         p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g_new,
@@ -195,21 +209,24 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, virt_net_t* v_net )
             port_net = p_src;
         }
         // get open port with same symbol pointer from child graph
-        port_net_new = dgraph_port_search_child( g_child, port_net );
+        port_net = dgraph_port_search_child( g_child, port_net );
+        if( id_from == id_to )
+            port = dgraph_port_search_child( g_child, port );
         // connect this port to the matching port of the virtual net
         if( v_net->type == VNET_NET ) {
             // unknown direction, class matters, modes have to be different
-            check_connection( port_net_new, port, g_new, false, false, false );
-            check_connection_cp( NULL, port_net_new, port, g_new, AST_NET );
+            check_connection( port_net, port, g_new, false, false, false );
+            check_connection_cp( NULL, port_net, port, g_new, AST_NET );
         }
         else if( v_net->type == VNET_WRAP ) {
             // unknown direction, ignore class, modes have to be different
-            check_connection( port_net_new, port, g_new, false, true, false );
+            check_connection( port_net, port, g_new, false, true, false );
         }
         IGRAPH_EIT_NEXT( eit );
     }
     igraph_eit_destroy( &eit );
     igraph_es_destroy( &es );
+    igraph_destroy( &g );
 }
 
 /******************************************************************************/
@@ -508,7 +525,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
             // there was no internal port, copy the regular port to the new list
             sp_src = VECTOR( sync->p_ext )[0];
             // search for the port in the virtual net of the connection
-            vp_net = virt_port_get_equivalent_by_name( v_net_i, sp_src->name );
+            vp_net = virt_port_get_equivalent_by_symb_attr( v_net_i, sp_src );
             vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
                     vp_net->v_net, vp_net->name, vp_net->symb );
             virt_port_append( v_net, vp_new );
@@ -530,8 +547,8 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
             for( j = 0; j < igraph_vector_ptr_size( &sync->p_int ); j++ ) {
                 sp_int = VECTOR( sync->p_int )[j];
                 // search for the port in the virtual net of the connection
-                vp_net = virt_port_get_equivalent_by_name( v_net_i,
-                        sp_int->name );
+                vp_net = virt_port_get_equivalent_by_symb_attr( v_net_i,
+                        sp_int );
                 // if the port cannot be found in the net its a bypass
                 if( vp_net == NULL ) {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)

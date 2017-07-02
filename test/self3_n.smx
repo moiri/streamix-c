@@ -1,0 +1,8 @@
+/**
+ * prevent feedback
+ */
+
+A = box fa( up in x, out y )
+B = box fb( in y, down out x )
+
+connect A.B

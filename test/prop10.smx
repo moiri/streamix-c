@@ -1,0 +1,12 @@
+A = box fa( out x )
+B = box fb( in x, out y, in z, out w )
+C = box fc( in w )
+
+wrapper W( out y, in z ) {
+    connect A:B:C
+} net( down out y, up in z )
+
+D = box fd( out z )
+F = box ff( in y)
+
+connect D.W.F

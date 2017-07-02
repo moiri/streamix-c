@@ -1,0 +1,9 @@
+/**
+ * That works as port A.y will automatically connect to C.y (no conflict)
+ */
+
+A = box fa( out x, out y )
+B = box fb( in x, out z )
+C = box fc( in z, up in y )
+
+connect A:B:C

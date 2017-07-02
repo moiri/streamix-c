@@ -1,0 +1,13 @@
+/**
+ * more complicated feedback on wrapper
+ */
+
+A = box fa( up in x, down out x, up in y, down out y )
+B = box fb( in x )
+C = box fc( out x )
+
+wrapper W( up in x, in y, down out x, out y ) {
+    connect A
+} net( up in x, down out x, up in y, down out y )
+
+connect C.W.B

@@ -1,0 +1,11 @@
+/**
+ * prevent feedback
+ */
+
+A = box fa( up in x, down out x )
+
+wrapper W( in x, out x ) {
+    connect A
+} net( up in x, down out x )
+
+connect W

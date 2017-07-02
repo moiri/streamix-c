@@ -29,7 +29,6 @@
 #endif
 
 // constants
-#define CONST_ERROR_LEN 256
 #define CONST_SCOPE_LEN 9
 #define CONST_ID_LEN 9
 
@@ -167,24 +166,5 @@ enum parse_attr_e
 #define TYPE_LS         4
 
 #define MAX_STACK_SIZE  100
-
-// errors
-#define ERR_WARNING "warning"
-#define ERR_ERROR   "error"
-
-#define ERROR_ALL_IN_DEC    "%s: all input ports are decoupled"
-#define ERROR_UNDEF_ID      "%s: use of undeclared identifier '%s'"
-#define ERROR_DUPLICATE_ID  "%s: redefinition of '%s'"
-#define ERROR_BAD_MODE      "%s: conflicting modes of ports '%s' in '%s'(%d) and '%s'(%d) (line %d)"
-#define ERROR_BAD_MODE_SIDE "%s: conflicting modes of side port '%s' in '%s'(%d)"
-#define ERROR_NO_NET_CON    "%s: no port connection in serial combinition '%s(%d).%s(%d)'"
-#define ERROR_NO_PORT_CON   "%s: port '%s' in '%s'(%d) is not connected"
-#define ERROR_UNDEF_PORT    "%s: use of undeclared port '%s' in '%s'(%d)"
-#define ERROR_UNDEF_NET     "%s: undefined reference to net '%s'"
-#define ERROR_TYPE_CONFLICT "%s: conflicting types for '%s'"
-#define ERROR_SMODE_CP      "%s: single mode in synchroniser '%s'(%d)"
-#define ERROR_BAD_SIA_PORT  "%s: action '%s' does not match the box signature"
-#define ERROR_NONDET        "%s: nondeterminism on deterministic operation '%s!%s', use '|' instead"
-#define WARNING_ALTER_CLASS "%s: port class of port '%s' in '%s'(%d) changed from '%s' to '%s'"
 
 #endif /* DEFINES_H */

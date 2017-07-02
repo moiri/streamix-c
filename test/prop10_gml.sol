@@ -6,6 +6,22 @@ graph
   node
   [
     id 0
+    label "D"
+    func "fd"
+    static 0
+    pure 0
+  ]
+  node
+  [
+    id 1
+    label "F"
+    func "ff"
+    static 0
+    pure 0
+  ]
+  node
+  [
+    id 2
     label "A"
     func "fa"
     static 0
@@ -13,7 +29,7 @@ graph
   ]
   node
   [
-    id 1
+    id 3
     label "B"
     func "fb"
     static 0
@@ -21,7 +37,7 @@ graph
   ]
   node
   [
-    id 2
+    id 4
     label "C"
     func "fc"
     static 0
@@ -29,8 +45,8 @@ graph
   ]
   edge
   [
-    source 0
-    target 1
+    source 2
+    target 3
     label "x"
     dsrc 0
     ddst 0
@@ -38,8 +54,26 @@ graph
   ]
   edge
   [
-    source 1
-    target 2
+    source 3
+    target 4
+    label "w"
+    dsrc 0
+    ddst 0
+    len 1
+  ]
+  edge
+  [
+    source 3
+    target 1
+    label "y"
+    dsrc 0
+    ddst 0
+    len 1
+  ]
+  edge
+  [
+    source 0
+    target 3
     label "z"
     dsrc 0
     ddst 0

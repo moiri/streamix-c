@@ -1,4 +1,4 @@
-test/prop5_n.smx: 5: warning: port class of port 'y' in 'A'(*) changed from 'down' to 'up'
-test/prop5_n.smx: 9: error: port 'y' in 'A'(*) is not connected
+test/prop5_n.smx: 5: error: unconnected port 'y' in 'A'(*) of serial combinition 'A.*'
+ -> for bypassing, use operator ':' or a wrapper
 test/prop5_n.smx: 9: error: port 'y' in 'C'(*) is not connected
- Error count: 3
+ Error count: 2

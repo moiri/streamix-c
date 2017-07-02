@@ -306,32 +306,14 @@ void virt_net_destroy_shallow( virt_net_t* v_net )
 }
 
 /******************************************************************************/
-void virt_net_update_class( virt_net_t* v_net, port_class_t port_class,
-        bool force )
+void virt_net_update_class( virt_net_t* v_net, port_class_t port_class )
 {
     virt_port_list_t* list = v_net->ports;
-    char error_msg[ CONST_ERROR_LEN ];
-    char* class_label[] = {
-        PORT_CLASS_NONE_STR,
-        PORT_CLASS_UP_STR,
-        PORT_CLASS_DOWN_STR,
-        PORT_CLASS_SIDE_STR
-    };
     while( list != NULL ) {
         if( ( list->port->attr_class != PORT_CLASS_SIDE )
                 && ( list->port->v_net->type != VNET_SYNC )
                 && ( list->port->state < VPORT_STATE_CONNECTED ) ) {
-            if( ( list->port->attr_class == PORT_CLASS_NONE ) || force ) {
-                if( ( list->port->attr_class != PORT_CLASS_NONE )
-                        && ( list->port->attr_class != port_class ) ) {
-                    sprintf( error_msg, WARNING_ALTER_CLASS, ERR_WARNING,
-                            list->port->name,
-                            list->port->v_net->inst->name,
-                            list->port->v_net->inst->id,
-                            class_label[list->port->attr_class],
-                            class_label[port_class] );
-                    report_yyerror( error_msg, list->port->symb->line );
-                }
+            if( list->port->attr_class == PORT_CLASS_NONE ) {
                 list->port->attr_class = port_class;
             }
         }
@@ -490,7 +472,9 @@ virt_port_t* virt_port_get_equivalent( virt_net_t* v_net, virt_port_t* port,
     while( ports != NULL ) {
         if( ( port->symb == ports->port->symb ) && ( all
                     || ( ports->port->state <= VPORT_STATE_CP_OPEN ) ) ) {
-#if defined(DEBUG) || defined(DEBUG_SEARCH_PORT)
+#if defined(DEBUG) || defined(DEBUG_SEARCH_PORT)\
+            || defined(DEBUG_SEARCH_PORT_WRAP)\
+            || defined(DEBUG_SEARCH_PORT_CHILD)
             printf( "Found port: " );
             debug_print_vport( ports->port  );
             printf( "\n" );
@@ -503,19 +487,24 @@ virt_port_t* virt_port_get_equivalent( virt_net_t* v_net, virt_port_t* port,
 }
 
 /******************************************************************************/
-virt_port_t* virt_port_get_equivalent_by_name( virt_net_t* v_net,
-        const char* name )
+virt_port_t* virt_port_get_equivalent_by_symb_attr( virt_net_t* v_net,
+        symrec_t* port )
 {
     virt_port_t* vp_net = NULL;
     virt_port_list_t* ports = v_net->ports;
 #if defined(DEBUG) || defined(DEBUG_SEARCH_PORT_WRAP)
-    printf( "virt_port_get_equivalent_by_name: Search port '%s'\n", name );
+    printf( "virt_port_get_equivalent_by_symb_attr: Search port " );
+    debug_print_rport( port, "UNDEF" );
     printf( " in virtual net: " );
     debug_print_vports( v_net );
 #endif // DEBUG
     while( ports != NULL ) {
-        if( ( strlen( name ) == strlen( ports->port->name ) )
-                && ( strcmp( name, ports->port->name ) == 0 ) ) {
+        if( ( strlen( port->name ) == strlen( ports->port->name ) )
+                && ( strcmp( port->name, ports->port->name ) == 0 )
+                && ( ( ports->port->attr_mode == PORT_MODE_BI )
+                    || ( port->attr_port->mode == PORT_MODE_BI )
+                    || ( ports->port->attr_mode == port->attr_port->mode ) )
+                ) {
             vp_net = ports->port;
             if( vp_net->v_net->type == VNET_SYNC ) break;
             /* break; */
