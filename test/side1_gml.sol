@@ -50,7 +50,7 @@ graph
     source 0
     target 2
     label "p1"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]

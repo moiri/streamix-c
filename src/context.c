@@ -474,10 +474,13 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                     PORT_CLASS_NONE, false, ast->port->ch_len );
             if( ast->port->mode != NULL )
                 p_attr->mode = ast->port->mode->attr->val;
-            if( ast->port->coupling != NULL ) p_attr->decoupled = true;
             if( ast->port->collection != NULL ) {
                 p_attr->collection = ast->port->collection->attr->val;
             }
+            if( ( ast->port->coupling != NULL )
+                    || ( ( p_attr->collection == PORT_CLASS_SIDE )
+                        && ( p_attr->mode == PORT_MODE_OUT ) ) )
+                p_attr->decoupled = true;
             if( ast->port->int_id != NULL ) {
                 _scope++;
                 utarray_push_back( scope_stack, &_scope );

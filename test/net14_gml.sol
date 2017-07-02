@@ -48,7 +48,7 @@ graph
     source 1
     target 2
     label "x"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]

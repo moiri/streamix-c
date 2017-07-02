@@ -32,7 +32,7 @@ graph
     source 2
     target 1
     label "a2"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]

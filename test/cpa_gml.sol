@@ -297,7 +297,7 @@ graph
     source 9
     target 3
     label "dist"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]
@@ -396,7 +396,7 @@ graph
     source 17
     target 11
     label "dist"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]
@@ -495,7 +495,7 @@ graph
     source 25
     target 19
     label "dist"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]
@@ -513,7 +513,7 @@ graph
     source 4
     target 12
     label "car_next"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]
@@ -522,7 +522,7 @@ graph
     source 12
     target 4
     label "car_prev"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]
@@ -531,7 +531,7 @@ graph
     source 4
     target 0
     label "car_prev"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]
@@ -549,7 +549,7 @@ graph
     source 12
     target 20
     label "car_next"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]
@@ -558,7 +558,7 @@ graph
     source 20
     target 12
     label "car_prev"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]
@@ -567,7 +567,7 @@ graph
     source 20
     target 1
     label "car_next"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]

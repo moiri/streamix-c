@@ -40,7 +40,7 @@ graph
     source 1
     target 0
     label "x"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]
@@ -49,7 +49,7 @@ graph
     source 2
     target 0
     label "x"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]

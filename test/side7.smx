@@ -4,6 +4,6 @@
 
 A = box A( side in s, out a )
 B = box B( side out s, in a, out b )
-C = box B( side out s, in b )
+C = box C( side out s, in b )
 
 connect A.B.C

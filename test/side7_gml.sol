@@ -31,7 +31,7 @@ graph
   [
     id 3
     label "C"
-    func "B"
+    func "C"
     static 0
     pure 0
   ]
@@ -49,7 +49,7 @@ graph
     source 1
     target 2
     label "s"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]
@@ -76,7 +76,7 @@ graph
     source 3
     target 2
     label "s"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]

@@ -59,6 +59,7 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
         const char* name )
 {
     int id = igraph_ecount( g );
+    bool decoupled;
     p_src->edge_id = id;
     p_dest->edge_id = id;
 #if defined(DEBUG) || defined(DEBUG_CONNECT_GRAPH)
@@ -69,10 +70,12 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
     igraph_cattribute_EAS_set( g, PORT_ATTR_LABEL, id, name );
     igraph_cattribute_EAN_set( g, PORT_ATTR_PSRC, id, ( uintptr_t )p_src );
     igraph_cattribute_EAN_set( g, PORT_ATTR_PDST, id, ( uintptr_t )p_dest );
-    igraph_cattribute_EAN_set( g, PORT_ATTR_DSRC, id,
-            p_src->symb->attr_port->decoupled );
-    igraph_cattribute_EAN_set( g, PORT_ATTR_DDST, id,
-            p_dest->symb->attr_port->decoupled );
+    decoupled = p_src->symb->attr_port->decoupled;
+    if( p_src->v_net->type == VNET_SYNC ) decoupled = false;
+    igraph_cattribute_EAN_set( g, PORT_ATTR_DSRC, id, decoupled );
+    decoupled = p_dest->symb->attr_port->decoupled;
+    if( p_dest->v_net->type == VNET_SYNC ) decoupled = false;
+    igraph_cattribute_EAN_set( g, PORT_ATTR_DDST, id, decoupled );
     return id;
 }
 

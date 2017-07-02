@@ -75,7 +75,7 @@ graph
     source 2
     target 4
     label "x3"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]
@@ -84,7 +84,7 @@ graph
     source 2
     target 4
     label "x2"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
   ]
