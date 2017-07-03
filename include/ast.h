@@ -23,6 +23,7 @@ typedef struct ast_port_s ast_port_t;
 typedef struct ast_prog_s ast_prog_t;
 typedef struct ast_prot_s ast_prot_t;
 typedef struct ast_symb_s ast_symb_t;
+typedef struct ast_tt_s ast_tt_t;
 typedef struct ast_wrap_s ast_wrap_t;
 
 typedef enum attr_type_e attr_type_t;
@@ -39,6 +40,7 @@ enum attr_type_e
     ATTR_PORT_MODE,
     ATTR_PORT_CLASS,
     ATTR_OTHER,
+    ATTR_INT,
 };
 
 /**
@@ -82,6 +84,7 @@ enum node_type_e
     AST_SERIAL_PROP,
     AST_STMTS,
     AST_SYNCS,
+    AST_TT,
     AST_WRAP,
     AST_ATTR,
     AST_ID
@@ -163,6 +166,7 @@ struct ast_node_s
         ast_port_t*     port;       /**< AST_PORT */
         ast_prog_t*     program;    /**< AST_PROG */
         ast_symb_t*     symbol;     /**< AST_ID */
+        ast_tt_t*       tt;         /**< AST_TT */
         ast_wrap_t*     wrap;       /**< AST_WRAP */
     };
 };
@@ -197,7 +201,7 @@ struct ast_port_s
     ast_node_t* collection; /**< ::ast_attr_t */
     ast_node_t* mode;       /**< ::ast_attr_t */
     ast_node_t* coupling;   /**< ::ast_attr_t */
-    int         ch_len;     /**< length of the channel */
+    ast_node_t* ch_len;     /**< ::ast_attr_t, length of the channel */
 };
 
 /**
@@ -216,6 +220,15 @@ struct ast_prot_s
 {
     ast_node_t*   id;       /**< ::ast_symb_t */
     ast_node_t*   ports;    /**< ::ast_list_t */
+};
+
+/**
+ * @brief   AST structure of node type AST_TT
+ */
+struct ast_tt_s
+{
+    ast_node_t*  op;    /**< ::ast_symb_t */
+    ast_node_t*  freq;  /**< ::ast_attr_t, ferquency of the clock */
 };
 
 /**
@@ -317,7 +330,7 @@ ast_node_t* ast_add_op( ast_node_t*, ast_node_t*, node_type_t );
  * @return              a pointer to the location where the data was stored
  */
 ast_node_t* ast_add_port( ast_node_t*, ast_node_t*, ast_node_t*, ast_node_t*,
-        ast_node_t*, int, port_type_t );
+        ast_node_t*, ast_node_t*, port_type_t );
 
 /**
  * @brief   Add a program node to the AST.
@@ -346,6 +359,14 @@ ast_node_t* ast_add_proto( ast_node_t*, ast_node_t* );
  * @return      a pointer to the location where the data was stored
  */
 ast_node_t* ast_add_symbol( char*, int, id_type_t );
+
+/**
+ * @brief Add a time triggered strcuture to the AST
+ *
+ * @param op    a pointer to the operand
+ * @param freq  the ferquency of the time trigered structure
+ */
+ast_node_t* ast_add_tt( ast_node_t*, ast_node_t* );
 
 /**
  * @brief   Add a wrapper declaration to the AST.

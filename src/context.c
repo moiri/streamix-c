@@ -471,7 +471,9 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
         case AST_PORT:
             // prepare symbol attributes and create symbol
             p_attr = symrec_attr_create_port( NULL, PORT_MODE_BI,
-                    PORT_CLASS_NONE, false, ast->port->ch_len );
+                    PORT_CLASS_NONE, false, 0 );
+            if( ast->port->ch_len != NULL )
+                p_attr->ch_len = ast->port->ch_len->attr->val;
             if( ast->port->mode != NULL )
                 p_attr->mode = ast->port->mode->attr->val;
             if( ast->port->collection != NULL ) {
@@ -876,6 +878,9 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             virt_net_destroy_shallow( v_net1 );
             virt_net_destroy_shallow( v_net2 );
             check_connections_cp( v_net, g, AST_SERIAL );
+            break;
+        case AST_TT:
+            v_net = install_nets( symtab, scope_stack, ast->tt->op, g );
             break;
         case AST_ID:
             // check the context of the symbol

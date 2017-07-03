@@ -32,6 +32,7 @@ char* node_label[] =
     "serial prop",
     "stmts",
     "sync",
+    "tt",
     "wrapper decl"
 };
 char* mode_label[] = {
@@ -69,18 +70,19 @@ void draw_ast_graph( ast_node_t* start )
 void draw_ast_graph_step( FILE* graph, ast_node_t* ptr )
 {
     ast_list_t* ast_list_ptr;
+    char label[10];
 
     if( ptr == NULL ) return;
 
     switch( ptr->type ) {
         // reached a leaf node of the AST -> add box or octagon to drawing
         case AST_ATTR:
-            graph_add_node(
-                    graph,
-                    ptr->id,
-                    attr_label[ ptr->attr->type ][ ptr->attr->val ],
-                    STYLE_N_AST_ATTR
-            );
+            if( ptr->attr->type == ATTR_INT )
+                sprintf( label, "%d", ptr->attr->val );
+            else
+                sprintf( label, "%s",
+                        attr_label[ ptr->attr->type ][ ptr->attr->val ] );
+            graph_add_node( graph, ptr->id, label, STYLE_N_AST_ATTR );
             break;
         case AST_ID:
             graph_add_node( graph, ptr->id, ptr->symbol->name, STYLE_N_AST_ID );
@@ -249,6 +251,23 @@ void draw_ast_graph_step( FILE* graph, ast_node_t* ptr )
                 graph_add_edge( graph, ptr->id, ptr->port->coupling->id, NULL,
                         STYLE_E_DEFAULT );
             }
+            // ch_len
+            if( ptr->port->ch_len != NULL ) {
+                draw_ast_graph_step( graph, ptr->port->ch_len );
+                graph_add_edge( graph, ptr->id, ptr->port->ch_len->id, NULL,
+                        STYLE_E_DEFAULT );
+            }
+            break;
+        case AST_TT:
+            graph_add_node( graph, ptr->id, node_label[ ptr->type ],
+                    STYLE_N_AST_NODE );
+            draw_ast_graph_step( graph, ptr->tt->op );
+            graph_add_edge( graph, ptr->id, ptr->tt->op->id, NULL,
+                    STYLE_E_DEFAULT );
+            // frequ
+            draw_ast_graph_step( graph, ptr->tt->freq );
+            graph_add_edge( graph, ptr->id, ptr->tt->freq->id, NULL,
+                    STYLE_E_DEFAULT );
             break;
         default:
             ;

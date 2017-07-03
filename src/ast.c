@@ -99,7 +99,7 @@ ast_node_t* ast_add_op( ast_node_t* left, ast_node_t* right,
 /******************************************************************************/
 ast_node_t* ast_add_port( ast_node_t* id, ast_node_t* int_id,
         ast_node_t* collection, ast_node_t* mode, ast_node_t* coupling,
-        int channel_len, port_type_t type )
+        ast_node_t* channel_len, port_type_t type )
 {
     ast_node_t *node = ast_add_node( AST_PORT );
     node->port = malloc( sizeof( ast_port_t ) );
@@ -142,6 +142,16 @@ ast_node_t* ast_add_symbol( char* name, int line, id_type_t type )
     node->symbol->name = name;
     node->symbol->type = type;
     node->symbol->line = line;
+    return node;
+}
+
+/******************************************************************************/
+ast_node_t* ast_add_tt( ast_node_t* op, ast_node_t* freq )
+{
+    ast_node_t *node = ast_add_node( AST_TT );
+    node->tt = malloc( sizeof( ast_tt_t ) );
+    node->tt->op = op;
+    node->tt->freq = freq;
     return node;
 }
 
