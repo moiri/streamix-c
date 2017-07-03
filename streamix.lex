@@ -48,6 +48,7 @@ pure            {yylval.ival = PARSE_ATTR_STATELESS;return STATELESS;}
 decoupled       {yylval.ival = PARSE_ATTR_DECOUPLED;return DECOUPLED;}
 static          {yylval.ival = PARSE_ATTR_STATIC;return STATIC;}
 tt              return TT;
+tb              return TB;
 
     /* identifiers */
 [a-zA-Z_$][a-zA-Z_$0-9]* {

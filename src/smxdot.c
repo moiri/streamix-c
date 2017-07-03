@@ -32,6 +32,7 @@ char* node_label[] =
     "serial prop",
     "stmts",
     "sync",
+    "tb",
     "tt",
     "wrapper decl"
 };
@@ -259,14 +260,15 @@ void draw_ast_graph_step( FILE* graph, ast_node_t* ptr )
             }
             break;
         case AST_TT:
+        case AST_TB:
             graph_add_node( graph, ptr->id, node_label[ ptr->type ],
                     STYLE_N_AST_NODE );
-            draw_ast_graph_step( graph, ptr->tt->op );
-            graph_add_edge( graph, ptr->id, ptr->tt->op->id, NULL,
+            draw_ast_graph_step( graph, ptr->time->op );
+            graph_add_edge( graph, ptr->id, ptr->time->op->id, NULL,
                     STYLE_E_DEFAULT );
             // frequ
-            draw_ast_graph_step( graph, ptr->tt->freq );
-            graph_add_edge( graph, ptr->id, ptr->tt->freq->id, NULL,
+            draw_ast_graph_step( graph, ptr->time->freq );
+            graph_add_edge( graph, ptr->id, ptr->time->freq->id, NULL,
                     STYLE_E_DEFAULT );
             break;
         default:

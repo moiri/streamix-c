@@ -26,7 +26,7 @@
     struct ast_list_s* lval;
 };
 /* keywods */
-%token CONNECT TT
+%token CONNECT TT TB
 %token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC INT
 
 /* optional and variable keyword tokens */
@@ -134,7 +134,10 @@ net:
 |   net '!' net { $$ = ast_add_op( $1, $3, AST_PARALLEL_DET ); }
 |   '(' net ')' { $$ = $2; }
 |   TT '[' INT ']' '(' net ')' {
-        $$ = ast_add_tt( $6, ast_add_attr( $3, ATTR_INT ) );
+        $$ = ast_add_time( $6, ast_add_attr( $3, ATTR_INT ), AST_TT );
+    }
+|   TB '[' INT ']' '(' net ')' {
+        $$ = ast_add_time( $6, ast_add_attr( $3, ATTR_INT ), AST_TB );
     }
 ;
 

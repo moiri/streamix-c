@@ -23,7 +23,7 @@ typedef struct ast_port_s ast_port_t;
 typedef struct ast_prog_s ast_prog_t;
 typedef struct ast_prot_s ast_prot_t;
 typedef struct ast_symb_s ast_symb_t;
-typedef struct ast_tt_s ast_tt_t;
+typedef struct ast_time_s ast_time_t;
 typedef struct ast_wrap_s ast_wrap_t;
 
 typedef enum attr_type_e attr_type_t;
@@ -84,6 +84,7 @@ enum node_type_e
     AST_SERIAL_PROP,
     AST_STMTS,
     AST_SYNCS,
+    AST_TB,
     AST_TT,
     AST_WRAP,
     AST_ATTR,
@@ -166,7 +167,7 @@ struct ast_node_s
         ast_port_t*     port;       /**< AST_PORT */
         ast_prog_t*     program;    /**< AST_PROG */
         ast_symb_t*     symbol;     /**< AST_ID */
-        ast_tt_t*       tt;         /**< AST_TT */
+        ast_time_t*     time;       /**< AST_TT, AST_TB */
         ast_wrap_t*     wrap;       /**< AST_WRAP */
     };
 };
@@ -225,7 +226,7 @@ struct ast_prot_s
 /**
  * @brief   AST structure of node type AST_TT
  */
-struct ast_tt_s
+struct ast_time_s
 {
     ast_node_t*  op;    /**< ::ast_symb_t */
     ast_node_t*  freq;  /**< ::ast_attr_t, ferquency of the clock */
@@ -365,8 +366,10 @@ ast_node_t* ast_add_symbol( char*, int, id_type_t );
  *
  * @param op    a pointer to the operand
  * @param freq  the ferquency of the time trigered structure
+ *              or the inter-arrival-time, depending on the type
+ * @param type  AST_TT or AST_TB
  */
-ast_node_t* ast_add_tt( ast_node_t*, ast_node_t* );
+ast_node_t* ast_add_time( ast_node_t*, ast_node_t*, node_type_t );
 
 /**
  * @brief   Add a wrapper declaration to the AST.

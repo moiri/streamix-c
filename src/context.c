@@ -880,7 +880,8 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             check_connections_cp( v_net, g, AST_SERIAL );
             break;
         case AST_TT:
-            v_net = install_nets( symtab, scope_stack, ast->tt->op, g );
+        case AST_TB:
+            v_net = install_nets( symtab, scope_stack, ast->time->op, g );
             break;
         case AST_ID:
             // check the context of the symbol
