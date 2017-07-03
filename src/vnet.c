@@ -362,6 +362,19 @@ void virt_port_append_all( virt_net_t* v_net1, virt_net_t* v_net2,
 }
 
 /******************************************************************************/
+void virt_port_add_time_bound( virt_net_t* v_net, int tb )
+{
+    virt_port_list_t* ports = v_net->ports;
+    while( ports != NULL ) {
+        if( ( ports->port->state < VPORT_STATE_CONNECTED )
+                && ( ports->port->attr_mode == PORT_MODE_IN ) ) {
+            ports->port->tb = tb;
+        }
+        ports = ports->next;
+    }
+}
+
+/******************************************************************************/
 virt_port_list_t* virt_port_assign( virt_port_list_t* old,
         virt_port_list_t* list_last, virt_net_t* v_net  )
 {
@@ -385,7 +398,7 @@ virt_port_list_t* virt_port_assign( virt_port_list_t* old,
 
 /******************************************************************************/
 virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
-        virt_net_t* port_vnet, const char* name, symrec_t* symb )
+        virt_net_t* port_vnet, const char* name, symrec_t* symb, int tb )
 {
     virt_port_t* new_port = NULL;
 
@@ -396,6 +409,7 @@ virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
     new_port->name = name;
     new_port->symb = symb;
     new_port->state = VPORT_STATE_OPEN;
+    new_port->tb = tb;
 
     return new_port;
 }
@@ -404,7 +418,7 @@ virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
 virt_port_t* virt_port_copy( virt_port_t* port )
 {
     return virt_port_create( port->attr_class, port->attr_mode, port->v_net,
-            port->name, port->symb );
+            port->name, port->symb, port->tb );
 }
 
 /******************************************************************************/
@@ -421,7 +435,7 @@ virt_port_list_t* virt_ports_copy_symb( symrec_list_t* ports,
         vports = malloc( sizeof( virt_port_list_t ) );
         new_port = virt_port_create( ports->rec->attr_port->collection,
                 ports->rec->attr_port->mode, v_net, ports->rec->name,
-                ports->rec );
+                ports->rec, 0 );
         if( v_net_i != NULL ) {
             // for wrappers, propagate the port symbol of the child nets
             port_net = virt_port_get_equivalent_in_wrap( v_net_i, new_port );
@@ -451,7 +465,7 @@ virt_port_list_t* virt_ports_copy_vnet( virt_port_list_t* ports,
             new_list = malloc( sizeof( virt_port_list_t ) );
             new_port = virt_port_create( ports->port->attr_class,
                     ports->port->attr_mode, v_net, ports->port->name,
-                    ports->port->symb );
+                    ports->port->symb, ports->port->tb );
             if( copy_status ) new_port->state = ports->port->state;
             new_list->port = new_port;
             new_list->next = list_last;
@@ -570,7 +584,10 @@ void debug_print_vport( virt_port_t* port )
     if( port->attr_class == PORT_CLASS_DOWN ) printf( "_" );
     else if( port->attr_class == PORT_CLASS_UP ) printf( "^" );
     else if( port->attr_class == PORT_CLASS_SIDE ) printf( "|" );
-    if( port->attr_mode == PORT_MODE_IN ) printf( "<--" );
+    if( port->attr_mode == PORT_MODE_IN ) {
+        printf( "<--" );
+        if( port->tb > 0 ) printf( "[%d]", port->tb );
+    }
     else if( port->attr_mode == PORT_MODE_OUT ) printf( "-->" );
     else printf( "<->" );
     printf( "%s", port->name );

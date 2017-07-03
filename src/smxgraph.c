@@ -530,7 +530,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
             // search for the port in the virtual net of the connection
             vp_net = virt_port_get_equivalent_by_symb_attr( v_net_i, sp_src );
             vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
-                    vp_net->v_net, vp_net->name, vp_net->symb );
+                    vp_net->v_net, vp_net->name, vp_net->symb, vp_net->tb );
             virt_port_append( v_net, vp_new );
         }
         else {
@@ -543,7 +543,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                 // create a new external virtual port
                 vp_net = virt_port_create( sp_src->attr_port->collection,
                         sp_src->attr_port->mode, cp_sync, sp_src->name,
-                        sp_src );
+                        sp_src, 0 );
                 virt_port_append( v_net, vp_net );
                 virt_port_append( cp_sync, virt_port_copy( vp_net ) );
             }
@@ -563,7 +563,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                 }
                 vp_new = virt_port_create( vp_net->attr_class,
                         vp_net->attr_mode, cp_sync, vp_net->name,
-                        vp_net->symb );
+                        vp_net->symb, vp_net->tb );
                 virt_port_append( cp_sync, vp_new );
                 // unknown direction, ignore class, modes have to be equal
                 check_connection( vp_new, vp_net, g, false, true, true );

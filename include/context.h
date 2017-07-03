@@ -89,12 +89,22 @@ void check_connections( virt_net_t*, virt_net_t*, igraph_t* );
 void check_connections_cp( virt_net_t*, igraph_t*, node_type_t );
 
 /**
+ * @brief Check for open connections
  *
+ * If connections are open after a locality binding serial connection
+ * (operator '.') and have a class asigned that should have connected, throw
+ * an error message
+ *
+ * @param vnet_l    pointer to the vnet of the left operator
+ * @param vnet_r    pointer to the vnet of the right operator
  */
 void check_connections_open( virt_net_t*, virt_net_t* );
 
 /**
+ * @brief Connect self loops of a box or wrapper
  *
+ * @param g     pointer to the net graph
+ * @param v_net pointer to the virtual net where self loops must be connected
  */
 void check_connections_self( igraph_t*, virt_net_t* );
 

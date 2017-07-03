@@ -95,6 +95,7 @@ struct virt_port_s
     int                 attr_mode;  /**< updated mode for cp-sync (VAL_BI) */
     virt_port_state_t   state;      /**< #virt_port_state_e */
     int                 edge_id;    /**< id of the connecting channel */
+    int                 tb;         /**< minimal inter-arrival time */
 };
 
 // FUNCTIONS ------------------------------------------------------------------
@@ -258,6 +259,14 @@ void virt_net_destroy_shallow( virt_net_t* );
 void virt_net_update_class( virt_net_t*, port_class_t );
 
 /**
+ * @brief add a time bound to each unconnected input port of a virtual net
+ *
+ * @param v_net     pointer to the virtual net
+ * @param int       time bound
+ */
+void virt_port_add_time_bound( virt_net_t*, int );
+
+/**
  * @brief   Append a port to the port list of a virtual net
  *
  * @param v_net pointer to the virtual net to appemd the port
@@ -298,10 +307,11 @@ virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t*,
  * @param vnet          the virtual net the port is part of
  * @param name          a pointer to the name of the port
  * @param symb          a pointer to the symbol of the port
+ * @param tb            time bound of port
  * @return              a pointer to the newly created port
  */
 virt_port_t* virt_port_create( port_class_t, port_mode_t, virt_net_t*,
-        const char*, symrec_t* );
+        const char*, symrec_t*, int );
 
 /**
  * @brief   Create a copy of a virtual port

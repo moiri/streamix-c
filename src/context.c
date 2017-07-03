@@ -141,7 +141,7 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
             else port_mode = PORT_MODE_BI;
             v_net_sync = dgraph_vertex_add_sync( g );
             port_new = virt_port_create( port_class, port_mode, v_net_sync,
-                    port1->name, port1->symb );
+                    port1->name, port1->symb, port1->tb );
             virt_port_append( v_net_sync, port_new );
             virt_port_append( v_net, port_new );
             connect_ports( port_new, port1, g, false );
@@ -258,6 +258,74 @@ void check_connections_cp( virt_net_t* v_net, igraph_t* g,
     }
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
     printf( "check_connections_cp, updated v_net: " );
+    debug_print_vports( v_net );
+#endif // DEBUG
+}
+
+/******************************************************************************/
+void check_connections_open( virt_net_t* vnet_l, virt_net_t* vnet_r )
+{
+    char error_msg[ CONST_ERROR_LEN ];
+    virt_port_list_t* ports = vnet_l->ports;
+    instrec_t *inst;
+    while( ports != NULL ) {
+        if( ( ports->port->state < VPORT_STATE_CONNECTED )
+                && ( ports->port->attr_class == PORT_CLASS_DOWN ) ) {
+            // a left opernad must have all ports with class down connected
+            inst = ports->port->v_net->inst;
+            sprintf( error_msg, ERROR_NO_PORT_CON_CLASS, ERR_ERROR,
+                    ports->port->name, inst->name, inst->id, inst->name, "*" );
+            report_yyerror( error_msg, ports->port->symb->line );
+            ports->port->state = VPORT_STATE_DISABLED;
+        }
+        ports = ports->next;
+    }
+    ports = vnet_r->ports;
+    while( ports != NULL ) {
+        if( ( ports->port->state < VPORT_STATE_CONNECTED )
+                && ( ports->port->attr_class == PORT_CLASS_UP ) ) {
+            // a right opernad must have all ports with class up connected
+            inst = ports->port->v_net->inst;
+            sprintf( error_msg, ERROR_NO_PORT_CON_CLASS, ERR_ERROR,
+                    ports->port->name, inst->name, inst->id, inst->name, "*" );
+            report_yyerror( error_msg, ports->port->symb->line );
+            ports->port->state = VPORT_STATE_DISABLED;
+        }
+        ports = ports->next;
+    }
+}
+
+/******************************************************************************/
+void check_connections_self( igraph_t* g, virt_net_t* v_net )
+{
+    virt_port_list_t* ports1 = NULL;
+    virt_port_list_t* ports2 = NULL;
+    int new_idx = 0;
+    if( v_net->ports != NULL ) new_idx = v_net->ports->idx;
+
+    // in the list of ports, test each combination only once and do not compare
+    // a port with itself (we use the new_idx counter for this) not that the
+    // port indices ports->idx start from the highest value
+    ports1 = v_net->ports;
+    while( ports1 != NULL ) {
+        ports2 = v_net->ports;
+        while( ports2 != NULL ) {
+            if( ( ports2->idx < new_idx )
+                    && ( ports1->port->state < VPORT_STATE_CONNECTED )
+                    && ( ports2->port->state < VPORT_STATE_CONNECTED )
+                    && ( ports1->port->attr_class == PORT_CLASS_NONE )
+                    && ( ports2->port->attr_class == PORT_CLASS_NONE )
+                    && are_port_modes_ok( ports1->port, ports2->port, false )
+                    && are_port_names_ok( ports1->port, ports2->port ) ) {
+                connect_ports( ports1->port, ports2->port, g, true );
+            }
+            ports2 = ports2->next;
+        }
+        ports1 = ports1->next;
+        new_idx--;
+    }
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+    printf( "check_connections_self, updated v_net: " );
     debug_print_vports( v_net );
 #endif // DEBUG
 }
@@ -471,7 +539,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
         case AST_PORT:
             // prepare symbol attributes and create symbol
             p_attr = symrec_attr_create_port( NULL, PORT_MODE_BI,
-                    PORT_CLASS_NONE, false, 0 );
+                    PORT_CLASS_NONE, false, 1 );
             if( ast->port->ch_len != NULL )
                 p_attr->ch_len = ast->port->ch_len->attr->val;
             if( ast->port->mode != NULL )
@@ -762,74 +830,6 @@ bool do_port_attrs_match( symrec_list_t* r_ports, virt_port_list_t* v_ports )
 }
 
 /******************************************************************************/
-void check_connections_self( igraph_t* g, virt_net_t* v_net )
-{
-    virt_port_list_t* ports1 = NULL;
-    virt_port_list_t* ports2 = NULL;
-    int new_idx = 0;
-    if( v_net->ports != NULL ) new_idx = v_net->ports->idx;
-
-    // in the list of ports, test each combination only once and do not compare
-    // a port with itself (we use the new_idx counter for this) not that the
-    // port indices ports->idx start from the highest value
-    ports1 = v_net->ports;
-    while( ports1 != NULL ) {
-        ports2 = v_net->ports;
-        while( ports2 != NULL ) {
-            if( ( ports2->idx < new_idx )
-                    && ( ports1->port->state < VPORT_STATE_CONNECTED )
-                    && ( ports2->port->state < VPORT_STATE_CONNECTED )
-                    && ( ports1->port->attr_class == PORT_CLASS_NONE )
-                    && ( ports2->port->attr_class == PORT_CLASS_NONE )
-                    && are_port_modes_ok( ports1->port, ports2->port, false )
-                    && are_port_names_ok( ports1->port, ports2->port ) ) {
-                connect_ports( ports1->port, ports2->port, g, true );
-            }
-            ports2 = ports2->next;
-        }
-        ports1 = ports1->next;
-        new_idx--;
-    }
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-    printf( "check_connections_self, updated v_net: " );
-    debug_print_vports( v_net );
-#endif // DEBUG
-}
-
-/******************************************************************************/
-void check_connections_open( virt_net_t* vnet_l, virt_net_t* vnet_r )
-{
-    char error_msg[ CONST_ERROR_LEN ];
-    virt_port_list_t* ports = vnet_l->ports;
-    instrec_t *inst;
-    while( ports != NULL ) {
-        if( ( ports->port->state < VPORT_STATE_CONNECTED )
-                && ( ports->port->attr_class == PORT_CLASS_DOWN ) ) {
-            // a left opernad must have all ports with class down connected
-            inst = ports->port->v_net->inst;
-            sprintf( error_msg, ERROR_NO_PORT_CON_CLASS, ERR_ERROR,
-                    ports->port->name, inst->name, inst->id, inst->name, "*" );
-            report_yyerror( error_msg, ports->port->symb->line );
-            ports->port->state = VPORT_STATE_DISABLED;
-        }
-        ports = ports->next;
-    }
-    ports = vnet_r->ports;
-    while( ports != NULL ) {
-        if( ( ports->port->state < VPORT_STATE_CONNECTED )
-                && ( ports->port->attr_class == PORT_CLASS_UP ) ) {
-            // a right opernad must have all ports with class up connected
-            inst = ports->port->v_net->inst;
-            sprintf( error_msg, ERROR_NO_PORT_CON_CLASS, ERR_ERROR,
-                    ports->port->name, inst->name, inst->id, inst->name, "*" );
-            report_yyerror( error_msg, ports->port->symb->line );
-            ports->port->state = VPORT_STATE_DISABLED;
-        }
-        ports = ports->next;
-    }
-}
-
-/******************************************************************************/
 virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
         ast_node_t* ast, igraph_t* g )
 {
@@ -880,8 +880,11 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             check_connections_cp( v_net, g, AST_SERIAL );
             break;
         case AST_TT:
+            v_net = install_nets( symtab, scope_stack, ast->time->op, g );
+            break;
         case AST_TB:
             v_net = install_nets( symtab, scope_stack, ast->time->op, g );
+            virt_port_add_time_bound( v_net, ast->time->freq->attr->val );
             break;
         case AST_ID:
             // check the context of the symbol
@@ -969,6 +972,7 @@ void post_process( igraph_t* g )
                 PORT_ATTR_PSRC, id_edge );
         ch_len = get_ch_len( p_dest, p_src );
         igraph_cattribute_EAN_set( g, CH_ATTR_LEN, id_edge, ch_len );
+        igraph_cattribute_EAN_set( g, PORT_ATTR_TB, id_edge, p_dest->tb );
         IGRAPH_EIT_NEXT( eit );
     }
     igraph_eit_destroy( &eit );
