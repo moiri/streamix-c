@@ -245,6 +245,21 @@ virt_net_t* virt_net_create_sync( instrec_t* inst )
 }
 
 /******************************************************************************/
+virt_net_t* virt_net_create_tt( instrec_t* inst )
+{
+    virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
+    v_net->ports = NULL;
+    v_net->inst = inst;
+    v_net->con = NULL;
+    v_net->type = VNET_TT;
+#if defined(DEBUG) || defined(DEBUG_VNET)
+    printf( "virt_net_create_tt:\n %s(%d): ", inst->name, inst->id );
+    debug_print_vports( v_net );
+#endif // DEBUG_CONNECT
+    return v_net;
+}
+
+/******************************************************************************/
 virt_net_t* virt_net_create_wrap( symrec_t* symb, instrec_t* inst )
 {
     virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
@@ -398,7 +413,8 @@ virt_port_list_t* virt_port_assign( virt_port_list_t* old,
 
 /******************************************************************************/
 virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
-        virt_net_t* port_vnet, const char* name, symrec_t* symb, int tb )
+        virt_net_t* port_vnet, const char* name, symrec_t* symb, int tb,
+        bool decoupled )
 {
     virt_port_t* new_port = NULL;
 
@@ -410,6 +426,7 @@ virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
     new_port->symb = symb;
     new_port->state = VPORT_STATE_OPEN;
     new_port->tb = tb;
+    new_port->descoupled = decoupled;
 
     return new_port;
 }
@@ -418,7 +435,7 @@ virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
 virt_port_t* virt_port_copy( virt_port_t* port )
 {
     return virt_port_create( port->attr_class, port->attr_mode, port->v_net,
-            port->name, port->symb, port->tb );
+            port->name, port->symb, port->tb, port->descoupled );
 }
 
 /******************************************************************************/
@@ -435,7 +452,7 @@ virt_port_list_t* virt_ports_copy_symb( symrec_list_t* ports,
         vports = malloc( sizeof( virt_port_list_t ) );
         new_port = virt_port_create( ports->rec->attr_port->collection,
                 ports->rec->attr_port->mode, v_net, ports->rec->name,
-                ports->rec, 0 );
+                ports->rec, 0, ports->rec->attr_port->decoupled );
         if( v_net_i != NULL ) {
             // for wrappers, propagate the port symbol of the child nets
             port_net = virt_port_get_equivalent_in_wrap( v_net_i, new_port );
@@ -465,7 +482,8 @@ virt_port_list_t* virt_ports_copy_vnet( virt_port_list_t* ports,
             new_list = malloc( sizeof( virt_port_list_t ) );
             new_port = virt_port_create( ports->port->attr_class,
                     ports->port->attr_mode, v_net, ports->port->name,
-                    ports->port->symb, ports->port->tb );
+                    ports->port->symb, ports->port->tb,
+                    ports->port->descoupled );
             if( copy_status ) new_port->state = ports->port->state;
             new_list->port = new_port;
             new_list->next = list_last;

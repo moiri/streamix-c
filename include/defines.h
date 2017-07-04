@@ -67,6 +67,8 @@ enum parse_attr_e
 };
 
 #define TEXT_CP         "smx_cp"
+#define TEXT_TT         "smx_tt"
+#define TEXT_CLK        "smx_clk"
 #define TEXT_NULL       "null"
 #define SIA_BOX_INFIX   "_"
 #define SIA_PORT_INFIX  "_"

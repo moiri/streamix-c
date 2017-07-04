@@ -27,6 +27,7 @@ enum instrec_type_e
     INSTREC_BOX,
     INSTREC_NET,
     INSTREC_SYNC,
+    INSTREC_TT,
     INSTREC_WRAP,
     INSTREC_UNDEF
 };

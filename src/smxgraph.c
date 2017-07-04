@@ -59,7 +59,6 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
         const char* name )
 {
     int id = igraph_ecount( g );
-    bool decoupled;
     p_src->edge_id = id;
     p_dest->edge_id = id;
 #if defined(DEBUG) || defined(DEBUG_CONNECT_GRAPH)
@@ -70,12 +69,8 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
     igraph_cattribute_EAS_set( g, PORT_ATTR_LABEL, id, name );
     igraph_cattribute_EAN_set( g, PORT_ATTR_PSRC, id, ( uintptr_t )p_src );
     igraph_cattribute_EAN_set( g, PORT_ATTR_PDST, id, ( uintptr_t )p_dest );
-    decoupled = p_src->symb->attr_port->decoupled;
-    if( p_src->v_net->type == VNET_SYNC ) decoupled = false;
-    igraph_cattribute_EAN_set( g, PORT_ATTR_DSRC, id, decoupled );
-    decoupled = p_dest->symb->attr_port->decoupled;
-    if( p_dest->v_net->type == VNET_SYNC ) decoupled = false;
-    igraph_cattribute_EAN_set( g, PORT_ATTR_DDST, id, decoupled );
+    igraph_cattribute_EAN_set( g, PORT_ATTR_DSRC, id, p_src->descoupled );
+    igraph_cattribute_EAN_set( g, PORT_ATTR_DDST, id, p_dest->descoupled );
     return id;
 }
 
@@ -348,6 +343,16 @@ virt_net_t* dgraph_vertex_add_sync( igraph_t* g )
 }
 
 /******************************************************************************/
+virt_net_t* dgraph_vertex_add_tt( igraph_t* g )
+{
+    int id = dgraph_vertex_add( g, TEXT_TT );
+    instrec_t* inst = instrec_create( TEXT_TT, id, -1, INSTREC_TT );
+    virt_net_t* v_net = virt_net_create_tt( inst );
+    dgraph_vertex_add_attr( g, id, TEXT_TT, NULL, v_net, NULL, false, false );
+    return v_net;
+}
+
+/******************************************************************************/
 virt_net_t* dgraph_vertex_add_wrap( igraph_t* g, symrec_t* symb, int line )
 {
     int id = dgraph_vertex_add( g, symb->name );
@@ -530,7 +535,8 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
             // search for the port in the virtual net of the connection
             vp_net = virt_port_get_equivalent_by_symb_attr( v_net_i, sp_src );
             vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
-                    vp_net->v_net, vp_net->name, vp_net->symb, vp_net->tb );
+                    vp_net->v_net, vp_net->name, vp_net->symb, vp_net->tb,
+                    vp_net->descoupled );
             virt_port_append( v_net, vp_new );
         }
         else {
@@ -540,10 +546,11 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                 sp_src = VECTOR( sync->p_ext )[j];
                 igraph_cattribute_VAN_set( g, INST_ATTR_SYMB, cp_sync->inst->id,
                         ( uintptr_t )sp_src );
-                // create a new external virtual port
+                // create a new external virtual port, cp_sync ports are
+                // decoupled and have no rate control
                 vp_net = virt_port_create( sp_src->attr_port->collection,
                         sp_src->attr_port->mode, cp_sync, sp_src->name,
-                        sp_src, 0 );
+                        sp_src, 0, false );
                 virt_port_append( v_net, vp_net );
                 virt_port_append( cp_sync, virt_port_copy( vp_net ) );
             }
@@ -563,7 +570,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                 }
                 vp_new = virt_port_create( vp_net->attr_class,
                         vp_net->attr_mode, cp_sync, vp_net->name,
-                        vp_net->symb, vp_net->tb );
+                        vp_net->symb, 0, false );
                 virt_port_append( cp_sync, vp_new );
                 // unknown direction, ignore class, modes have to be equal
                 check_connection( vp_new, vp_net, g, false, true, true );

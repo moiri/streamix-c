@@ -35,6 +35,7 @@ enum virt_net_type_e
     VNET_SYMBOL,
     VNET_SYNC,
     VNET_SERIAL,
+    VNET_TT,
     VNET_WRAP
 };
 
@@ -96,6 +97,7 @@ struct virt_port_s
     virt_port_state_t   state;      /**< #virt_port_state_e */
     int                 edge_id;    /**< id of the connecting channel */
     int                 tb;         /**< minimal inter-arrival time */
+    bool                descoupled; /**< is port decoupled? */
 };
 
 // FUNCTIONS ------------------------------------------------------------------
@@ -226,6 +228,14 @@ virt_net_t* virt_net_create_symbol( virt_net_t* );
 virt_net_t* virt_net_create_sync( instrec_t* );
 
 /**
+ * @breif   Create a virtual net of a time triggered guard
+ *
+ * @param inst  pointer to the instance of the copy synchronizer
+ * @return      pointer to the newly created virtual net
+ */
+virt_net_t* virt_net_create_tt( instrec_t* );
+
+/**
  * @brief   Create a new virtual net out of virtial net of a wrapper
  *
  * @param symb  pointer to the symbol of the wrapper
@@ -308,10 +318,11 @@ virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t*,
  * @param name          a pointer to the name of the port
  * @param symb          a pointer to the symbol of the port
  * @param tb            time bound of port
+ * @param decoupled     iis port decoupled
  * @return              a pointer to the newly created port
  */
 virt_port_t* virt_port_create( port_class_t, port_mode_t, virt_net_t*,
-        const char*, symrec_t*, int );
+        const char*, symrec_t*, int, bool );
 
 /**
  * @brief   Create a copy of a virtual port
