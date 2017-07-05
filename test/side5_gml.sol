@@ -24,6 +24,8 @@ graph
     source 0
     target 1
     label "p"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 1
     ddst 0
     len 1

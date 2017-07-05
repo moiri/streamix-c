@@ -64,6 +64,8 @@ graph
     source 3
     target 4
     label "cb_int2"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1
@@ -74,6 +76,8 @@ graph
     source 5
     target 6
     label "cbb"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1
@@ -84,6 +88,8 @@ graph
     source 4
     target 1
     label "b2"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1
@@ -94,6 +100,8 @@ graph
     source 6
     target 1
     label "b1"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1
@@ -104,6 +112,8 @@ graph
     source 0
     target 3
     label "a2"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1
@@ -114,6 +124,8 @@ graph
     source 0
     target 2
     label "a1"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1
@@ -124,6 +136,8 @@ graph
     source 2
     target 5
     label "cb_int1"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1

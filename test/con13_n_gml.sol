@@ -32,6 +32,8 @@ graph
     source 1
     target 2
     label "x"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1

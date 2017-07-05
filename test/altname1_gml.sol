@@ -14,16 +14,8 @@ graph
   node
   [
     id 1
-    label "A1"
-    func "A1"
-    static 0
-    pure 0
-  ]
-  node
-  [
-    id 2
-    label "A2"
-    func "A2"
+    label "B"
+    func "B"
     static 0
     pure 0
   ]
@@ -32,20 +24,8 @@ graph
     source 0
     target 1
     label "a"
-    nsrc "smx_null"
-    ndst "smx_null"
-    dsrc 0
-    ddst 0
-    len 1
-    tb 0
-  ]
-  edge
-  [
-    source 1
-    target 2
-    label "b"
-    nsrc "smx_null"
-    ndst "smx_null"
+    nsrc "x"
+    ndst "y"
     dsrc 0
     ddst 0
     len 1

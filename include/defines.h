@@ -69,7 +69,7 @@ enum parse_attr_e
 #define TEXT_CP         "smx_cp"
 #define TEXT_TT         "smx_tt"
 #define TEXT_CLK        "smx_clk"
-#define TEXT_NULL       "null"
+#define TEXT_NULL       "smx_null"
 #define SIA_BOX_INFIX   "_"
 #define SIA_PORT_INFIX  "_"
 
@@ -86,6 +86,8 @@ enum parse_attr_e
 #define PORT_ATTR_PDST      "pdst"
 #define PORT_ATTR_DSRC      "dsrc"
 #define PORT_ATTR_DDST      "ddst"
+#define PORT_ATTR_NSRC      "nsrc"
+#define PORT_ATTR_NDST      "ndst"
 #define CH_ATTR_LEN         "len"
 #define PORT_ATTR_TB        "tb"
 

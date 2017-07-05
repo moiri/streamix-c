@@ -7,7 +7,7 @@ graph
   [
     id 0
     label "A"
-    func "fa"
+    func "A"
     static 0
     pure 0
   ]
@@ -15,7 +15,7 @@ graph
   [
     id 1
     label "B"
-    func "fb"
+    func "B"
     static 0
     pure 0
   ]
@@ -23,7 +23,7 @@ graph
   [
     id 2
     label "C"
-    func "fc"
+    func "C"
     static 0
     pure 0
   ]
@@ -31,9 +31,9 @@ graph
   [
     source 0
     target 1
-    label "x"
-    nsrc "smx_null"
-    ndst "smx_null"
+    label "a"
+    nsrc "x"
+    ndst "y"
     dsrc 0
     ddst 0
     len 1
@@ -44,18 +44,6 @@ graph
     source 1
     target 2
     label "z"
-    nsrc "smx_null"
-    ndst "smx_null"
-    dsrc 0
-    ddst 0
-    len 1
-    tb 0
-  ]
-  edge
-  [
-    source 0
-    target 2
-    label "y"
     nsrc "smx_null"
     ndst "smx_null"
     dsrc 0

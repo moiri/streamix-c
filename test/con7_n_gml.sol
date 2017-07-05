@@ -40,6 +40,8 @@ graph
     source 1
     target 3
     label "a2"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1
@@ -50,6 +52,8 @@ graph
     source 0
     target 2
     label "a1"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1

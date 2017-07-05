@@ -72,6 +72,8 @@ graph
     source 1
     target 2
     label "a"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1
@@ -82,6 +84,8 @@ graph
     source 0
     target 2
     label "a"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1
@@ -92,6 +96,8 @@ graph
     source 2
     target 4
     label "a"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1
@@ -102,6 +108,8 @@ graph
     source 2
     target 3
     label "a"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1
@@ -112,6 +120,8 @@ graph
     source 4
     target 5
     label "b"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1
@@ -122,6 +132,8 @@ graph
     source 3
     target 5
     label "b"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1
@@ -132,6 +144,8 @@ graph
     source 5
     target 7
     label "b"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1
@@ -142,6 +156,8 @@ graph
     source 5
     target 6
     label "b"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 0
     len 1

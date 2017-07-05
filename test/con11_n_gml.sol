@@ -24,6 +24,8 @@ graph
     source 0
     target 1
     label "y"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 1
     len 1
@@ -34,6 +36,8 @@ graph
     source 0
     target 1
     label "x"
+    nsrc "smx_null"
+    ndst "smx_null"
     dsrc 0
     ddst 1
     len 1

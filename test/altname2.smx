@@ -1,0 +1,9 @@
+/**
+ * A simple serial connection between two boxes with alternative port names
+ */
+
+A = box A( out a(x) )
+B = box B( in a(y), out z )
+C = box C( in z )
+connect A.B.C
+
