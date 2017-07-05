@@ -551,12 +551,19 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                     || ( ( p_attr->collection == PORT_CLASS_SIDE )
                         && ( p_attr->mode == PORT_MODE_OUT ) ) )
                 p_attr->decoupled = true;
-            if( ast->port->int_id != NULL ) {
+            if( ( ast->port->int_id != NULL )
+                    && ( ast->port->int_id->type == AST_INT_PORTS ) ) {
+                // internal port list
                 _scope++;
                 utarray_push_back( scope_stack, &_scope );
                 p_attr->ports_int = ( symrec_list_t* )check_context_ast( symtab,
                         scope_stack, ast->port->int_id );
                 utarray_pop_back( scope_stack );
+            }
+            else if( ( ast->port->int_id != NULL )
+                    && ( ast->port->int_id->type == AST_ID ) ) {
+                // alternative port name
+                p_attr->alt_name = ast->port->int_id->symbol->name;
             }
             rec = symrec_create_port( ast->port->id->symbol->name,
                     *utarray_back( scope_stack ), ast->port->id->symbol->line,

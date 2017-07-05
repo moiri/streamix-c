@@ -55,6 +55,7 @@
 %type <nval> alt_port_decl
 %type <nval> opt_alt_ports
 %type <nval> opt_channel_len
+%type <nval> opt_alt_port_name
 
 /* lists */
 %type <lval> net_decls
@@ -203,22 +204,28 @@ opt_box_port_list:
 ;
 
 box_port_decl:
-    kw_opt_decoupled kw_opt_port_class kw_port_mode IDENTIFIER opt_channel_len {
+    kw_opt_decoupled kw_opt_port_class kw_port_mode IDENTIFIER opt_alt_port_name opt_channel_len {
         $$ = ast_add_port(
             ast_add_symbol( $4, @3.last_line, ID_PORT ),
-            ( ast_node_t* )0, // no internal id
+            $5, // alternative port name
             $2,
             $3,
             $1,
-            $5,
+            $6,
             PORT_BOX
         );
     }
 ;
 
+opt_alt_port_name:
+    %empty { $$ = ( ast_node_t*)0; }
+|   '(' IDENTIFIER ')' { $$ = ast_add_symbol( $2, @2.last_line, ID_PORT_ALT ); }
+;
+
 opt_channel_len:
     %empty { $$ = ( ast_node_t* )0; }
 |   '[' INT ']' { $$ = ast_add_attr( $2, ATTR_INT ); }
+;
 
 /* wrapper declaration */
 wrap_decl:
