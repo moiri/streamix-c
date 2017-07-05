@@ -104,6 +104,7 @@ struct attr_port_s
     port_class_t    collection;     /**< VAL_UP, VAL_DOWN, VAL_SIDE, VAL_NONE */
     bool            decoupled;      /**< port is non-triggering **/
     int             ch_len;         /**< length of the channel */
+    const char*     alt_name;       /**< alternative name of the port */
 };
 
 /**

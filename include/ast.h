@@ -53,6 +53,7 @@ enum id_type_e
     ID_BOX,
     ID_BOX_IMPL,
     ID_PORT,
+    ID_PORT_ALT,
     ID_IPORT,
     ID_NPORT,
     ID_CNET,

@@ -48,6 +48,7 @@ attr_port_t* symrec_attr_create_port( symrec_list_t* ports_int,
     new_attr->collection = collection;
     new_attr->decoupled = decoupled;
     new_attr->ch_len = ch_len;
+    new_attr->alt_name = NULL;
     return new_attr;
 }
 
