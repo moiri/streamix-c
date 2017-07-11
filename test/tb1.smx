@@ -1,4 +1,4 @@
 A = box fa( out x, in y )
 B = box fb( in x, out y )
 
-connect tb[100](A.B)
+connect tb[100s](A.B)

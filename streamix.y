@@ -27,7 +27,8 @@
 };
 /* keywods */
 %token CONNECT TT TB
-%token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC INT
+%token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC
+%token <ival> BUFLEN TIME
 
 /* optional and variable keyword tokens */
 %type <nval> kw_opt_state
@@ -134,10 +135,10 @@ net:
 |   net '|' net { $$ = ast_add_op( $1, $3, AST_PARALLEL ); }
 |   net '!' net { $$ = ast_add_op( $1, $3, AST_PARALLEL_DET ); }
 |   '(' net ')' { $$ = $2; }
-|   TT '[' INT ']' '(' net ')' {
+|   TT '[' TIME ']' '(' net ')' {
         $$ = ast_add_time( $6, ast_add_attr( $3, ATTR_INT ), AST_TT );
     }
-|   TB '[' INT ']' '(' net ')' {
+|   TB '[' TIME ']' '(' net ')' {
         $$ = ast_add_time( $6, ast_add_attr( $3, ATTR_INT ), AST_TB );
     }
 ;
@@ -224,7 +225,7 @@ opt_alt_port_name:
 
 opt_channel_len:
     %empty { $$ = ( ast_node_t* )0; }
-|   '[' INT ']' { $$ = ast_add_attr( $2, ATTR_INT ); }
+|   '[' BUFLEN ']' { $$ = ast_add_attr( $2, ATTR_INT ); }
 ;
 
 /* wrapper declaration */

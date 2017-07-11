@@ -55,11 +55,32 @@ tb              return TB;
                 yylval.sval = strdup(yytext);
                 return IDENTIFIER;
 }
+    /* time */
+[1-9][0-9]*s {
+                char *yycopy = strdup( yytext );
+                yycopy[strlen( yycopy ) - 1] = 0;
+                yylval.ival = atoi( yycopy );
+                yylval.ival *= 1000000;
+                return TIME;
+}
+[1-9][0-9][0-9]ms {
+                char *yycopy = strdup( yytext );
+                yycopy[strlen( yycopy ) - 2] = 0;
+                yylval.ival = atoi( yycopy );
+                yylval.ival *= 1000;
+                return TIME;
+}
+[1-9][0-9][0-9]us {
+                char *yycopy = strdup( yytext );
+                yycopy[strlen( yycopy ) - 2] = 0;
+                yylval.ival = atoi( yycopy );
+                return TIME;
+}
 
     /* channel length */
 [1-9][0-9]* {
                 yylval.ival = atoi( yytext );
-                return INT;
+                return BUFLEN;
 }
 
     /* operators */
