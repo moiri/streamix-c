@@ -29,7 +29,8 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tb 100000
+    tbs 0
+    tbns 100000000
   ]
   edge
   [
@@ -41,6 +42,7 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tb 200
+    tbs 0
+    tbns 200000
   ]
 ]

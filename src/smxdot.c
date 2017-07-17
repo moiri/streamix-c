@@ -71,7 +71,7 @@ void draw_ast_graph( ast_node_t* start )
 void draw_ast_graph_step( FILE* graph, ast_node_t* ptr )
 {
     ast_list_t* ast_list_ptr;
-    char label[10];
+    char label[22];
 
     if( ptr == NULL ) return;
 
@@ -265,10 +265,6 @@ void draw_ast_graph_step( FILE* graph, ast_node_t* ptr )
                     STYLE_N_AST_NODE );
             draw_ast_graph_step( graph, ptr->time->op );
             graph_add_edge( graph, ptr->id, ptr->time->op->id, NULL,
-                    STYLE_E_DEFAULT );
-            // frequ
-            draw_ast_graph_step( graph, ptr->time->freq );
-            graph_add_edge( graph, ptr->id, ptr->time->freq->id, NULL,
                     STYLE_E_DEFAULT );
             break;
         default:

@@ -10,6 +10,7 @@
 #define AST_H
 
 #include <stdbool.h>
+#include <time.h>
 
 // TYPEDEFS -------------------------------------------------------------------
 typedef struct ast_assign_s ast_assign_t;
@@ -229,8 +230,8 @@ struct ast_prot_s
  */
 struct ast_time_s
 {
-    ast_node_t*  op;    /**< ::ast_symb_t */
-    ast_node_t*  freq;  /**< ::ast_attr_t, ferquency of the clock */
+    ast_node_t*  op;        /**< ::ast_symb_t */
+    struct timespec time;   /**< ::ast_attr_t, ferquency of the clock */
 };
 
 /**
@@ -370,7 +371,7 @@ ast_node_t* ast_add_symbol( char*, int, id_type_t );
  *              or the inter-arrival-time, depending on the type
  * @param type  AST_TT or AST_TB
  */
-ast_node_t* ast_add_time( ast_node_t*, ast_node_t*, node_type_t );
+ast_node_t* ast_add_time( ast_node_t*, struct timespec, node_type_t );
 
 /**
  * @brief   Add a wrapper declaration to the AST.

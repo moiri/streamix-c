@@ -19,6 +19,7 @@ typedef enum virt_net_type_e virt_net_type_t;
 typedef enum virt_port_state_e virt_port_state_t;
 
 #include <igraph.h>
+#include <time.h>
 #include "symtab.h"
 #include "insttab.h"
 
@@ -96,7 +97,7 @@ struct virt_port_s
     int                 attr_mode;  /**< updated mode for cp-sync (VAL_BI) */
     virt_port_state_t   state;      /**< #virt_port_state_e */
     int                 edge_id;    /**< id of the connecting channel */
-    int                 tb;         /**< minimal inter-arrival time */
+    struct timespec     tb;         /**< minimal inter-arrival time */
     bool                descoupled; /**< is port decoupled? */
 };
 
@@ -274,7 +275,7 @@ void virt_net_update_class( virt_net_t*, port_class_t );
  * @param v_net     pointer to the virtual net
  * @param int       time bound
  */
-void virt_port_add_time_bound( virt_net_t*, int );
+void virt_port_add_time_bound( virt_net_t*, struct timespec );
 
 /**
  * @brief   Append a port to the port list of a virtual net
@@ -322,7 +323,7 @@ virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t*,
  * @return              a pointer to the newly created port
  */
 virt_port_t* virt_port_create( port_class_t, port_mode_t, virt_net_t*,
-        const char*, symrec_t*, int, bool );
+        const char*, symrec_t*, struct timespec, bool );
 
 /**
  * @brief   Create a copy of a virtual port

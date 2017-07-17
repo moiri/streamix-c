@@ -85,7 +85,8 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tb 0
+    tbs 0
+    tbns 0
   ]
   edge
   [
@@ -97,7 +98,8 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tb 0
+    tbs 0
+    tbns 0
   ]
   edge
   [
@@ -109,7 +111,8 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tb 0
+    tbs 0
+    tbns 0
   ]
   edge
   [
@@ -121,7 +124,8 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tb 0
+    tbs 0
+    tbns 0
   ]
   edge
   [
@@ -133,7 +137,8 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tb 0
+    tbs 0
+    tbns 0
   ]
   edge
   [
@@ -145,7 +150,8 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tb 0
+    tbs 0
+    tbns 0
   ]
   edge
   [
@@ -157,7 +163,8 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tb 0
+    tbs 0
+    tbns 0
   ]
   edge
   [
@@ -169,7 +176,8 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tb 0
+    tbs 0
+    tbns 0
   ]
   edge
   [
@@ -181,7 +189,8 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tb 0
+    tbs 0
+    tbns 0
   ]
   edge
   [
@@ -193,6 +202,7 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tb 0
+    tbs 0
+    tbns 0
   ]
 ]

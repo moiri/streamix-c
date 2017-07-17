@@ -89,7 +89,8 @@ enum parse_attr_e
 #define PORT_ATTR_NSRC      "nsrc"
 #define PORT_ATTR_NDST      "ndst"
 #define CH_ATTR_LEN         "len"
-#define PORT_ATTR_TB        "tb"
+#define PORT_ATTR_TBS       "tbs"
+#define PORT_ATTR_TBNS      "tbns"
 
 #define GRAPH_ATTR_SIA      "sia"
 #define GRAPH_ATTR_NAME     "name"

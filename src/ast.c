@@ -146,12 +146,13 @@ ast_node_t* ast_add_symbol( char* name, int line, id_type_t type )
 }
 
 /******************************************************************************/
-ast_node_t* ast_add_time( ast_node_t* op, ast_node_t* freq, node_type_t type )
+ast_node_t* ast_add_time( ast_node_t* op, struct timespec time,
+        node_type_t type )
 {
     ast_node_t *node = ast_add_node( type );
     node->time = malloc( sizeof( ast_time_t ) );
     node->time->op = op;
-    node->time->freq = freq;
+    node->time->time = time;
     return node;
 }
 

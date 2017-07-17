@@ -79,6 +79,9 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
     char error_msg[ CONST_ERROR_LEN ];
     bool b_parallel = ( ( parallel == AST_PARALLEL )
             || ( parallel == AST_PARALLEL_DET ) );
+    struct timespec tb;
+    tb.tv_sec = 0;
+    tb.tv_nsec = 0;
     virt_net_t* v_net_sync = NULL;
     instrec_t* inst1 = port1->v_net->inst;
     instrec_t* inst2 = port2->v_net->inst;
@@ -141,7 +144,7 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
             else port_mode = PORT_MODE_BI;
             v_net_sync = dgraph_vertex_add_sync( g );
             port_new = virt_port_create( port_class, port_mode, v_net_sync,
-                    port1->name, port1->symb, 0, false );
+                    port1->name, port1->symb, tb, false );
             virt_port_append( v_net_sync, port_new );
             virt_port_append( v_net, port_new );
             connect_ports( port_new, port1, g, false );
@@ -837,13 +840,17 @@ bool do_port_attrs_match( symrec_list_t* r_ports, virt_port_list_t* v_ports )
 }
 
 /******************************************************************************/
-virt_net_t* virt_net_create_tt_net( igraph_t* g, virt_net_t* vnet_tt, int freq )
+virt_net_t* virt_net_create_tt_net( igraph_t* g, virt_net_t* vnet_tt,
+        struct timespec freq )
 {
     virt_net_t* vnet;
     virt_net_t* vnet_l = NULL;
     virt_net_t* vnet_r = NULL;
     virt_port_t* port_new;
     virt_port_list_t* ports = vnet_tt->ports;
+    struct timespec tb;
+    tb.tv_sec = 0;
+    tb.tv_nsec = 0;
     // create ports
     // ports in v_net must all have a class up or down (no side ports ?)
     while( ports != NULL ) {
@@ -854,22 +861,22 @@ virt_net_t* virt_net_create_tt_net( igraph_t* g, virt_net_t* vnet_tt, int freq )
                 if( ports->port->attr_mode == PORT_MODE_IN ) {
                     if( vnet_l == NULL ) vnet_l = dgraph_vertex_add_tt( g );
                     port_new = virt_port_create( PORT_CLASS_UP, PORT_MODE_IN,
-                            vnet_l, ports->port->name, ports->port->symb, 0,
+                            vnet_l, ports->port->name, ports->port->symb, tb,
                             true );
                     virt_port_append( vnet_l, port_new );
                     port_new = virt_port_create( PORT_CLASS_DOWN, PORT_MODE_OUT,
-                            vnet_l, ports->port->name, ports->port->symb, 0,
+                            vnet_l, ports->port->name, ports->port->symb, tb,
                             true );
                     virt_port_append( vnet_l, port_new );
                 }
                 else if( ports->port->attr_mode == PORT_MODE_OUT ) {
                     if( vnet_l == NULL ) vnet_l = dgraph_vertex_add_tt( g );
                     port_new = virt_port_create( PORT_CLASS_UP, PORT_MODE_OUT,
-                            vnet_l, ports->port->name, ports->port->symb, 0,
+                            vnet_l, ports->port->name, ports->port->symb, tb,
                             true );
                     virt_port_append( vnet_l, port_new );
                     port_new = virt_port_create( PORT_CLASS_DOWN, PORT_MODE_IN,
-                            vnet_l, ports->port->name, ports->port->symb, 0,
+                            vnet_l, ports->port->name, ports->port->symb, tb,
                             true );
                     virt_port_append( vnet_l, port_new );
                 }
@@ -878,22 +885,22 @@ virt_net_t* virt_net_create_tt_net( igraph_t* g, virt_net_t* vnet_tt, int freq )
                 if( ports->port->attr_mode == PORT_MODE_IN ) {
                     if( vnet_r == NULL ) vnet_r = dgraph_vertex_add_tt( g );
                     port_new = virt_port_create( PORT_CLASS_DOWN, PORT_MODE_IN,
-                            vnet_l, ports->port->name, ports->port->symb, 0,
+                            vnet_l, ports->port->name, ports->port->symb, tb,
                             true );
                     virt_port_append( vnet_l, port_new );
                     port_new = virt_port_create( PORT_CLASS_UP, PORT_MODE_OUT,
-                            vnet_l, ports->port->name, ports->port->symb, 0,
+                            vnet_l, ports->port->name, ports->port->symb, tb,
                             true );
                     virt_port_append( vnet_l, port_new );
                 }
                 else if( ports->port->attr_mode == PORT_MODE_OUT ) {
                     if( vnet_r == NULL ) vnet_r = dgraph_vertex_add_tt( g );
                     port_new = virt_port_create( PORT_CLASS_DOWN, PORT_MODE_OUT,
-                            vnet_l, ports->port->name, ports->port->symb, 0,
+                            vnet_l, ports->port->name, ports->port->symb, tb,
                             true );
                     virt_port_append( vnet_l, port_new );
                     port_new = virt_port_create( PORT_CLASS_UP, PORT_MODE_IN,
-                            vnet_l, ports->port->name, ports->port->symb, 0,
+                            vnet_l, ports->port->name, ports->port->symb, tb,
                             true );
                     virt_port_append( vnet_l, port_new );
                 }
@@ -978,11 +985,11 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
         case AST_TT:
             v_net = install_nets( symtab, scope_stack, ast->time->op, g );
             v_net = virt_net_create_tt_net( g, v_net,
-                    ast->time->freq->attr->val );
+                    ast->time->time );
             break;
         case AST_TB:
             v_net = install_nets( symtab, scope_stack, ast->time->op, g );
-            virt_port_add_time_bound( v_net, ast->time->freq->attr->val );
+            virt_port_add_time_bound( v_net, ast->time->time );
             break;
         case AST_ID:
             // check the context of the symbol
@@ -1070,7 +1077,8 @@ void post_process( igraph_t* g )
                 PORT_ATTR_PSRC, id_edge );
         ch_len = get_ch_len( p_dest, p_src );
         igraph_cattribute_EAN_set( g, CH_ATTR_LEN, id_edge, ch_len );
-        igraph_cattribute_EAN_set( g, PORT_ATTR_TB, id_edge, p_dest->tb );
+        igraph_cattribute_EAN_set( g, PORT_ATTR_TBS, id_edge, p_dest->tb.tv_sec );
+        igraph_cattribute_EAN_set( g, PORT_ATTR_TBNS, id_edge, p_dest->tb.tv_nsec );
         IGRAPH_EIT_NEXT( eit );
     }
     igraph_eit_destroy( &eit );

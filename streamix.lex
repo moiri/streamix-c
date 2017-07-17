@@ -60,21 +60,27 @@ tb              return TB;
                 char *yycopy = strdup( yytext );
                 yycopy[strlen( yycopy ) - 1] = 0;
                 yylval.ival = atoi( yycopy );
-                yylval.ival *= 1000000;
-                return TIME;
+                return TIME_SEC;
 }
-[1-9][0-9][0-9]ms {
+[1-9][0-9]{0,2}ms {
+                char *yycopy = strdup( yytext );
+                yycopy[strlen( yycopy ) - 2] = 0;
+                yylval.ival = atoi( yycopy );
+                yylval.ival *= 1000000;
+                return TIME_NSEC;
+}
+[1-9][0-9]{0,5}us {
                 char *yycopy = strdup( yytext );
                 yycopy[strlen( yycopy ) - 2] = 0;
                 yylval.ival = atoi( yycopy );
                 yylval.ival *= 1000;
-                return TIME;
+                return TIME_NSEC;
 }
-[1-9][0-9][0-9]us {
+[1-9][0-9]{0,8}ns {
                 char *yycopy = strdup( yytext );
                 yycopy[strlen( yycopy ) - 2] = 0;
                 yylval.ival = atoi( yycopy );
-                return TIME;
+                return TIME_NSEC;
 }
 
     /* channel length */

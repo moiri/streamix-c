@@ -527,6 +527,7 @@ void dgraph_vptr_to_v( igraph_vector_ptr_t* vptr, igraph_vector_t* v )
 void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
         virt_net_t* v_net_i, virt_net_t* v_net )
 {
+    struct timespec tb;
     int i = 0, j = 0;
     sync_t* sync = NULL;
     virt_port_t* vp_new = NULL;
@@ -534,6 +535,8 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
     symrec_t* sp_src = NULL;
     symrec_t* sp_int = NULL;
     virt_net_t* cp_sync = NULL;
+    tb.tv_sec = 0;
+    tb.tv_nsec = 0;
 
     for( i = 0; i < igraph_vector_ptr_size( syncs ); i++ ) {
         sync = VECTOR( *syncs )[i];
@@ -558,7 +561,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                 // decoupled and have no rate control
                 vp_net = virt_port_create( sp_src->attr_port->collection,
                         sp_src->attr_port->mode, cp_sync, sp_src->name,
-                        sp_src, 0, false );
+                        sp_src, tb, false );
                 virt_port_append( v_net, vp_net );
                 virt_port_append( cp_sync, virt_port_copy( vp_net ) );
             }
@@ -578,7 +581,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                 }
                 vp_new = virt_port_create( vp_net->attr_class,
                         vp_net->attr_mode, cp_sync, vp_net->name,
-                        vp_net->symb, 0, false );
+                        vp_net->symb, tb, false );
                 virt_port_append( cp_sync, vp_new );
                 // unknown direction, ignore class, modes have to be equal
                 check_connection( vp_new, vp_net, g, false, true, true );

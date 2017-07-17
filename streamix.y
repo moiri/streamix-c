@@ -24,11 +24,12 @@
     char *sval;
     struct ast_node_s* nval;
     struct ast_list_s* lval;
+    struct timespec    tval;
 };
 /* keywods */
 %token CONNECT TT TB
 %token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC
-%token <ival> BUFLEN TIME
+%token <ival> BUFLEN TIME_SEC TIME_NSEC
 
 /* optional and variable keyword tokens */
 %type <nval> kw_opt_state
@@ -37,6 +38,7 @@
 %type <nval> kw_port_class
 %type <nval> kw_opt_port_class
 %type <nval> kw_port_mode
+%type <tval> kw_time
 
 /* idenitifiers */
 %token <sval> IDENTIFIER
@@ -135,11 +137,11 @@ net:
 |   net '|' net { $$ = ast_add_op( $1, $3, AST_PARALLEL ); }
 |   net '!' net { $$ = ast_add_op( $1, $3, AST_PARALLEL_DET ); }
 |   '(' net ')' { $$ = $2; }
-|   TT '[' TIME ']' '(' net ')' {
-        $$ = ast_add_time( $6, ast_add_attr( $3, ATTR_INT ), AST_TT );
+|   TT '[' kw_time ']' '(' net ')' {
+        $$ = ast_add_time( $6, $3, AST_TT );
     }
-|   TB '[' TIME ']' '(' net ')' {
-        $$ = ast_add_time( $6, ast_add_attr( $3, ATTR_INT ), AST_TB );
+|   TB '[' kw_time ']' '(' net ')' {
+        $$ = ast_add_time( $6, $3, AST_TB );
     }
 ;
 
@@ -347,6 +349,27 @@ kw_port_class:
 kw_opt_static:
     %empty { $$ = ( ast_node_t* )0; }
 |   STATIC { $$ = ast_add_attr( $1, ATTR_OTHER ); }
+;
+
+kw_time:
+    TIME_SEC TIME_NSEC {
+        struct timespec time;
+        time.tv_sec = $1;
+        time.tv_nsec = $2;
+        $$ = time;
+    }
+|   TIME_SEC {
+        struct timespec time;
+        time.tv_sec = $1;
+        time.tv_nsec = 0;
+        $$ = time;
+    }
+|   TIME_NSEC {
+        struct timespec time;
+        time.tv_sec = 0;
+        time.tv_nsec = $1;
+        $$ = time;
+    }
 ;
 
 %%

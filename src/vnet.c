@@ -377,7 +377,7 @@ void virt_port_append_all( virt_net_t* v_net1, virt_net_t* v_net2,
 }
 
 /******************************************************************************/
-void virt_port_add_time_bound( virt_net_t* v_net, int tb )
+void virt_port_add_time_bound( virt_net_t* v_net, struct timespec tb )
 {
     virt_port_list_t* ports = v_net->ports;
     while( ports != NULL ) {
@@ -413,8 +413,8 @@ virt_port_list_t* virt_port_assign( virt_port_list_t* old,
 
 /******************************************************************************/
 virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
-        virt_net_t* port_vnet, const char* name, symrec_t* symb, int tb,
-        bool decoupled )
+        virt_net_t* port_vnet, const char* name, symrec_t* symb,
+        struct timespec tb, bool decoupled )
 {
     virt_port_t* new_port = NULL;
 
@@ -442,17 +442,20 @@ virt_port_t* virt_port_copy( virt_port_t* port )
 virt_port_list_t* virt_ports_copy_symb( symrec_list_t* ports,
         virt_net_t* v_net, virt_net_t* v_net_i )
 {
+    struct timespec tb;
     virt_port_t* new_port = NULL;
     virt_port_t* port_net = NULL;
     virt_port_list_t* list_last = NULL;
     virt_port_list_t* vports = NULL;
     int idx = 0;
 
+    tb.tv_sec = 0;
+    tb.tv_nsec = 0;
     while( ports != NULL  ) {
         vports = malloc( sizeof( virt_port_list_t ) );
         new_port = virt_port_create( ports->rec->attr_port->collection,
                 ports->rec->attr_port->mode, v_net, ports->rec->name,
-                ports->rec, 0, ports->rec->attr_port->decoupled );
+                ports->rec, tb, ports->rec->attr_port->decoupled );
         if( v_net_i != NULL ) {
             // for wrappers, propagate the port symbol of the child nets
             port_net = virt_port_get_equivalent_in_wrap( v_net_i, new_port );
@@ -604,7 +607,7 @@ void debug_print_vport( virt_port_t* port )
     else if( port->attr_class == PORT_CLASS_SIDE ) printf( "|" );
     if( port->attr_mode == PORT_MODE_IN ) {
         printf( "<--" );
-        if( port->tb > 0 ) printf( "[%d]", port->tb );
+        if( port->tb.tv_sec > 0 ) printf( "[%lus]", port->tb.tv_sec );
     }
     else if( port->attr_mode == PORT_MODE_OUT ) printf( "-->" );
     else printf( "<->" );
