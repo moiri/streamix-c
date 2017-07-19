@@ -270,19 +270,6 @@ bool is_connected( instrec_t*, instrec_t*, igraph_t* );
 void post_process( igraph_t* );
 
 /**
- * @brief create the virtual net of time-triggered instance
- *
- * If necessary create a temporal firewall and connect the tt instance
- * to the firewall accordingly
- *
- * @param igraph_t*         pointer to the dependency graph
- * @param virt_net_t*       pointer to the time-triggered net instance
- * @return virt_net_t*      pointer to the temporal firewall or the modified
- *                          tt instance
- */
-virt_net_t* tt_net_create( igraph_t*, virt_net_t* );
-
-/**
  * @brief transform a net to a tt net
  *
  * All ports are decoupled and the tt timings are set
@@ -291,23 +278,5 @@ virt_net_t* tt_net_create( igraph_t*, virt_net_t* );
  * @param tt        tt timings
  */
 void tt_update_net( virt_net_t*, struct timespec, igraph_t* );
-
-/**
- * @brief get the length of a channel given two port pointers
- *
- * @param virt_port_t*  pointer to a virtual port
- * @param virt_port_t*  pointer to a virtual port
- * @return int          length of the channel between the two ports
- */
-int get_ch_len( virt_port_t*, virt_port_t* );
-
-/**
- * @brief function returning the max between two numbers
- *
- * @param int n1
- * @param int n2
- * @return int max( n1, n2 )
- */
-int max( int, int );
 
 #endif // CONTEXT_H

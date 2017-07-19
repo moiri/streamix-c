@@ -58,6 +58,7 @@ void dgraph_append( igraph_t* g, igraph_t* g_tpl, bool deep )
 int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
         const char* name )
 {
+    int ch_len;
     int id = igraph_ecount( g );
     const char* alt_name = TEXT_NULL;
     p_src->edge_id = id;
@@ -79,6 +80,10 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
     igraph_cattribute_EAS_set( g, PORT_ATTR_NDST, id, alt_name );
     igraph_cattribute_EAN_set( g, PORT_ATTR_DSRC, id, p_src->descoupled );
     igraph_cattribute_EAN_set( g, PORT_ATTR_DDST, id, p_dest->descoupled );
+    ch_len = get_ch_len( p_dest, p_src );
+    igraph_cattribute_EAN_set( g, CH_ATTR_LEN, id, ch_len );
+    igraph_cattribute_EAN_set( g, PORT_ATTR_TBS, id, p_dest->tb.tv_sec );
+    igraph_cattribute_EAN_set( g, PORT_ATTR_TBNS, id, p_dest->tb.tv_nsec );
     return id;
 }
 
@@ -574,7 +579,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
             vp_net = virt_port_get_equivalent_by_symb_attr( v_net_i, sp_src );
             vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
                     vp_net->v_net, vp_net->name, vp_net->symb, vp_net->tb,
-                    vp_net->descoupled );
+                    vp_net->descoupled, vp_net->ch_len );
             virt_port_append( v_net, vp_new );
         }
         else {
@@ -585,10 +590,10 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                 igraph_cattribute_VAN_set( g, INST_ATTR_SYMB, cp_sync->inst->id,
                         ( uintptr_t )sp_src );
                 // create a new external virtual port, cp_sync ports are
-                // decoupled and have no rate control
+                // not decoupled and have no rate control
                 vp_net = virt_port_create( sp_src->attr_port->collection,
                         sp_src->attr_port->mode, cp_sync, sp_src->name,
-                        sp_src, tb, false );
+                        sp_src, tb, false, 0 );
                 virt_port_append( v_net, vp_net );
                 virt_port_append( cp_sync, virt_port_copy( vp_net ) );
             }
@@ -608,13 +613,21 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                 }
                 vp_new = virt_port_create( vp_net->attr_class,
                         vp_net->attr_mode, cp_sync, vp_net->name,
-                        vp_net->symb, tb, false );
+                        vp_net->symb, tb, false, 0 );
                 virt_port_append( cp_sync, vp_new );
                 // unknown direction, ignore class, modes have to be equal
                 check_connection( vp_new, vp_net, g, false, true, true );
             }
         }
     }
+}
+
+/******************************************************************************/
+int get_ch_len( virt_port_t* p1, virt_port_t* p2 )
+{
+    int res = p1->ch_len + p2->ch_len;
+    if( res == 0 ) res = 1;
+    return res;
 }
 
 /******************************************************************************/

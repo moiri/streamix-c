@@ -1,0 +1,11 @@
+A = box fa( out x[5] )
+B = box fb( in x[4] )
+
+wrapper W( out x ) {
+    connect A
+} net( down out x )
+
+N1 = (A|A).B
+N2 = W.B
+
+connect N1|N2

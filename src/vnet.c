@@ -114,10 +114,6 @@ net_con_t* net_con_create( instrec_t* inst )
 virt_net_t* virt_net_create()
 {
     virt_net_t* v_net = malloc( sizeof( struct virt_net_s ) );
-    struct timespec time;
-    time.tv_sec = 0;
-    time.tv_nsec = 0;
-    v_net->tt = time;
     return v_net;
 }
 
@@ -424,7 +420,7 @@ virt_port_list_t* virt_port_assign( virt_port_list_t* old,
 /******************************************************************************/
 virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
         virt_net_t* port_vnet, const char* name, symrec_t* symb,
-        struct timespec tb, bool decoupled )
+        struct timespec tb, bool decoupled, int ch_len )
 {
     virt_port_t* new_port = NULL;
 
@@ -437,6 +433,7 @@ virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
     new_port->state = VPORT_STATE_OPEN;
     new_port->tb = tb;
     new_port->descoupled = decoupled;
+    new_port->ch_len = ch_len;
 
     return new_port;
 }
@@ -445,7 +442,7 @@ virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
 virt_port_t* virt_port_copy( virt_port_t* port )
 {
     return virt_port_create( port->attr_class, port->attr_mode, port->v_net,
-            port->name, port->symb, port->tb, port->descoupled );
+            port->name, port->symb, port->tb, port->descoupled, port->ch_len );
 }
 
 /******************************************************************************/
@@ -465,7 +462,8 @@ virt_port_list_t* virt_ports_copy_symb( symrec_list_t* ports,
         vports = malloc( sizeof( virt_port_list_t ) );
         new_port = virt_port_create( ports->rec->attr_port->collection,
                 ports->rec->attr_port->mode, v_net, ports->rec->name,
-                ports->rec, tb, ports->rec->attr_port->decoupled );
+                ports->rec, tb, ports->rec->attr_port->decoupled,
+                ports->rec->attr_port->ch_len );
         if( v_net_i != NULL ) {
             // for wrappers, propagate the port symbol of the child nets
             port_net = virt_port_get_equivalent_in_wrap( v_net_i, new_port );
@@ -496,7 +494,7 @@ virt_port_list_t* virt_ports_copy_vnet( virt_port_list_t* ports,
             new_port = virt_port_create( ports->port->attr_class,
                     ports->port->attr_mode, v_net, ports->port->name,
                     ports->port->symb, ports->port->tb,
-                    ports->port->descoupled );
+                    ports->port->descoupled, ports->port->ch_len );
             if( copy_status ) new_port->state = ports->port->state;
             new_list->port = new_port;
             new_list->next = list_last;

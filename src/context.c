@@ -143,8 +143,10 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
                 port_mode = port1->attr_mode;
             else port_mode = PORT_MODE_BI;
             v_net_sync = dgraph_vertex_add_sync( g );
+            // channel length is set to one: the connecting box port might
+            // overwrite this due to the max function
             port_new = virt_port_create( port_class, port_mode, v_net_sync,
-                    port1->name, port1->symb, tb, false );
+                    port1->name, port1->symb, tb, false, 0 );
             virt_port_append( v_net_sync, port_new );
             virt_port_append( v_net, port_new );
             connect_ports( port_new, port1, g, false );
@@ -542,7 +544,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
         case AST_PORT:
             // prepare symbol attributes and create symbol
             p_attr = symrec_attr_create_port( NULL, PORT_MODE_BI,
-                    PORT_CLASS_NONE, false, 1 );
+                    PORT_CLASS_NONE, false, 0 );
             if( ast->port->ch_len != NULL )
                 p_attr->ch_len = ast->port->ch_len->attr->val;
             if( ast->port->mode != NULL )
@@ -941,10 +943,7 @@ void post_process( igraph_t* g )
     igraph_vector_t dids;
     virt_net_t *v_net;
     symrec_t* symb;
-    int inst_id, ch_len, id_edge;
-    igraph_es_t es;
-    igraph_eit_t eit;
-    virt_port_t *p_src, *p_dest;
+    int inst_id;
 
     vs = igraph_vss_all();
     igraph_vit_create( g, vs, &vit );
@@ -972,98 +971,24 @@ void post_process( igraph_t* g )
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
     igraph_vector_destroy( &dids );
-
-    es = igraph_ess_all( IGRAPH_EDGEORDER_ID );
-    igraph_eit_create( g, es, &eit );
-    while( !IGRAPH_EIT_END( eit ) ) {
-        id_edge = IGRAPH_EIT_GET( eit );
-        p_dest = ( virt_port_t* )( uintptr_t )igraph_cattribute_EAN( g,
-                PORT_ATTR_PDST, id_edge );
-        p_src = ( virt_port_t* )( uintptr_t )igraph_cattribute_EAN( g,
-                PORT_ATTR_PSRC, id_edge );
-        ch_len = get_ch_len( p_dest, p_src );
-        igraph_cattribute_EAN_set( g, CH_ATTR_LEN, id_edge, ch_len );
-        igraph_cattribute_EAN_set( g, PORT_ATTR_TBS, id_edge, p_dest->tb.tv_sec );
-        igraph_cattribute_EAN_set( g, PORT_ATTR_TBNS, id_edge, p_dest->tb.tv_nsec );
-        IGRAPH_EIT_NEXT( eit );
-    }
-    igraph_eit_destroy( &eit );
-    igraph_es_destroy( &es );
 }
 
 /******************************************************************************/
 void tt_update_net( virt_net_t* v_net, struct timespec tt, igraph_t* g )
 {
+    int vid;
     virt_port_list_t* ports = v_net->ports;
     // create ports
     while( ports != NULL ) {
-        if( ports->port->state < VPORT_STATE_CONNECTED ) {
+        // decouple all open ports
+        if( ports->port->state < VPORT_STATE_CONNECTED )
             ports->port->descoupled = true;
-        }
         // add tt timings to nets
-        dgraph_vertex_add_attr_tt( g, ports->port->v_net->inst->id, tt );
+        vid = ports->port->v_net->inst->id;
+        dgraph_vertex_add_attr_tt( g, vid, tt );
+        // set buffer length to zero (will be set to one or to the value
+        // specified at the connecting port)
+        ports->port->ch_len = 0;
         ports = ports->next;
     }
-}
-
-/******************************************************************************/
-virt_net_t* tt_net_create( igraph_t* g, virt_net_t* vnet_tt )
-{
-    virt_net_t* vnet = NULL;
-    virt_port_t* port_new;
-    virt_port_list_t* ports = vnet_tt->ports;
-    struct timespec tb;
-    tb.tv_sec = 0;
-    tb.tv_nsec = 0;
-    // create ports
-    while( ports != NULL ) {
-        if( ports->port->state < VPORT_STATE_CONNECTED ) {
-            if( vnet == NULL ) vnet = dgraph_vertex_add_tt( g );
-            port_new = virt_port_create( ports->port->attr_class,
-                    ports->port->attr_mode, vnet_tt, ports->port->name,
-                    ports->port->symb, tb, true );
-            virt_port_append( vnet, port_new );
-            if( ports->port->attr_mode == PORT_MODE_IN ) {
-                port_new = virt_port_create( PORT_CLASS_NONE,
-                        PORT_MODE_OUT, vnet_tt, ports->port->name,
-                        ports->port->symb, tb, true );
-                virt_port_append( vnet, port_new );
-                dgraph_edge_add( g, port_new, ports->port, ports->port->name );
-            }
-            else if( ports->port->attr_mode == PORT_MODE_OUT ) {
-                port_new = virt_port_create( PORT_CLASS_NONE,
-                        PORT_MODE_IN, vnet_tt, ports->port->name,
-                        ports->port->symb, tb, true );
-                virt_port_append( vnet, port_new );
-                dgraph_edge_add( g, ports->port, port_new, ports->port->name );
-            }
-            else if( ports->port->attr_mode == PORT_MODE_BI ) {
-                // it is a side-port connected to a cp-sync
-                // TODO
-            }
-        }
-        // add tt timings to nets
-        ports->port->v_net->
-        ports = ports->next;
-    }
-    if( vnet == NULL ) vnet = vnet_tt; // no open ports, connect clk without fw
-    return vnet;
-}
-
-/******************************************************************************/
-int get_ch_len( virt_port_t* p1, virt_port_t* p2 )
-{
-    if( p1->v_net->type == VNET_SYNC )
-        return p2->symb->attr_port->ch_len;
-    else if( p2->v_net->type == VNET_SYNC )
-        return p1->symb->attr_port->ch_len;
-    else 
-        return max( p1->symb->attr_port->ch_len, p2->symb->attr_port->ch_len );
-}
-
-/******************************************************************************/
-int max( int num1, int num2 )
-{
-    if( num1 > num2 ) return num1;
-    else return num2;
 }

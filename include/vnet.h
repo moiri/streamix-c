@@ -73,7 +73,6 @@ struct virt_net_s
     net_con_t*          con;        /**< connection vector structure */
     virt_port_list_t*   ports;      /**< port list */
     virt_net_type_t     type;       /**< #virt_net_type_e */
-    struct timespec     tt;         /**< ::timespec struct with tt timings */
 };
 
 /**
@@ -99,6 +98,7 @@ struct virt_port_s
     virt_port_state_t   state;      /**< #virt_port_state_e */
     int                 edge_id;    /**< id of the connecting channel */
     struct timespec     tb;         /**< minimal inter-arrival time */
+    int                 ch_len;     /**< length of the channel */
     bool                descoupled; /**< is port decoupled? */
 };
 
@@ -318,11 +318,12 @@ virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t* );
  * @param name          a pointer to the name of the port
  * @param symb          a pointer to the symbol of the port
  * @param tb            time bound of port
- * @param decoupled     iis port decoupled
+ * @param decoupled     is port decoupled
+ * @param ch_len        channel length
  * @return              a pointer to the newly created port
  */
 virt_port_t* virt_port_create( port_class_t, port_mode_t, virt_net_t*,
-        const char*, symrec_t*, struct timespec, bool );
+        const char*, symrec_t*, struct timespec, bool, int );
 
 /**
  * @brief   Create a copy of a virtual port

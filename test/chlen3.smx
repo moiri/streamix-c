@@ -1,0 +1,5 @@
+A1 = box fa( out x )
+A2 = box fa( out x[3] )
+B = box fb( in x[4] )
+
+connect A1.tt[100ms](B)|A2.tt[200ms](B)

@@ -1,0 +1,4 @@
+A = box fa( out x[5] )
+B = box fb( in x[4] )
+
+connect A.B

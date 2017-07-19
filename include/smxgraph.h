@@ -280,6 +280,15 @@ void dgraph_wrap_sync_create( igraph_t*, igraph_vector_ptr_t*, virt_net_t*,
         virt_net_t* );
 
 /**
+ * @brief get the length of a channel given two port pointers
+ *
+ * @param virt_port_t*  pointer to a virtual port
+ * @param virt_port_t*  pointer to a virtual port
+ * @return int          length of the channel between the two ports
+ */
+int get_ch_len( virt_port_t*, virt_port_t* );
+
+/**
  * @brief   check wheather two sync structures can be merged
  *
  * @param v1            pointer to a port list vector
