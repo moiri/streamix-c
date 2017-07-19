@@ -10,6 +10,7 @@
 /* Prologue */
     #include "ast.h"
     #include "defines.h"
+    #include <stdio.h>
     extern int yylex();
     extern void yyerror ( void**, const char* );
 %}
@@ -28,8 +29,8 @@
 };
 /* keywods */
 %token CONNECT TT TB
-%token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC
-%token <ival> BUFLEN TIME_SEC TIME_NSEC
+%token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC BUFLEN
+%token <tval> TIME_SEC TIME_MSEC TIME_USEC TIME_NSEC
 
 /* optional and variable keyword tokens */
 %type <nval> kw_opt_state
@@ -39,6 +40,10 @@
 %type <nval> kw_opt_port_class
 %type <nval> kw_port_mode
 %type <tval> kw_time
+%type <tval> kw_time_sec
+%type <tval> kw_time_msec
+%type <tval> kw_time_usec
+%type <tval> kw_time_nsec
 
 /* idenitifiers */
 %token <sval> IDENTIFIER
@@ -352,24 +357,50 @@ kw_opt_static:
 ;
 
 kw_time:
-    TIME_SEC TIME_NSEC {
-        struct timespec time;
-        time.tv_sec = $1;
-        time.tv_nsec = $2;
-        $$ = time;
+    kw_time_sec kw_time_msec kw_time_usec kw_time_nsec {
+        $$.tv_sec = $1.tv_sec + $2.tv_sec + $3.tv_sec + $4.tv_sec;
+        $$.tv_nsec = $1.tv_nsec + $2.tv_nsec + $3.tv_nsec + $4.tv_nsec;
     }
-|   TIME_SEC {
+;
+
+kw_time_sec:
+    %empty {
         struct timespec time;
-        time.tv_sec = $1;
+        time.tv_sec = 0;
         time.tv_nsec = 0;
         $$ = time;
     }
-|   TIME_NSEC {
+|   TIME_SEC { $$ = $1; }
+;
+
+kw_time_msec:
+    %empty {
         struct timespec time;
         time.tv_sec = 0;
-        time.tv_nsec = $1;
+        time.tv_nsec = 0;
         $$ = time;
     }
+|   TIME_MSEC { $$ = $1; }
+;
+
+kw_time_usec:
+    %empty {
+        struct timespec time;
+        time.tv_sec = 0;
+        time.tv_nsec = 0;
+        $$ = time;
+    }
+|   TIME_USEC { $$ = $1; }
+;
+
+kw_time_nsec:
+    %empty {
+        struct timespec time;
+        time.tv_sec = 0;
+        time.tv_nsec = 0;
+        $$ = time;
+    }
+|   TIME_NSEC { $$ = $1; }
 ;
 
 %%

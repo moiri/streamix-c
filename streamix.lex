@@ -57,29 +57,71 @@ tb              return TB;
 }
     /* time */
 [1-9][0-9]*s {
+                struct timespec time;
                 char *yycopy = strdup( yytext );
                 yycopy[strlen( yycopy ) - 1] = 0;
-                yylval.ival = atoi( yycopy );
+                time.tv_sec = atoi( yycopy );
+                time.tv_nsec = 0;
+                yylval.tval = time;
                 return TIME_SEC;
 }
-[1-9][0-9]{0,2}ms {
+[1-9][0-9]*ms {
+                struct timespec time;
                 char *yycopy = strdup( yytext );
-                yycopy[strlen( yycopy ) - 2] = 0;
-                yylval.ival = atoi( yycopy );
-                yylval.ival *= 1000000;
-                return TIME_NSEC;
+                int len = strlen( yycopy );
+                int digits = 3;
+                int fact = 1000000;
+                yycopy[len - 2] = 0;
+                len -= 2;
+                if( len > digits ) {
+                    time.tv_nsec = atoi( &yycopy[len - digits] ) * fact;
+                    yycopy[len - digits] = 0;
+                    time.tv_sec = atoi( yycopy );
+                }
+                else {
+                    time.tv_nsec = atoi( yycopy ) * fact;
+                    time.tv_sec = 0;
+                }
+                yylval.tval = time;
+                return TIME_MSEC;
 }
-[1-9][0-9]{0,5}us {
+[1-9][0-9]*us {
+                struct timespec time;
                 char *yycopy = strdup( yytext );
-                yycopy[strlen( yycopy ) - 2] = 0;
-                yylval.ival = atoi( yycopy );
-                yylval.ival *= 1000;
-                return TIME_NSEC;
+                int len = strlen( yycopy );
+                int digits = 6;
+                int fact = 1000;
+                yycopy[len - 2] = 0;
+                len -= 2;
+                if( len > digits ) {
+                    time.tv_nsec = atoi( &yycopy[len - digits] ) * fact;
+                    yycopy[len - digits] = 0;
+                    time.tv_sec = atoi( yycopy );
+                }
+                else {
+                    time.tv_nsec = atoi( yycopy ) * fact;
+                    time.tv_sec = 0;
+                }
+                yylval.tval = time;
+                return TIME_USEC;
 }
-[1-9][0-9]{0,8}ns {
+[1-9][0-9]*ns {
+                struct timespec time;
                 char *yycopy = strdup( yytext );
-                yycopy[strlen( yycopy ) - 2] = 0;
-                yylval.ival = atoi( yycopy );
+                int len = strlen( yycopy );
+                int digits = 9;
+                yycopy[len - 2] = 0;
+                len -= 2;
+                if( len > digits ) {
+                    time.tv_nsec = atoi( &yycopy[len - digits] );
+                    yycopy[len - digits] = 0;
+                    time.tv_sec = atoi( yycopy );
+                }
+                else {
+                    time.tv_nsec = atoi( yycopy );
+                    time.tv_sec = 0;
+                }
+                yylval.tval = time;
                 return TIME_NSEC;
 }
 
@@ -95,4 +137,3 @@ tb              return TB;
     /* anything else is an error */
 .               yyerror( NULL, "invalid character" );
 %%
-
