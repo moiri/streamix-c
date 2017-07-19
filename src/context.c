@@ -840,99 +840,6 @@ bool do_port_attrs_match( symrec_list_t* r_ports, virt_port_list_t* v_ports )
 }
 
 /******************************************************************************/
-virt_net_t* virt_net_create_tt_net( igraph_t* g, virt_net_t* vnet_tt,
-        struct timespec freq )
-{
-    virt_net_t* vnet;
-    virt_net_t* vnet_l = NULL;
-    virt_net_t* vnet_r = NULL;
-    virt_port_t* port_new;
-    virt_port_list_t* ports = vnet_tt->ports;
-    struct timespec tb;
-    tb.tv_sec = 0;
-    tb.tv_nsec = 0;
-    // create ports
-    // ports in v_net must all have a class up or down (no side ports ?)
-    while( ports != NULL ) {
-        if( ( ports->port->state < VPORT_STATE_CONNECTED )
-                && ( ports->port->attr_class != PORT_CLASS_SIDE ) ) {
-            // a left opernad must have all ports with class down connected
-            if( ports->port->attr_class == PORT_CLASS_UP ) {
-                if( ports->port->attr_mode == PORT_MODE_IN ) {
-                    if( vnet_l == NULL ) vnet_l = dgraph_vertex_add_tt( g );
-                    port_new = virt_port_create( PORT_CLASS_UP, PORT_MODE_IN,
-                            vnet_l, ports->port->name, ports->port->symb, tb,
-                            true );
-                    virt_port_append( vnet_l, port_new );
-                    port_new = virt_port_create( PORT_CLASS_DOWN, PORT_MODE_OUT,
-                            vnet_l, ports->port->name, ports->port->symb, tb,
-                            true );
-                    virt_port_append( vnet_l, port_new );
-                }
-                else if( ports->port->attr_mode == PORT_MODE_OUT ) {
-                    if( vnet_l == NULL ) vnet_l = dgraph_vertex_add_tt( g );
-                    port_new = virt_port_create( PORT_CLASS_UP, PORT_MODE_OUT,
-                            vnet_l, ports->port->name, ports->port->symb, tb,
-                            true );
-                    virt_port_append( vnet_l, port_new );
-                    port_new = virt_port_create( PORT_CLASS_DOWN, PORT_MODE_IN,
-                            vnet_l, ports->port->name, ports->port->symb, tb,
-                            true );
-                    virt_port_append( vnet_l, port_new );
-                }
-            }
-            else if( ports->port->attr_class == PORT_CLASS_DOWN ) {
-                if( ports->port->attr_mode == PORT_MODE_IN ) {
-                    if( vnet_r == NULL ) vnet_r = dgraph_vertex_add_tt( g );
-                    port_new = virt_port_create( PORT_CLASS_DOWN, PORT_MODE_IN,
-                            vnet_l, ports->port->name, ports->port->symb, tb,
-                            true );
-                    virt_port_append( vnet_l, port_new );
-                    port_new = virt_port_create( PORT_CLASS_UP, PORT_MODE_OUT,
-                            vnet_l, ports->port->name, ports->port->symb, tb,
-                            true );
-                    virt_port_append( vnet_l, port_new );
-                }
-                else if( ports->port->attr_mode == PORT_MODE_OUT ) {
-                    if( vnet_r == NULL ) vnet_r = dgraph_vertex_add_tt( g );
-                    port_new = virt_port_create( PORT_CLASS_DOWN, PORT_MODE_OUT,
-                            vnet_l, ports->port->name, ports->port->symb, tb,
-                            true );
-                    virt_port_append( vnet_l, port_new );
-                    port_new = virt_port_create( PORT_CLASS_UP, PORT_MODE_IN,
-                            vnet_l, ports->port->name, ports->port->symb, tb,
-                            true );
-                    virt_port_append( vnet_l, port_new );
-                }
-            }
-            else {
-                // problem, not allowed for tt systems
-            }
-        }
-        ports = ports->next;
-    }
-    if( vnet_l != NULL ) {
-        port_new = virt_port_create( PORT_CLASS_NONE, PORT_MODE_IN, vnet_l,
-                TEXT_CLK, NULL, freq, false );
-        port_new->state = VPORT_STATE_CONNECTED;
-        vnet = virt_net_create_serial( vnet_l, vnet_tt );
-        virt_net_destroy_shallow( vnet_l );
-        virt_net_destroy_shallow( vnet_tt );
-        vnet_tt = vnet;
-    }
-    if( vnet_l != NULL ) {
-        port_new = virt_port_create( PORT_CLASS_NONE, PORT_MODE_IN, vnet_l,
-                TEXT_CLK, NULL, freq, false );
-        port_new->state = VPORT_STATE_CONNECTED;
-        vnet = virt_net_create_serial( vnet_tt, vnet_r );
-        virt_net_destroy_shallow( vnet_r );
-        virt_net_destroy_shallow( vnet_tt );
-        vnet_tt = vnet;
-    }
-    return vnet_tt;
-}
-
-/******************************************************************************/
 virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
         ast_node_t* ast, igraph_t* g )
 {
@@ -984,8 +891,7 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             break;
         case AST_TT:
             v_net = install_nets( symtab, scope_stack, ast->time->op, g );
-            v_net = virt_net_create_tt_net( g, v_net,
-                    ast->time->time );
+            tt_update_net( v_net, ast->time->time, g );
             break;
         case AST_TB:
             v_net = install_nets( symtab, scope_stack, ast->time->op, g );
@@ -1083,6 +989,65 @@ void post_process( igraph_t* g )
     }
     igraph_eit_destroy( &eit );
     igraph_es_destroy( &es );
+}
+
+/******************************************************************************/
+void tt_update_net( virt_net_t* v_net, struct timespec tt, igraph_t* g )
+{
+    virt_port_list_t* ports = v_net->ports;
+    // create ports
+    while( ports != NULL ) {
+        if( ports->port->state < VPORT_STATE_CONNECTED ) {
+            ports->port->descoupled = true;
+        }
+        // add tt timings to nets
+        dgraph_vertex_add_attr_tt( g, ports->port->v_net->inst->id, tt );
+        ports = ports->next;
+    }
+}
+
+/******************************************************************************/
+virt_net_t* tt_net_create( igraph_t* g, virt_net_t* vnet_tt )
+{
+    virt_net_t* vnet = NULL;
+    virt_port_t* port_new;
+    virt_port_list_t* ports = vnet_tt->ports;
+    struct timespec tb;
+    tb.tv_sec = 0;
+    tb.tv_nsec = 0;
+    // create ports
+    while( ports != NULL ) {
+        if( ports->port->state < VPORT_STATE_CONNECTED ) {
+            if( vnet == NULL ) vnet = dgraph_vertex_add_tt( g );
+            port_new = virt_port_create( ports->port->attr_class,
+                    ports->port->attr_mode, vnet_tt, ports->port->name,
+                    ports->port->symb, tb, true );
+            virt_port_append( vnet, port_new );
+            if( ports->port->attr_mode == PORT_MODE_IN ) {
+                port_new = virt_port_create( PORT_CLASS_NONE,
+                        PORT_MODE_OUT, vnet_tt, ports->port->name,
+                        ports->port->symb, tb, true );
+                virt_port_append( vnet, port_new );
+                dgraph_edge_add( g, port_new, ports->port, ports->port->name );
+            }
+            else if( ports->port->attr_mode == PORT_MODE_OUT ) {
+                port_new = virt_port_create( PORT_CLASS_NONE,
+                        PORT_MODE_IN, vnet_tt, ports->port->name,
+                        ports->port->symb, tb, true );
+                virt_port_append( vnet, port_new );
+                dgraph_edge_add( g, ports->port, port_new, ports->port->name );
+            }
+            else if( ports->port->attr_mode == PORT_MODE_BI ) {
+                // it is a side-port connected to a cp-sync
+                // TODO
+            }
+        }
+        // add tt timings to nets
+        ports->port->v_net->
+        ports = ports->next;
+    }
+    if( vnet == NULL ) vnet = vnet_tt; // no open ports, connect clk without fw
+    return vnet;
 }
 
 /******************************************************************************/

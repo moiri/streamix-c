@@ -10,6 +10,8 @@ graph
     func "fc"
     static 0
     pure 0
+    tts 0
+    ttns 0
   ]
   node
   [
@@ -18,6 +20,8 @@ graph
     func "fb"
     static 0
     pure 0
+    tts 0
+    ttns 0
   ]
   node
   [
@@ -26,6 +30,8 @@ graph
     func "fa"
     static 0
     pure 0
+    tts 0
+    ttns 0
   ]
   edge
   [

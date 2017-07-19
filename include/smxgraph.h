@@ -148,6 +148,15 @@ void dgraph_vertex_add_attr( igraph_t*, int, const char*, symrec_t*,
         virt_net_t*, igraph_t*, bool, bool );
 
 /**
+ * @brief   Add tt timings to a vertex as attribute
+ *
+ * @param g             graph where the vertex resides
+ * @param int           id of the vertex
+ * @param tt            ::timespec structure with timing information
+ */
+void dgraph_vertex_add_attr_tt( igraph_t*, int, struct timespec );
+
+/**
  * @brief   Create a box instance and add it to the graph
  *
  * @param g     graph where the vertex will be added
@@ -225,19 +234,21 @@ void dgraph_vertex_destroy_attr( igraph_t*, int, bool );
 int dgraph_vertex_merge( igraph_t*, int, int );
 
 /**
+ * @brief set the attributes static and tt for all vertices in the child graph
+ *
+ * @param g_in  pointer to the parent graph object
+ * @param g     pointer to the child graph object
+ * @param int   id of a vertex in the parent graph
+ */
+void dgraph_vertex_propagate_attrs( igraph_t*, igraph_t*, int );
+
+/**
  * @brief   remove a vertex from the graph and destroy its attributes
  *
  * @param g     pointer to the dependency graph
  * @param id    vertex id to be removed
  */
 void dgraph_vertex_remove( igraph_t*, int );
-
-/**
- * @brief   set the attribute static to true for all vertices in g
- *
- * @param g pointer to a graph object
- */
-void dgraph_vertex_set_attr_static( igraph_t* g );
 
 /**
  * @brief   decrement the instance id of all vertices in a graph

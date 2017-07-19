@@ -10,6 +10,8 @@ graph
     func "funcX"
     static 0
     pure 0
+    tts 0
+    ttns 0
   ]
   node
   [
@@ -18,6 +20,8 @@ graph
     func "funcZ"
     static 0
     pure 0
+    tts 0
+    ttns 0
   ]
   node
   [
@@ -26,6 +30,8 @@ graph
     func "funcA"
     static 0
     pure 0
+    tts 0
+    ttns 0
   ]
   node
   [
@@ -34,6 +40,8 @@ graph
     func "funcA"
     static 0
     pure 0
+    tts 0
+    ttns 0
   ]
   edge
   [

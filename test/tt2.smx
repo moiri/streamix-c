@@ -1,0 +1,4 @@
+A = box fa( out x )
+B = box fb( in x )
+
+connect A.tt[1s](B)

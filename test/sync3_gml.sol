@@ -10,6 +10,8 @@ graph
     func "A"
     static 0
     pure 0
+    tts 0
+    ttns 0
   ]
   node
   [
@@ -18,6 +20,8 @@ graph
     func "B"
     static 0
     pure 0
+    tts 0
+    ttns 0
   ]
   node
   [
@@ -26,6 +30,8 @@ graph
     func "smx_cp"
     static 0
     pure 0
+    tts 0
+    ttns 0
   ]
   node
   [
@@ -34,6 +40,8 @@ graph
     func "C"
     static 0
     pure 0
+    tts 0
+    ttns 0
   ]
   node
   [
@@ -42,6 +50,8 @@ graph
     func "D"
     static 0
     pure 0
+    tts 0
+    ttns 0
   ]
   edge
   [

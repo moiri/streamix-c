@@ -111,9 +111,20 @@ net_con_t* net_con_create( instrec_t* inst )
 }
 
 /******************************************************************************/
+virt_net_t* virt_net_create()
+{
+    virt_net_t* v_net = malloc( sizeof( struct virt_net_s ) );
+    struct timespec time;
+    time.tv_sec = 0;
+    time.tv_nsec = 0;
+    v_net->tt = time;
+    return v_net;
+}
+
+/******************************************************************************/
 virt_net_t* virt_net_create_box( symrec_t* rec, instrec_t* inst )
 {
-    virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
+    virt_net_t* v_net = virt_net_create();
     v_net->ports = virt_ports_copy_symb( rec->attr_box->ports, v_net, NULL );
     v_net->con = net_con_create( inst );
     v_net->inst = inst;
@@ -129,7 +140,7 @@ virt_net_t* virt_net_create_box( symrec_t* rec, instrec_t* inst )
 /******************************************************************************/
 virt_net_t* virt_net_create_flatten( virt_net_t* v_net_n, instrec_t* inst )
 {
-    virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
+    virt_net_t* v_net = virt_net_create();
     v_net->ports = virt_ports_copy_vnet( v_net_n->ports, v_net, false, true );
     v_net->con = NULL;
     v_net->inst = inst;
@@ -144,7 +155,7 @@ virt_net_t* virt_net_create_flatten( virt_net_t* v_net_n, instrec_t* inst )
 /******************************************************************************/
 virt_net_t* virt_net_create_net( virt_net_t* v_net_n, instrec_t* inst )
 {
-    virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
+    virt_net_t* v_net = virt_net_create();
     v_net->ports = virt_ports_copy_vnet( v_net_n->ports, v_net, true, false );
     v_net->con = net_con_create( inst );
     v_net->inst = inst;
@@ -160,14 +171,14 @@ virt_net_t* virt_net_create_net( virt_net_t* v_net_n, instrec_t* inst )
 virt_net_t* virt_net_create_parallel( virt_net_t* v_net1, virt_net_t* v_net2 )
 {
     virt_port_list_t* ports_tmp = NULL;
-    virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
+    virt_net_t* v_net = virt_net_create();
     v_net->inst = NULL;
     v_net->type = VNET_PARALLEL;
 
     // alter ports
-    ports_tmp = virt_port_assign( v_net1->ports, NULL, NULL );
+    ports_tmp = virt_port_assign( v_net1->ports, NULL );
     if(v_net2 != NULL )
-        v_net->ports = virt_port_assign( v_net2->ports, ports_tmp, NULL );
+        v_net->ports = virt_port_assign( v_net2->ports, ports_tmp );
     else v_net->ports = ports_tmp;
 
     // create connection list
@@ -189,13 +200,13 @@ virt_net_t* virt_net_create_parallel( virt_net_t* v_net1, virt_net_t* v_net2 )
 virt_net_t* virt_net_create_serial( virt_net_t* v_net1, virt_net_t* v_net2 )
 {
     virt_port_list_t* ports_tmp = NULL;
-    virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
+    virt_net_t* v_net = virt_net_create();
     v_net->inst = NULL;
     v_net->type = VNET_SERIAL;
 
     // alter ports
-    ports_tmp = virt_port_assign( v_net1->ports, NULL, NULL );
-    v_net->ports = virt_port_assign( v_net2->ports, ports_tmp, NULL );
+    ports_tmp = virt_port_assign( v_net1->ports, NULL );
+    v_net->ports = virt_port_assign( v_net2->ports, ports_tmp );
 
     // create connection list
     v_net->con = malloc( sizeof( net_con_t ) );
@@ -211,12 +222,12 @@ virt_net_t* virt_net_create_serial( virt_net_t* v_net1, virt_net_t* v_net2 )
 /******************************************************************************/
 virt_net_t* virt_net_create_symbol( virt_net_t* v_net1 )
 {
-    virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
+    virt_net_t* v_net = virt_net_create();
     v_net->inst = NULL;
     v_net->type = VNET_SYMBOL;
 
     // alter ports
-    v_net->ports = virt_port_assign( v_net1->ports, NULL, NULL );
+    v_net->ports = virt_port_assign( v_net1->ports, NULL );
 
     // create connection list
     v_net->con = malloc( sizeof( net_con_t ) );
@@ -232,7 +243,7 @@ virt_net_t* virt_net_create_symbol( virt_net_t* v_net1 )
 /******************************************************************************/
 virt_net_t* virt_net_create_sync( instrec_t* inst )
 {
-    virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
+    virt_net_t* v_net = virt_net_create();
     v_net->ports = NULL;
     v_net->inst = inst;
     v_net->con = NULL;
@@ -247,7 +258,7 @@ virt_net_t* virt_net_create_sync( instrec_t* inst )
 /******************************************************************************/
 virt_net_t* virt_net_create_tt( instrec_t* inst )
 {
-    virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
+    virt_net_t* v_net = virt_net_create();
     v_net->ports = NULL;
     v_net->inst = inst;
     v_net->con = NULL;
@@ -262,7 +273,7 @@ virt_net_t* virt_net_create_tt( instrec_t* inst )
 /******************************************************************************/
 virt_net_t* virt_net_create_wrap( symrec_t* symb, instrec_t* inst )
 {
-    virt_net_t* v_net = malloc( sizeof( virt_net_t ) );
+    virt_net_t* v_net = virt_net_create();
     v_net->ports = virt_ports_copy_symb( symb->attr_wrap->ports, v_net,
             symb->attr_wrap->v_net );
     v_net->con = net_con_create( inst );
@@ -391,7 +402,7 @@ void virt_port_add_time_bound( virt_net_t* v_net, struct timespec tb )
 
 /******************************************************************************/
 virt_port_list_t* virt_port_assign( virt_port_list_t* old,
-        virt_port_list_t* list_last, virt_net_t* v_net  )
+        virt_port_list_t* list_last )
 {
     virt_port_list_t* new_list = NULL;
     virt_port_list_t* old_list = old;
@@ -401,7 +412,6 @@ virt_port_list_t* virt_port_assign( virt_port_list_t* old,
     while( old_list != NULL ) {
         new_list = malloc( sizeof( virt_port_list_t ) );
         new_list->port = old_list->port;
-        if( v_net != NULL ) new_list->port->v_net = v_net;
         new_list->next = list_last;
         new_list->idx = idx;
         idx++;

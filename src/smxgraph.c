@@ -153,9 +153,8 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
             // deep copy child graph to create new instances
             igraph_empty( &g_child, 0, IGRAPH_DIRECTED );
             dgraph_append( &g_child, g_tmp, true );
-            // propagate attribute static
-            if( igraph_cattribute_VAN( &g_in, INST_ATTR_STATIC, inst_id ) )
-                dgraph_vertex_set_attr_static( &g_child );
+            // propagate attributes static and tt
+            dgraph_vertex_propagate_attrs( &g_in, &g_child, inst_id );
             // recoursively flatten further net instances
             dgraph_flatten( g, &g_child );
             dgraph_flatten_net( g, &g_child, v_net_i );
@@ -316,6 +315,15 @@ void dgraph_vertex_add_attr( igraph_t* g, int id, const char* func,
     igraph_cattribute_VAN_set( g, INST_ATTR_GRAPH, id, ( uintptr_t )g_net );
     igraph_cattribute_VAN_set( g, INST_ATTR_STATIC, id, attr_static );
     igraph_cattribute_VAN_set( g, INST_ATTR_PURE, id, attr_pure );
+    igraph_cattribute_VAN_set( g, INST_ATTR_TTS, id, 0 );
+    igraph_cattribute_VAN_set( g, INST_ATTR_TTNS, id, 0 );
+}
+
+/******************************************************************************/
+void dgraph_vertex_add_attr_tt( igraph_t* g, int id, struct timespec tt )
+{
+    igraph_cattribute_VAN_set( g, INST_ATTR_TTS, id, tt.tv_sec );
+    igraph_cattribute_VAN_set( g, INST_ATTR_TTNS, id, tt.tv_nsec );
 }
 
 /******************************************************************************/
@@ -418,6 +426,14 @@ instrec_t* dgraph_vertex_copy( igraph_t* g_src, igraph_t* g_dest, int id,
                 INST_ATTR_PURE ) )
         igraph_cattribute_VAN_set( g_dest, INST_ATTR_PURE, new_id,
             igraph_cattribute_VAN( g_src, INST_ATTR_PURE, id ) );
+    if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
+                INST_ATTR_TTS ) )
+        igraph_cattribute_VAN_set( g_dest, INST_ATTR_TTS, new_id,
+            igraph_cattribute_VAN( g_src, INST_ATTR_TTS, id ) );
+    if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
+                INST_ATTR_TTNS ) )
+        igraph_cattribute_VAN_set( g_dest, INST_ATTR_TTNS, new_id,
+            igraph_cattribute_VAN( g_src, INST_ATTR_TTNS, id ) );
     return inst;
 }
 
@@ -460,6 +476,8 @@ int dgraph_vertex_merge( igraph_t* g, int id1, int id2 )
             INST_ATTR_GRAPH, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
             INST_ATTR_STATIC, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
             INST_ATTR_PURE, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            INST_ATTR_TTS, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            INST_ATTR_TTNS, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
             IGRAPH_NO_MORE_ATTRIBUTES );
     igraph_contract_vertices( g, &v_new, &comb );
     igraph_attribute_combination_destroy( &comb );
@@ -467,6 +485,31 @@ int dgraph_vertex_merge( igraph_t* g, int id1, int id2 )
 
     // id of deleted element
     return id_high;
+}
+
+/******************************************************************************/
+void dgraph_vertex_propagate_attrs( igraph_t* g_in, igraph_t* g, int id )
+{
+    int vid;
+    igraph_vs_t vs;
+    igraph_vit_t vit;
+    int v_static = igraph_cattribute_VAN( g_in, INST_ATTR_STATIC, id );
+    int v_tts = igraph_cattribute_VAN( g_in, INST_ATTR_TTS, id );
+    int v_ttns = igraph_cattribute_VAN( g_in, INST_ATTR_TTNS, id );
+    vs = igraph_vss_all();
+    igraph_vit_create( g, vs, &vit );
+    while( !IGRAPH_VIT_END( vit ) ) {
+        vid = IGRAPH_VIT_GET( vit );
+        if( v_static )
+            igraph_cattribute_VAN_set( g, INST_ATTR_STATIC, vid, v_static );
+        if( v_tts )
+            igraph_cattribute_VAN_set( g, INST_ATTR_TTS, vid, v_tts );
+        if( v_ttns )
+            igraph_cattribute_VAN_set( g, INST_ATTR_TTNS, vid, v_ttns );
+        IGRAPH_VIT_NEXT( vit );
+    }
+    igraph_vit_destroy( &vit );
+    igraph_vs_destroy( &vs );
 }
 
 /******************************************************************************/
@@ -481,22 +524,6 @@ void dgraph_vertex_remove( igraph_t* g, int id )
     igraph_delete_vertices( g, vs );
     igraph_vs_destroy( &vs );
     dgraph_vertex_update_ids( g, id );
-}
-
-/******************************************************************************/
-void dgraph_vertex_set_attr_static( igraph_t* g )
-{
-    igraph_vs_t vs;
-    igraph_vit_t vit;
-    vs = igraph_vss_all();
-    igraph_vit_create( g, vs, &vit );
-    while( !IGRAPH_VIT_END( vit ) ) {
-        igraph_cattribute_VAN_set( g, INST_ATTR_STATIC, IGRAPH_VIT_GET( vit ),
-                true );
-        IGRAPH_VIT_NEXT( vit );
-    }
-    igraph_vit_destroy( &vit );
-    igraph_vs_destroy( &vs );
 }
 
 /******************************************************************************/

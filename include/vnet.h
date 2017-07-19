@@ -73,6 +73,7 @@ struct virt_net_s
     net_con_t*          con;        /**< connection vector structure */
     virt_port_list_t*   ports;      /**< port list */
     virt_net_type_t     type;       /**< #virt_net_type_e */
+    struct timespec     tt;         /**< ::timespec struct with tt timings */
 };
 
 /**
@@ -304,11 +305,9 @@ void virt_port_append_all( virt_net_t*, virt_net_t*, bool );
  *
  * @param old       port list containing the ports to assign
  * @param last_list a pointer to a list which will be chained to the new list
- * @param v_net     if not NULL, assign it to all ports
  * @return          a pointer to the new port list
  */
-virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t*,
-        virt_net_t* );
+virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t* );
 
 /**
  * @brief   Create a new virtual port

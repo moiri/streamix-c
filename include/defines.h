@@ -80,6 +80,8 @@ enum parse_attr_e
 #define INST_ATTR_GRAPH     "igraph"
 #define INST_ATTR_STATIC    "static"
 #define INST_ATTR_PURE      "pure"
+#define INST_ATTR_TTS       "tts"
+#define INST_ATTR_TTNS      "ttns"
 
 #define PORT_ATTR_LABEL     "label"
 #define PORT_ATTR_PSRC      "psrc"
