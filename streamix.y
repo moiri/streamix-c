@@ -28,7 +28,7 @@
     struct timespec    tval;
 };
 /* keywods */
-%token CONNECT TT TB
+%token CONNECT TT TB TF
 %token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC BUFLEN
 %token <tval> TIME_SEC TIME_MSEC TIME_USEC TIME_NSEC
 
@@ -143,10 +143,13 @@ net:
 |   net '!' net { $$ = ast_add_op( $1, $3, AST_PARALLEL_DET ); }
 |   '(' net ')' { $$ = $2; }
 |   TT '[' kw_time ']' '(' net ')' {
-        $$ = ast_add_time( $6, $3, AST_TT );
+        $$ = ast_add_time( $6, $3, AST_TT, @3.last_line );
     }
 |   TB '[' kw_time ']' '(' net ')' {
-        $$ = ast_add_time( $6, $3, AST_TB );
+        $$ = ast_add_time( $6, $3, AST_TB, @3.last_line );
+    }
+|   TF '[' kw_time ']' '(' net ')' {
+        $$ = ast_add_time( $6, $3, AST_TF, @3.last_line );
     }
 ;
 

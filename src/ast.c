@@ -147,12 +147,13 @@ ast_node_t* ast_add_symbol( char* name, int line, id_type_t type )
 
 /******************************************************************************/
 ast_node_t* ast_add_time( ast_node_t* op, struct timespec time,
-        node_type_t type )
+        node_type_t type, int line )
 {
     ast_node_t *node = ast_add_node( type );
     node->time = malloc( sizeof( ast_time_t ) );
     node->time->op = op;
     node->time->time = time;
+    node->time->line = line;
     return node;
 }
 
@@ -231,6 +232,7 @@ void ast_destroy( ast_node_t* ast )
             ast_destroy( ast->port->collection );
             ast_destroy( ast->port->mode );
             ast_destroy( ast->port->coupling );
+            ast_destroy( ast->port->ch_len );
             free( ast->port );
             free( ast );
             break;
@@ -241,7 +243,9 @@ void ast_destroy( ast_node_t* ast )
             free( ast );
             break;
         case AST_PARALLEL:
+        case AST_PARALLEL_DET:
         case AST_SERIAL:
+        case AST_SERIAL_PROP:
             ast_destroy( ast->op->right );
             ast_destroy( ast->op->left );
             free( ast->op );
@@ -256,7 +260,11 @@ void ast_destroy( ast_node_t* ast )
             free( ast->wrap );
             free( ast );
             break;
-        default:
-            ;
+        case AST_TT:
+        case AST_TB:
+        case AST_TF:
+            ast_destroy( ast->time->op );
+            free( ast->time );
+            free( ast );
     }
 }

@@ -10,7 +10,7 @@
 #define DEFINES_H
 
 #ifndef MAKE_TEST
-/* #define DEBUG */
+#define DEBUG
 /* #define DEBUG_INST */
 /* #define DEBUG_SYMB */
 /* #define DEBUG_VNET */

@@ -232,10 +232,10 @@ virt_net_t* virt_net_create_sync( instrec_t* );
 /**
  * @breif   Create a virtual net of a time triggered guard
  *
- * @param inst  pointer to the instance of the copy synchronizer
- * @return      pointer to the newly created virtual net
+ * @param inst      pointer to the instance of the copy synchronizer
+ * @return          pointer to the newly created virtual net
  */
-virt_net_t* virt_net_create_tt( instrec_t* );
+virt_net_t* virt_net_create_tf( instrec_t* );
 
 /**
  * @brief   Create a new virtual net out of virtial net of a wrapper

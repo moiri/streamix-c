@@ -187,10 +187,10 @@ virt_net_t* dgraph_vertex_add_sync( igraph_t* );
 /**
  * @brief   Create a time triggered guard instance and add it to the graph
  *
- * @param g     graph where the vertex will be added
- * @return      the virtual net of the tt guard instance
+ * @param g         graph where the vertex will be added
+ * @return          the virtual net of the tt guard instance
  */
-virt_net_t* dgraph_vertex_add_tt( igraph_t* );
+virt_net_t* dgraph_vertex_add_tf( igraph_t* );
 
 /**
  * @brief   Create a wrapper instance and add it to the graph

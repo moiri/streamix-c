@@ -143,7 +143,7 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
                 port_mode = port1->attr_mode;
             else port_mode = PORT_MODE_BI;
             v_net_sync = dgraph_vertex_add_sync( g );
-            // channel length is set to one: the connecting box port might
+            // channel length is set to zero: the connecting box port might
             // overwrite this due to the max function
             port_new = virt_port_create( port_class, port_mode, v_net_sync,
                     port1->name, port1->symb, tb, false, 0 );
@@ -895,6 +895,16 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             v_net = install_nets( symtab, scope_stack, ast->time->op, g );
             tt_update_net( v_net, ast->time->time, g );
             break;
+        case AST_TF:
+            v_net1 = install_nets( symtab, scope_stack, ast->time->op, g );
+            v_net = tf_create_net( g, v_net1, ast->time->time );
+            if( v_net == NULL ) {
+                // no temporal firewall introduced
+                sprintf( error_msg, WARNING_NO_TF, ERR_WARNING );
+                report_yyerror( error_msg, ast->time->line );
+                v_net = v_net1;
+            }
+            break;
         case AST_TB:
             v_net = install_nets( symtab, scope_stack, ast->time->op, g );
             virt_port_add_time_bound( v_net, ast->time->time );
@@ -909,15 +919,18 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
                 case SYMREC_BOX:
                     v_net = dgraph_vertex_add_box( g, rec, ast->symbol->line );
                     v_net = virt_net_create_symbol( v_net );
+                    /* virt_net_destroy_shallow( v_net1 ); */
                     check_connections_self( g, v_net );
                     break;
                 case SYMREC_NET:
                     v_net = dgraph_vertex_add_net( g, rec, ast->symbol->line );
                     v_net = virt_net_create_symbol( v_net );
+                    /* virt_net_destroy_shallow( v_net1 ); */
                     break;
                 case SYMREC_WRAP:
                     v_net = dgraph_vertex_add_wrap( g, rec, ast->symbol->line );
                     v_net = virt_net_create_symbol( v_net );
+                    /* virt_net_destroy_shallow( v_net1 ); */
                     check_connections_self( g, v_net );
                     break;
                 case SYMREC_NET_PROTO:
@@ -974,6 +987,57 @@ void post_process( igraph_t* g )
 }
 
 /******************************************************************************/
+virt_net_t* tf_create_net( igraph_t* g, virt_net_t* vnet_tt,
+        struct timespec tt )
+{
+    virt_net_t* vnet = NULL;
+    virt_port_t* port_new;
+    virt_port_list_t* ports = vnet_tt->ports;
+    struct timespec tb;
+    tb.tv_sec = 0;
+    tb.tv_nsec = 0;
+    // create ports
+    while( ports != NULL ) {
+        if( ports->port->state < VPORT_STATE_CONNECTED ) {
+            if( vnet == NULL ) vnet = dgraph_vertex_add_tf( g );
+            ports->port->ch_len = 0;
+            port_new = virt_port_create( ports->port->attr_class,
+                    ports->port->attr_mode, vnet, ports->port->name,
+                    ports->port->symb, tb, true, 0 );
+            virt_port_append( vnet, port_new );
+            if( ports->port->attr_mode == PORT_MODE_IN ) {
+                port_new = virt_port_create( PORT_CLASS_NONE,
+                        PORT_MODE_OUT, vnet, ports->port->name,
+                        ports->port->symb, tb, true, 0 );
+                virt_port_append( vnet, port_new );
+                dgraph_edge_add( g, port_new, ports->port, ports->port->name );
+                ports->port->state = VPORT_STATE_CONNECTED;
+                port_new->state = VPORT_STATE_CONNECTED;
+            }
+            else if( ports->port->attr_mode == PORT_MODE_OUT ) {
+                port_new = virt_port_create( PORT_CLASS_NONE,
+                        PORT_MODE_IN, vnet, ports->port->name,
+                        ports->port->symb, tb, true, 0 );
+                virt_port_append( vnet, port_new );
+                dgraph_edge_add( g, ports->port, port_new, ports->port->name );
+                ports->port->state = VPORT_STATE_CONNECTED;
+                port_new->state = VPORT_STATE_CONNECTED;
+            }
+            else if( ports->port->attr_mode == PORT_MODE_BI ) {
+                // it is a side-port connected to a cp-sync
+                printf("what to do with tf and side-port cp-syncs?\n");
+            }
+        }
+        ports = ports->next;
+    }
+    if( vnet != NULL ) {
+        dgraph_vertex_add_attr_tt( g, vnet->inst->id, tt ); // add clock
+        vnet = virt_net_create_symbol( vnet );
+    }
+    return vnet;
+}
+
+/******************************************************************************/
 void tt_update_net( virt_net_t* v_net, struct timespec tt, igraph_t* g )
 {
     int vid;
@@ -992,3 +1056,4 @@ void tt_update_net( virt_net_t* v_net, struct timespec tt, igraph_t* g )
         ports = ports->next;
     }
 }
+

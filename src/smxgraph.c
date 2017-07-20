@@ -364,11 +364,11 @@ virt_net_t* dgraph_vertex_add_sync( igraph_t* g )
 }
 
 /******************************************************************************/
-virt_net_t* dgraph_vertex_add_tt( igraph_t* g )
+virt_net_t* dgraph_vertex_add_tf( igraph_t* g )
 {
     int id = dgraph_vertex_add( g, TEXT_TT );
     instrec_t* inst = instrec_create( TEXT_TT, id, -1, INSTREC_TT );
-    virt_net_t* v_net = virt_net_create_tt( inst );
+    virt_net_t* v_net = virt_net_create_tf( inst );
     dgraph_vertex_add_attr( g, id, TEXT_TT, NULL, v_net, NULL, false, false );
     return v_net;
 }

@@ -49,6 +49,7 @@ decoupled       {yylval.ival = PARSE_ATTR_DECOUPLED;return DECOUPLED;}
 static          {yylval.ival = PARSE_ATTR_STATIC;return STATIC;}
 tt              return TT;
 tb              return TB;
+tf              return TF;
 
     /* identifiers */
 [a-zA-Z_$][a-zA-Z_$0-9]* {
@@ -63,6 +64,7 @@ tb              return TB;
                 time.tv_sec = atoi( yycopy );
                 time.tv_nsec = 0;
                 yylval.tval = time;
+                free( yycopy );
                 return TIME_SEC;
 }
 [1-9][0-9]*ms {
@@ -83,6 +85,7 @@ tb              return TB;
                     time.tv_sec = 0;
                 }
                 yylval.tval = time;
+                free( yycopy );
                 return TIME_MSEC;
 }
 [1-9][0-9]*us {
@@ -103,6 +106,7 @@ tb              return TB;
                     time.tv_sec = 0;
                 }
                 yylval.tval = time;
+                free( yycopy );
                 return TIME_USEC;
 }
 [1-9][0-9]*ns {
@@ -122,6 +126,7 @@ tb              return TB;
                     time.tv_sec = 0;
                 }
                 yylval.tval = time;
+                free( yycopy );
                 return TIME_NSEC;
 }
 

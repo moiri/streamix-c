@@ -78,5 +78,8 @@ void report_yyerror( const char*, int );
 #define WARNING_ALTER_CLASS\
     "%s: port class of port '%s' in '%s'(%d) changed from '%s' to '%s'"
 
+#define WARNING_NO_TF\
+    "%s: net has no open ports, operator 'tf' has no effect"
+
 #endif // ERROR_H
 

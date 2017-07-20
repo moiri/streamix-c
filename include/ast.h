@@ -88,6 +88,7 @@ enum node_type_e
     AST_SYNCS,
     AST_TB,
     AST_TT,
+    AST_TF,
     AST_WRAP,
     AST_ATTR,
     AST_ID
@@ -230,7 +231,8 @@ struct ast_prot_s
  */
 struct ast_time_s
 {
-    ast_node_t*  op;        /**< ::ast_symb_t */
+    int             line;   /**< the line number of the operation */
+    ast_node_t*     op;     /**< ::ast_symb_t */
     struct timespec time;   /**< ::ast_attr_t, ferquency of the clock */
 };
 
@@ -369,9 +371,10 @@ ast_node_t* ast_add_symbol( char*, int, id_type_t );
  * @param op    a pointer to the operand
  * @param freq  the ferquency of the time trigered structure
  *              or the inter-arrival-time, depending on the type
- * @param type  AST_TT or AST_TB
+ * @param type  AST_TT or AST_TB or AST_TF
+ * @param line  line number of the operator
  */
-ast_node_t* ast_add_time( ast_node_t*, struct timespec, node_type_t );
+ast_node_t* ast_add_time( ast_node_t*, struct timespec, node_type_t, int );
 
 /**
  * @brief   Add a wrapper declaration to the AST.

@@ -252,13 +252,15 @@ virt_net_t* virt_net_create_sync( instrec_t* inst )
 }
 
 /******************************************************************************/
-virt_net_t* virt_net_create_tt( instrec_t* inst )
+virt_net_t* virt_net_create_tf( instrec_t* inst )
 {
     virt_net_t* v_net = virt_net_create();
     v_net->ports = NULL;
     v_net->inst = inst;
-    v_net->con = NULL;
     v_net->type = VNET_TT;
+
+    // create connection list
+    v_net->con = net_con_create( inst );
 #if defined(DEBUG) || defined(DEBUG_VNET)
     printf( "virt_net_create_tt:\n %s(%d): ", inst->name, inst->id );
     debug_print_vports( v_net );
@@ -434,6 +436,7 @@ virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
     new_port->tb = tb;
     new_port->descoupled = decoupled;
     new_port->ch_len = ch_len;
+    new_port->edge_id = 0;
 
     return new_port;
 }

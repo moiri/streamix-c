@@ -34,6 +34,7 @@ char* node_label[] =
     "sync",
     "tb",
     "tt",
+    "tf",
     "wrapper decl"
 };
 char* mode_label[] = {
