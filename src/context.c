@@ -1032,7 +1032,10 @@ virt_net_t* tf_create_net( igraph_t* g, virt_net_t* vnet_tt,
     }
     if( vnet != NULL ) {
         dgraph_vertex_add_attr_tt( g, vnet->inst->id, tt ); // add clock
+        // create a wrapping vnet for the temporal firewall
         vnet = virt_net_create_symbol( vnet );
+        // remove the wrapping vnet of the guarded vnet
+        virt_net_destroy_shallow( vnet_tt );
     }
     return vnet;
 }
