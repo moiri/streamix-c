@@ -27,9 +27,9 @@ void smx2sia( igraph_t* g, sia_t** smx_symbs, sia_t** desc_symbs )
     while( !IGRAPH_VIT_END( vit ) ) {
         vid = IGRAPH_VIT_GET( vit );
         net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
-                INST_ATTR_VNET, vid );
-        impl_name = igraph_cattribute_VAS( g, INST_ATTR_FUNC, vid );
-        name = igraph_cattribute_VAS( g, INST_ATTR_LABEL, vid );
+                GV_VNET, vid );
+        impl_name = igraph_cattribute_VAS( g, GV_IMPL, vid );
+        name = igraph_cattribute_VAS( g, GV_LABEL, vid );
         ports = net->ports;
         if( net->type == VNET_BOX ) {
             // only consider boxes, the rest is dependant on the runtime system
@@ -78,8 +78,8 @@ void smx2sia_set_name_box( sia_t* sia, const char* box_name,
     sprintf( smx_name, "%s%s%s%s%d", box_name, SIA_BOX_INFIX, impl_name,
             SIA_BOX_INFIX, id );
     sia->smx_name = smx_name;
-    igraph_cattribute_GAS_set( &sia->g, GRAPH_ATTR_SIA, vsmx_id );
-    igraph_cattribute_GAS_set( &sia->g, GRAPH_ATTR_NAME, box_name );
+    igraph_cattribute_GAS_set( &sia->g, GG_SIA, vsmx_id );
+    igraph_cattribute_GAS_set( &sia->g, GG_NAME, box_name );
     free( vsmx_id );
 }
 

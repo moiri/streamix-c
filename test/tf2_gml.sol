@@ -26,8 +26,8 @@ graph
   node
   [
     id 2
-    label "smx_tt"
-    func "smx_tt"
+    label "smx_tf"
+    func "smx_tf"
     static 0
     pure 0
     tts 1

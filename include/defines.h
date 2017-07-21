@@ -9,6 +9,8 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+#include "graph_defines.h"
+
 #ifndef MAKE_TEST
 #define DEBUG
 /* #define DEBUG_INST */
@@ -66,36 +68,8 @@ enum parse_attr_e
     PARSE_ATTR_NET
 };
 
-#define TEXT_CP         "smx_cp"
-#define TEXT_TT         "smx_tt"
-#define TEXT_CLK        "smx_clk"
-#define TEXT_NULL       "smx_null"
 #define SIA_BOX_INFIX   "_"
 #define SIA_PORT_INFIX  "_"
-
-#define INST_ATTR_LABEL     "label"
-#define INST_ATTR_FUNC      "func"
-#define INST_ATTR_SYMB      "symb"
-#define INST_ATTR_VNET      "vnet"
-#define INST_ATTR_GRAPH     "igraph"
-#define INST_ATTR_STATIC    "static"
-#define INST_ATTR_PURE      "pure"
-#define INST_ATTR_TTS       "tts"
-#define INST_ATTR_TTNS      "ttns"
-
-#define PORT_ATTR_LABEL     "label"
-#define PORT_ATTR_PSRC      "psrc"
-#define PORT_ATTR_PDST      "pdst"
-#define PORT_ATTR_DSRC      "dsrc"
-#define PORT_ATTR_DDST      "ddst"
-#define PORT_ATTR_NSRC      "nsrc"
-#define PORT_ATTR_NDST      "ndst"
-#define CH_ATTR_LEN         "len"
-#define PORT_ATTR_TBS       "tbs"
-#define PORT_ATTR_TBNS      "tbns"
-
-#define GRAPH_ATTR_SIA      "sia"
-#define GRAPH_ATTR_NAME     "name"
 
 #define PORT_CLASS_NONE_STR "none"
 #define PORT_CLASS_SIDE_STR "side"

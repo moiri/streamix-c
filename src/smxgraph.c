@@ -41,9 +41,9 @@ void dgraph_append( igraph_t* g, igraph_t* g_tpl, bool deep )
         id_edge = IGRAPH_EIT_GET( eit );
         igraph_edge( g_tpl, IGRAPH_EIT_GET( eit ), &id_from, &id_to );
         p_src = dgraph_port_search_neighbour( g_tpl, g, id_edge,
-                inst_map[ id_from ]->id, PORT_ATTR_PSRC );
+                inst_map[ id_from ]->id, GE_PSRC );
         p_dest = dgraph_port_search_neighbour( g_tpl, g, id_edge,
-                inst_map[ id_to ]->id, PORT_ATTR_PDST );
+                inst_map[ id_to ]->id, GE_PDST );
         name = p_src->name;
         if( p_dest->v_net->inst->type != INSTREC_SYNC ) name = p_dest->name;
         dgraph_edge_add( g, p_src, p_dest, name );
@@ -68,22 +68,22 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
             p_dest->v_net->inst->id );
 #endif // DEBUG
     igraph_add_edge( g, p_src->v_net->inst->id, p_dest->v_net->inst->id );
-    igraph_cattribute_EAS_set( g, PORT_ATTR_LABEL, id, name );
-    igraph_cattribute_EAN_set( g, PORT_ATTR_PSRC, id, ( uintptr_t )p_src );
-    igraph_cattribute_EAN_set( g, PORT_ATTR_PDST, id, ( uintptr_t )p_dest );
+    igraph_cattribute_EAS_set( g, GE_LABEL, id, name );
+    igraph_cattribute_EAN_set( g, GE_PSRC, id, ( uintptr_t )p_src );
+    igraph_cattribute_EAN_set( g, GE_PDST, id, ( uintptr_t )p_dest );
     if( p_src->symb->attr_port->alt_name != NULL )
         alt_name = p_src->symb->attr_port->alt_name;
-    igraph_cattribute_EAS_set( g, PORT_ATTR_NSRC, id, alt_name );
+    igraph_cattribute_EAS_set( g, GE_NSRC, id, alt_name );
     alt_name = TEXT_NULL;
     if( p_dest->symb->attr_port->alt_name != NULL )
         alt_name = p_dest->symb->attr_port->alt_name;
-    igraph_cattribute_EAS_set( g, PORT_ATTR_NDST, id, alt_name );
-    igraph_cattribute_EAN_set( g, PORT_ATTR_DSRC, id, p_src->descoupled );
-    igraph_cattribute_EAN_set( g, PORT_ATTR_DDST, id, p_dest->descoupled );
+    igraph_cattribute_EAS_set( g, GE_NDST, id, alt_name );
+    igraph_cattribute_EAN_set( g, GE_DSRC, id, p_src->descoupled );
+    igraph_cattribute_EAN_set( g, GE_DDST, id, p_dest->descoupled );
     ch_len = get_ch_len( p_dest, p_src );
-    igraph_cattribute_EAN_set( g, CH_ATTR_LEN, id, ch_len );
-    igraph_cattribute_EAN_set( g, PORT_ATTR_TBS, id, p_dest->tb.tv_sec );
-    igraph_cattribute_EAN_set( g, PORT_ATTR_TBNS, id, p_dest->tb.tv_nsec );
+    igraph_cattribute_EAN_set( g, GE_LEN, id, ch_len );
+    igraph_cattribute_EAN_set( g, GE_TBS, id, p_dest->tb.tv_sec );
+    igraph_cattribute_EAN_set( g, GE_TBNS, id, p_dest->tb.tv_nsec );
     return id;
 }
 
@@ -105,11 +105,11 @@ void dgraph_destroy_attr( igraph_t* g )
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
 
-    dgraph_destroy_attr_v( g, INST_ATTR_SYMB );
-    dgraph_destroy_attr_v( g, INST_ATTR_GRAPH );
-    dgraph_destroy_attr_v( g, INST_ATTR_VNET );
-    dgraph_destroy_attr_e( g, PORT_ATTR_PDST );
-    dgraph_destroy_attr_e( g, PORT_ATTR_PSRC );
+    dgraph_destroy_attr_v( g, GV_SYMB );
+    dgraph_destroy_attr_v( g, GV_GRAPH );
+    dgraph_destroy_attr_v( g, GV_VNET );
+    dgraph_destroy_attr_e( g, GE_PDST );
+    dgraph_destroy_attr_e( g, GE_PSRC );
 }
 
 /******************************************************************************/
@@ -142,14 +142,14 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
     while( !IGRAPH_VIT_END( vit ) ) {
         inst_id = IGRAPH_VIT_GET( vit );
         v_net_i = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
-                INST_ATTR_VNET, inst_id );
+                GV_VNET, inst_id );
         if( ( v_net_i->type == VNET_NET ) || ( v_net_i->type == VNET_WRAP ) ) {
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
             printf( "\nFlatten instance '%s(%d)' start\n", v_net_i->inst->name,
                     v_net_i->inst->id );
 #endif // DEBUG_FLATTEN_GRAPH
             g_tmp = ( igraph_t* )( uintptr_t )igraph_cattribute_VAN( &g_in,
-                    INST_ATTR_GRAPH, inst_id );
+                    GV_GRAPH, inst_id );
             if( igraph_vcount( g_tmp ) == 0 ) {
                 // something went wrong
                 IGRAPH_VIT_NEXT( vit );
@@ -208,9 +208,9 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, virt_net_t* v_net )
         done[eid] = true;
         igraph_edge( g_new, eid, &id_from, &id_to );
         p_src = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g_new,
-                PORT_ATTR_PSRC, IGRAPH_EIT_GET( eit ) );
+                GE_PSRC, IGRAPH_EIT_GET( eit ) );
         p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g_new,
-                PORT_ATTR_PDST, IGRAPH_EIT_GET( eit ) );
+                GE_PDST, IGRAPH_EIT_GET( eit ) );
         // get id of the non net end of the edge
         port = p_src;
         port_net = p_dest;
@@ -247,7 +247,7 @@ virt_port_t* dgraph_port_search_neighbour( igraph_t* g, igraph_t* g_new,
     virt_port_t* port = ( virt_port_t* )( uintptr_t )igraph_cattribute_EAN( g,
             attr, id_edge );
     v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g_new,
-            INST_ATTR_VNET, id_inst );
+            GV_VNET, id_inst );
 #if defined(DEBUG) || defined(DEBUG_SEARCH_PORT)
     printf( "dgraph_port_search_neighbour: Search port " );
     debug_print_vport( port );
@@ -275,7 +275,7 @@ virt_port_t* dgraph_port_search_child( igraph_t* g, virt_port_t* port )
     while( !IGRAPH_VIT_END( vit ) ) {
         id_inst = IGRAPH_VIT_GET( vit );
         v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
-                INST_ATTR_VNET, id_inst );
+                GV_VNET, id_inst );
 #if defined(DEBUG) || defined(DEBUG_SEARCH_PORT_CHILD)
         printf( " in virtual net: " );
         debug_print_vports( v_net );
@@ -300,7 +300,7 @@ int dgraph_vertex_add( igraph_t* g, const char* name )
 {
     int id = igraph_vcount( g );
     igraph_add_vertices( g, 1, NULL );
-    igraph_cattribute_VAS_set( g, INST_ATTR_LABEL, id, name );
+    igraph_cattribute_VAS_set( g, GV_LABEL, id, name );
 #if defined(DEBUG) || defined(DEBUG_CONNECT_GRAPH)
     printf( "dgraph_vertex_add: '%s(%d)'\n", name, id );
 #endif // DEBUG
@@ -314,21 +314,21 @@ void dgraph_vertex_add_attr( igraph_t* g, int id, const char* func,
 {
     const char* f_name = TEXT_NULL;
     if( func != NULL ) f_name = func;
-    igraph_cattribute_VAS_set( g, INST_ATTR_FUNC, id, f_name );
-    igraph_cattribute_VAN_set( g, INST_ATTR_SYMB, id, ( uintptr_t )symb );
-    igraph_cattribute_VAN_set( g, INST_ATTR_VNET, id, ( uintptr_t )v_net );
-    igraph_cattribute_VAN_set( g, INST_ATTR_GRAPH, id, ( uintptr_t )g_net );
-    igraph_cattribute_VAN_set( g, INST_ATTR_STATIC, id, attr_static );
-    igraph_cattribute_VAN_set( g, INST_ATTR_PURE, id, attr_pure );
-    igraph_cattribute_VAN_set( g, INST_ATTR_TTS, id, 0 );
-    igraph_cattribute_VAN_set( g, INST_ATTR_TTNS, id, 0 );
+    igraph_cattribute_VAS_set( g, GV_IMPL, id, f_name );
+    igraph_cattribute_VAN_set( g, GV_SYMB, id, ( uintptr_t )symb );
+    igraph_cattribute_VAN_set( g, GV_VNET, id, ( uintptr_t )v_net );
+    igraph_cattribute_VAN_set( g, GV_GRAPH, id, ( uintptr_t )g_net );
+    igraph_cattribute_VAN_set( g, GV_STATIC, id, attr_static );
+    igraph_cattribute_VAN_set( g, GV_PURE, id, attr_pure );
+    igraph_cattribute_VAN_set( g, GV_TTS, id, 0 );
+    igraph_cattribute_VAN_set( g, GV_TTNS, id, 0 );
 }
 
 /******************************************************************************/
 void dgraph_vertex_add_attr_tt( igraph_t* g, int id, struct timespec tt )
 {
-    igraph_cattribute_VAN_set( g, INST_ATTR_TTS, id, tt.tv_sec );
-    igraph_cattribute_VAN_set( g, INST_ATTR_TTNS, id, tt.tv_nsec );
+    igraph_cattribute_VAN_set( g, GV_TTS, id, tt.tv_sec );
+    igraph_cattribute_VAN_set( g, GV_TTNS, id, tt.tv_nsec );
 }
 
 /******************************************************************************/
@@ -366,10 +366,10 @@ virt_net_t* dgraph_vertex_add_sync( igraph_t* g )
 /******************************************************************************/
 virt_net_t* dgraph_vertex_add_tf( igraph_t* g )
 {
-    int id = dgraph_vertex_add( g, TEXT_TT );
-    instrec_t* inst = instrec_create( TEXT_TT, id, -1, INSTREC_TT );
+    int id = dgraph_vertex_add( g, TEXT_TF );
+    instrec_t* inst = instrec_create( TEXT_TF, id, -1, INSTREC_TT );
     virt_net_t* v_net = virt_net_create_tf( inst );
-    dgraph_vertex_add_attr( g, id, TEXT_TT, NULL, v_net, NULL, false, false );
+    dgraph_vertex_add_attr( g, id, TEXT_TF, NULL, v_net, NULL, false, false );
     return v_net;
 }
 
@@ -393,7 +393,7 @@ instrec_t* dgraph_vertex_copy( igraph_t* g_src, igraph_t* g_dest, int id,
     instrec_t *inst;
     // get old inst
     v_net = ( virt_net_t* )( uintptr_t ) igraph_cattribute_VAN( g_src,
-            INST_ATTR_VNET, id );
+            GV_VNET, id );
     inst = v_net->inst;
     // add new vertex
     new_id = dgraph_vertex_add( g_dest, inst->name );
@@ -403,42 +403,42 @@ instrec_t* dgraph_vertex_copy( igraph_t* g_src, igraph_t* g_dest, int id,
         v_net = virt_net_create_flatten( v_net, inst );
     }
     else inst->id = new_id;
-    igraph_cattribute_VAN_set( g_dest, INST_ATTR_VNET, new_id,
+    igraph_cattribute_VAN_set( g_dest, GV_VNET, new_id,
             ( uintptr_t )v_net );
 #if defined(DEBUG) || defined(DEBUG_FLATTEN_GRAPH)
     printf( "dgraph_vertex_copy: '%s(%d->%d)'\n", inst->name, id, new_id );
 #endif // DEBUG_FLATTEN_GRAPH
     // add attr 'function name' if it exists
     if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
-                INST_ATTR_FUNC ) )
-        igraph_cattribute_VAS_set( g_dest, INST_ATTR_FUNC, new_id,
-            igraph_cattribute_VAS( g_src, INST_ATTR_FUNC, id ) );
+                GV_IMPL ) )
+        igraph_cattribute_VAS_set( g_dest, GV_IMPL, new_id,
+            igraph_cattribute_VAS( g_src, GV_IMPL, id ) );
     // add attr 'symbol' if it exists
     if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
-                INST_ATTR_SYMB ) )
-        igraph_cattribute_VAN_set( g_dest, INST_ATTR_SYMB, new_id,
-            igraph_cattribute_VAN( g_src, INST_ATTR_SYMB, id ) );
+                GV_SYMB ) )
+        igraph_cattribute_VAN_set( g_dest, GV_SYMB, new_id,
+            igraph_cattribute_VAN( g_src, GV_SYMB, id ) );
     // add attr 'graph' if it exists
     if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
-                INST_ATTR_GRAPH ) )
-        igraph_cattribute_VAN_set( g_dest, INST_ATTR_GRAPH, new_id,
-            igraph_cattribute_VAN( g_src, INST_ATTR_GRAPH, id ) );
+                GV_GRAPH ) )
+        igraph_cattribute_VAN_set( g_dest, GV_GRAPH, new_id,
+            igraph_cattribute_VAN( g_src, GV_GRAPH, id ) );
     if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
-                INST_ATTR_STATIC ) )
-        igraph_cattribute_VAN_set( g_dest, INST_ATTR_STATIC, new_id,
-            igraph_cattribute_VAN( g_src, INST_ATTR_STATIC, id ) );
+                GV_STATIC ) )
+        igraph_cattribute_VAN_set( g_dest, GV_STATIC, new_id,
+            igraph_cattribute_VAN( g_src, GV_STATIC, id ) );
     if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
-                INST_ATTR_PURE ) )
-        igraph_cattribute_VAN_set( g_dest, INST_ATTR_PURE, new_id,
-            igraph_cattribute_VAN( g_src, INST_ATTR_PURE, id ) );
+                GV_PURE ) )
+        igraph_cattribute_VAN_set( g_dest, GV_PURE, new_id,
+            igraph_cattribute_VAN( g_src, GV_PURE, id ) );
     if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
-                INST_ATTR_TTS ) )
-        igraph_cattribute_VAN_set( g_dest, INST_ATTR_TTS, new_id,
-            igraph_cattribute_VAN( g_src, INST_ATTR_TTS, id ) );
+                GV_TTS ) )
+        igraph_cattribute_VAN_set( g_dest, GV_TTS, new_id,
+            igraph_cattribute_VAN( g_src, GV_TTS, id ) );
     if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
-                INST_ATTR_TTNS ) )
-        igraph_cattribute_VAN_set( g_dest, INST_ATTR_TTNS, new_id,
-            igraph_cattribute_VAN( g_src, INST_ATTR_TTNS, id ) );
+                GV_TTNS ) )
+        igraph_cattribute_VAN_set( g_dest, GV_TTNS, new_id,
+            igraph_cattribute_VAN( g_src, GV_TTNS, id ) );
     return inst;
 }
 
@@ -448,7 +448,7 @@ void dgraph_vertex_destroy_attr( igraph_t* g, int id, bool deep )
     virt_net_t* v_net;
 
     v_net = ( virt_net_t* )( uintptr_t ) igraph_cattribute_VAN( g,
-            INST_ATTR_VNET, id );
+            GV_VNET, id );
     virt_net_destroy( v_net, deep );
 }
 
@@ -474,15 +474,15 @@ int dgraph_vertex_merge( igraph_t* g, int id1, int id2 )
         }
     }
     igraph_attribute_combination( &comb,
-            INST_ATTR_LABEL, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
-            INST_ATTR_FUNC, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
-            INST_ATTR_SYMB, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
-            INST_ATTR_VNET, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
-            INST_ATTR_GRAPH, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
-            INST_ATTR_STATIC, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
-            INST_ATTR_PURE, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
-            INST_ATTR_TTS, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
-            INST_ATTR_TTNS, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            GV_LABEL, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            GV_IMPL, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            GV_SYMB, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            GV_VNET, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            GV_GRAPH, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            GV_STATIC, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            GV_PURE, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            GV_TTS, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            GV_TTNS, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
             IGRAPH_NO_MORE_ATTRIBUTES );
     igraph_contract_vertices( g, &v_new, &comb );
     igraph_attribute_combination_destroy( &comb );
@@ -498,19 +498,19 @@ void dgraph_vertex_propagate_attrs( igraph_t* g_in, igraph_t* g, int id )
     int vid;
     igraph_vs_t vs;
     igraph_vit_t vit;
-    int v_static = igraph_cattribute_VAN( g_in, INST_ATTR_STATIC, id );
-    int v_tts = igraph_cattribute_VAN( g_in, INST_ATTR_TTS, id );
-    int v_ttns = igraph_cattribute_VAN( g_in, INST_ATTR_TTNS, id );
+    int v_static = igraph_cattribute_VAN( g_in, GV_STATIC, id );
+    int v_tts = igraph_cattribute_VAN( g_in, GV_TTS, id );
+    int v_ttns = igraph_cattribute_VAN( g_in, GV_TTNS, id );
     vs = igraph_vss_all();
     igraph_vit_create( g, vs, &vit );
     while( !IGRAPH_VIT_END( vit ) ) {
         vid = IGRAPH_VIT_GET( vit );
         if( v_static )
-            igraph_cattribute_VAN_set( g, INST_ATTR_STATIC, vid, v_static );
+            igraph_cattribute_VAN_set( g, GV_STATIC, vid, v_static );
         if( v_tts )
-            igraph_cattribute_VAN_set( g, INST_ATTR_TTS, vid, v_tts );
+            igraph_cattribute_VAN_set( g, GV_TTS, vid, v_tts );
         if( v_ttns )
-            igraph_cattribute_VAN_set( g, INST_ATTR_TTNS, vid, v_ttns );
+            igraph_cattribute_VAN_set( g, GV_TTNS, vid, v_ttns );
         IGRAPH_VIT_NEXT( vit );
     }
     igraph_vit_destroy( &vit );
@@ -538,7 +538,7 @@ void dgraph_vertex_update_ids( igraph_t* g, int id_start )
     virt_net_t *v_net;
     for( id = id_start; id < igraph_vcount( g ); id++ ) {
         v_net = ( virt_net_t* )
-            ( uintptr_t )igraph_cattribute_VAN( g, INST_ATTR_VNET, id );
+            ( uintptr_t )igraph_cattribute_VAN( g, GV_VNET, id );
         instrec_replace_id( v_net->inst, id + 1, id );
     }
 }
@@ -587,7 +587,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
             cp_sync = dgraph_vertex_add_sync( g );
             for( j = 0; j < igraph_vector_ptr_size( &sync->p_ext ); j++ ) {
                 sp_src = VECTOR( sync->p_ext )[j];
-                igraph_cattribute_VAN_set( g, INST_ATTR_SYMB, cp_sync->inst->id,
+                igraph_cattribute_VAN_set( g, GV_SYMB, cp_sync->inst->id,
                         ( uintptr_t )sp_src );
                 // create a new external virtual port, cp_sync ports are
                 // not decoupled and have no rate control
@@ -607,7 +607,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
                     printf( "wrap_sync_create_cp: bypass\n" );
 #endif // DEBUG_CONNECT
-                    igraph_cattribute_VAN_set( g, INST_ATTR_SYMB,
+                    igraph_cattribute_VAN_set( g, GV_SYMB,
                             cp_sync->inst->id, ( uintptr_t )sp_int );
                     break;
                 }

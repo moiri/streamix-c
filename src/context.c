@@ -756,16 +756,16 @@ bool cpsync_reduce( igraph_t* g, int id, symrec_t* symb )
     igraph_incident( g, &eids, id, IGRAPH_ALL );
     if( igraph_vector_size( &eids ) == 2 ) {
         p_src = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
-                PORT_ATTR_PSRC, VECTOR( eids )[ 0 ] );
+                GE_PSRC, VECTOR( eids )[ 0 ] );
         p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
-                PORT_ATTR_PDST, VECTOR( eids )[ 0 ] );
+                GE_PDST, VECTOR( eids )[ 0 ] );
         // get id of the non net end of the edge
         if( p_dest->v_net->inst->id != id ) p_to = p_dest;
         else p_from = p_src;
         p_src = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
-                PORT_ATTR_PSRC, VECTOR( eids )[ 1 ] );
+                GE_PSRC, VECTOR( eids )[ 1 ] );
         p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
-                PORT_ATTR_PDST, VECTOR( eids )[ 1 ] );
+                GE_PDST, VECTOR( eids )[ 1 ] );
         // get id of the non net end of the edge
         if( p_dest->v_net->inst->id != id ) { p_to = p_dest; }
         else { p_from = p_src; }
@@ -965,9 +965,9 @@ void post_process( igraph_t* g )
     while( !IGRAPH_VIT_END( vit ) ) {
         inst_id = IGRAPH_VIT_GET( vit );
         v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
-                INST_ATTR_VNET, inst_id );
+                GV_VNET, inst_id );
         symb = ( symrec_t* )( uintptr_t )igraph_cattribute_VAN( g,
-                INST_ATTR_SYMB, inst_id );
+                GV_SYMB, inst_id );
         if( v_net->type == VNET_BOX ) {
             check_ports_open( v_net );
         }
