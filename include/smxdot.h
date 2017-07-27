@@ -20,7 +20,7 @@
  *
  * @param start   pointer to the root node of the AST
  */
-void draw_ast_graph( ast_node_t* );
+void draw_ast_graph( ast_node_t*  start );
 
 /**
  * @breif   Recursive function to draw AST nodes
@@ -28,7 +28,7 @@ void draw_ast_graph( ast_node_t* );
  * @param graph     file pointer to the dot file
  * @param ptr       pointer to the current ast node
  */
-void draw_ast_graph_step( FILE*, ast_node_t* );
+void draw_ast_graph_step( FILE* graph, ast_node_t* ptr );
 #endif // DOT_AST
 
 /**
@@ -39,7 +39,7 @@ void draw_ast_graph_step( FILE*, ast_node_t* );
  * @param scope     actual scope
  * @param flag      an indicator to tag the divider
  */
-void graph_add_divider( FILE*, int, const char );
+void graph_add_divider( FILE* graph, int scope, const char flag );
 
 /**
  * @brief   Add an edge to the graph
@@ -50,7 +50,7 @@ void graph_add_divider( FILE*, int, const char );
  * @param label     name of the edge
  * @param style     style of the edge
  */
-void graph_add_edge( FILE*, int, int, char*, int );
+void graph_add_edge( FILE* graph, int start, int end, char* label, int style );
 
 /**
  * @brief   Add a node to the graph
@@ -60,7 +60,7 @@ void graph_add_edge( FILE*, int, int, char*, int );
  * @param name      name of the node
  * @param style     style of the node
  */
-void graph_add_node( FILE*, int, char*, int );
+void graph_add_node( FILE* graph, int id, char* name, int style );
 
 /**
  * @brief   Create a rank of two nodes
@@ -69,21 +69,21 @@ void graph_add_node( FILE*, int, char*, int );
  * @param id1       id of a node
  * @param id2       id of a node
  */
-void graph_add_rank( FILE*, int, int );
+void graph_add_rank( FILE* graph, int id1, int id2 );
 
 /**
  * @brief   Adds final bracket to the dot file
  *
  * @param graph     file pointer to the dot file
  */
-void graph_finish( FILE* );
+void graph_finish( FILE* graph );
 
 /**
  * @brief   Closes the subgraph by adding closing brackets
  *
  * @param graph     file pointer to the dot file
  */
-void graph_finish_subgraph( FILE* );
+void graph_finish_subgraph( FILE* graph );
 
 #ifdef DOT_CON
 /**
@@ -98,7 +98,7 @@ void graph_finish_subgraph( FILE* );
  * @param t_path    path to a temporary file
  * @param r_path    path to the dot file to be reordered
  */
-void graph_fix_dot( char*, char* );
+void graph_fix_dot( char* t_path, char* r_path );
 #endif // DOT_CON
 
 /**
@@ -107,7 +107,7 @@ void graph_fix_dot( char*, char* );
  * @param graph     file pointer to the dot file
  * @param style     style of the graph (STYLE_DEFAULT, STYLE_CON_GRAPH)
  */
-void graph_init( FILE*, int );
+void graph_init( FILE* graph, int style );
 
 /**
  * Initializes a subgraph with a lable composed out of a name and a scope
@@ -117,6 +117,6 @@ void graph_init( FILE*, int );
  * @param id        id of the node
  * @param style     scope of the net that is represented as a subgraph
  */
-void graph_init_subgraph( FILE*, char*, int, int );
+void graph_init_subgraph( FILE* graph, char* name, int id, int style );
 
 #endif /* DOT_H */

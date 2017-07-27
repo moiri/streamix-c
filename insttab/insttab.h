@@ -10,8 +10,8 @@
 #define INSTTAB_H
 
 // TYPEDEFS -------------------------------------------------------------------
-typedef struct instrec_s instrec_t;
-typedef enum instrec_type_e instrec_type_t;
+typedef struct instrec_s instrec_t;         /**< ::instrec_s */
+typedef enum instrec_type_e instrec_type_t; /**< ::instrec_type_e */
 
 // INCLUDES -------------------------------------------------------------------
 #include <igraph.h>
@@ -56,14 +56,14 @@ struct instrec_s
  * @param type  type of the record
  * @return      pointer to the record
  */
-instrec_t* instrec_create( char*, int, int, instrec_type_t );
+instrec_t* instrec_create( char* name, int id, int line, instrec_type_t type );
 
 /**
  * @brief   Destroy an instance record
  *
  * @param rec   pointer to the record
  */
-void instrec_destroy( instrec_t* );
+void instrec_destroy( instrec_t* rec );
 
 /**
  * @brief   Replace the id of a record
@@ -72,6 +72,6 @@ void instrec_destroy( instrec_t* );
  * @param old_id    id to be replaced
  * @param new_id    new id to replace the old one with
  */
-void instrec_replace_id( instrec_t*, int, int );
+void instrec_replace_id( instrec_t* rec, int old_id, int new_id );
 
 #endif // INSTTAB_H

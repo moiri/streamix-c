@@ -14,16 +14,16 @@
 #include "defines.h"
 
 // TYPEDEFS -------------------------------------------------------------------
-typedef struct symrec_s symrec_t;
-typedef struct symrec_list_s symrec_list_t;
-typedef struct attr_box_s attr_box_t;
-typedef struct attr_net_s attr_net_t;
-typedef struct attr_port_s attr_port_t;
-typedef struct attr_prot_s attr_prot_t;
-typedef struct attr_wrap_s attr_wrap_t;
-typedef enum symrec_type_e symrec_type_t;
-typedef enum port_mode_e port_mode_t;
-typedef enum port_class_e port_class_t;
+typedef struct symrec_s symrec_t;           /**< ::symrec_s */
+typedef struct symrec_list_s symrec_list_t; /**< ::symrec_list_s */
+typedef struct attr_box_s attr_box_t;       /**< ::attr_box_s */
+typedef struct attr_net_s attr_net_t;       /**< ::attr_net_s */
+typedef struct attr_port_s attr_port_t;     /**< ::attr_port_s */
+typedef struct attr_prot_s attr_prot_t;     /**< ::attr_prot_s */
+typedef struct attr_wrap_s attr_wrap_t;     /**< ::attr_wrap_s */
+typedef enum symrec_type_e symrec_type_t;   /**< ::symrec_type_e */
+typedef enum port_mode_e port_mode_t;       /**< ::port_mode_e */
+typedef enum port_class_e port_class_t;     /**< ::port_class_e */
 
 // INCLUDES -------------------------------------------------------------------
 #include <stdbool.h>
@@ -50,7 +50,7 @@ enum symrec_type_e
  */
 struct symrec_s
 {
-    char*           key;
+    char*           key;    /**< unique key of the symbol (hh key) */
     char*           name;   /**< name of the symbol */
     int             scope;  /**< scope of the record */
     symrec_type_t   type;   /**< #symrec_type_e */
@@ -76,7 +76,7 @@ struct symrec_list_s
 };
 
 /**
- * @breif   Attributes of a box
+ * @brief   Attributes of a box
  */
 struct attr_box_s
 {
@@ -91,7 +91,7 @@ struct attr_box_s
 struct attr_net_s
 {
     virt_net_t* v_net;  /**< pointer to a virtual net */
-    igraph_t    g;
+    igraph_t    g;      /**< graph representing the inner net */
 };
 
 /**
@@ -116,14 +116,14 @@ struct attr_prot_s
 };
 
 /**
- * @breif   Attributes of a wrapper
+ * @brief   Attributes of a wrapper
  */
 struct attr_wrap_s
 {
     bool            attr_static;/**< wrapper does no proliferation */
     symrec_list_t*  ports;      /**< pointer to the port list of the net */
     virt_net_t*     v_net;      /**< pointer to a virtual net */
-    igraph_t        g;
+    igraph_t        g;          /**< graph representing the inner net */
 };
 
 // FUNCTIONS ------------------------------------------------------------------
@@ -135,7 +135,8 @@ struct attr_wrap_s
  * @param ports     pointer to a port list
  * @return          pointer to the new structure
  */
-attr_box_t* symrec_attr_create_box( bool, char*, symrec_list_t* );
+attr_box_t* symrec_attr_create_box( bool attr_pure, char* impl_name,
+        symrec_list_t* ports );
 
 /**
  * @brief   Create a net attribute structure
@@ -144,7 +145,7 @@ attr_box_t* symrec_attr_create_box( bool, char*, symrec_list_t* );
  * @param g     pointer to a graph object
  * @return      pointer to the new structure
  */
-attr_net_t* symrec_attr_create_net( virt_net_t*, igraph_t* );
+attr_net_t* symrec_attr_create_net( virt_net_t* v_net, igraph_t* g );
 
 /**
  * @brief   Create a port attribute structure
@@ -156,8 +157,8 @@ attr_net_t* symrec_attr_create_net( virt_net_t*, igraph_t* );
  * @param ch_len        length of the channel
  * @return              pointer to the new structure
  */
-attr_port_t* symrec_attr_create_port( symrec_list_t*, port_mode_t, port_class_t,
-        bool, int );
+attr_port_t* symrec_attr_create_port( symrec_list_t* port_int, port_mode_t mode,
+        port_class_t collection, bool decoupled, int ch_len );
 
 /**
  * @brief   Create a net prototype attribute structure
@@ -165,7 +166,7 @@ attr_port_t* symrec_attr_create_port( symrec_list_t*, port_mode_t, port_class_t,
  * @param ports     pointer to a port list
  * @return          pointer to the new structure
  */
-attr_prot_t* symrec_attr_create_proto( symrec_list_t* );
+attr_prot_t* symrec_attr_create_proto( symrec_list_t* ports );
 
 /**
  * @brief   Create a wrap attribute structure
@@ -176,19 +177,44 @@ attr_prot_t* symrec_attr_create_proto( symrec_list_t* );
  * @param g             pointer to a graph object
  * @return              pointer to the new structure
  */
-attr_wrap_t* symrec_attr_create_wrap( bool, symrec_list_t*, virt_net_t*,
-        igraph_t* );
+attr_wrap_t* symrec_attr_create_wrap( bool attr_static, symrec_list_t* ports,
+        virt_net_t* v_net, igraph_t* g );
 
 /**
- * @brief   Destroy attributes of a symbol table record
+ * @brief   Destroy attributes of a box symbol table record
  *
  * @param attr  pointer to the attribute
  */
-void symrec_attr_destroy_box( attr_box_t* );
-void symrec_attr_destroy_net( attr_net_t*, bool );
-void symrec_attr_destroy_port( attr_port_t* );
-void symrec_attr_destroy_proto( attr_prot_t* );
-void symrec_attr_destroy_wrap( attr_wrap_t* );
+void symrec_attr_destroy_box( attr_box_t* attr );
+
+/**
+ * @brief   Destroy attributes of net a symbol table record
+ *
+ * @param attr  pointer to the attribute
+ * @param deep  if true, also destroy the grap attribute
+ */
+void symrec_attr_destroy_net( attr_net_t* attr, bool deep );
+
+/**
+ * @brief   Destroy attributes of a port symbol table record
+ *
+ * @param attr  pointer to the attribute
+ */
+void symrec_attr_destroy_port( attr_port_t* attr );
+
+/**
+ * @brief   Destroy attributes of a prototype symbol table record
+ *
+ * @param attr  pointer to the attribute
+ */
+void symrec_attr_destroy_proto( attr_prot_t* attr );
+
+/**
+ * @brief   Destroy attributes of a wrapper symbol table record
+ *
+ * @param attr  pointer to the attribute
+ */
+void symrec_attr_destroy_wrap( attr_wrap_t* attr );
 
 /**
  * @brief   Create a symbol table record.
@@ -199,15 +225,16 @@ void symrec_attr_destroy_wrap( attr_wrap_t* );
  *
  * @param name      name of the record
  * @param scope     scope of the record
+ * @param type      type of the record
  * @param line      position (line number) of the identifier
  * @param attr_key  a number derived from the attributes to create a unique key
  * @return          a pointer to the new record structure
  */
-symrec_t* symrec_create( char*, int, symrec_type_t, int, int );
-
+symrec_t* symrec_create( char* name, int scope, symrec_type_t type, int line,
+        int attr_key );
 
 /**
- * @brief   Create a specific symbol table record.
+ * @brief   Create a box symbol table record.
  *
  * @param name      name of the record
  * @param scope     scope of the record
@@ -215,11 +242,56 @@ symrec_t* symrec_create( char*, int, symrec_type_t, int, int );
  * @param attr      pointer to the specific attribute structure
  * @return          a pointer to the new record structure
  */
-symrec_t* symrec_create_box( char*, int, int, attr_box_t* );
-symrec_t* symrec_create_net( char*, int, int, attr_net_t* );
-symrec_t* symrec_create_port( char*, int, int, attr_port_t* );
-symrec_t* symrec_create_proto( char*, int, int, attr_prot_t* );
-symrec_t* symrec_create_wrap( char*, int, int, attr_wrap_t* );
+symrec_t* symrec_create_box( char* name, int scope, int line,
+        attr_box_t* attr );
+
+/**
+ * @brief   Create a net symbol table record.
+ *
+ * @param name      name of the record
+ * @param scope     scope of the record
+ * @param line      position (line number) of the identifier
+ * @param attr      pointer to the specific attribute structure
+ * @return          a pointer to the new record structure
+ */
+symrec_t* symrec_create_net( char* name, int scope, int line,
+        attr_net_t* attr );
+
+/**
+ * @brief   Create a port symbol table record.
+ *
+ * @param name      name of the record
+ * @param scope     scope of the record
+ * @param line      position (line number) of the identifier
+ * @param attr      pointer to the specific attribute structure
+ * @return          a pointer to the new record structure
+ */
+symrec_t* symrec_create_port( char* name, int scope, int line,
+        attr_port_t* attr );
+
+/**
+ * @brief   Create a prototype symbol table record.
+ *
+ * @param name      name of the record
+ * @param scope     scope of the record
+ * @param line      position (line number) of the identifier
+ * @param attr      pointer to the specific attribute structure
+ * @return          a pointer to the new record structure
+ */
+symrec_t* symrec_create_proto( char* name, int scope, int line,
+        attr_prot_t* attr );
+
+/**
+ * @brief   Create a wrapper symbol table record.
+ *
+ * @param name      name of the record
+ * @param scope     scope of the record
+ * @param line      position (line number) of the identifier
+ * @param attr      pointer to the specific attribute structure
+ * @return          a pointer to the new record structure
+ */
+symrec_t* symrec_create_wrap( char* name, int scope, int line,
+        attr_wrap_t* attr );
 
 /**
  * @brief    Remove a record from the symbol table and free the allocated space
@@ -227,28 +299,28 @@ symrec_t* symrec_create_wrap( char*, int, int, attr_wrap_t* );
  * @param symtab pointer to the hashtable
  * @param rec    pointer to the record to be removed
  */
-void symrec_del( symrec_t**, symrec_t* );
+void symrec_del( symrec_t** symtab, symrec_t* rec );
 
 /**
  * @brief   Remove all records from the symbol table
  *
  * @param recs  pointer to the hashtable
  */
-void symrec_del_all( symrec_t** );
+void symrec_del_all( symrec_t** recs );
 
 /**
  * @brief   free the memory of a symrec, excluding attributes
  *
  * @param rec   pointer to the symbol table record
  */
-void symrec_destroy( symrec_t* );
+void symrec_destroy( symrec_t* rec );
 
 /**
  * @brief   Remove all elements of a linked list
  *
  * @param list  pointer to the first element of a linked list
  */
-void symrec_list_del( symrec_list_t* );
+void symrec_list_del( symrec_list_t* list );
 
 /**
  * @brief   Get a symbol from the symbol table
@@ -266,7 +338,8 @@ void symrec_list_del( symrec_list_t* );
  * @return              a pointer to the location where the data is stored
  *                      a null pointer if the element was not found
  */
-symrec_t* symrec_get( symrec_t**, UT_array*, char*, int, int );
+symrec_t* symrec_get( symrec_t** symtab, UT_array* scope_stack, char* name,
+        int line, int attr_key );
 
 /**
  * @brief   Add a record to the symbol table
@@ -281,7 +354,7 @@ symrec_t* symrec_get( symrec_t**, UT_array*, char*, int, int );
  * @return          a pointer to the location where the data was stored
  *                  a null pointer if the element was not stored
  */
-symrec_t* symrec_put( symrec_t**, symrec_t* );
+symrec_t* symrec_put( symrec_t** symtab, symrec_t* new_item );
 
 /**
  * Search an identifier in the symbol table and rturn it if found
@@ -295,7 +368,8 @@ symrec_t* symrec_put( symrec_t**, symrec_t* );
  * @return              a pointer to the location where the data is stored
  *                      a null pointer if the element was not found
  * */
-symrec_t* symrec_search( symrec_t**, UT_array*, char*, int );
+symrec_t* symrec_search( symrec_t** symtab, UT_array* scope_stack, char* name,
+        int attr_key );
 
 /**
  * @brief   Print debug information of a port of a port record list
@@ -303,7 +377,7 @@ symrec_t* symrec_search( symrec_t**, UT_array*, char*, int );
  * @param port  pointer to the port record
  * @param name  name of the net instance to port belongs to
  */
-void debug_print_rport( symrec_t*, char* );
+void debug_print_rport( symrec_t* port, char* name );
 
 /**
  * @brief   Print debug information of all ports in a port record list
@@ -311,6 +385,6 @@ void debug_print_rport( symrec_t*, char* );
  * @param rports    pointer to the port record list
  * @param name      name of the net instance to port belongs to
  */
-void debug_print_rports( symrec_list_t*, char* );
+void debug_print_rports( symrec_list_t* rports, char* name );
 
 #endif /* SYMTAB_H */

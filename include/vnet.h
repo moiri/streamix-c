@@ -11,12 +11,12 @@
 #define VNET_H
 
 // TYPEDEFS -------------------------------------------------------------------
-typedef struct net_con_s net_con_t;
-typedef struct virt_net_s virt_net_t;
-typedef struct virt_port_s virt_port_t;
-typedef struct virt_port_list_s virt_port_list_t;
-typedef enum virt_net_type_e virt_net_type_t;
-typedef enum virt_port_state_e virt_port_state_t;
+typedef struct net_con_s net_con_t;                 /**< ::net_con_s */
+typedef struct virt_net_s virt_net_t;               /**< ::virt_net_s */
+typedef struct virt_port_s virt_port_t;             /**< ::virt_port_s */
+typedef struct virt_port_list_s virt_port_list_t;   /**< ::virt_port_list_s */
+typedef enum virt_net_type_e virt_net_type_t;       /**< ::virt_net_type_e */
+typedef enum virt_port_state_e virt_port_state_t;   /**< ::virt_port_state_e */
 
 #include <igraph.h>
 #include <time.h>
@@ -29,15 +29,15 @@ typedef enum virt_port_state_e virt_port_state_t;
  */
 enum virt_net_type_e
 {
-    VNET_BOX,
-    VNET_NET,
-    VNET_FLATTEN,
-    VNET_PARALLEL,
-    VNET_SYMBOL,
-    VNET_SYNC,
-    VNET_SERIAL,
-    VNET_TT,
-    VNET_WRAP
+    VNET_BOX,       /**< user-defined box */
+    VNET_NET,       /**< net symbol */
+    VNET_FLATTEN,   /**< a flattened net */
+    VNET_PARALLEL,  /**< a parallel composition */
+    VNET_SYMBOL,    /**< a container for symbols */
+    VNET_SYNC,      /**< a cp sync*/
+    VNET_SERIAL,    /**< a serial composition */
+    VNET_TT,        /**< a time-triggered net */
+    VNET_WRAP       /**< a wrapper */
 };
 
 /**
@@ -111,7 +111,7 @@ struct virt_port_s
  * @param p2    pointer the a port of a virtual net
  * @return      true if ports can connect, false if not
  */
-bool are_port_names_ok( virt_port_t*, virt_port_t* );
+bool are_port_names_ok( virt_port_t* p1, virt_port_t* p2 );
 
 /**
  * @brief   Checkes whether port classes for normal connections match
@@ -122,7 +122,7 @@ bool are_port_names_ok( virt_port_t*, virt_port_t* );
  *                  into account
  * @return          true if ports can connect, false if not
  */
-bool are_port_classes_ok( virt_port_t*, virt_port_t*, bool );
+bool are_port_classes_ok( virt_port_t* p1, virt_port_t* p2, bool directed );
 
 /**
  * @brief   Checkes port classes for copy synchronizer connections
@@ -133,7 +133,7 @@ bool are_port_classes_ok( virt_port_t*, virt_port_t*, bool );
  *              parallel operators are checked
  * @return      true if ports can connect, false if not
  */
-bool are_port_cp_classes_ok( virt_port_t*, virt_port_t*, bool );
+bool are_port_cp_classes_ok( virt_port_t* p1, virt_port_t* p2, bool cpp );
 
 /**
  * @brief    Checkes whether port modes match
@@ -144,7 +144,7 @@ bool are_port_cp_classes_ok( virt_port_t*, virt_port_t*, bool );
  *              if set to false, the function checks wheter modes are differnt
  * @return      true if ports can connect, false if not
  */
-bool are_port_modes_ok( virt_port_t*, virt_port_t*, bool );
+bool are_port_modes_ok( virt_port_t* p1, virt_port_t* p2, bool equal );
 
 /**
  * @brief   Create a net connection structure initialised with one instance
@@ -152,7 +152,14 @@ bool are_port_modes_ok( virt_port_t*, virt_port_t*, bool );
  * @param inst  pointer to a instance record
  * @return      pointer to a net connection structure
  */
-net_con_t* net_con_create( instrec_t* );
+net_con_t* net_con_create( instrec_t* inst );
+
+/**
+ * @brief Allocate space for a v_net structure
+ *
+ * @return pointer to the allocated space
+ */
+virt_net_t* virt_net_create();
 
 /**
  * @brief   Create a new virtual net of a box
@@ -161,7 +168,7 @@ net_con_t* net_con_create( instrec_t* );
  * @param inst  pointer to the instance of the box
  * @return      pointer to the newly created virtual net
  */
-virt_net_t* virt_net_create_box( symrec_t*, instrec_t* );
+virt_net_t* virt_net_create_box( symrec_t* rec, instrec_t* inst );
 
 /**
  * @brief   Create a virtual net from any other virtual net
@@ -174,17 +181,17 @@ virt_net_t* virt_net_create_box( symrec_t*, instrec_t* );
  *              new virtual net and the virtual net itself
  * @return      pointer to the newly crated virtual net
  */
-virt_net_t* virt_net_create_flatten( virt_net_t*, instrec_t* );
+virt_net_t* virt_net_create_flatten( virt_net_t* v_net, instrec_t* inst );
 
 /**
  * @brief   Create a new virtual net out of virtial net of a net
  *
- * @param ports pointer to the initial virtual net
- * @param inst  pointer to the instance to be referred to by the ports of the
- *              new virtual net and the virtual net itself
- * @return      pointer to the newly crated virtual net
+ * @param v_net_n   pointer to the initial virtual net
+ * @param inst      pointer to the instance to be referred to by the ports of
+ *                  the new virtual net and the virtual net itself
+ * @return          pointer to the newly crated virtual net
  */
-virt_net_t* virt_net_create_net( virt_net_t*, instrec_t* );
+virt_net_t* virt_net_create_net( virt_net_t* v_net_n, instrec_t* inst );
 
 /**
  * @brief   Create a virtual net from two operands op1|op2
@@ -196,7 +203,7 @@ virt_net_t* virt_net_create_net( virt_net_t*, instrec_t* );
  * @param v_net2    pointer to virtual net of right operand
  * @return          pointer to the new virtual net
  */
-virt_net_t* virt_net_create_parallel( virt_net_t*, virt_net_t* );
+virt_net_t* virt_net_create_parallel( virt_net_t* v_net1, virt_net_t* v_net2 );
 
 /**
  * @brief   Create a virtual net from two operands op1.op2
@@ -208,7 +215,7 @@ virt_net_t* virt_net_create_parallel( virt_net_t*, virt_net_t* );
  * @param v_net2    pointer to virtual net of right operand
  * @return          pointer to the new virtual net
  */
-virt_net_t* virt_net_create_serial( virt_net_t*, virt_net_t* );
+virt_net_t* virt_net_create_serial( virt_net_t* v_net1, virt_net_t* v_net2 );
 
 /**
  * @brief   Create a virtual net from a single symbol (box, netw, wrap)
@@ -219,23 +226,23 @@ virt_net_t* virt_net_create_serial( virt_net_t*, virt_net_t* );
  * @param v_net1    pointer to virtual net
  * @return          pointer to the new virtual net
  */
-virt_net_t* virt_net_create_symbol( virt_net_t* );
+virt_net_t* virt_net_create_symbol( virt_net_t* v_net1 );
 
 /**
- * @breif   Create a virtual net of a copy synchronizer
+ * @brief   Create a virtual net of a copy synchronizer
  *
  * @param inst  pointer to the instance of the copy synchronizer
  * @return      pointer to the newly created virtual net
  */
-virt_net_t* virt_net_create_sync( instrec_t* );
+virt_net_t* virt_net_create_sync( instrec_t* inst );
 
 /**
- * @breif   Create a virtual net of a time triggered guard
+ * @brief   Create a virtual net of a time triggered guard
  *
  * @param inst      pointer to the instance of the copy synchronizer
  * @return          pointer to the newly created virtual net
  */
-virt_net_t* virt_net_create_tf( instrec_t* );
+virt_net_t* virt_net_create_tf( instrec_t* inst );
 
 /**
  * @brief   Create a new virtual net out of virtial net of a wrapper
@@ -245,22 +252,22 @@ virt_net_t* virt_net_create_tf( instrec_t* );
  *              new virtual net and the virtual net itself
  * @return      pointer to the newly crated virtual net
  */
-virt_net_t* virt_net_create_wrap( symrec_t*, instrec_t* );
+virt_net_t* virt_net_create_wrap( symrec_t* symb, instrec_t* inst );
 
 /**
  * @brief   Destroy a virtual net and its conent.
  *
  * @param v_net     pointer to the virtual net
- * @parma shallow   if true do not free the port structures
+ * @param shallow   if true do not free the port structures
  */
-void virt_net_destroy( virt_net_t*, bool );
+void virt_net_destroy( virt_net_t* v_net, bool shallow );
 
 /**
  * @brief   Destroy a virtual net and its conent except the port structures.
  *
  * @param v_net     pointer to the virtual net
  */
-void virt_net_destroy_shallow( virt_net_t* );
+void virt_net_destroy_shallow( virt_net_t* v_net );
 
 /**
  * @brief   update the port class of all open ports in the v_net
@@ -268,15 +275,15 @@ void virt_net_destroy_shallow( virt_net_t* );
  * @param v_net         a pointer to a virtual net to update the ports
  * @param port_class    the class the ports will be updated to
  */
-void virt_net_update_class( virt_net_t*, port_class_t );
+void virt_net_update_class( virt_net_t* v_net, port_class_t port_class );
 
 /**
  * @brief add a time bound to each unconnected input port of a virtual net
  *
  * @param v_net     pointer to the virtual net
- * @param int       time bound
+ * @param tb        time bound
  */
-void virt_port_add_time_bound( virt_net_t*, struct timespec );
+void virt_port_add_time_bound( virt_net_t* v_net, struct timespec tb );
 
 /**
  * @brief   Append a port to the port list of a virtual net
@@ -284,18 +291,19 @@ void virt_port_add_time_bound( virt_net_t*, struct timespec );
  * @param v_net pointer to the virtual net to appemd the port
  * @param port  pointer to the port to append
  */
-void virt_port_append( virt_net_t*, virt_port_t* );
+void virt_port_append( virt_net_t* v_net, virt_port_t* port );
 
 /**
  * @brief   Append all ports of one virtual net to the port list of
  * another virtual net
  *
- * @param v_net pointer to the virtual net to append the port
- * @param v_net pointer to the source virtual net
+ * @param v_net1        pointer to the virtual net to append the port
+ * @param v_net2        pointer to the source virtual net
  * @param update_inst   if true update the instances of the source ports
  *                      with the instance of v_net1
  */
-void virt_port_append_all( virt_net_t*, virt_net_t*, bool );
+void virt_port_append_all( virt_net_t* v_net1, virt_net_t* v_net2,
+        bool update_inst );
 
 /**
  * @brief   Assign ports to a virtual net
@@ -307,7 +315,8 @@ void virt_port_append_all( virt_net_t*, virt_net_t*, bool );
  * @param last_list a pointer to a list which will be chained to the new list
  * @return          a pointer to the new port list
  */
-virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t* );
+virt_port_list_t* virt_port_assign( virt_port_list_t* old,
+        virt_port_list_t* last_list );
 
 /**
  * @brief   Create a new virtual port
@@ -322,8 +331,9 @@ virt_port_list_t* virt_port_assign( virt_port_list_t*, virt_port_list_t* );
  * @param ch_len        channel length
  * @return              a pointer to the newly created port
  */
-virt_port_t* virt_port_create( port_class_t, port_mode_t, virt_net_t*,
-        const char*, symrec_t*, struct timespec, bool, int );
+virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
+        virt_net_t* vnet, const char* name, symrec_t* symb, struct timespec tb,
+        bool decoupled, int ch_len );
 
 /**
  * @brief   Create a copy of a virtual port
@@ -333,7 +343,7 @@ virt_port_t* virt_port_create( port_class_t, port_mode_t, virt_net_t*,
  * @param port  pointer to the virtual port to be copied
  * @return      pointer to the new virtual port
  */
-virt_port_t* virt_port_copy( virt_port_t* );
+virt_port_t* virt_port_copy( virt_port_t* port );
 
 /**
  * @brief   Make a copy of the port list of a symbol record
@@ -343,8 +353,8 @@ virt_port_t* virt_port_copy( virt_port_t* );
  * @param v_net_i   a pointer to the virtual net of the content of a wrapper
  * @return          pointer to the last element of the new list
  */
-virt_port_list_t* virt_ports_copy_symb( symrec_list_t*, virt_net_t*,
-        virt_net_t* );
+virt_port_list_t* virt_ports_copy_symb( symrec_list_t* ports, virt_net_t* v_net,
+        virt_net_t* v_net_i );
 
 /**
  * @brief   Make a copy of the port list of a symbol record
@@ -357,8 +367,8 @@ virt_port_list_t* virt_ports_copy_symb( symrec_list_t*, virt_net_t*,
  *                      if false the port status is set to PORT_STATE_OPEN
  * @return              pointer to the last element of the new list
  */
-virt_port_list_t* virt_ports_copy_vnet( virt_port_list_t*, virt_net_t*, bool,
-        bool );
+virt_port_list_t* virt_ports_copy_vnet( virt_port_list_t* ports,
+        virt_net_t* inst, bool check_status, bool copy_status );
 
 /**
  * @brief   Get an equivalent port from a virtual net
@@ -369,7 +379,8 @@ virt_port_list_t* virt_ports_copy_vnet( virt_port_list_t*, virt_net_t*, bool,
  *              if false search only for open ports
  * @return      pointer to the port, NULL if no port was found
  */
-virt_port_t* virt_port_get_equivalent( virt_net_t*, virt_port_t*, bool );
+virt_port_t* virt_port_get_equivalent( virt_net_t* v_net, virt_port_t* port,
+        bool all );
 
 /**
  * @brief   Get a port from a virtual net port list by compairing names
@@ -378,7 +389,8 @@ virt_port_t* virt_port_get_equivalent( virt_net_t*, virt_port_t*, bool );
  * @param port  pointer to the port symbol
  * @return      pointer to the port, NULL if no port was found
  */
-virt_port_t* virt_port_get_equivalent_by_symb_attr( virt_net_t*, symrec_t* );
+virt_port_t* virt_port_get_equivalent_by_symb_attr( virt_net_t* v_net,
+        symrec_t* port );
 
 /**
  * @brief   Get the namesake of a port out of a net interface of a wrapper
@@ -388,7 +400,8 @@ virt_port_t* virt_port_get_equivalent_by_symb_attr( virt_net_t*, symrec_t* );
  * @param port      pointer to the port of wich a namesake should be found
  * @return          pointer to the port, NULL if no port was found
  */
-virt_port_t* virt_port_get_equivalent_in_wrap( virt_net_t*, virt_port_t* );
+virt_port_t* virt_port_get_equivalent_in_wrap( virt_net_t* v_net,
+        virt_port_t* port );
 
 /**
  * @brief   update the instance of a port
@@ -396,21 +409,21 @@ virt_port_t* virt_port_get_equivalent_in_wrap( virt_net_t*, virt_port_t* );
  * @param port  port to update
  * @param v_net virtual net to assign
  */
-void virt_port_update_inst( virt_port_t*, virt_net_t* );
+void virt_port_update_inst( virt_port_t* port, virt_net_t* v_net );
 
 /**
  * @brief   Print debug information of a port of a virtual net
  *
  * @param port  pointer to the port of a virtual net
  */
-void debug_print_vport( virt_port_t* );
+void debug_print_vport( virt_port_t* port );
 
 /**
  * @brief   Wrapper function for debug_print_vports_s( ... )
  *
  * @param v_net pointer to the virtual net
  */
-void debug_print_vports( virt_net_t* );
+void debug_print_vports( virt_net_t* v_net );
 
 /**
  * @brief   Print debug information of all ports in a virtual net
@@ -419,5 +432,5 @@ void debug_print_vports( virt_net_t* );
  * @param all   flag to indicate whether all ports or only the open ports
  *              should be printed
  */
-void debug_print_vports_s( virt_net_t*, bool );
+void debug_print_vports_s( virt_net_t* v_net, bool all );
 #endif // VNET_H

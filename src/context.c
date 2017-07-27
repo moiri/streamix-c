@@ -11,7 +11,7 @@
 #include "smxgraph.h"
 #include "smxerr.h"
 
-igraph_vector_ptr_t __rm_cp;
+igraph_vector_ptr_t __rm_cp; // remember removed cp-sync pointers for cleanup
 
 /******************************************************************************/
 bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
@@ -745,12 +745,13 @@ void cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g )
 }
 
 /******************************************************************************/
-bool cpsync_reduce( igraph_t* g, int id, symrec_t* symb )
+bool cpsync_reduce( igraph_t* g, int id )
 {
     bool res = false;
     virt_port_t *p_src, *p_dest, *p_from, *p_to;
     igraph_vector_t eids;
     const char* name;
+    symrec_t* port_symb;
 
     igraph_vector_init( &eids, 0 );
     igraph_incident( g, &eids, id, IGRAPH_ALL );
@@ -759,6 +760,11 @@ bool cpsync_reduce( igraph_t* g, int id, symrec_t* symb )
                 GE_PSRC, VECTOR( eids )[ 0 ] );
         p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
                 GE_PDST, VECTOR( eids )[ 0 ] );
+        // usually the symb entry of a cp-sync is NULL but if it is a wrapper
+        // cp-sync, symb points to an external port symbol. It is a hack and I
+        // I will probably hate myself for this at some point in the future.
+        port_symb = ( symrec_t* )( uintptr_t )igraph_cattribute_VAN( g,
+                GV_SYMB, id );
         // get id of the non net end of the edge
         if( p_dest->v_net->inst->id != id ) p_to = p_dest;
         else p_from = p_src;
@@ -770,7 +776,7 @@ bool cpsync_reduce( igraph_t* g, int id, symrec_t* symb )
         if( p_dest->v_net->inst->id != id ) { p_to = p_dest; }
         else { p_from = p_src; }
         // set name
-        if( symb != NULL ) name = symb->name;
+        if( port_symb != NULL ) name = port_symb->name;
         else name = p_from->name;
         dgraph_edge_add( g, p_from, p_to, name );
         res = true;
@@ -955,7 +961,6 @@ void post_process( igraph_t* g )
     igraph_vit_t vit;
     igraph_vector_t dids;
     virt_net_t *v_net;
-    symrec_t* symb;
     int inst_id;
 
     vs = igraph_vss_all();
@@ -966,14 +971,12 @@ void post_process( igraph_t* g )
         inst_id = IGRAPH_VIT_GET( vit );
         v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
                 GV_VNET, inst_id );
-        symb = ( symrec_t* )( uintptr_t )igraph_cattribute_VAN( g,
-                GV_SYMB, inst_id );
         if( v_net->type == VNET_BOX ) {
             check_ports_open( v_net );
         }
         else if( v_net->type == VNET_SYNC ) {
             if( check_single_mode_cp( g, inst_id ) )
-                if( cpsync_reduce( g, inst_id, symb ) ) {
+                if( cpsync_reduce( g, inst_id ) ) {
                     igraph_vector_push_back( &dids, inst_id );
                     dgraph_vertex_destroy_attr( g, inst_id, true );
                 }

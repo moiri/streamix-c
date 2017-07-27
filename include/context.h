@@ -33,8 +33,8 @@
  *                      if false, port modes have to be different
  * @return          true if connection was ok, false if no connection
  */
-bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g, bool, bool,
-        bool );
+bool check_connection( virt_port_t* ports_l, virt_port_t* ports_r, igraph_t* g,
+        bool directed, bool ignore_class, bool mode_equal );
 
 /**
  * @brief   Connect two ports of copy synchronizers
@@ -51,8 +51,8 @@ bool check_connection( virt_port_t*, virt_port_t*, igraph_t* g, bool, bool,
  *                  are checked (AST_PARALLEL/AST_PARALLEL_DET) or side ports
  *                  in serial combinations (0)
  */
-void check_connection_cp( virt_net_t*, virt_port_t*, virt_port_t*, igraph_t*,
-        node_type_t );
+void check_connection_cp( virt_net_t* net, virt_port_t* port1,
+        virt_port_t* port2, igraph_t* g, node_type_t parallel );
 
 /**
  * @brief    Report missing connections
@@ -64,7 +64,8 @@ void check_connection_cp( virt_net_t*, virt_port_t*, virt_port_t*, igraph_t*,
  * @param v_net_r   pointer to the virtual net of the right operand
  * @param g         pointer to a initialized igraph object
  */
-void check_connection_missing( virt_net_t*, virt_net_t*, igraph_t* );
+void check_connection_missing( virt_net_t* v_net_l, virt_net_t* v_net_r,
+        igraph_t* g );
 
 /**
  * @brief    Check port connections of two nets and connect them
@@ -73,7 +74,7 @@ void check_connection_missing( virt_net_t*, virt_net_t*, igraph_t* );
  * @param v_net2    pointer to the virtual net of the right operator
  * @param g         pointer to a initialized igraph object
  */
-void check_connections( virt_net_t*, virt_net_t*, igraph_t* );
+void check_connections( virt_net_t* v_net1, virt_net_t* v_net2, igraph_t* g );
 
 /**
  * @brief   Connect copy synchronizers of two nets
@@ -82,11 +83,12 @@ void check_connections( virt_net_t*, virt_net_t*, igraph_t* );
  * includes side ports as well as regular ports.
  *
  * @param v_net1    pointer to the virtual net
+ * @param g         pointer to a initialized igraph object
  * @param parallel  flag to indicate wheter copy synchronizer connections
  *                  in parallel operators are checked
- * @param g         pointer to a initialized igraph object
  */
-void check_connections_cp( virt_net_t*, igraph_t*, node_type_t );
+void check_connections_cp( virt_net_t* v_net1, igraph_t* g,
+        node_type_t parallel );
 
 /**
  * @brief Check for open connections
@@ -98,7 +100,7 @@ void check_connections_cp( virt_net_t*, igraph_t*, node_type_t );
  * @param vnet_l    pointer to the vnet of the left operator
  * @param vnet_r    pointer to the vnet of the right operator
  */
-void check_connections_open( virt_net_t*, virt_net_t* );
+void check_connections_open( virt_net_t* vnet_l, virt_net_t* vnet_r );
 
 /**
  * @brief Connect self loops of a box or wrapper
@@ -106,7 +108,7 @@ void check_connections_open( virt_net_t*, virt_net_t* );
  * @param g     pointer to the net graph
  * @param v_net pointer to the virtual net where self loops must be connected
  */
-void check_connections_self( igraph_t*, virt_net_t* );
+void check_connections_self( igraph_t* g, virt_net_t* v_net );
 
 /**
  * @brief    Check the context of all identifiers in the program
@@ -115,7 +117,7 @@ void check_connections_self( igraph_t*, virt_net_t* );
  * @param symtab    pointer to the symbol table
  * @param g         pointer to an initialized igraph object
  */
-void check_context( ast_node_t*, symrec_t**, igraph_t* );
+void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g );
 
 /**
  * @brief    Step wise context checker
@@ -128,21 +130,22 @@ void check_context( ast_node_t*, symrec_t**, igraph_t* );
  * @param ast           pointer to the ast node
  * @return              pointer to a symrec net attribute (cast to void*)
  */
-void* check_context_ast( symrec_t**, UT_array*, ast_node_t* );
+void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
+        ast_node_t* ast );
 
 /**
  * @brief   check if a net has at least one triggering input
  *
  * @param ports pointer to a symbol port list
  */
-void check_ports_decoupled( symrec_list_t* );
+void check_ports_decoupled( symrec_list_t* ports );
 
 /**
  * @brief   check if all ports are connected
  *
  * @param v_net pointer to a virtual net
  */
-void check_ports_open( virt_net_t* );
+void check_ports_open( virt_net_t* v_net );
 
 /**
  * @brief   Check whether types of a prototype and a net match
@@ -153,7 +156,7 @@ void check_ports_open( virt_net_t* );
  * @return          true if prototype matches with net definition
  *                  false if there is no match
  */
-bool check_prototype( symrec_list_t*, virt_net_t*, char* );
+bool check_prototype( symrec_list_t* r_ports, virt_net_t* v_net, char* name );
 
 /**
  * @brief   check whether synchronizers have only outgoing or incoming ports
@@ -162,7 +165,7 @@ bool check_prototype( symrec_list_t*, virt_net_t*, char* );
  * @param id    id of the node to check
  * @return      true if cp is valid, false otherwise
  */
-bool check_single_mode_cp( igraph_t*, int );
+bool check_single_mode_cp( igraph_t* g, int id );
 
 /**
  * @brief   Connect two instances by a pirt of matching ports
@@ -172,12 +175,13 @@ bool check_single_mode_cp( igraph_t*, int );
  *
  * @param port_l        pointer to a virtual port of the left instance
  * @param port_r        pointer to a virtual port of the right instance
- * @oaram g             pointer to the dependancy graph to update
+ * @param g             pointer to the dependancy graph to update
  * @param connect_sync  if true, port state of synch-ports is updated.
  *                      this must be true when a serial connection is
  *                      performed
  */
-void connect_ports( virt_port_t*, virt_port_t*, igraph_t*, bool );
+void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
+        bool connect_sync );
 
 /**
  * @brief   Merge two copy synchronizer
@@ -189,9 +193,8 @@ void connect_ports( virt_port_t*, virt_port_t*, igraph_t*, bool );
  * @param port1 pointer to the port of a virtual net
  * @param port2 pointer to the port of a virtual net
  * @param g     pointer to a initialized igraph object
- * @return      pointer to the merged copy synchronizer
  */
-void cpsync_merge( virt_port_t*, virt_port_t*, igraph_t* );
+void cpsync_merge( virt_port_t* port1, virt_port_t* port2, igraph_t* g );
 
 /**
  * @brief   update ports of a virtual net after merging two copy synchrpnizers
@@ -201,7 +204,8 @@ void cpsync_merge( virt_port_t*, virt_port_t*, igraph_t* );
  * @param cp_sync   pointer to the copy synchronizer instance
  * @param g         pointer to the dependency graph
  */
-void cpsync_merge_ports( virt_port_t*, virt_port_t*, instrec_t*, igraph_t* );
+void cpsync_merge_ports( virt_port_t* port_l, virt_port_t* port_r,
+        instrec_t* cp_sync, igraph_t* g );
 
 /**
  * @brief   Replace cp syncs with only two pors by an edge
@@ -210,7 +214,7 @@ void cpsync_merge_ports( virt_port_t*, virt_port_t*, instrec_t*, igraph_t* );
  * @param id    id of the synchronizer to check
  * @return      true if the sync was replaced, false if not
  */
-bool cpsync_reduce( igraph_t*, int, symrec_t* );
+bool cpsync_reduce( igraph_t* g, int id );
 
 /**
  * @brief   Check whether each list has the same number of elements
@@ -219,7 +223,7 @@ bool cpsync_reduce( igraph_t*, int, symrec_t* );
  * @param v_ports   port list from a virtual net
  * @return          true if port count matches, false if not
  */
-bool do_port_cnts_match( symrec_list_t*, virt_port_list_t* );
+bool do_port_cnts_match( symrec_list_t* r_ports, virt_port_list_t* v_ports );
 
 /**
  * @brief   Check whether port attributes from two port lists match
@@ -231,7 +235,7 @@ bool do_port_cnts_match( symrec_list_t*, virt_port_list_t* );
  * @param v_ports   port list from a net
  * @return          true if port attributes match, false if not
  */
-bool do_port_attrs_match( symrec_list_t*, virt_port_list_t* );
+bool do_port_attrs_match( symrec_list_t* r_ports, virt_port_list_t* v_ports );
 
 /**
  * @brief   Install instances to the instance table and the graph
@@ -249,7 +253,8 @@ bool do_port_attrs_match( symrec_list_t*, virt_port_list_t* );
  * @return              pointer to a virtual net with a port list and connection
  *                      vectors
  */
-virt_net_t* install_nets( symrec_t**, UT_array*, ast_node_t*, igraph_t* );
+virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
+        ast_node_t* ast, igraph_t* g );
 
 /**
  * @brief   checks wheter two instances are connected
@@ -260,14 +265,14 @@ virt_net_t* install_nets( symrec_t**, UT_array*, ast_node_t*, igraph_t* );
  * @return      true if there is a connection
  *              false if the instances are not connected
  */
-bool is_connected( instrec_t*, instrec_t*, igraph_t* );
+bool is_connected( instrec_t* rec1, instrec_t* rec2, igraph_t* g );
 
 /**
  * @brief   perform post proecessing operations on the graph
  *
  * @param g pointer to the dependancy graph
  */
-void post_process( igraph_t* );
+void post_process( igraph_t* g );
 
 /**
  * @brief add a temporal firewall to enclodes net
@@ -277,7 +282,8 @@ void post_process( igraph_t* );
  * @param tf        timings
  * @return          pointer to the vnet of the temporal firewall
  */
-virt_net_t* tf_create_net( igraph_t*, virt_net_t*, struct timespec );
+virt_net_t* tf_create_net( igraph_t* g, virt_net_t* vnet_tf,
+        struct timespec tf );
 
 /**
  * @brief transform a net to a tt net
@@ -286,7 +292,8 @@ virt_net_t* tf_create_net( igraph_t*, virt_net_t*, struct timespec );
  *
  * @param v_net     pointer to the tt net
  * @param tt        tt timings
+ * @param g         pointer to the dependency graph
  */
-void tt_update_net( virt_net_t*, struct timespec, igraph_t* );
+void tt_update_net( virt_net_t* v_net, struct timespec tt, igraph_t* g );
 
 #endif // CONTEXT_H

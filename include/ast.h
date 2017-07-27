@@ -13,24 +13,24 @@
 #include <time.h>
 
 // TYPEDEFS -------------------------------------------------------------------
-typedef struct ast_assign_s ast_assign_t;
-typedef struct ast_attr_s ast_attr_t;
-typedef struct ast_box_s ast_box_t;
-typedef struct ast_list_s ast_list_t;
-typedef struct ast_net_s ast_net_t;
-typedef struct ast_node_s ast_node_t;
-typedef struct ast_op_s ast_op_t;
-typedef struct ast_port_s ast_port_t;
-typedef struct ast_prog_s ast_prog_t;
-typedef struct ast_prot_s ast_prot_t;
-typedef struct ast_symb_s ast_symb_t;
-typedef struct ast_time_s ast_time_t;
-typedef struct ast_wrap_s ast_wrap_t;
+typedef struct ast_assign_s ast_assign_t;   /**< ::ast_assign_s */
+typedef struct ast_attr_s ast_attr_t;       /**< ::ast_attr_s */
+typedef struct ast_box_s ast_box_t;         /**< ::ast_box_s */
+typedef struct ast_list_s ast_list_t;       /**< ::ast_list_s */
+typedef struct ast_net_s ast_net_t;         /**< ::ast_net_s */
+typedef struct ast_node_s ast_node_t;       /**< ::ast_node_s */
+typedef struct ast_op_s ast_op_t;           /**< ::ast_op_s */
+typedef struct ast_port_s ast_port_t;       /**< ::ast_port_s */
+typedef struct ast_prog_s ast_prog_t;       /**< ::ast_prog_s */
+typedef struct ast_prot_s ast_prot_t;       /**< ::ast_prot_s */
+typedef struct ast_symb_s ast_symb_t;       /**< ::ast_symb_s */
+typedef struct ast_time_s ast_time_t;       /**< ::ast_time_s */
+typedef struct ast_wrap_s ast_wrap_t;       /**< ::ast_wrap_s */
 
-typedef enum attr_type_e attr_type_t;
-typedef enum id_type_e id_type_t;
-typedef enum node_type_e node_type_t;
-typedef enum port_type_e port_type_t;
+typedef enum attr_type_e attr_type_t;       /**< ::attr_type_e */
+typedef enum id_type_e id_type_t;           /**< ::id_type_e */
+typedef enum node_type_e node_type_t;       /**< ::node_type_e */
+typedef enum port_type_e port_type_t;       /**< ::port_type_e */
 
 // ENUMS ----------------------------------------------------------------------
 /**
@@ -113,7 +113,7 @@ struct ast_assign_s
 {
     ast_node_t*   id;   /**< ::ast_symb_t */
     ast_node_t*   op;   /**< ::ast_box_t, ::ast_prot_t, ::ast_net_t */
-    node_type_t   type; /**< #node_tpe_e */
+    node_type_t   type; /**< #node_type_e */
 };
 
 /**
@@ -149,7 +149,7 @@ struct ast_list_s
  */
 struct ast_net_s
 {
-    ast_node_t* net;    /**< ::ast_symb_t, ::ast_ap_t */
+    ast_node_t* net;    /**< ::ast_symb_t, ::ast_op_t */
 };
 
 /**
@@ -257,7 +257,7 @@ struct ast_wrap_s
  * @param type  node type of operand
  * @return      a pointer to the location where the data was stored
  */
-ast_node_t* ast_add_assign( ast_node_t*, ast_node_t*, node_type_t );
+ast_node_t* ast_add_assign( ast_node_t* id, ast_node_t* op, node_type_t type );
 
 /**
  * @brief   Add a leaf (end node) attribute to the AST.
@@ -266,7 +266,7 @@ ast_node_t* ast_add_assign( ast_node_t*, ast_node_t*, node_type_t );
  * @param type  type of the attribute
  * @return      a pointer to the location where the data was stored
  */
-ast_node_t* ast_add_attr( int, attr_type_t );
+ast_node_t* ast_add_attr( int val, attr_type_t type );
 
 /**
  * @brief   Add a box declaration to the AST.
@@ -276,7 +276,7 @@ ast_node_t* ast_add_attr( int, attr_type_t );
  * @param state     pointer to the state AST node
  * @return          a pointer to the location where the data was stored
  */
-ast_node_t* ast_add_box( ast_node_t*, ast_node_t*, ast_node_t* );
+ast_node_t* ast_add_box( ast_node_t* id, ast_node_t* ports, ast_node_t* state );
 
 /**
  * @brief   Add a list as node to the AST.
@@ -285,7 +285,7 @@ ast_node_t* ast_add_box( ast_node_t*, ast_node_t*, ast_node_t* );
  * @param type  type of AST node
  * @return      a pointer to the location where the data was stored
  */
-ast_node_t* ast_add_list( ast_list_t*, node_type_t );
+ast_node_t* ast_add_list( ast_list_t* list, node_type_t type );
 
 /**
  * @brief   Add a node to the a list.
@@ -294,7 +294,7 @@ ast_node_t* ast_add_list( ast_list_t*, node_type_t );
  * @param list  pointer to the list
  * @return      a pointer to the location where the data was stored
  */
-ast_list_t* ast_add_list_elem( ast_node_t*, ast_list_t* );
+ast_list_t* ast_add_list_elem( ast_node_t* node, ast_list_t* list );
 
 /**
  * @brief   Add a net to the AST.
@@ -302,7 +302,7 @@ ast_list_t* ast_add_list_elem( ast_node_t*, ast_list_t* );
  * @param node  pointer to net node
  * @return      a pointer to the location where the data was stored
  */
-ast_node_t* ast_add_net( ast_node_t* );
+ast_node_t* ast_add_net( ast_node_t* node );
 
 /**
  * @brief   Add a node to the AST.
@@ -310,7 +310,7 @@ ast_node_t* ast_add_net( ast_node_t* );
  * @param type  type of AST node
  * @return      a pointer to the location where the data was stored
  */
-ast_node_t* ast_add_node( node_type_t );
+ast_node_t* ast_add_node( node_type_t type );
 
 /**
  * @brief   Add a an operation to the AST.
@@ -320,7 +320,7 @@ ast_node_t* ast_add_node( node_type_t );
  * @param type   AST_SERIAL, AST_PARALLEL
  * @return       a pointer to the location where the data was stored
  */
-ast_node_t* ast_add_op( ast_node_t*, ast_node_t*, node_type_t );
+ast_node_t* ast_add_op( ast_node_t* left, ast_node_t* right, node_type_t type );
 
 /**
  * @brief   Add a port to the AST.
@@ -334,8 +334,9 @@ ast_node_t* ast_add_op( ast_node_t*, ast_node_t*, node_type_t );
  * @param type          PORT_BOX, PORT_NET, PORT_SYNC
  * @return              a pointer to the location where the data was stored
  */
-ast_node_t* ast_add_port( ast_node_t*, ast_node_t*, ast_node_t*, ast_node_t*,
-        ast_node_t*, ast_node_t*, port_type_t );
+ast_node_t* ast_add_port( ast_node_t* id, ast_node_t* int_id,
+        ast_node_t* collection, ast_node_t* mode, ast_node_t* coupling,
+        ast_node_t* channel_len, port_type_t type );
 
 /**
  * @brief   Add a program node to the AST.
@@ -344,7 +345,7 @@ ast_node_t* ast_add_port( ast_node_t*, ast_node_t*, ast_node_t*, ast_node_t*,
  * @param net       pointer to a net node
  * @return          a pointer to the location where the data was stored
  */
-ast_node_t* ast_add_prog( ast_node_t*, ast_node_t* );
+ast_node_t* ast_add_prog( ast_node_t* stmts, ast_node_t* net );
 
 /**
  * @brief   Add a net prototype to the AST.
@@ -353,7 +354,7 @@ ast_node_t* ast_add_prog( ast_node_t*, ast_node_t* );
  * @param ports     pointer to the ports list AST node
  * @return          a pointer to the location where the data was stored
  */
-ast_node_t* ast_add_proto( ast_node_t*, ast_node_t* );
+ast_node_t* ast_add_proto( ast_node_t* id, ast_node_t* ports );
 
 /**
  * @brief   Add a symbol to the AST.
@@ -363,7 +364,7 @@ ast_node_t* ast_add_proto( ast_node_t*, ast_node_t* );
  * @param type  type of the symbol
  * @return      a pointer to the location where the data was stored
  */
-ast_node_t* ast_add_symbol( char*, int, id_type_t );
+ast_node_t* ast_add_symbol( char* name, int line, id_type_t type );
 
 /**
  * @brief Add a time triggered strcuture to the AST
@@ -374,7 +375,8 @@ ast_node_t* ast_add_symbol( char*, int, id_type_t );
  * @param type  AST_TT or AST_TB or AST_TF
  * @param line  line number of the operator
  */
-ast_node_t* ast_add_time( ast_node_t*, struct timespec, node_type_t, int );
+ast_node_t* ast_add_time( ast_node_t* op, struct timespec freq,
+        node_type_t type, int line );
 
 /**
  * @brief   Add a wrapper declaration to the AST.
@@ -386,8 +388,8 @@ ast_node_t* ast_add_time( ast_node_t*, struct timespec, node_type_t, int );
  * @param attr          pointer to the attr AST node
  * @return              pointer to the location where the data was stored
  */
-ast_node_t* ast_add_wrap( ast_node_t*, ast_node_t*, ast_node_t*, ast_node_t*,
-        ast_node_t* );
+ast_node_t* ast_add_wrap( ast_node_t* id, ast_node_t* ports_wrap,
+        ast_node_t* ports_net, ast_node_t* stmts, ast_node_t* attr );
 
 /**
  * @brief   Destroy the AST
@@ -397,6 +399,6 @@ ast_node_t* ast_add_wrap( ast_node_t*, ast_node_t*, ast_node_t*, ast_node_t*,
  *
  * @param ast   pointer to the root node of the ast
  */
-void ast_destroy( ast_node_t* );
+void ast_destroy( ast_node_t* ast );
 
 #endif /* AST_H */

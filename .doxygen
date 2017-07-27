@@ -842,6 +842,7 @@ EXCLUDE_PATTERNS      += */test/*
 EXCLUDE_PATTERNS      += */uthash/*
 EXCLUDE_PATTERNS      += smxc
 EXCLUDE_PATTERNS      += sia2graph
+EXCLUDE_PATTERNS      += streamix-sia-lang
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the

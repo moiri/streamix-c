@@ -162,7 +162,7 @@ $(DOT_P_CON_FILE).pdf: $(DOT_P_CON_FILE).dot
 	@gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$(DOT_P_CON_FILE).pdf dot/tmpfile*
 	@rm -f dot/tmpfile*
 
-.PHONY: clean graph run run_test run_test_all install
+.PHONY: clean graph run run_test run_test_all install doc
 
 clean:
 	rm -f $(PROJECT).tab.c
@@ -183,6 +183,8 @@ install:
 	mkdir -p /usr/local/bin
 	cp -a $(PARSER) /usr/local/bin/.
 
+doc:
+	doxygen .doxygen
 
 # generate '.pdf' files from the '.dot' files
 # graph: $(DOT_AST_FILE).pdf $(DOT_N_CON_FILE).pdf $(DOT_P_CON_FILE).pdf
