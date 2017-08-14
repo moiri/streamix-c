@@ -61,6 +61,7 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
     int ch_len;
     int id = igraph_ecount( g );
     const char* alt_name = TEXT_NULL;
+    rate_type_t type;
     p_src->edge_id = id;
     p_dest->edge_id = id;
 #if defined(DEBUG) || defined(DEBUG_CONNECT_GRAPH)
@@ -82,8 +83,16 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
     igraph_cattribute_EAN_set( g, GE_DDST, id, p_dest->descoupled );
     ch_len = get_ch_len( p_dest, p_src );
     igraph_cattribute_EAN_set( g, GE_LEN, id, ch_len );
-    igraph_cattribute_EAN_set( g, GE_TBS, id, p_dest->tb.tv_sec );
-    igraph_cattribute_EAN_set( g, GE_TBNS, id, p_dest->tb.tv_nsec );
+    igraph_cattribute_EAN_set( g, GE_DTS, id, p_dest->rate.time.tv_sec );
+    igraph_cattribute_EAN_set( g, GE_DTNS, id, p_dest->rate.time.tv_nsec );
+    igraph_cattribute_EAN_set( g, GE_STS, id, p_src->rate.time.tv_sec );
+    igraph_cattribute_EAN_set( g, GE_STNS, id, p_src->rate.time.tv_nsec );
+    if( ( p_src->rate.type == TIME_TT ) || ( p_dest->rate.type == TIME_TT ) )
+        type = TIME_TT;
+    else if( ( p_src->rate.type == TIME_TB ) || ( p_dest->rate.type == TIME_TB ) )
+        type = TIME_TB;
+    else type = TIME_NONE;
+    igraph_cattribute_EAN_set( g, GE_TYPE, id, type );
     return id;
 }
 
@@ -320,15 +329,6 @@ void dgraph_vertex_add_attr( igraph_t* g, int id, const char* func,
     igraph_cattribute_VAN_set( g, GV_GRAPH, id, ( uintptr_t )g_net );
     igraph_cattribute_VAN_set( g, GV_STATIC, id, attr_static );
     igraph_cattribute_VAN_set( g, GV_PURE, id, attr_pure );
-    igraph_cattribute_VAN_set( g, GV_TTS, id, 0 );
-    igraph_cattribute_VAN_set( g, GV_TTNS, id, 0 );
-}
-
-/******************************************************************************/
-void dgraph_vertex_add_attr_tt( igraph_t* g, int id, struct timespec tt )
-{
-    igraph_cattribute_VAN_set( g, GV_TTS, id, tt.tv_sec );
-    igraph_cattribute_VAN_set( g, GV_TTNS, id, tt.tv_nsec );
 }
 
 /******************************************************************************/
@@ -360,16 +360,6 @@ virt_net_t* dgraph_vertex_add_sync( igraph_t* g )
     instrec_t* inst = instrec_create( TEXT_CP, id, -1, INSTREC_SYNC );
     virt_net_t* v_net = virt_net_create_sync( inst );
     dgraph_vertex_add_attr( g, id, TEXT_CP, NULL, v_net, NULL, false, false );
-    return v_net;
-}
-
-/******************************************************************************/
-virt_net_t* dgraph_vertex_add_tf( igraph_t* g )
-{
-    int id = dgraph_vertex_add( g, TEXT_TF );
-    instrec_t* inst = instrec_create( TEXT_TF, id, -1, INSTREC_TT );
-    virt_net_t* v_net = virt_net_create_tf( inst );
-    dgraph_vertex_add_attr( g, id, TEXT_TF, NULL, v_net, NULL, false, false );
     return v_net;
 }
 
@@ -431,14 +421,6 @@ instrec_t* dgraph_vertex_copy( igraph_t* g_src, igraph_t* g_dest, int id,
                 GV_PURE ) )
         igraph_cattribute_VAN_set( g_dest, GV_PURE, new_id,
             igraph_cattribute_VAN( g_src, GV_PURE, id ) );
-    if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
-                GV_TTS ) )
-        igraph_cattribute_VAN_set( g_dest, GV_TTS, new_id,
-            igraph_cattribute_VAN( g_src, GV_TTS, id ) );
-    if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
-                GV_TTNS ) )
-        igraph_cattribute_VAN_set( g_dest, GV_TTNS, new_id,
-            igraph_cattribute_VAN( g_src, GV_TTNS, id ) );
     return inst;
 }
 
@@ -481,8 +463,6 @@ int dgraph_vertex_merge( igraph_t* g, int id1, int id2 )
             GV_GRAPH, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
             GV_STATIC, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
             GV_PURE, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
-            GV_TTS, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
-            GV_TTNS, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
             IGRAPH_NO_MORE_ATTRIBUTES );
     igraph_contract_vertices( g, &v_new, &comb );
     igraph_attribute_combination_destroy( &comb );
@@ -499,18 +479,12 @@ void dgraph_vertex_propagate_attrs( igraph_t* g_in, igraph_t* g, int id )
     igraph_vs_t vs;
     igraph_vit_t vit;
     int v_static = igraph_cattribute_VAN( g_in, GV_STATIC, id );
-    int v_tts = igraph_cattribute_VAN( g_in, GV_TTS, id );
-    int v_ttns = igraph_cattribute_VAN( g_in, GV_TTNS, id );
     vs = igraph_vss_all();
     igraph_vit_create( g, vs, &vit );
     while( !IGRAPH_VIT_END( vit ) ) {
         vid = IGRAPH_VIT_GET( vit );
         if( v_static )
             igraph_cattribute_VAN_set( g, GV_STATIC, vid, v_static );
-        if( v_tts )
-            igraph_cattribute_VAN_set( g, GV_TTS, vid, v_tts );
-        if( v_ttns )
-            igraph_cattribute_VAN_set( g, GV_TTNS, vid, v_ttns );
         IGRAPH_VIT_NEXT( vit );
     }
     igraph_vit_destroy( &vit );
@@ -578,8 +552,9 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
             // search for the port in the virtual net of the connection
             vp_net = virt_port_get_equivalent_by_symb_attr( v_net_i, sp_src );
             vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
-                    vp_net->v_net, vp_net->name, vp_net->symb, vp_net->tb,
-                    vp_net->descoupled, vp_net->ch_len );
+                    vp_net->v_net, vp_net->name, vp_net->symb,
+                    vp_net->rate.time, vp_net->rate.type, vp_net->descoupled,
+                    vp_net->ch_len );
             virt_port_append( v_net, vp_new );
         }
         else {
@@ -593,7 +568,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                 // not decoupled and have no rate control
                 vp_net = virt_port_create( sp_src->attr_port->collection,
                         sp_src->attr_port->mode, cp_sync, sp_src->name,
-                        sp_src, tb, false, 0 );
+                        sp_src, tb, TIME_NONE, false, 0 );
                 virt_port_append( v_net, vp_net );
                 virt_port_append( cp_sync, virt_port_copy( vp_net ) );
             }
@@ -613,7 +588,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                 }
                 vp_new = virt_port_create( vp_net->attr_class,
                         vp_net->attr_mode, cp_sync, vp_net->name,
-                        vp_net->symb, tb, false, 0 );
+                        vp_net->symb, tb, TIME_NONE, false, 0 );
                 virt_port_append( cp_sync, vp_new );
                 // unknown direction, ignore class, modes have to be equal
                 check_connection( vp_new, vp_net, g, false, true, true );

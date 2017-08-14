@@ -24,8 +24,6 @@
 #define GV_SIA      "sia"
 #define GV_STATIC   "static"
 #define GV_SYMB     "symb"
-#define GV_TTS      "tts"
-#define GV_TTNS     "ttns"
 #define GV_VNET     "vnet"
 
 #define GE_DSRC     "dsrc"
@@ -37,7 +35,16 @@
 #define GE_PSRC     "psrc"
 #define GE_PDST     "pdst"
 #define GE_SIA      "sia"
-#define GE_TBS      "tbs"
-#define GE_TBNS     "tbns"
+#define GE_STS      "sts"
+#define GE_STNS     "stns"
+#define GE_DTS      "dts"
+#define GE_DTNS     "dtns"
+#define GE_TYPE     "type"
+
+enum rate_type_e {
+    TIME_NONE,
+    TIME_TT,
+    TIME_TB,
+};
 
 #endif /* GRAPH_DEFINES_H */

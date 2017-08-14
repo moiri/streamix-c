@@ -2,4 +2,4 @@ A = box fa( out x )
 B = box fb( in x, out y )
 C = box fc( in y )
 
-connect A.tf[1s](B).C
+connect A.tt[1s](B).C

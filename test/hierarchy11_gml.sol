@@ -10,8 +10,6 @@ graph
     func "A"
     static 0
     pure 0
-    tts 0
-    ttns 0
   ]
   node
   [
@@ -20,8 +18,6 @@ graph
     func "A2"
     static 0
     pure 0
-    tts 0
-    ttns 0
   ]
   edge
   [
@@ -33,7 +29,10 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tbs 0
-    tbns 0
+    dts 0
+    dtns 0
+    sts 0
+    stns 0
+    type 0
   ]
 ]

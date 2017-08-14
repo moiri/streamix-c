@@ -162,7 +162,7 @@ $(DOT_P_CON_FILE).pdf: $(DOT_P_CON_FILE).dot
 	@gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$(DOT_P_CON_FILE).pdf dot/tmpfile*
 	@rm -f dot/tmpfile*
 
-.PHONY: clean graph run run_test run_test_all install doc
+.PHONY: clean graph run run_test run_test_all install doc move_res
 
 clean:
 	rm -f $(PROJECT).tab.c
@@ -233,5 +233,10 @@ run_test_all:
 	@printf "\nSuspended Tests:\n" | tee -a $(TEST_PATH)/test.log
 	@for file in $(TEST_PATH)/*.$(TEST_SUSPENDED); do \
 		echo $$file | tee -a $(TEST_PATH)/test.log;\
+	done
+
+move_res:
+	@for f in $(TEST_PATH)/*_gml.$(TEST_OUT); do \
+		mv -- "$$f" "$${f%.$(TEST_OUT)}.${TEST_SOL}"; \
 	done
 

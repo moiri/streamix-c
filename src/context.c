@@ -146,7 +146,7 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
             // channel length is set to zero: the connecting box port might
             // overwrite this due to the max function
             port_new = virt_port_create( port_class, port_mode, v_net_sync,
-                    port1->name, port1->symb, tb, false, 0 );
+                    port1->name, port1->symb, tb, TIME_NONE, false, 0 );
             virt_port_append( v_net_sync, port_new );
             virt_port_append( v_net, port_new );
             connect_ports( port_new, port1, g, false );
@@ -897,23 +897,13 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             virt_net_destroy_shallow( v_net2 );
             check_connections_cp( v_net, g, AST_SERIAL );
             break;
-        case AST_TT:
-            v_net = install_nets( symtab, scope_stack, ast->time->op, g );
-            tt_update_net( v_net, ast->time->time, g );
-            break;
-        case AST_TF:
-            v_net1 = install_nets( symtab, scope_stack, ast->time->op, g );
-            v_net = tf_create_net( g, v_net1, ast->time->time );
-            if( v_net == NULL ) {
-                // no temporal firewall introduced
-                sprintf( error_msg, WARNING_NO_TF, ERR_WARNING );
-                report_yyerror( error_msg, ast->time->line );
-                v_net = v_net1;
-            }
-            break;
         case AST_TB:
             v_net = install_nets( symtab, scope_stack, ast->time->op, g );
-            virt_port_add_time_bound( v_net, ast->time->time );
+            virt_port_add_time_bound( v_net, ast->time->time, TIME_TB );
+            break;
+        case AST_TT:
+            v_net = install_nets( symtab, scope_stack, ast->time->op, g );
+            virt_port_add_time_bound( v_net, ast->time->time, TIME_TT );
             break;
         case AST_ID:
             // check the context of the symbol
@@ -987,79 +977,5 @@ void post_process( igraph_t* g )
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
     igraph_vector_destroy( &dids );
-}
-
-/******************************************************************************/
-virt_net_t* tf_create_net( igraph_t* g, virt_net_t* vnet_tt,
-        struct timespec tt )
-{
-    virt_net_t* vnet = NULL;
-    virt_port_t* port_new;
-    virt_port_list_t* ports = vnet_tt->ports;
-    struct timespec tb;
-    tb.tv_sec = 0;
-    tb.tv_nsec = 0;
-    // create ports
-    while( ports != NULL ) {
-        if( ports->port->state < VPORT_STATE_CONNECTED ) {
-            if( vnet == NULL ) vnet = dgraph_vertex_add_tf( g );
-            ports->port->ch_len = 0;
-            port_new = virt_port_create( ports->port->attr_class,
-                    ports->port->attr_mode, vnet, ports->port->name,
-                    ports->port->symb, tb, true, 0 );
-            virt_port_append( vnet, port_new );
-            if( ports->port->attr_mode == PORT_MODE_IN ) {
-                port_new = virt_port_create( PORT_CLASS_NONE,
-                        PORT_MODE_OUT, vnet, ports->port->name,
-                        ports->port->symb, tb, true, 0 );
-                virt_port_append( vnet, port_new );
-                dgraph_edge_add( g, port_new, ports->port, ports->port->name );
-                ports->port->state = VPORT_STATE_CONNECTED;
-                port_new->state = VPORT_STATE_CONNECTED;
-            }
-            else if( ports->port->attr_mode == PORT_MODE_OUT ) {
-                port_new = virt_port_create( PORT_CLASS_NONE,
-                        PORT_MODE_IN, vnet, ports->port->name,
-                        ports->port->symb, tb, true, 0 );
-                virt_port_append( vnet, port_new );
-                dgraph_edge_add( g, ports->port, port_new, ports->port->name );
-                ports->port->state = VPORT_STATE_CONNECTED;
-                port_new->state = VPORT_STATE_CONNECTED;
-            }
-            else if( ports->port->attr_mode == PORT_MODE_BI ) {
-                // it is a side-port connected to a cp-sync
-                printf("what to do with tf and side-port cp-syncs?\n");
-            }
-        }
-        ports = ports->next;
-    }
-    if( vnet != NULL ) {
-        dgraph_vertex_add_attr_tt( g, vnet->inst->id, tt ); // add clock
-        // create a wrapping vnet for the temporal firewall
-        vnet = virt_net_create_symbol( vnet );
-        // remove the wrapping vnet of the guarded vnet
-        virt_net_destroy_shallow( vnet_tt );
-    }
-    return vnet;
-}
-
-/******************************************************************************/
-void tt_update_net( virt_net_t* v_net, struct timespec tt, igraph_t* g )
-{
-    int vid;
-    virt_port_list_t* ports = v_net->ports;
-    // create ports
-    while( ports != NULL ) {
-        // decouple all open ports
-        if( ports->port->state < VPORT_STATE_CONNECTED )
-            ports->port->descoupled = true;
-        // add tt timings to nets
-        vid = ports->port->v_net->inst->id;
-        dgraph_vertex_add_attr_tt( g, vid, tt );
-        // set buffer length to zero (will be set to one or to the value
-        // specified at the connecting port)
-        ports->port->ch_len = 0;
-        ports = ports->next;
-    }
 }
 

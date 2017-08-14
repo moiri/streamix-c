@@ -10,8 +10,6 @@ graph
     func "funcA"
     static 0
     pure 0
-    tts 0
-    ttns 0
   ]
   node
   [
@@ -20,8 +18,6 @@ graph
     func "funcA"
     static 0
     pure 0
-    tts 0
-    ttns 0
   ]
   node
   [
@@ -30,8 +26,6 @@ graph
     func "smx_cp"
     static 0
     pure 0
-    tts 0
-    ttns 0
   ]
   node
   [
@@ -40,8 +34,6 @@ graph
     func "funcB"
     static 0
     pure 0
-    tts 0
-    ttns 0
   ]
   node
   [
@@ -50,8 +42,6 @@ graph
     func "funcB"
     static 0
     pure 0
-    tts 0
-    ttns 0
   ]
   node
   [
@@ -60,8 +50,6 @@ graph
     func "smx_cp"
     static 0
     pure 0
-    tts 0
-    ttns 0
   ]
   node
   [
@@ -70,8 +58,6 @@ graph
     func "funcC"
     static 0
     pure 0
-    tts 0
-    ttns 0
   ]
   node
   [
@@ -80,8 +66,6 @@ graph
     func "funcC"
     static 0
     pure 0
-    tts 0
-    ttns 0
   ]
   edge
   [
@@ -93,8 +77,11 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tbs 0
-    tbns 0
+    dts 0
+    dtns 0
+    sts 0
+    stns 0
+    type 0
   ]
   edge
   [
@@ -106,8 +93,11 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tbs 0
-    tbns 0
+    dts 0
+    dtns 0
+    sts 0
+    stns 0
+    type 0
   ]
   edge
   [
@@ -119,8 +109,11 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tbs 0
-    tbns 0
+    dts 0
+    dtns 0
+    sts 0
+    stns 0
+    type 0
   ]
   edge
   [
@@ -132,8 +125,11 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tbs 0
-    tbns 0
+    dts 0
+    dtns 0
+    sts 0
+    stns 0
+    type 0
   ]
   edge
   [
@@ -145,8 +141,11 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tbs 0
-    tbns 0
+    dts 0
+    dtns 0
+    sts 0
+    stns 0
+    type 0
   ]
   edge
   [
@@ -158,8 +157,11 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tbs 0
-    tbns 0
+    dts 0
+    dtns 0
+    sts 0
+    stns 0
+    type 0
   ]
   edge
   [
@@ -171,8 +173,11 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tbs 0
-    tbns 0
+    dts 0
+    dtns 0
+    sts 0
+    stns 0
+    type 0
   ]
   edge
   [
@@ -184,7 +189,10 @@ graph
     dsrc 0
     ddst 0
     len 1
-    tbs 0
-    tbns 0
+    dts 0
+    dtns 0
+    sts 0
+    stns 0
+    type 0
   ]
 ]

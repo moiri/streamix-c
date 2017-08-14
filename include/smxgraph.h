@@ -152,15 +152,6 @@ void dgraph_vertex_add_attr( igraph_t* g, int id, const char* func,
         bool attr_pure );
 
 /**
- * @brief   Add tt timings to a vertex as attribute
- *
- * @param g             graph where the vertex resides
- * @param id            id of the vertex
- * @param tt            ::timespec structure with timing information
- */
-void dgraph_vertex_add_attr_tt( igraph_t* g, int id, struct timespec tt );
-
-/**
  * @brief   Create a box instance and add it to the graph
  *
  * @param g     graph where the vertex will be added
@@ -187,14 +178,6 @@ virt_net_t* dgraph_vertex_add_net( igraph_t* g, symrec_t* symb, int line );
  * @return      the virtual net of the synchronizer instance
  */
 virt_net_t* dgraph_vertex_add_sync( igraph_t* g );
-
-/**
- * @brief   Create a time triggered guard instance and add it to the graph
- *
- * @param g         graph where the vertex will be added
- * @return          the virtual net of the tt guard instance
- */
-virt_net_t* dgraph_vertex_add_tf( igraph_t* g );
 
 /**
  * @brief   Create a wrapper instance and add it to the graph

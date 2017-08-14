@@ -17,6 +17,7 @@ typedef struct virt_port_s virt_port_t;             /**< ::virt_port_s */
 typedef struct virt_port_list_s virt_port_list_t;   /**< ::virt_port_list_s */
 typedef enum virt_net_type_e virt_net_type_t;       /**< ::virt_net_type_e */
 typedef enum virt_port_state_e virt_port_state_t;   /**< ::virt_port_state_e */
+typedef enum rate_type_e rate_type_t;               /**< ::rate_type_e */
 
 #include <igraph.h>
 #include <time.h>
@@ -97,7 +98,11 @@ struct virt_port_s
     int                 attr_mode;  /**< updated mode for cp-sync (VAL_BI) */
     virt_port_state_t   state;      /**< #virt_port_state_e */
     int                 edge_id;    /**< id of the connecting channel */
-    struct timespec     tb;         /**< minimal inter-arrival time */
+    struct
+    {
+        struct timespec time;       /**< time specification */
+        rate_type_t     type;       /**< ::rate_type_e */
+    } rate;
     int                 ch_len;     /**< length of the channel */
     bool                descoupled; /**< is port decoupled? */
 };
@@ -282,8 +287,10 @@ void virt_net_update_class( virt_net_t* v_net, port_class_t port_class );
  *
  * @param v_net     pointer to the virtual net
  * @param tb        time bound
+ * @param rt        rate type
  */
-void virt_port_add_time_bound( virt_net_t* v_net, struct timespec tb );
+void virt_port_add_time_bound( virt_net_t* v_net, struct timespec time,
+        rate_type_t rt );
 
 /**
  * @brief   Append a port to the port list of a virtual net
@@ -326,14 +333,15 @@ virt_port_list_t* virt_port_assign( virt_port_list_t* old,
  * @param vnet          the virtual net the port is part of
  * @param name          a pointer to the name of the port
  * @param symb          a pointer to the symbol of the port
- * @param tb            time bound of port
+ * @param time          period of rate
+ * @param rt            type of rate
  * @param decoupled     is port decoupled
  * @param ch_len        channel length
  * @return              a pointer to the newly created port
  */
 virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
-        virt_net_t* vnet, const char* name, symrec_t* symb, struct timespec tb,
-        bool decoupled, int ch_len );
+        virt_net_t* vnet, const char* name, symrec_t* symb,
+        struct timespec time, rate_type_t rt, bool decoupled, int ch_len );
 
 /**
  * @brief   Create a copy of a virtual port

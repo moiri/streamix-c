@@ -274,26 +274,4 @@ bool is_connected( instrec_t* rec1, instrec_t* rec2, igraph_t* g );
  */
 void post_process( igraph_t* g );
 
-/**
- * @brief add a temporal firewall to enclodes net
- *
- * @param g         pointer to the dependency graph
- * @param vnet_tf   pointer to the enclosed net
- * @param tf        timings
- * @return          pointer to the vnet of the temporal firewall
- */
-virt_net_t* tf_create_net( igraph_t* g, virt_net_t* vnet_tf,
-        struct timespec tf );
-
-/**
- * @brief transform a net to a tt net
- *
- * All ports are decoupled and the tt timings are set
- *
- * @param v_net     pointer to the tt net
- * @param tt        tt timings
- * @param g         pointer to the dependency graph
- */
-void tt_update_net( virt_net_t* v_net, struct timespec tt, igraph_t* g );
-
 #endif // CONTEXT_H
