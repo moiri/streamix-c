@@ -37,6 +37,8 @@
     /* keywords */
 up              {yylval.ival = PORT_CLASS_UP;return UP;}
 down            {yylval.ival = PORT_CLASS_DOWN;return DOWN;}
+left            {yylval.ival = PORT_CLASS_UP;return UP;}
+right           {yylval.ival = PORT_CLASS_DOWN;return DOWN;}
 side            {yylval.ival = PORT_CLASS_SIDE;return SIDE;}
 in              {yylval.ival = PORT_MODE_IN;return IN;}
 out             {yylval.ival = PORT_MODE_OUT;return OUT;}
