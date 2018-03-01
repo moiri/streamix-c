@@ -87,6 +87,29 @@ void smx2sia_set_name_box( sia_t* sia, const char* box_name,
 sia_t* smx2sia_state( virt_port_list_t* ports_rec, int vid )
 {
     virt_port_list_t* ports = ports_rec;
+    int id_dst, id_src, v_count = 0;
+    sia_t* sia = sia_create( NULL, NULL );
+    while( ports != NULL ) {
+        v_count++;
+        ports = ports->next;
+    }
+    ports = ports_rec;
+    igraph_add_vertices( &sia->g, v_count, NULL );
+    id_src = v_count - 1;
+    id_dst = 0;
+    while( ports != NULL ) {
+        smx2sia_add_transition( &sia->g, ports->port, id_src, id_dst, vid );
+        id_dst = id_src;
+        id_src--;
+        ports = ports->next;
+    }
+    return sia;
+}
+
+/******************************************************************************/
+sia_t* smx2sia_state_reverse( virt_port_list_t* ports_rec, int vid )
+{
+    virt_port_list_t* ports = ports_rec;
     int id_dst, id_src = 0;
     sia_t* sia = sia_create( NULL, NULL );
     igraph_add_vertices( &sia->g, 1, NULL );
