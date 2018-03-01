@@ -7,8 +7,8 @@ A = box funcA(out a)
 B = box funcB(in a, out b)
 C = box funcC(in b)
 
-X = A|A
-Y = B|B
+X = A!A
+Y = B!B
 
 G = X.Y
 

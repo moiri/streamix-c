@@ -7,5 +7,5 @@ A = box funcA(up in a, down out a)
 X = box funcX(out a)
 Z = box funcY(in a)
 
-Y = A|A
-connect (X|X).Y.Y.(Z|Z)
+Y = A!A
+connect (X!X).Y.Y.(Z|Z)

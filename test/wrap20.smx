@@ -9,7 +9,7 @@ R = box R( in p1, in p2 )
 wrapper W( up in p1(a), up in p2(a), down out p1(b), down out p2(b) ) {
     A = box A ( in a, out p_int )
     B = box B ( in p_int, out b )
-    connect (A|A).(B|B)
+    connect (A!A).(B!B)
 } net( up in a, down out b )
 
 connect L.W.W.R

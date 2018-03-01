@@ -5,5 +5,5 @@
 A = box funcA( out b)
 Z = box funcY(in b)
 
-Y = A|A
+Y = A!A
 connect Y.(Z|Z)

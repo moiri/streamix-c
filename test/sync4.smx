@@ -7,4 +7,4 @@ B = box B( in x )
 C = box C( out x )
 D = box D( out x )
 
-connect (A|B).(C|D)
+connect (A|B).(C!D)

@@ -5,4 +5,4 @@
 A = box fa( out x )
 B = box fb( in x )
 
-connect (A!A).B
+connect (A|A).B

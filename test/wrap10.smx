@@ -10,7 +10,7 @@ wrapper W( in p1(a1, a2), out p2(b1, b2) ) {
     B = box B ( up in p_int, down out p_int )
     C1 = box C ( in p_int, out b1 )
     C2 = box C ( in p_int, out b2 )
-    connect (A1|A2).B.(C1|C2)
+    connect (A1!A2).B.(C1|C2)
 } net ( up in a1, up in a2, down out b1, down out b2 )
 
 connect L.W.R

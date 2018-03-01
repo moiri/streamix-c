@@ -67,7 +67,7 @@ void report_yyerror( const char*, int );
     "%s: action '%s' does not match the box signature"
 
 #define ERROR_NONDET\
-    "%s: nondeterminism on deterministic operation '%s!%s', use '|' instead"
+    "%s: nondeterminism on deterministic operation '%s|%s', use '!' instead"
 
 #define ERROR_NO_PORT_CON_CLASS\
     "%s: unconnected port '%s' in '%s'(%d) of serial combinition '%s.%s'\n"\

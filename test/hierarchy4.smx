@@ -10,7 +10,7 @@ wrapper W1( in a ) {
         A2 = box A2( in b )
         connect (A2|A2)
     } net( up in b )
-    connect (A1|A1).W2
+    connect (A1!A1).W2
 } net( up in a )
 
 connect A.W1

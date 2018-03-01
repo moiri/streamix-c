@@ -5,7 +5,7 @@ wrapper W( out x ) {
     connect A
 } net( down out x )
 
-N1 = (A|A).B
+N1 = (A!A).B
 N2 = W.B
 
 connect N1|N2

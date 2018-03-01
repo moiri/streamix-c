@@ -8,4 +8,4 @@ B = box B( out x )
 C = box C( in x )
 D = box D( in x )
 
-connect (A|B).(C|D)
+connect (A!B).(C|D)
