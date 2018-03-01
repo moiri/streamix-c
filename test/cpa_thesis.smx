@@ -1,0 +1,32 @@
+RevolutionSensor = box f_rs( out speed, side out log )
+DistanceSensor = box f_ds( out dist, side out log )
+Break = box fb( in break_abs, side out log )
+ManualBreak = box f_mb( out break_cmd, side out log )
+DistanceControl = box f_dc( in abs, in cpa, in dist_dc,
+        out dc_cpa, out dc_abs, side out log )
+CarPlatooning = box f_cpa( in dist_cpa, in dc_cpa,
+        out cpa, in com_front_in, out com_front_out,
+        in com_rear_in, out com_rear_out, side out log )
+ABS = box f_abs( in speed, in break_cmd, in dc_abs,
+        out break_abs, out abs, side out log )
+ComFront = box f_com( out com_front_rcv( com_rcv ),
+        in com_front_send( com_send ), side out log )
+ComRear = box f_com( out com_rear_rcv( com_rcv ),
+        in com_rear_send( com_send ), side out log )
+Logger = box f_log( side in log )
+
+wrapper DSW( out dist_dc( dist ), out dist_cpa( dist ), side out log ) {
+    connect DistanceSensor
+} net( right out dist, side out log )
+
+wrapper Car( out com_front_send( com_front_out ),
+        in com_front_rcv( com_front_in ),
+        out com_rear_send( com_rear_out ),
+        in com_rear_rcv( com_rear_in ), side out log ) {
+    DCN = DSW:DistanceControl
+    connect ( RevolutionSensor | Break | ManualBreak ).ABS
+        .DCN.CarPlatooning
+} net( right out com_front_out, right in com_front_in,
+        right out com_rear_out, right in com_rear_in, side out log )
+
+connect Logger|ComFront.Car.ComRear
