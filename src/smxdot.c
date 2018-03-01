@@ -29,7 +29,7 @@ char* node_label[] =
     "ports",
     "program",
     "serial",
-    "serial prop",
+    "serial open",
     "stmts",
     "sync",
     "tb",
@@ -133,7 +133,9 @@ void draw_ast_graph_step( FILE* graph, ast_node_t* ptr )
             break;
         // draw operators
         case AST_SERIAL:
+        case AST_SERIAL_PROP:
         case AST_PARALLEL:
+        case AST_PARALLEL_DET:
             graph_add_node( graph, ptr->id, node_label[ ptr->type ],
                     STYLE_N_AST_NODE );
             // continue on the left branch
