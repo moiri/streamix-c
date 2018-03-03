@@ -61,7 +61,7 @@ void report_yyerror( const char*, int );
     "%s: conflicting types for '%s'"
 
 #define ERROR_SMODE_CP\
-    "%s: single mode in synchroniser '%s'(%d)"
+    "%s: single mode in routing node '%s'(%d)"
 
 #define ERROR_BAD_SIA_PORT\
     "%s: action '%s' does not match the box signature"

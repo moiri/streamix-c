@@ -10,7 +10,7 @@
 #define GRAPH_DEFINES_H
 
 #define TEXT_CH     "smx_ch"
-#define TEXT_CP     "smx_cp"
+#define TEXT_CP     "smx_rn"
 #define TEXT_TF     "smx_tf"
 #define TEXT_NULL   "smx_null"
 
