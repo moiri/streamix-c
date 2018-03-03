@@ -55,7 +55,7 @@ int main( int argc, char **argv ) {
                 printf( "  -f 'format'   Format of the graph either 'gml' or 'graphml'\n" );
                 return 0;
             case 'v':
-                printf( "smxc-v0.0.1\n" );
+                printf( "smxc-v0.3.0\n" );
                 return 0;
             case 's':
                 sia_desc_file = optarg;
