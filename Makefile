@@ -32,7 +32,7 @@ INSTTAB_SRC = $(INSTTAB_DIR)/insttab.c $(INSTTAB_DIR)/insttab.h
 OBJECTS = $(SYMTAB_OBJ) $(INSTTAB_OBJ) $(SIA_LANG_OBJ)
 
 INCLUDES_DIR = -I$(UTHASH_DIR)/src \
-			   -I/usr/local/include/igraph \
+			   -I/usr/include/igraph \
 			   -I$(INSTTAB_DIR) \
 			   -I$(SYMTAB_DIR) \
 			   -I$(LOC_INC_DIR) \
