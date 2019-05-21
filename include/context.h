@@ -50,9 +50,10 @@ bool check_connection( virt_port_t* ports_l, virt_port_t* ports_r, igraph_t* g,
  * @param parallel  flag to indicate wheter cp syncs of parallel combinations
  *                  are checked (AST_PARALLEL/AST_PARALLEL_DET) or side ports
  *                  in serial combinations (0)
+ * @param is_tt     true if the net is time-triggered, false otherwise
  */
 void check_connection_cp( virt_net_t* net, virt_port_t* port1,
-        virt_port_t* port2, igraph_t* g, node_type_t parallel );
+        virt_port_t* port2, igraph_t* g, node_type_t parallel, bool is_tt );
 
 /**
  * @brief    Report missing connections
@@ -86,9 +87,10 @@ void check_connections( virt_net_t* v_net1, virt_net_t* v_net2, igraph_t* g );
  * @param g         pointer to a initialized igraph object
  * @param parallel  flag to indicate wheter copy synchronizer connections
  *                  in parallel operators are checked
+ * @param is_tt     true if the net is time-triggered, false otherwise
  */
 void check_connections_cp( virt_net_t* v_net1, igraph_t* g,
-        node_type_t parallel );
+        node_type_t parallel, bool is_tt );
 
 /**
  * @brief Check for open connections
@@ -250,11 +252,12 @@ bool do_port_attrs_match( symrec_list_t* r_ports, virt_port_list_t* v_ports );
  * @param scope_stack   pointer to the scope stack
  * @param ast           pointer to the ast node
  * @param g             pointer to an initialized igraph object
+ * @param is_tt         true if the net is time-triggered, false otherwise
  * @return              pointer to a virtual net with a port list and connection
  *                      vectors
  */
 virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
-        ast_node_t* ast, igraph_t* g );
+        ast_node_t* ast, igraph_t* g, bool is_tt );
 
 /**
  * @brief   checks wheter two instances are connected

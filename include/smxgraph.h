@@ -152,6 +152,18 @@ void dgraph_vertex_add_attr( igraph_t* g, int id, const char* func,
         bool attr_pure );
 
 /**
+ * @brief   Mark a vertex as time-triggered vertex
+ *
+ * @param g             graph where the vertex resides
+ * @param id            id of the vertex
+ * @param attr_tt       indicating the type of time-triggered net:
+ *                       0: no tt net
+ *                       1: a tt net (i.e. multiple nets surrounded by tfs)
+ *                       2: a tt box (i.e. a single net surrounded by tfs)
+ */
+void dgraph_vertex_add_attr_tt( igraph_t* g, int id, int attr_tt );
+
+/**
  * @brief   Create a box instance and add it to the graph
  *
  * @param g     graph where the vertex will be added

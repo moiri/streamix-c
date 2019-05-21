@@ -74,7 +74,7 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
 
 /******************************************************************************/
 void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
-        virt_port_t* port2, igraph_t* g, node_type_t parallel )
+        virt_port_t* port2, igraph_t* g, node_type_t parallel, bool is_tt )
 {
     char error_msg[ CONST_ERROR_LEN ];
     bool b_parallel = ( ( parallel == AST_PARALLEL )
@@ -143,6 +143,7 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
                 port_mode = port1->attr_mode;
             else port_mode = PORT_MODE_BI;
             v_net_sync = dgraph_vertex_add_sync( g );
+            dgraph_vertex_add_attr_tt( g, v_net_sync->inst->id, is_tt ? 1 : 0 );
             // channel length is set to zero: the connecting box port might
             // overwrite this due to the max function
             port_new = virt_port_create( port_class, port_mode, v_net_sync,
@@ -235,7 +236,7 @@ void check_connections( virt_net_t* v_net1, virt_net_t* v_net2, igraph_t* g )
 
 /******************************************************************************/
 void check_connections_cp( virt_net_t* v_net, igraph_t* g,
-        node_type_t parallel )
+        node_type_t parallel, bool is_tt )
 {
     virt_port_list_t* ports1 = NULL;
     virt_port_list_t* ports2 = NULL;
@@ -254,7 +255,7 @@ void check_connections_cp( virt_net_t* v_net, igraph_t* g,
                     && ( ports2->port->state < VPORT_STATE_CONNECTED )
                     && are_port_names_ok( ports1->port, ports2->port ) ) {
                 check_connection_cp( v_net, ports1->port, ports2->port, g,
-                        parallel );
+                        parallel, is_tt );
             }
             ports2 = ports2->next;
         }
@@ -461,7 +462,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
         case AST_NET:
             igraph_empty( &g_net, 0, true );
             v_net = ( void* )install_nets( symtab, scope_stack,
-                    ast->network->net, &g_net );
+                    ast->network->net, &g_net, false );
             n_attr = symrec_attr_create_net( v_net, &g_net );
 #if defined(DEBUG) || defined(DEBUG_NET_DOT)
             igraph_write_graph_dot( &g_net, stdout );
@@ -849,7 +850,7 @@ bool do_port_attrs_match( symrec_list_t* r_ports, virt_port_list_t* v_ports )
 
 /******************************************************************************/
 virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
-        ast_node_t* ast, igraph_t* g )
+        ast_node_t* ast, igraph_t* g, bool is_tt )
 {
     symrec_t* rec = NULL;
     virt_net_t* v_net = NULL;
@@ -862,9 +863,9 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
     switch( ast->type ) {
         case AST_PARALLEL:
         case AST_PARALLEL_DET:
-            v_net1 = install_nets( symtab, scope_stack, ast->op->left, g );
+            v_net1 = install_nets( symtab, scope_stack, ast->op->left, g, is_tt );
             if( v_net1 == NULL ) return NULL;
-            v_net2 = install_nets( symtab, scope_stack, ast->op->right, g );
+            v_net2 = install_nets( symtab, scope_stack, ast->op->right, g, is_tt );
             if( v_net2 == NULL ) {
                 virt_net_destroy_shallow( v_net1 );
                 return NULL;
@@ -872,13 +873,13 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             v_net = virt_net_create_parallel( v_net1, v_net2 );
             virt_net_destroy_shallow( v_net1 );
             virt_net_destroy_shallow( v_net2 );
-            check_connections_cp( v_net, g, ast->type );
+            check_connections_cp( v_net, g, ast->type, is_tt );
             break;
         case AST_SERIAL:
         case AST_SERIAL_PROP:
-            v_net1 = install_nets( symtab, scope_stack, ast->op->left, g );
+            v_net1 = install_nets( symtab, scope_stack, ast->op->left, g, is_tt );
             if( v_net1 == NULL ) return NULL;
-            v_net2 = install_nets( symtab, scope_stack, ast->op->right, g );
+            v_net2 = install_nets( symtab, scope_stack, ast->op->right, g, is_tt );
             if( v_net2 == NULL ) {
                 virt_net_destroy_shallow( v_net1 );
                 return NULL;
@@ -895,14 +896,14 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             v_net = virt_net_create_serial( v_net1, v_net2 );
             virt_net_destroy_shallow( v_net1 );
             virt_net_destroy_shallow( v_net2 );
-            check_connections_cp( v_net, g, AST_SERIAL );
+            check_connections_cp( v_net, g, AST_SERIAL, is_tt );
             break;
         case AST_TB:
-            v_net = install_nets( symtab, scope_stack, ast->time->op, g );
+            v_net = install_nets( symtab, scope_stack, ast->time->op, g, is_tt );
             virt_port_add_time_bound( v_net, ast->time->time, TIME_TB );
             break;
         case AST_TT:
-            v_net = install_nets( symtab, scope_stack, ast->time->op, g );
+            v_net = install_nets( symtab, scope_stack, ast->time->op, g, true );
             virt_port_add_time_bound( v_net, ast->time->time, TIME_TT );
             break;
         case AST_ID:
@@ -914,17 +915,20 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             switch( rec->type ) {
                 case SYMREC_BOX:
                     v_net = dgraph_vertex_add_box( g, rec, ast->symbol->line );
+                    dgraph_vertex_add_attr_tt( g, v_net->inst->id, is_tt ? 2 : 0 );
                     v_net = virt_net_create_symbol( v_net );
                     /* virt_net_destroy_shallow( v_net1 ); */
                     check_connections_self( g, v_net );
                     break;
                 case SYMREC_NET:
                     v_net = dgraph_vertex_add_net( g, rec, ast->symbol->line );
+                    dgraph_vertex_add_attr_tt( g, v_net->inst->id, is_tt ? 1 : 0 );
                     v_net = virt_net_create_symbol( v_net );
                     /* virt_net_destroy_shallow( v_net1 ); */
                     break;
                 case SYMREC_WRAP:
                     v_net = dgraph_vertex_add_wrap( g, rec, ast->symbol->line );
+                    dgraph_vertex_add_attr_tt( g, v_net->inst->id, is_tt ? 1 : 0 );
                     v_net = virt_net_create_symbol( v_net );
                     /* virt_net_destroy_shallow( v_net1 ); */
                     check_connections_self( g, v_net );

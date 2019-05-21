@@ -235,7 +235,8 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, virt_net_t* v_net )
         if( v_net->type == VNET_NET ) {
             // unknown direction, class matters, modes have to be different
             check_connection( port_net, port, g_new, false, false, false );
-            check_connection_cp( NULL, port_net, port, g_new, AST_NET );
+            check_connection_cp( NULL, port_net, port, g_new, AST_NET,
+                igraph_cattribute_VAN( g_new, GV_TT, v_net->inst->id ) );
         }
         else if( v_net->type == VNET_WRAP ) {
             // unknown direction, ignore class, modes have to be different
@@ -329,6 +330,13 @@ void dgraph_vertex_add_attr( igraph_t* g, int id, const char* func,
     igraph_cattribute_VAN_set( g, GV_GRAPH, id, ( uintptr_t )g_net );
     igraph_cattribute_VAN_set( g, GV_STATIC, id, attr_static );
     igraph_cattribute_VAN_set( g, GV_PURE, id, attr_pure );
+    igraph_cattribute_VAN_set( g, GV_TT, id, false );
+}
+
+/******************************************************************************/
+void dgraph_vertex_add_attr_tt( igraph_t* g, int id, int attr_tt )
+{
+    igraph_cattribute_VAN_set( g, GV_TT, id, attr_tt );
 }
 
 /******************************************************************************/
@@ -421,6 +429,10 @@ instrec_t* dgraph_vertex_copy( igraph_t* g_src, igraph_t* g_dest, int id,
                 GV_PURE ) )
         igraph_cattribute_VAN_set( g_dest, GV_PURE, new_id,
             igraph_cattribute_VAN( g_src, GV_PURE, id ) );
+    if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
+                GV_TT ) )
+        igraph_cattribute_VAN_set( g_dest, GV_TT, new_id,
+            igraph_cattribute_VAN( g_src, GV_TT, id ) );
     return inst;
 }
 
@@ -463,6 +475,7 @@ int dgraph_vertex_merge( igraph_t* g, int id1, int id2 )
             GV_GRAPH, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
             GV_STATIC, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
             GV_PURE, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            GV_TT, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
             IGRAPH_NO_MORE_ATTRIBUTES );
     igraph_contract_vertices( g, &v_new, &comb );
     igraph_attribute_combination_destroy( &comb );
@@ -479,12 +492,15 @@ void dgraph_vertex_propagate_attrs( igraph_t* g_in, igraph_t* g, int id )
     igraph_vs_t vs;
     igraph_vit_t vit;
     int v_static = igraph_cattribute_VAN( g_in, GV_STATIC, id );
+    int v_tt = igraph_cattribute_VAN( g_in, GV_TT, id );
     vs = igraph_vss_all();
     igraph_vit_create( g, vs, &vit );
     while( !IGRAPH_VIT_END( vit ) ) {
         vid = IGRAPH_VIT_GET( vit );
         if( v_static )
             igraph_cattribute_VAN_set( g, GV_STATIC, vid, v_static );
+        if( v_tt )
+            igraph_cattribute_VAN_set( g, GV_TT, vid, v_tt );
         IGRAPH_VIT_NEXT( vit );
     }
     igraph_vit_destroy( &vit );

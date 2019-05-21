@@ -25,6 +25,7 @@
 #define GV_STATIC   "static"
 #define GV_SYMB     "symb"
 #define GV_VNET     "vnet"
+#define GV_TT       "tt"
 
 #define GE_DSRC     "dsrc"
 #define GE_DDST     "ddst"
