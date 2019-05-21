@@ -7,25 +7,25 @@ graph
   [
     id 0
     label "A"
-    func "A"
+    func "fa"
     static 0
     pure 0
-    tt 0
+    tt 1
   ]
   node
   [
     id 1
-    label "A2"
-    func "A2"
+    label "B"
+    func "fb"
     static 0
     pure 0
-    tt 0
+    tt 1
   ]
   edge
   [
     source 0
     target 1
-    label "a"
+    label "x"
     nsrc "smx_null"
     ndst "smx_null"
     dsrc 0

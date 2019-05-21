@@ -10,6 +10,7 @@ graph
     func "funcA"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -18,14 +19,16 @@ graph
     func "funcA"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
     id 2
-    label "smx_cp"
-    func "smx_cp"
+    label "smx_rn"
+    func "smx_rn"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -34,6 +37,7 @@ graph
     func "funcB"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -42,14 +46,16 @@ graph
     func "funcB"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
     id 5
-    label "smx_cp"
-    func "smx_cp"
+    label "smx_rn"
+    func "smx_rn"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -58,6 +64,7 @@ graph
     func "funcC"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -66,6 +73,7 @@ graph
     func "funcC"
     static 0
     pure 0
+    tt 0
   ]
   edge
   [

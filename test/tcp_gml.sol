@@ -10,6 +10,7 @@ graph
     func "a"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -18,6 +19,7 @@ graph
     func "b"
     static 0
     pure 0
+    tt 0
   ]
   edge
   [

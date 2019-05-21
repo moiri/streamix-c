@@ -7,28 +7,28 @@ graph
   [
     id 0
     label "A"
-    func "A"
+    func "fa"
     static 0
     pure 0
-    tt 0
+    tt 2
   ]
   node
   [
     id 1
     label "B"
-    func "B"
+    func "fb"
     static 0
     pure 0
-    tt 0
+    tt 2
   ]
   node
   [
     id 2
-    label "C"
-    func "C"
+    label "B"
+    func "fb"
     static 0
     pure 0
-    tt 0
+    tt 2
   ]
   node
   [
@@ -37,7 +37,7 @@ graph
     func "smx_rn"
     static 0
     pure 0
-    tt 0
+    tt 1
   ]
   edge
   [
@@ -49,11 +49,11 @@ graph
     dsrc 0
     ddst 0
     len 1
-    dts 0
+    dts 1
     dtns 0
-    sts 0
+    sts 1
     stns 0
-    type 0
+    type 1
   ]
   edge
   [
@@ -65,11 +65,11 @@ graph
     dsrc 0
     ddst 0
     len 1
-    dts 0
+    dts 1
     dtns 0
-    sts 0
+    sts 1
     stns 0
-    type 0
+    type 1
   ]
   edge
   [
@@ -81,10 +81,10 @@ graph
     dsrc 0
     ddst 0
     len 1
-    dts 0
+    dts 1
     dtns 0
-    sts 0
+    sts 1
     stns 0
-    type 0
+    type 1
   ]
 ]

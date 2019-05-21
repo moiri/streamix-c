@@ -10,6 +10,7 @@ graph
     func "CarS"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -18,6 +19,7 @@ graph
     func "CarE"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -26,6 +28,7 @@ graph
     func "DS"
     static 0
     pure 1
+    tt 0
   ]
   node
   [
@@ -34,6 +37,7 @@ graph
     func "RS"
     static 0
     pure 1
+    tt 0
   ]
   node
   [
@@ -42,6 +46,7 @@ graph
     func "B"
     static 0
     pure 1
+    tt 0
   ]
   node
   [
@@ -50,6 +55,7 @@ graph
     func "MB"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -58,6 +64,7 @@ graph
     func "ABS"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -66,6 +73,7 @@ graph
     func "DC"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -74,14 +82,16 @@ graph
     func "CPA"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
     id 9
-    label "smx_cp"
-    func "smx_cp"
+    label "smx_rn"
+    func "smx_rn"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -90,6 +100,7 @@ graph
     func "DS"
     static 0
     pure 1
+    tt 0
   ]
   node
   [
@@ -98,6 +109,7 @@ graph
     func "RS"
     static 0
     pure 1
+    tt 0
   ]
   node
   [
@@ -106,6 +118,7 @@ graph
     func "B"
     static 0
     pure 1
+    tt 0
   ]
   node
   [
@@ -114,6 +127,7 @@ graph
     func "MB"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -122,6 +136,7 @@ graph
     func "ABS"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -130,6 +145,7 @@ graph
     func "DC"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -138,14 +154,16 @@ graph
     func "CPA"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
     id 17
-    label "smx_cp"
-    func "smx_cp"
+    label "smx_rn"
+    func "smx_rn"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -154,6 +172,7 @@ graph
     func "DS"
     static 0
     pure 1
+    tt 0
   ]
   node
   [
@@ -162,6 +181,7 @@ graph
     func "RS"
     static 0
     pure 1
+    tt 0
   ]
   node
   [
@@ -170,6 +190,7 @@ graph
     func "B"
     static 0
     pure 1
+    tt 0
   ]
   node
   [
@@ -178,6 +199,7 @@ graph
     func "MB"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -186,6 +208,7 @@ graph
     func "ABS"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -194,6 +217,7 @@ graph
     func "DC"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
@@ -202,14 +226,16 @@ graph
     func "CPA"
     static 0
     pure 0
+    tt 0
   ]
   node
   [
     id 25
-    label "smx_cp"
-    func "smx_cp"
+    label "smx_rn"
+    func "smx_rn"
     static 0
     pure 0
+    tt 0
   ]
   edge
   [
