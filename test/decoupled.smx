@@ -1,0 +1,8 @@
+/**
+ * A connection with decoupled and coupled ports
+ */
+
+A = box A( out a, coupled side out p1, decoupled side out p2 )
+B = box B( in a, side out p1, side out p2 )
+P = box P( side in p1, decoupled side in p2 )
+connect A.(B|B)|P

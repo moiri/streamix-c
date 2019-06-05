@@ -553,9 +553,11 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             if( ast->port->collection != NULL ) {
                 p_attr->collection = ast->port->collection->attr->val;
             }
-            if( ( ast->port->coupling != NULL )
+            if( ( ast->port->coupling != NULL
+                        && ast->port->coupling->attr->val == PARSE_ATTR_DECOUPLED )
                     || ( ( p_attr->collection == PORT_CLASS_SIDE )
-                        && ( p_attr->mode == PORT_MODE_OUT ) ) )
+                        && ( p_attr->mode == PORT_MODE_OUT )
+                        && ( ast->port->coupling == NULL ) ) )
                 p_attr->decoupled = true;
             if( ( ast->port->int_id != NULL )
                     && ( ast->port->int_id->type == AST_INT_PORTS ) ) {

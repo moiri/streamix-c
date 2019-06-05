@@ -29,7 +29,7 @@
 };
 /* keywods */
 %token CONNECT TT TB TF
-%token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED STATELESS STATIC BUFLEN
+%token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED COUPLED STATELESS STATIC BUFLEN
 %token <tval> TIME_SEC TIME_MSEC TIME_USEC TIME_NSEC
 
 /* optional and variable keyword tokens */
@@ -336,6 +336,7 @@ kw_opt_state:
 kw_opt_decoupled:
     %empty { $$ = ( ast_node_t* )0; }
 |   DECOUPLED { $$ = ast_add_attr( $1, ATTR_OTHER ); }
+|   COUPLED { $$ = ast_add_attr( $1, ATTR_OTHER ); }
 ;
 
 kw_port_mode:

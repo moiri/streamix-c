@@ -49,6 +49,7 @@ char* class_label[] = {
 };
 char* nattr_label[] = {
     "decoupled",
+    "coupled",
     "pure",
     "static"
 };

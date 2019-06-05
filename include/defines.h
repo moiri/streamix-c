@@ -61,6 +61,7 @@ enum port_mode_e
 enum parse_attr_e
 {
     PARSE_ATTR_DECOUPLED,
+    PARSE_ATTR_COUPLED,
     PARSE_ATTR_STATELESS,
     PARSE_ATTR_STATIC,
     PARSE_ATTR_BOX,
