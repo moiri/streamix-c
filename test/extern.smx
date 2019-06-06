@@ -1,0 +1,8 @@
+/**
+ * A simple serial connection between two boxes with tests on the keyword extern
+ */
+
+A = extern box a( out x )
+B = box b( in x )
+
+connect A.B
