@@ -13,6 +13,8 @@
    externally. For boxes with the keyword `extern` no signature will be
    generated, however, an h-file will be included in the main file with the
    name of the box.
+ - introduce the keyword `open` which allows to mark that a port was
+   intentionally left open.
 
 # `diss_final`
 

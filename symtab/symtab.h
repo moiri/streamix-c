@@ -103,7 +103,8 @@ struct attr_port_s
     symrec_list_t*  ports_int;      /**< internal name or NULL */
     port_mode_t     mode;           /**< input or output */
     port_class_t    collection;     /**< VAL_UP, VAL_DOWN, VAL_SIDE, VAL_NONE */
-    bool            decoupled;      /**< port is non-triggering **/
+    bool            decoupled;      /**< port is non-triggering */
+    bool            is_open;        /**< whether the port is unconnected */
     int             ch_len;         /**< length of the channel */
     const char*     alt_name;       /**< alternative name of the port */
 };
@@ -156,11 +157,12 @@ attr_net_t* symrec_attr_create_net( virt_net_t* v_net, igraph_t* g );
  * @param mode          direction of the port
  * @param collection    class of the port
  * @param decoupled     flag indicating whether a port is decoupled
+ * @param is_open       flag indication whther a port is open
  * @param ch_len        length of the channel
  * @return              pointer to the new structure
  */
 attr_port_t* symrec_attr_create_port( symrec_list_t* port_int, port_mode_t mode,
-        port_class_t collection, bool decoupled, int ch_len );
+        port_class_t collection, bool decoupled, bool is_open, int ch_len );
 
 /**
  * @brief   Create a net prototype attribute structure

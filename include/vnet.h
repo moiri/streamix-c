@@ -105,6 +105,7 @@ struct virt_port_s
     } rate;
     int                 ch_len;     /**< length of the channel */
     bool                descoupled; /**< is port decoupled? */
+    bool                is_open;    /**< is port open? */
 };
 
 // FUNCTIONS ------------------------------------------------------------------
@@ -336,12 +337,14 @@ virt_port_list_t* virt_port_assign( virt_port_list_t* old,
  * @param time          period of rate
  * @param rt            type of rate
  * @param decoupled     is port decoupled
+ * @param open          is port open
  * @param ch_len        channel length
  * @return              a pointer to the newly created port
  */
 virt_port_t* virt_port_create( port_class_t port_class, port_mode_t port_mode,
         virt_net_t* vnet, const char* name, symrec_t* symb,
-        struct timespec time, rate_type_t rt, bool decoupled, int ch_len );
+        struct timespec time, rate_type_t rt, bool decoupled, bool is_open,
+        int ch_len );
 
 /**
  * @brief   Create a copy of a virtual port

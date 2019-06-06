@@ -52,7 +52,8 @@ char* nattr_label[] = {
     "coupled",
     "pure",
     "static",
-    "extern"
+    "extern",
+    "open"
 };
 char** attr_label[] = {
     mode_label,
