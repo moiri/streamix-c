@@ -10,6 +10,7 @@ graph
     func "fc"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -19,6 +20,7 @@ graph
     func "fd"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -28,6 +30,7 @@ graph
     func "fe"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -37,6 +40,7 @@ graph
     func "fep"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -46,6 +50,7 @@ graph
     func "smx_rn"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -55,6 +60,7 @@ graph
     func "fa"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -64,6 +70,7 @@ graph
     func "fb"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   edge

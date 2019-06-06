@@ -10,6 +10,7 @@ graph
     func "funcX"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -19,6 +20,7 @@ graph
     func "funcY"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -28,6 +30,7 @@ graph
     func "funcA"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -37,6 +40,7 @@ graph
     func "funcB"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   edge

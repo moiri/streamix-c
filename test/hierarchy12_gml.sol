@@ -10,6 +10,7 @@ graph
     func "B"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -19,6 +20,7 @@ graph
     func "A3"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   edge

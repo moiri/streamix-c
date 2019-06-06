@@ -10,6 +10,7 @@ graph
     func "fa"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -19,6 +20,7 @@ graph
     func "fa"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -28,6 +30,7 @@ graph
     func "fb"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   edge

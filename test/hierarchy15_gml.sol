@@ -10,6 +10,7 @@ graph
     func "A"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -19,6 +20,7 @@ graph
     func "B"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -28,6 +30,7 @@ graph
     func "CA"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -37,6 +40,7 @@ graph
     func "CC"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -46,6 +50,7 @@ graph
     func "CD"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -55,6 +60,7 @@ graph
     func "CBA"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   node
@@ -64,6 +70,7 @@ graph
     func "CBB"
     static 0
     pure 0
+    extern 0
     tt 0
   ]
   edge
