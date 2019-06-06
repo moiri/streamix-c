@@ -51,7 +51,8 @@ char* nattr_label[] = {
     "decoupled",
     "coupled",
     "pure",
-    "static"
+    "static",
+    "extern"
 };
 char** attr_label[] = {
     mode_label,

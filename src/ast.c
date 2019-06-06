@@ -34,13 +34,15 @@ ast_node_t* ast_add_attr( int val, attr_type_t type )
 }
 
 /******************************************************************************/
-ast_node_t* ast_add_box( ast_node_t* id, ast_node_t* ports, ast_node_t* state )
+ast_node_t* ast_add_box( ast_node_t* id, ast_node_t* ports, ast_node_t* state,
+        ast_node_t* ext )
 {
     ast_node_t *node = ast_add_node( AST_BOX );
     node->box = malloc( sizeof( ast_box_t ) );
     node->box->impl = id;
     node->box->ports = ports;
     node->box->attr_pure = state;
+    node->box->attr_ext = ext;
     return node;
 }
 

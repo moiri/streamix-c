@@ -21,6 +21,7 @@
 #define GV_IMPL     "func"
 #define GV_LABEL    "label"
 #define GV_PURE     "pure"
+#define GV_EXT      "extern"
 #define GV_SIA      "sia"
 #define GV_STATIC   "static"
 #define GV_SYMB     "symb"

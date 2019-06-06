@@ -146,10 +146,11 @@ int dgraph_vertex_add( igraph_t* g, const char* name );
  * @param g_net         pointer to the graph or NULL
  * @param attr_static   boolean attribute
  * @param attr_pure     boolean attribute
+ * @param attr_ext      boolean attribute
  */
 void dgraph_vertex_add_attr( igraph_t* g, int id, const char* func,
         symrec_t* symb, virt_net_t* v_net, igraph_t* g_net, bool attr_static,
-        bool attr_pure );
+        bool attr_pure, bool attr_ext );
 
 /**
  * @brief   Mark a vertex as time-triggered vertex

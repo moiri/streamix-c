@@ -50,6 +50,7 @@ pure            {yylval.ival = PARSE_ATTR_STATELESS;return STATELESS;}
 decoupled       {yylval.ival = PARSE_ATTR_DECOUPLED;return DECOUPLED;}
 coupled         {yylval.ival = PARSE_ATTR_COUPLED;return COUPLED;}
 static          {yylval.ival = PARSE_ATTR_STATIC;return STATIC;}
+extern          {yylval.ival = PARSE_ATTR_EXTERN;return EXTERN;}
 tt              return TT;
 tb              return TB;
 tf              return TF;

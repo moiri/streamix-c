@@ -133,6 +133,7 @@ struct ast_box_s
     ast_node_t*   impl;         /**< ::ast_symb_t */
     ast_node_t*   ports;        /**< ::ast_list_t */
     ast_node_t*   attr_pure;    /**< ::ast_attr_t */
+    ast_node_t*   attr_ext;     /**< ::ast_attr_t */
 };
 
 /**
@@ -274,9 +275,11 @@ ast_node_t* ast_add_attr( int val, attr_type_t type );
  * @param id        pointer to an ast node of type AST_ID
  * @param ports     pointer to the ports list AST node
  * @param state     pointer to the state AST node
+ * @param ext       pointer to the extern AST node
  * @return          a pointer to the location where the data was stored
  */
-ast_node_t* ast_add_box( ast_node_t* id, ast_node_t* ports, ast_node_t* state );
+ast_node_t* ast_add_box( ast_node_t* id, ast_node_t* ports, ast_node_t* state,
+        ast_node_t* ext );
 
 /**
  * @brief   Add a list as node to the AST.

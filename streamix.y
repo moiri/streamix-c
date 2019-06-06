@@ -29,11 +29,12 @@
 };
 /* keywods */
 %token CONNECT TT TB TF
-%token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED COUPLED STATELESS STATIC BUFLEN
+%token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED COUPLED STATELESS STATIC EXTERN BUFLEN
 %token <tval> TIME_SEC TIME_MSEC TIME_USEC TIME_NSEC
 
 /* optional and variable keyword tokens */
 %type <nval> kw_opt_state
+%type <nval> kw_opt_extern
 %type <nval> kw_opt_static
 %type <nval> kw_opt_decoupled
 %type <nval> kw_port_class
@@ -192,10 +193,11 @@ net_port_decl:
 
 /* box declarartion */
 box_decl:
-    kw_opt_state BOX IDENTIFIER '(' box_port_list ')' {
+    kw_opt_extern kw_opt_state BOX IDENTIFIER '(' box_port_list ')' {
         $$ = ast_add_box(
-            ast_add_symbol( $3, @3.last_line, ID_BOX_IMPL ),
-            ast_add_list( $5, AST_PORTS ),
+            ast_add_symbol( $4, @4.last_line, ID_BOX_IMPL ),
+            ast_add_list( $6, AST_PORTS ),
+            $2,
             $1
         );
     }
@@ -328,6 +330,11 @@ alt_port_decl:
 ;
 
 /* keywords */
+kw_opt_extern:
+    %empty { $$ = ( ast_node_t* )0; }
+|   EXTERN { $$ = ast_add_attr( $1, ATTR_OTHER ); }
+;
+
 kw_opt_state:
     %empty { $$ = ( ast_node_t* )0; }
 |   STATELESS { $$ = ast_add_attr( $1, ATTR_OTHER ); }
