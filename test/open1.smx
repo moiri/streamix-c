@@ -1,0 +1,7 @@
+/**
+ * A simple serial connection between two boxes to test open ports
+ */
+
+A = box a( out x, out y open )
+B = box b( in x )
+connect A.B

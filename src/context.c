@@ -29,7 +29,26 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
     inst_l = port_l->v_net->inst;
     inst_r = port_r->v_net->inst;
     if( ignore_class || are_port_classes_ok( port_l, port_r, directed ) ) {
-        if( ( inst_l->type == INSTREC_SYNC )
+        if( port_r->is_open || port_l->is_open )
+        {
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+            printf( "\n  => connection is invalid (port is open)\n" );
+#endif // DEBUG_CONNECT
+            if( port_r->is_open )
+            {
+                sprintf( error_msg, ERROR_CONNECT_OPEN, ERR_ERROR, port_r->name,
+                        inst_r->name, inst_r->id );
+                report_yyerror( error_msg, inst_r->line );
+            }
+            if( port_l->is_open )
+            {
+                sprintf( error_msg, ERROR_CONNECT_OPEN, ERR_ERROR, port_l->name,
+                        inst_l->name, inst_l->id );
+                report_yyerror( error_msg, inst_l->line );
+            }
+            res = false;
+        }
+        else if( ( inst_l->type == INSTREC_SYNC )
                 && ( inst_r->type == INSTREC_SYNC ) ) {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "\n  => connection is valid\n" );

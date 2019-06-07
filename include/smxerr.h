@@ -40,6 +40,9 @@ void report_yyerror( const char*, int );
 #define ERROR_BAD_MODE\
     "%s: conflicting modes of ports '%s' in '%s'(%d) and '%s'(%d) (line %d)"
 
+#define ERROR_CONNECT_OPEN\
+    "%s: cannot connect open port '%s' in '%s'(%d)"
+
 // currently not used
 #define ERROR_BAD_MODE_SIDE\
     "%s: conflicting modes of side port '%s' in '%s'(%d)"

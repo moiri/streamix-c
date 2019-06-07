@@ -1,0 +1,8 @@
+/**
+ * A serial connection, spawning a routing node, to test bad connections on open
+ * ports
+ */
+
+A = box a( out x open )
+B = box b( in x )
+connect A.(B|B)
