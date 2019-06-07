@@ -69,6 +69,15 @@ void check_connection_missing( virt_net_t* v_net_l, virt_net_t* v_net_r,
         igraph_t* g );
 
 /**
+ * Check whether a port is declared as open in a connections of two ports.
+ *
+ * @param ports_l   pointer to the port of a virtual net of the left operator
+ * @param ports_r   pointer to the port of a virtual net of the right operator
+ * @return          true if connection was ok, false if no connection
+ */
+bool check_connection_on_open_ports( virt_port_t* port_l, virt_port_t* port_r );
+
+/**
  * @brief    Check port connections of two nets and connect them
  *
  * @param v_net1    pointer to the virtual net of the left operator

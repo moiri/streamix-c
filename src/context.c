@@ -29,26 +29,9 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
     inst_l = port_l->v_net->inst;
     inst_r = port_r->v_net->inst;
     if( ignore_class || are_port_classes_ok( port_l, port_r, directed ) ) {
-        if( port_r->is_open || port_l->is_open )
-        {
-#if defined(DEBUG) || defined(DEBUG_CONNECT)
-            printf( "\n  => connection is invalid (port is open)\n" );
-#endif // DEBUG_CONNECT
-            if( port_r->is_open )
-            {
-                sprintf( error_msg, ERROR_CONNECT_OPEN, ERR_ERROR, port_r->name,
-                        inst_r->name, inst_r->id );
-                report_yyerror( error_msg, inst_r->line );
-            }
-            if( port_l->is_open )
-            {
-                sprintf( error_msg, ERROR_CONNECT_OPEN, ERR_ERROR, port_l->name,
-                        inst_l->name, inst_l->id );
-                report_yyerror( error_msg, inst_l->line );
-            }
-            res = false;
-        }
-        else if( ( inst_l->type == INSTREC_SYNC )
+        if( !check_connection_on_open_ports( port_l, port_r ) )
+            return false;
+        if( ( inst_l->type == INSTREC_SYNC )
                 && ( inst_r->type == INSTREC_SYNC ) ) {
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "\n  => connection is valid\n" );
@@ -119,6 +102,8 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
     else if( port2->attr_class == PORT_CLASS_NONE )
         port_class = port1->attr_class;
     if ( are_port_cp_classes_ok( port1, port2, b_parallel ) ) {
+        if( !check_connection_on_open_ports( port1, port2 ) )
+            return;
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
         printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
@@ -229,6 +214,36 @@ void check_connection_missing( virt_net_t* v_net_l, virt_net_t* v_net_r,
 }
 
 /******************************************************************************/
+bool check_connection_on_open_ports( virt_port_t* port_l, virt_port_t* port_r )
+{
+    instrec_t *inst_l, *inst_r;
+    char error_msg[ CONST_ERROR_LEN ];
+    inst_l = port_l->v_net->inst;
+    inst_r = port_r->v_net->inst;
+
+    if( port_r->is_open || port_l->is_open )
+    {
+#if defined(DEBUG) || defined(DEBUG_CONNECT)
+        printf( "\n  => connection is invalid (port is open)\n" );
+#endif // DEBUG_CONNECT
+        if( port_r->is_open )
+        {
+            sprintf( error_msg, ERROR_CONNECT_OPEN, ERR_ERROR, port_r->name,
+                    inst_r->name, inst_r->id );
+            report_yyerror( error_msg, inst_r->line );
+        }
+        if( port_l->is_open )
+        {
+            sprintf( error_msg, ERROR_CONNECT_OPEN, ERR_ERROR, port_l->name,
+                    inst_l->name, inst_l->id );
+            report_yyerror( error_msg, inst_l->line );
+        }
+        return false;
+    }
+    return true;
+}
+
+/******************************************************************************/
 void check_connections( virt_net_t* v_net1, virt_net_t* v_net2, igraph_t* g )
 {
     virt_port_list_t* ports_l = NULL;
@@ -263,7 +278,7 @@ void check_connections_cp( virt_net_t* v_net, igraph_t* g,
     if( v_net->ports != NULL ) new_idx = v_net->ports->idx;
 
     // in the list of ports, test each combination only once and do not compare
-    // a port with itself (we use the new_idx counter for this) not that the
+    // a port with itself (we use the new_idx counter for this) note that the
     // port indices ports->idx start from the highest value
     ports1 = v_net->ports;
     while( ports1 != NULL ) {
