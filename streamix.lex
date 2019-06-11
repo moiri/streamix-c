@@ -42,6 +42,7 @@ right           {yylval.ival = PORT_CLASS_DOWN;return DOWN;}
 side            {yylval.ival = PORT_CLASS_SIDE;return SIDE;}
 in              {yylval.ival = PORT_MODE_IN;return IN;}
 out             {yylval.ival = PORT_MODE_OUT;return OUT;}
+profiler        {yylval.ival = PORT_MODE_PROFILER;return PROFILER;}
 box             {yylval.ival = PARSE_ATTR_BOX;return BOX;}
 wrapper         {yylval.ival = PARSE_ATTR_WRAP;return WRAPPER;}
 net             {yylval.ival = PARSE_ATTR_NET;return NET;}

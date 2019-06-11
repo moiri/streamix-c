@@ -6,7 +6,7 @@
  - instead of compiling igraph manually use the already prepared deb package
 
 ### New Features
- - mark nets that are framed by temporal firewals with a graph attribute
+ - mark nets that are framed by temporal firewalls with a graph attribute
  - introduce the keyword `coupled` which allows to overwrite the default
    decoupling of side output ports and make such a port blocking.
  - introduce the keyword `extern` which allows to mark boxes which are defined
@@ -15,6 +15,10 @@
    name of the box.
  - introduce the keyword `open` which allows to mark that a port was
    intentionally left open.
+ - introduce the keyword `profiler` which indicates the input port of the
+   profiler. This keyword spawns a routing node which will connect to each net
+   except itself and the connecting profiler backend but including the
+   abstracted ones like `smx_rn` and `smx_tf`.
 
 # `diss_final`
 

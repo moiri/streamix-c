@@ -18,6 +18,13 @@
 #include "utarray.h"
 
 /**
+ * Spawns a profiler routing node and connects it to the profiler backend.
+ *
+ * @param g     pointer to the dependency graph
+ */
+void add_profiler_connections( igraph_t* g );
+
+/**
  * @brief    check port connections of two ports
  *
  * Check the connection of two ports from virtual nets and connect them.

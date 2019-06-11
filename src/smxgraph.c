@@ -58,9 +58,9 @@ void dgraph_append( igraph_t* g, igraph_t* g_tpl, bool deep )
 int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
         const char* name )
 {
-    int ch_len;
     int id = igraph_ecount( g );
-    const char* alt_name = TEXT_NULL;
+    const char* name_src = TEXT_NULL;
+    const char* name_dst = TEXT_NULL;
     rate_type_t type;
     p_src->edge_id = id;
     p_dest->edge_id = id;
@@ -69,31 +69,41 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
             p_dest->v_net->inst->id );
 #endif // DEBUG
     igraph_add_edge( g, p_src->v_net->inst->id, p_dest->v_net->inst->id );
-    igraph_cattribute_EAS_set( g, GE_LABEL, id, name );
-    igraph_cattribute_EAN_set( g, GE_PSRC, id, ( uintptr_t )p_src );
-    igraph_cattribute_EAN_set( g, GE_PDST, id, ( uintptr_t )p_dest );
-    if( p_src->symb->attr_port->alt_name != NULL )
-        alt_name = p_src->symb->attr_port->alt_name;
-    igraph_cattribute_EAS_set( g, GE_NSRC, id, alt_name );
-    alt_name = TEXT_NULL;
-    if( p_dest->symb->attr_port->alt_name != NULL )
-        alt_name = p_dest->symb->attr_port->alt_name;
-    igraph_cattribute_EAS_set( g, GE_NDST, id, alt_name );
-    igraph_cattribute_EAN_set( g, GE_DSRC, id, p_src->descoupled );
-    igraph_cattribute_EAN_set( g, GE_DDST, id, p_dest->descoupled );
-    ch_len = get_ch_len( p_dest, p_src );
-    igraph_cattribute_EAN_set( g, GE_LEN, id, ch_len );
-    igraph_cattribute_EAN_set( g, GE_DTS, id, p_dest->rate.time.tv_sec );
-    igraph_cattribute_EAN_set( g, GE_DTNS, id, p_dest->rate.time.tv_nsec );
-    igraph_cattribute_EAN_set( g, GE_STS, id, p_src->rate.time.tv_sec );
-    igraph_cattribute_EAN_set( g, GE_STNS, id, p_src->rate.time.tv_nsec );
+    if( p_src->symb != NULL && p_src->symb->attr_port->alt_name != NULL )
+        name_src = p_src->symb->attr_port->alt_name;
+    if( p_dest->symb != NULL && p_dest->symb->attr_port->alt_name != NULL )
+        name_dst = p_dest->symb->attr_port->alt_name;
     if( ( p_src->rate.type == TIME_TT ) || ( p_dest->rate.type == TIME_TT ) )
         type = TIME_TT;
     else if( ( p_src->rate.type == TIME_TB ) || ( p_dest->rate.type == TIME_TB ) )
         type = TIME_TB;
     else type = TIME_NONE;
-    igraph_cattribute_EAN_set( g, GE_TYPE, id, type );
+    dgraph_edge_add_attr( g, id, name, p_src, p_dest, name_src, name_dst,
+            p_src->descoupled, p_dest->descoupled, get_ch_len( p_dest, p_src ),
+            p_src->rate.time.tv_sec, p_src->rate.time.tv_nsec,
+            p_dest->rate.time.tv_sec, p_dest->rate.time.tv_nsec, type );
     return id;
+}
+
+/******************************************************************************/
+void dgraph_edge_add_attr( igraph_t* g, int id, const char* name,
+        virt_port_t* p_src, virt_port_t* p_dst, const char* n_src,
+        const char* n_dst, bool d_src, bool d_dst, int len, int ts_src,
+        int tns_src, int ts_dst, int tns_dst, rate_type_t type )
+{
+    igraph_cattribute_EAS_set( g, GE_LABEL, id, name );
+    igraph_cattribute_EAN_set( g, GE_PSRC, id, ( uintptr_t )p_src );
+    igraph_cattribute_EAN_set( g, GE_PDST, id, ( uintptr_t )p_dst );
+    igraph_cattribute_EAS_set( g, GE_NSRC, id, n_src );
+    igraph_cattribute_EAS_set( g, GE_NDST, id, n_dst );
+    igraph_cattribute_EAN_set( g, GE_DSRC, id, d_src );
+    igraph_cattribute_EAN_set( g, GE_DDST, id, d_dst );
+    igraph_cattribute_EAN_set( g, GE_LEN, id, len );
+    igraph_cattribute_EAN_set( g, GE_DTS, id, ts_dst );
+    igraph_cattribute_EAN_set( g, GE_DTNS, id, tns_dst );
+    igraph_cattribute_EAN_set( g, GE_STS, id, ts_src );
+    igraph_cattribute_EAN_set( g, GE_STNS, id, tns_src );
+    igraph_cattribute_EAN_set( g, GE_TYPE, id, type );
 }
 
 /******************************************************************************/

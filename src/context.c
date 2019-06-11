@@ -14,6 +14,41 @@
 igraph_vector_ptr_t __rm_cp; // remember removed cp-sync pointers for cleanup
 
 /******************************************************************************/
+void add_profiler_connections( igraph_t* g )
+{
+    int inst_id, vid, eid;
+    virt_net_t *v_net;
+    igraph_vs_t v_sel;
+    igraph_vit_t v_it1;
+    virt_port_list_t* ports;
+
+    v_sel = igraph_vss_all();
+    igraph_vit_create( g, v_sel, &v_it1 );
+    while( !IGRAPH_VIT_END( v_it1 ) ) {
+        inst_id = IGRAPH_VIT_GET( v_it1 );
+        v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
+                GV_VNET, inst_id );
+        ports = v_net->ports;
+        while( ports != NULL ) {
+            if( ports->port->attr_mode == PORT_MODE_PROFILER ) {
+                eid = igraph_ecount( g );
+                vid = dgraph_vertex_add( g, TEXT_PROFILER );
+                dgraph_vertex_add_attr( g, vid, TEXT_PROFILER, NULL, NULL, NULL,
+                        false, false, false );
+                igraph_add_edge( g, vid, inst_id );
+                dgraph_edge_add_attr( g, eid, ports->port->name, NULL, NULL,
+                        TEXT_NULL, TEXT_NULL, false, false, ports->port->ch_len,
+                        0, 0, 0, 0, TIME_NONE );
+            }
+            ports = ports->next;
+        }
+        IGRAPH_VIT_NEXT( v_it1 );
+    }
+    igraph_vit_destroy( &v_it1 );
+    igraph_vs_destroy( &v_sel );
+}
+
+/******************************************************************************/
 bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
         bool directed, bool ignore_class, bool mode_equal )
 {
@@ -657,7 +692,8 @@ void check_ports_open( virt_net_t* v_net )
 
     ports = v_net->ports;
     while( ports != NULL ) {
-        if( ports->port->state == VPORT_STATE_OPEN && !ports->port->is_open ) {
+        if( ports->port->state == VPORT_STATE_OPEN && !ports->port->is_open
+                && ports->port->attr_mode != PORT_MODE_PROFILER ) {
             sprintf( error_msg, ERROR_NO_PORT_CON, ERR_ERROR, ports->port->name,
                     v_net->inst->name, v_net->inst->id );
             report_yyerror( error_msg, v_net->inst->line );
@@ -1019,4 +1055,5 @@ void post_process( igraph_t* g )
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
     igraph_vector_destroy( &dids );
+    add_profiler_connections( g );
 }

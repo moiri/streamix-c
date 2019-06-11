@@ -39,7 +39,8 @@ char* node_label[] =
 };
 char* mode_label[] = {
     "in",
-    "out"
+    "out",
+    "profiler"
 };
 char* class_label[] = {
     PORT_CLASS_NONE_STR,

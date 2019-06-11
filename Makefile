@@ -197,7 +197,7 @@ run:
 
 run_test:
 	@touch $(INPUT:.$(TEST_IN)=.$(TEST_SOL))
-	@./$(PARSER) -f gml -S -p ./ -o $(PROJECT).gml $(INPUT) > $(INPUT:.$(TEST_IN)=.$(TEST_OUT))
+	./$(PARSER) -f gml -S -p ./ -o $(PROJECT).gml $(INPUT) > $(INPUT:.$(TEST_IN)=.$(TEST_OUT))
 	@echo "testing $(INPUT)"
 	@diff <(sed -r 's/-?[0-9]+\)/*)/g' $(INPUT:.$(TEST_IN)=.$(TEST_OUT))) $(INPUT:.$(TEST_IN)=.$(TEST_SOL))
 	$(MAKE) -s graph

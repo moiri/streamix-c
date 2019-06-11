@@ -52,6 +52,7 @@ enum port_mode_e
 {
     PORT_MODE_IN,
     PORT_MODE_OUT,
+    PORT_MODE_PROFILER,
     PORT_MODE_BI
 };
 
