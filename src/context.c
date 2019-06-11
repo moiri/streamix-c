@@ -16,11 +16,18 @@ igraph_vector_ptr_t __rm_cp; // remember removed cp-sync pointers for cleanup
 /******************************************************************************/
 void add_profiler_connections( igraph_t* g )
 {
-    int inst_id, vid, eid;
+    int inst_id;
     virt_net_t *v_net;
     igraph_vs_t v_sel;
     igraph_vit_t v_it1;
     virt_port_list_t* ports;
+    virt_net_t* v_net_sync = NULL;
+    virt_port_t* port_new;
+    symrec_t* rec = NULL;
+    attr_port_t* p_attr = NULL;
+    struct timespec tb;
+    tb.tv_sec = 0;
+    tb.tv_nsec = 0;
 
     v_sel = igraph_vss_all();
     igraph_vit_create( g, v_sel, &v_it1 );
@@ -31,14 +38,18 @@ void add_profiler_connections( igraph_t* g )
         ports = v_net->ports;
         while( ports != NULL ) {
             if( ports->port->attr_mode == PORT_MODE_PROFILER ) {
-                eid = igraph_ecount( g );
-                vid = dgraph_vertex_add( g, TEXT_PROFILER );
-                dgraph_vertex_add_attr( g, vid, TEXT_PROFILER, NULL, NULL, NULL,
-                        false, false, false );
-                igraph_add_edge( g, vid, inst_id );
-                dgraph_edge_add_attr( g, eid, ports->port->name, NULL, NULL,
-                        TEXT_NULL, TEXT_NULL, false, false, ports->port->ch_len,
-                        0, 0, 0, 0, TIME_NONE );
+                v_net_sync = dgraph_vertex_add_sync( g, TEXT_PROFILER );
+                p_attr = symrec_attr_create_port( NULL, PORT_MODE_PROFILER,
+                        PORT_CLASS_NONE, false, false, 0 );
+                p_attr->alt_name = TEXT_PROFILER_PORT;
+                rec = symrec_create_port( TEXT_PROFILER_PORT, 0, -1, p_attr );
+                port_new = virt_port_create( PORT_CLASS_NONE, PORT_MODE_PROFILER,
+                        v_net_sync, ports->port->name, rec, tb, TIME_NONE,
+                        false, false, 0 );
+                virt_port_append( v_net_sync, port_new );
+                dgraph_edge_add( g, port_new, ports->port, ports->port->name );
+                symrec_attr_destroy_port( p_attr );
+                symrec_destroy( rec );
             }
             ports = ports->next;
         }
@@ -181,7 +192,7 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
             if( port1->attr_mode == port2->attr_mode )
                 port_mode = port1->attr_mode;
             else port_mode = PORT_MODE_BI;
-            v_net_sync = dgraph_vertex_add_sync( g );
+            v_net_sync = dgraph_vertex_add_sync( g, TEXT_CP );
             dgraph_vertex_add_attr_tt( g, v_net_sync->inst->id, is_tt ? 1 : 0 );
             // channel length is set to zero: the connecting box port might
             // overwrite this due to the max function

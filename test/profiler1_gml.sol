@@ -64,7 +64,7 @@ graph
     source 3
     target 2
     label "data"
-    nsrc "smx_null"
+    nsrc "profiler"
     ndst "smx_null"
     dsrc 0
     ddst 0

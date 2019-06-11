@@ -373,12 +373,12 @@ virt_net_t* dgraph_vertex_add_net( igraph_t* g, symrec_t* symb, int line )
 }
 
 /******************************************************************************/
-virt_net_t* dgraph_vertex_add_sync( igraph_t* g )
+virt_net_t* dgraph_vertex_add_sync( igraph_t* g, const char* name )
 {
-    int id = dgraph_vertex_add( g, TEXT_CP );
-    instrec_t* inst = instrec_create( TEXT_CP, id, -1, INSTREC_SYNC );
+    int id = dgraph_vertex_add( g, name );
+    instrec_t* inst = instrec_create( ( char* )name, id, -1, INSTREC_SYNC );
     virt_net_t* v_net = virt_net_create_sync( inst );
-    dgraph_vertex_add_attr( g, id, TEXT_CP, NULL, v_net, NULL, false, false,
+    dgraph_vertex_add_attr( g, id, name, NULL, v_net, NULL, false, false,
             false );
     return v_net;
 }
@@ -592,7 +592,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
         }
         else {
             // create a copy synchronizer
-            cp_sync = dgraph_vertex_add_sync( g );
+            cp_sync = dgraph_vertex_add_sync( g, TEXT_CP );
             for( j = 0; j < igraph_vector_ptr_size( &sync->p_ext ); j++ ) {
                 sp_src = VECTOR( sync->p_ext )[j];
                 igraph_cattribute_VAN_set( g, GV_SYMB, cp_sync->inst->id,
