@@ -206,7 +206,7 @@ run_test:
 	mv $(PROJECT).gml $(INPUT:.$(TEST_IN)=_$(TEST_GML).$(TEST_OUT))
 	@diff $(INPUT:.$(TEST_IN)=_$(TEST_GML).$(TEST_OUT)) $(INPUT:.$(TEST_IN)=_$(TEST_GML).$(TEST_SOL))
 ifeq ($(MEM),1)
-	@valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -v ./$(PARSER) $(INPUT) &> $(INPUT:.$(TEST_IN)=.$(TEST_VAL))
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -v ./$(PARSER) $(INPUT) &> $(INPUT:.$(TEST_IN)=.$(TEST_VAL))
 	@diff <(tail -n1 $(INPUT:.$(TEST_IN)=.$(TEST_VAL)) | sed 's/==[0-9]*== //g') <(echo $(MSG_VAL))
 endif
 	# cp $(DOT_N_CON_FILE).pdf $(INPUT:.$(TEST_IN)=_gn.pdf)

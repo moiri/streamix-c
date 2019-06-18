@@ -48,7 +48,7 @@ int main( int argc, char **argv ) {
     char* build_path_sia = NULL;
     int name_size;
     int path_size;
-    char* file_name = NULL;
+    char* file_name;
     FILE* src_smx;
     FILE* src_sia;
     FILE* out_file;
@@ -111,6 +111,7 @@ int main( int argc, char **argv ) {
     name_size = strlen( __src_file_name ) - path_size - 4;
     file_name = malloc( name_size + 1 ); // minus ".smx"
     memcpy( file_name, &__src_file_name[path_size], name_size );
+    file_name[ name_size ] = '\0';
 
     if( format == NULL ) format = G_FMT_GRAPHML;
     if( build_path == NULL ) build_path = "./build";
@@ -124,7 +125,7 @@ int main( int argc, char **argv ) {
         return -1;
     }
     if( out_file_name == NULL ) {
-        out_file_path = malloc( strlen( build_path ) + strlen( format ) + 6 );
+        out_file_path = malloc( strlen( build_path ) + strlen( format ) + strlen( file_name ) + 3 );
         sprintf( out_file_path, "%s/%s.%s", build_path, file_name, format );
     }
     else {
@@ -210,6 +211,7 @@ int main( int argc, char **argv ) {
     // cleanup
     free( out_file_path );
     free( build_path_sia );
+    free( file_name );
     igraph_destroy( &g );
     smx2sia_sias_destroy( sias, &sia_desc_symbols, &sia_smx_symbols );
     ast_destroy( ast );
