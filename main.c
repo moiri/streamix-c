@@ -20,6 +20,19 @@ extern FILE *zzin;
 extern int zzparse( void** );
 extern int zzlex_destroy();
 
+int get_path_size( const char* str )
+{
+    const char* slash;
+    int path_size;
+    slash = strrchr( str, '/' );
+    if( slash == NULL ) {
+        return 0;
+    }
+    else {
+        path_size = slash - str + 1;
+    }
+    return path_size;
+}
 
 int main( int argc, char **argv ) {
     void* ast = NULL;
@@ -33,6 +46,9 @@ int main( int argc, char **argv ) {
     const char* sia_desc_file = NULL;
     const char* build_path = NULL;
     char* build_path_sia = NULL;
+    int name_size;
+    int path_size;
+    char* file_name = NULL;
     FILE* src_smx;
     FILE* src_sia;
     FILE* out_file;
@@ -91,6 +107,11 @@ int main( int argc, char **argv ) {
         return -1;
     }
     __src_file_name = argv[ optind ];
+    path_size = get_path_size( __src_file_name );
+    name_size = strlen( __src_file_name ) - path_size - 4;
+    file_name = malloc( name_size + 1 ); // minus ".smx"
+    memcpy( file_name, &__src_file_name[path_size], name_size );
+
     if( format == NULL ) format = G_FMT_GRAPHML;
     if( build_path == NULL ) build_path = "./build";
     mkdir( build_path, 0755 );
@@ -104,7 +125,7 @@ int main( int argc, char **argv ) {
     }
     if( out_file_name == NULL ) {
         out_file_path = malloc( strlen( build_path ) + strlen( format ) + 6 );
-        sprintf( out_file_path, "%s/out.%s", build_path, format );
+        sprintf( out_file_path, "%s/%s.%s", build_path, file_name, format );
     }
     else {
         out_file_path = malloc( strlen( build_path ) + strlen( out_file_name )
