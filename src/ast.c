@@ -196,6 +196,7 @@ void ast_destroy( ast_node_t* ast )
             ast_destroy( ast->box->impl );
             ast_destroy( ast->box->ports );
             ast_destroy( ast->box->attr_pure );
+            ast_destroy( ast->box->attr_ext );
             free( ast->box );
             free( ast );
             break;
@@ -236,6 +237,7 @@ void ast_destroy( ast_node_t* ast )
             ast_destroy( ast->port->mode );
             ast_destroy( ast->port->coupling );
             ast_destroy( ast->port->ch_len );
+            ast_destroy( ast->port->open );
             free( ast->port );
             free( ast );
             break;
