@@ -180,8 +180,8 @@ clean:
 	rm -f $(SIA_LANG_DIR)/lex.zz.c
 
 install:
-	mkdir -p /usr/local/bin
-	cp -a $(PARSER) /usr/local/bin/.
+	mkdir -p /opt/smx/bin
+	cp -a $(PARSER) /opt/smx/bin/.
 
 doc:
 	doxygen .doxygen
