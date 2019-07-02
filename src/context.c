@@ -75,7 +75,7 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
     inst_l = port_l->v_net->inst;
     inst_r = port_r->v_net->inst;
     if( ignore_class || are_port_classes_ok( port_l, port_r, directed ) ) {
-        if( !check_connection_on_open_ports( port_l, port_r ) )
+        if( !check_connection_on_open_ports( port_l, port_r, false ) )
             return false;
         if( ( inst_l->type == INSTREC_SYNC )
                 && ( inst_r->type == INSTREC_SYNC ) ) {
@@ -148,7 +148,7 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
     else if( port2->attr_class == PORT_CLASS_NONE )
         port_class = port1->attr_class;
     if ( are_port_cp_classes_ok( port1, port2, b_parallel ) ) {
-        if( !check_connection_on_open_ports( port1, port2 ) )
+        if( !check_connection_on_open_ports( port1, port2, b_parallel ) )
             return;
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
         printf( "\n  => connection is valid\n" );
@@ -260,7 +260,8 @@ void check_connection_missing( virt_net_t* v_net_l, virt_net_t* v_net_r,
 }
 
 /******************************************************************************/
-bool check_connection_on_open_ports( virt_port_t* port_l, virt_port_t* port_r )
+bool check_connection_on_open_ports( virt_port_t* port_l, virt_port_t* port_r,
+        bool is_parallel )
 {
     instrec_t *inst_l, *inst_r;
     char error_msg[ CONST_ERROR_LEN ];
@@ -272,13 +273,13 @@ bool check_connection_on_open_ports( virt_port_t* port_l, virt_port_t* port_r )
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
         printf( "\n  => connection is invalid (port is open)\n" );
 #endif // DEBUG_CONNECT
-        if( port_r->is_open )
+        if( !is_parallel && port_r->is_open )
         {
             sprintf( error_msg, ERROR_CONNECT_OPEN, ERR_ERROR, port_r->name,
                     inst_r->name, inst_r->id );
             report_yyerror( error_msg, inst_r->line );
         }
-        if( port_l->is_open )
+        if( !is_parallel && port_l->is_open )
         {
             sprintf( error_msg, ERROR_CONNECT_OPEN, ERR_ERROR, port_l->name,
                     inst_l->name, inst_l->id );
@@ -910,9 +911,9 @@ bool do_port_attrs_match( symrec_list_t* r_ports, virt_port_list_t* v_ports )
                     == strlen( v_port_ptr->port->name )
                 && strcmp( r_port_ptr->rec->name,
                     v_port_ptr->port->name ) == 0
-                && ( r_port_attr->collection == v_port_ptr->port->attr_class
+                && ( (int)r_port_attr->collection == v_port_ptr->port->attr_class
                     || v_port_ptr->port->attr_class == PORT_CLASS_NONE )
-                && ( r_port_attr->mode == v_port_ptr->port->attr_mode
+                && ( (int)r_port_attr->mode == v_port_ptr->port->attr_mode
                     || v_port_ptr->port->attr_mode == PORT_MODE_BI )
                 ) {
                 // use more specific mode from prototype

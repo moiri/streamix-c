@@ -1,0 +1,8 @@
+/**
+ * A serial connection, spawning a routing node, to test parallel rn spawns on
+ * open ports
+ */
+
+A = box a( out x )
+B = box b( in x, in y open )
+connect A.(B|B)
