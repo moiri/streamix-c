@@ -12,9 +12,7 @@
 #define TEXT_CH         "smx_ch"
 #define TEXT_CP         "smx_rn"
 #define TEXT_TF         "smx_tf"
-#define TEXT_PROFILER   "smx_profiler"
 #define TEXT_NULL       "smx_null"
-#define TEXT_PROFILER_PORT   "profiler"
 
 #define GG_NAME      "name"
 #define GG_SIA       "sia"

@@ -60,7 +60,7 @@ void smx2sia_add_transition( igraph_t* g, virt_port_t* port, int id_src,
 {
     const char* mode;
     char* edge_id = sia_create_action_name( vid, port->edge_id );
-    if( port->attr_mode == PORT_MODE_IN || port->attr_mode == PORT_MODE_PROFILER )
+    if( port->attr_mode == PORT_MODE_IN )
         mode = G_SIA_MODE_IN;
     else if( port->attr_mode == PORT_MODE_OUT )
         mode = G_SIA_MODE_OUT;

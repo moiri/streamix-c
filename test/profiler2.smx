@@ -1,9 +1,0 @@
-/**
- * A conncetion spawning a routing node with profiling enabled.
- */
-
-A = box a( out x )
-B = box b( in x )
-Profiler = box smx_mongo( profiler data[10] )
-
-connect A.(B|B)|Profiler

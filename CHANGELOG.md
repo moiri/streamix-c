@@ -15,10 +15,6 @@
    name of the box.
  - introduce the keyword `open` which allows to mark that a port was
    intentionally left open.
- - introduce the keyword `profiler` which indicates the input port of the
-   profiler. This keyword spawns a routing node which will connect to each net
-   except itself and the connecting profiler backend but including the
-   abstracted ones like `smx_rn` and `smx_tf`.
 
 # `diss_final`
 

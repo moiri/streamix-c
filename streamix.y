@@ -29,7 +29,7 @@
 };
 /* keywods */
 %token CONNECT TT TB TF
-%token <ival> BOX WRAPPER NET IN OUT PROFILER UP DOWN SIDE DECOUPLED COUPLED STATELESS STATIC EXTERN OPEN BUFLEN
+%token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED COUPLED STATELESS STATIC EXTERN OPEN BUFLEN
 %token <tval> TIME_SEC TIME_MSEC TIME_USEC TIME_NSEC
 
 /* optional and variable keyword tokens */
@@ -41,7 +41,6 @@
 %type <nval> kw_port_class
 %type <nval> kw_opt_port_class
 %type <nval> kw_port_mode
-%type <nval> kw_port_mode_box
 %type <tval> kw_time
 %type <tval> kw_time_sec
 %type <tval> kw_time_msec
@@ -220,7 +219,7 @@ opt_box_port_list:
 ;
 
 box_port_decl:
-    kw_opt_decoupled kw_opt_port_class kw_port_mode_box IDENTIFIER opt_alt_port_name opt_channel_len kw_opt_open {
+    kw_opt_decoupled kw_opt_port_class kw_port_mode IDENTIFIER opt_alt_port_name opt_channel_len kw_opt_open {
         $$ = ast_add_port(
             ast_add_symbol( $4, @3.last_line, ID_PORT ),
             $5, // alternative port name
@@ -361,12 +360,6 @@ kw_opt_decoupled:
 kw_port_mode:
     IN   { $$ = ast_add_attr( $1, ATTR_PORT_MODE );}
 |   OUT  { $$ = ast_add_attr( $1, ATTR_PORT_MODE );}
-;
-
-kw_port_mode_box:
-    IN       { $$ = ast_add_attr( $1, ATTR_PORT_MODE );}
-|   OUT      { $$ = ast_add_attr( $1, ATTR_PORT_MODE );}
-|   PROFILER { $$ = ast_add_attr( $1, ATTR_PORT_MODE );}
 ;
 
 kw_opt_port_class:

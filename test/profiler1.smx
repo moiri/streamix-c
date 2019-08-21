@@ -1,9 +1,0 @@
-/**
- * A simple serial connection between two boxes with a profiler enabled
- */
-
-A = box a( out x )
-B = box b( in x )
-Profiler = box smx_mongo( profiler data[10] )
-
-connect A.B|Profiler
