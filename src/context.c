@@ -183,7 +183,7 @@ void check_connection_cp_net( virt_port_t* port1, virt_port_t* port2,
 
 /******************************************************************************/
 void check_connection_missing( virt_net_t* v_net_l, virt_net_t* v_net_r,
-        igraph_t* g )
+        igraph_t* g, bool is_prop )
 {
     int i, j;
     char error_msg[ CONST_ERROR_LEN ];
@@ -214,8 +214,12 @@ void check_connection_missing( virt_net_t* v_net_l, virt_net_t* v_net_r,
                 inst1 = VECTOR( v_net_l->con->right )[i];
                 inst2 = VECTOR( v_net_r->con->left )[j];
                 // ERROR: there is no connection between the two nets
-                sprintf( error_msg, ERROR_NO_NET_CON, ERR_ERROR, inst1->name,
-                        inst1->id, inst2->name, inst2->id );
+                if( is_prop )
+                    sprintf( error_msg, WARNING_NO_NET_CON, ERR_WARNING,
+                            inst1->name, inst1->id, inst2->name, inst2->id );
+                else
+                    sprintf( error_msg, ERROR_NO_NET_CON, ERR_ERROR,
+                            inst1->name, inst1->id, inst2->name, inst2->id );
                 report_yyerror( error_msg, inst1->line );
             }
         }
@@ -947,7 +951,8 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
                 virt_net_update_class( v_net2, PORT_CLASS_DOWN );
                 check_connections_open( v_net1, v_net2 );
             }
-            check_connection_missing( v_net1, v_net2, g );
+            check_connection_missing( v_net1, v_net2, g,
+                    ast->type == AST_SERIAL_PROP );
             v_net = virt_net_create_serial( v_net1, v_net2 );
             virt_net_destroy_shallow( v_net1 );
             virt_net_destroy_shallow( v_net2 );

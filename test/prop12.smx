@@ -1,0 +1,11 @@
+/**
+ * Here, compared to test/prop11_n.smx, an abstract net is used, hence the
+ * warning is avoided.
+ */
+
+A = box a(out bypass)
+B = box b(out x)
+C = box c(in x, in bypass)
+
+N = B:C
+connect A.N

@@ -1,0 +1,10 @@
+/**
+ * This bypass operation produces a warning because there is no connection
+ * between A and B.
+ */
+
+A = box a(out bypass)
+B = box b(out x)
+C = box c(in x, in bypass)
+
+connect A:B:C

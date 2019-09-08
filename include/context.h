@@ -74,9 +74,11 @@ void check_connection_cp_net( virt_port_t* port1, virt_port_t* port2,
  * @param v_net_l   pointer to the virtual net of the left operand
  * @param v_net_r   pointer to the virtual net of the right operand
  * @param g         pointer to a initialized igraph object
+ * @param is_prop   if true the connection is bypassing, if false the connection
+ *                  is enforcing
  */
 void check_connection_missing( virt_net_t* v_net_l, virt_net_t* v_net_r,
-        igraph_t* g );
+        igraph_t* g, bool is_prop );
 
 /**
  * Check whether a port is declared as open in a connections of two ports.
