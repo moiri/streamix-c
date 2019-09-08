@@ -245,6 +245,9 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, virt_net_t* v_net )
         if( v_net->type == VNET_NET ) {
             // unknown direction, class matters, modes have to be different
             check_connection( port_net, port, g_new, false, false, false );
+            // connect rn of parallel nets to children
+            check_connection_cp_net( port_net, port, g_new );
+            // spawn rn if necessary and connect side ports
             check_connection_cp( NULL, port_net, port, g_new, AST_NET,
                 igraph_cattribute_VAN( g_new, GV_TT, v_net->inst->id ) );
         }

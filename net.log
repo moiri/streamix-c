@@ -1,0 +1,895 @@
+added symbol x in scope 1
+added symbol A in scope 0
+added symbol x in scope 2
+added symbol y in scope 2
+added symbol B in scope 0
+added symbol y in scope 3
+added symbol C in scope 0
+found symbol A in scope 0
+dgraph_vertex_add: 'A(0)'
+instrec_create: create instance A(0)
+virt_net_create_box:
+ A(0): A(0)-->x, 
+virt_net_create_symbol:
+ A(0)-->x, 
+check_connections_self, updated v_net: A(0)-->x, 
+found symbol B in scope 0
+dgraph_vertex_add: 'B(1)'
+instrec_create: create instance B(1)
+virt_net_create_box:
+ B(1): B(1)<--x, B(1)<--y, 
+virt_net_create_symbol:
+ B(1)<--y, B(1)<--x, 
+check_connections_self, updated v_net: B(1)<--y, B(1)<--x, 
+check_connection:
+ A(0)-->x and B(1)<--x
+  => connection is valid
+ add new edge x(0->1)
+ check ids 0 and 1
+virt_net_create_serial:
+ +B(1)^<--x, B(1)_<--y, +A(0)_-->x, 
+virt_net_destroy_shallow:
+ 
+virt_net_destroy_shallow:
+ 
+check_connections_cp, updated v_net: +B(1)^<--x, B(1)_<--y, +A(0)_-->x, 
+/* Created by igraph 0.7.1 */
+digraph {
+  0 [
+    label=A
+    func=a
+    symb=94459220504352
+    vnet=94459220506400
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  1 [
+    label=B
+    func=b
+    symb=94459220505104
+    vnet=94459220515840
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+
+  0 -> 1 [
+    label=x
+    psrc=94459220506480
+    pdst=94459220516032
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+}
+added symbol N in scope 0
+found symbol N in scope 0
+dgraph_vertex_add: 'N(0)'
+instrec_create: create instance N(0)
+virt_net_create_net:
+ N(0): N(0)_<--y, 
+virt_net_create_symbol:
+ N(0)_<--y, 
+found symbol N in scope 0
+dgraph_vertex_add: 'N(1)'
+instrec_create: create instance N(1)
+virt_net_create_net:
+ N(1): N(1)_<--y, 
+virt_net_create_symbol:
+ N(1)_<--y, 
+virt_net_create_parallel:
+ N(1)_<--y, N(0)_<--y, 
+virt_net_destroy_shallow:
+ 
+virt_net_destroy_shallow:
+ 
+check_connection_cp:
+ N(1)_<--y and N(0)_<--y
+  => connection is valid
+dgraph_vertex_add: 'smx_rn(2)'
+instrec_create: create instance smx_rn(2)
+virt_net_create_sync:
+ smx_rn(2): 
+virt_port_append: Append port y to inst smx_rn(2)
+virt_port_append: Append port y to inner net
+ add new edge y(2->1)
+ add new edge y(2->0)
+check_connections_cp, updated v_net: +N(1)_<--y, +N(0)_<--y, smx_rn(2)_<--y, 
+found symbol C in scope 0
+dgraph_vertex_add: 'C(3)'
+instrec_create: create instance C(3)
+virt_net_create_box:
+ C(3): C(3)-->y, 
+virt_net_create_symbol:
+ C(3)-->y, 
+check_connections_self, updated v_net: C(3)-->y, 
+check_connection:
+ smx_rn(2)_<--y and C(3)-->y
+  => connection is valid
+ add new edge y(3->2)
+ check ids 0 and 3
+ check ids 1 and 3
+virt_net_create_serial:
+ +C(3)^-->y, +smx_rn(2)_<--y, +N(0)_<--y, +N(1)_<--y, 
+virt_net_destroy_shallow:
+ parallel
+virt_net_destroy_shallow:
+ 
+check_connections_cp, updated v_net: +C(3)^-->y, +smx_rn(2)_<--y, +N(0)_<--y, +N(1)_<--y, 
+/* Created by igraph 0.7.1 */
+digraph {
+  0 [
+    label=N
+    func=smx_null
+    symb=94459220521216
+    vnet=94459220516256
+    igraph=94459220520728
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  1 [
+    label=N
+    func=smx_null
+    symb=94459220521216
+    vnet=94459220514608
+    igraph=94459220520728
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  2 [
+    label=smx_rn
+    func=smx_rn
+    symb=0
+    vnet=94459220523168
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  3 [
+    label=C
+    func=c
+    symb=94459220505600
+    vnet=94459220525952
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+
+  2 -> 1 [
+    label=y
+    psrc=94459220523248
+    pdst=94459220516368
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+  2 -> 0 [
+    label=y
+    psrc=94459220523248
+    pdst=94459220520896
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+  3 -> 2 [
+    label=y
+    psrc=94459220524624
+    pdst=94459220523248
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+}
+dgraph_vertex_add: 'N(0)'
+instrec_create: create instance N(0)
+virt_net_create_flatten:
+ N(0): +N(0)_<--y, 
+dgraph_vertex_copy: 'N(0->0)'
+dgraph_vertex_add: 'N(1)'
+instrec_create: create instance N(1)
+virt_net_create_flatten:
+ N(1): +N(1)_<--y, 
+dgraph_vertex_copy: 'N(1->1)'
+dgraph_vertex_add: 'smx_rn(2)'
+instrec_create: create instance smx_rn(2)
+virt_net_create_flatten:
+ smx_rn(2): +smx_rn(2)_<--y, 
+dgraph_vertex_copy: 'smx_rn(2->2)'
+dgraph_vertex_add: 'C(3)'
+instrec_create: create instance C(3)
+virt_net_create_flatten:
+ C(3): +C(3)^-->y, 
+dgraph_vertex_copy: 'C(3->3)'
+dgraph_port_search_neighbour: Search port +smx_rn(2)_<--y
+ in virtual net: +smx_rn(2)_<--y, 
+Found port: +smx_rn(2)_<--y
+dgraph_port_search_neighbour: Search port +N(1)_<--y
+ in virtual net: +N(1)_<--y, 
+Found port: +N(1)_<--y
+ add new edge y(2->1)
+dgraph_port_search_neighbour: Search port +smx_rn(2)_<--y
+ in virtual net: +smx_rn(2)_<--y, 
+Found port: +smx_rn(2)_<--y
+dgraph_port_search_neighbour: Search port +N(0)_<--y
+ in virtual net: +N(0)_<--y, 
+Found port: +N(0)_<--y
+ add new edge y(2->0)
+dgraph_port_search_neighbour: Search port +C(3)^-->y
+ in virtual net: +C(3)^-->y, 
+Found port: +C(3)^-->y
+dgraph_port_search_neighbour: Search port +smx_rn(2)_<--y
+ in virtual net: +smx_rn(2)_<--y, 
+Found port: +smx_rn(2)_<--y
+ add new edge y(3->2)
+
+Flatten instance 'N(0)' start
+dgraph_vertex_add: 'A(0)'
+instrec_create: create instance A(0)
+virt_net_create_flatten:
+ A(0): +A(0)_-->x, 
+dgraph_vertex_copy: 'A(0->0)'
+dgraph_vertex_add: 'B(1)'
+instrec_create: create instance B(1)
+virt_net_create_flatten:
+ B(1): B(1)_<--y, +B(1)^<--x, 
+dgraph_vertex_copy: 'B(1->1)'
+dgraph_port_search_neighbour: Search port +A(0)_-->x
+ in virtual net: +A(0)_-->x, 
+Found port: +A(0)_-->x
+dgraph_port_search_neighbour: Search port +B(1)^<--x
+ in virtual net: B(1)_<--y, +B(1)^<--x, 
+Found port: +B(1)^<--x
+ add new edge x(0->1)
+dgraph_vertex_add: 'A(4)'
+dgraph_vertex_copy: 'A(0->4)'
+dgraph_vertex_add: 'B(5)'
+dgraph_vertex_copy: 'B(1->5)'
+dgraph_port_search_neighbour: Search port +A(4)_-->x
+ in virtual net: +A(4)_-->x, 
+Found port: +A(4)_-->x
+dgraph_port_search_neighbour: Search port +B(5)^<--x
+ in virtual net: B(5)_<--y, +B(5)^<--x, 
+Found port: +B(5)^<--x
+ add new edge x(4->5)
+/* Created by igraph 0.7.1 */
+digraph {
+  0 [
+    label=N
+    vnet=94459220526912
+    func=smx_null
+    symb=94459220521216
+    igraph=94459220520728
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  1 [
+    label=N
+    vnet=94459220527328
+    func=smx_null
+    symb=94459220521216
+    igraph=94459220520728
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  2 [
+    label=smx_rn
+    vnet=94459220529168
+    func=smx_rn
+    symb=0
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  3 [
+    label=C
+    vnet=94459220525872
+    func=c
+    symb=94459220505600
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  4 [
+    label=A
+    vnet=94459220532160
+    func=a
+    symb=94459220504352
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  5 [
+    label=B
+    vnet=94459220539024
+    func=b
+    symb=94459220505104
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+
+  2 -> 1 [
+    label=y
+    psrc=94459220529648
+    pdst=94459220530640
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+  2 -> 0 [
+    label=y
+    psrc=94459220529648
+    pdst=94459220529472
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+  3 -> 2 [
+    label=y
+    psrc=94459220526656
+    pdst=94459220529648
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+  4 -> 5 [
+    label=x
+    psrc=94459220532768
+    pdst=94459220539296
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+}
+dgrap_port_search_child: Search port +N(0)_<--y
+ in virtual net: +A(4)_-->x, 
+ in virtual net: B(5)_<--y, +B(5)^<--x, 
+Found port: B(5)_<--y
+check_connection:
+ B(5)_<--y and +smx_rn(2)_<--y
+  => connection is invalid (no match)
+ add new edge y(2->5)
+check_connection_cp:
+ +B(5)_<--y and +smx_rn(2)_<--y
+  => connection is invalid (no match)
+dgraph_remove_vertex: id = 0
+virt_net_destroy_deep:
+ N(0): +N(0)_<--y, 
+instrec_destroy: delete instance N(0x55e9004913d0,0)
+instrec_replace_id: replace inst id 1 with 0
+instrec_replace_id: replace inst id 2 with 1
+instrec_replace_id: replace inst id 3 with 2
+instrec_replace_id: replace inst id 4 with 3
+instrec_replace_id: replace inst id 5 with 4
+Flatten instance end
+
+
+Flatten instance 'N(0)' start
+dgraph_vertex_add: 'A(0)'
+instrec_create: create instance A(0)
+virt_net_create_flatten:
+ A(0): +A(0)_-->x, 
+dgraph_vertex_copy: 'A(0->0)'
+dgraph_vertex_add: 'B(1)'
+instrec_create: create instance B(1)
+virt_net_create_flatten:
+ B(1): B(1)_<--y, +B(1)^<--x, 
+dgraph_vertex_copy: 'B(1->1)'
+dgraph_port_search_neighbour: Search port +A(0)_-->x
+ in virtual net: +A(0)_-->x, 
+Found port: +A(0)_-->x
+dgraph_port_search_neighbour: Search port +B(1)^<--x
+ in virtual net: B(1)_<--y, +B(1)^<--x, 
+Found port: +B(1)^<--x
+ add new edge x(0->1)
+dgraph_vertex_add: 'A(5)'
+dgraph_vertex_copy: 'A(0->5)'
+dgraph_vertex_add: 'B(6)'
+dgraph_vertex_copy: 'B(1->6)'
+dgraph_port_search_neighbour: Search port +A(5)_-->x
+ in virtual net: +A(5)_-->x, 
+Found port: +A(5)_-->x
+dgraph_port_search_neighbour: Search port +B(6)^<--x
+ in virtual net: B(6)_<--y, +B(6)^<--x, 
+Found port: +B(6)^<--x
+ add new edge x(5->6)
+/* Created by igraph 0.7.1 */
+digraph {
+  0 [
+    label=N
+    vnet=94459220527328
+    func=smx_null
+    symb=94459220521216
+    igraph=94459220520728
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  1 [
+    label=smx_rn
+    vnet=94459220529168
+    func=smx_rn
+    symb=0
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  2 [
+    label=C
+    vnet=94459220525872
+    func=c
+    symb=94459220505600
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  3 [
+    label=A
+    vnet=94459220532160
+    func=a
+    symb=94459220504352
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  4 [
+    label=B
+    vnet=94459220539024
+    func=b
+    symb=94459220505104
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  5 [
+    label=A
+    vnet=94459220540768
+    func=a
+    symb=94459220504352
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  6 [
+    label=B
+    vnet=94459220549248
+    func=b
+    symb=94459220505104
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+
+  1 -> 0 [
+    label=y
+    psrc=94459220529648
+    pdst=94459220530640
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+  2 -> 1 [
+    label=y
+    psrc=94459220526656
+    pdst=94459220529648
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+  3 -> 4 [
+    label=x
+    psrc=94459220532768
+    pdst=94459220539296
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+  1 -> 4 [
+    label=y
+    psrc=94459220529648
+    pdst=94459220523504
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+  5 -> 6 [
+    label=x
+    psrc=94459220529472
+    pdst=94459220547968
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+}
+dgrap_port_search_child: Search port +N(0)_<--y
+ in virtual net: +A(5)_-->x, 
+ in virtual net: B(6)_<--y, +B(6)^<--x, 
+Found port: B(6)_<--y
+check_connection:
+ B(6)_<--y and +smx_rn(1)_<--y
+  => connection is invalid (no match)
+ add new edge y(1->6)
+check_connection_cp:
+ +B(6)_<--y and +smx_rn(1)_<--y
+  => connection is invalid (no match)
+dgraph_remove_vertex: id = 0
+virt_net_destroy_deep:
+ N(0): +N(0)_<--y, 
+instrec_destroy: delete instance N(0x55e900491830,0)
+instrec_replace_id: replace inst id 1 with 0
+instrec_replace_id: replace inst id 2 with 1
+instrec_replace_id: replace inst id 3 with 2
+instrec_replace_id: replace inst id 4 with 3
+instrec_replace_id: replace inst id 5 with 4
+instrec_replace_id: replace inst id 6 with 5
+Flatten instance end
+
+dgraph_vertex_add: 'smx_rn(0)'
+dgraph_vertex_copy: 'smx_rn(0->0)'
+dgraph_vertex_add: 'C(1)'
+dgraph_vertex_copy: 'C(1->1)'
+dgraph_vertex_add: 'A(2)'
+dgraph_vertex_copy: 'A(2->2)'
+dgraph_vertex_add: 'B(3)'
+dgraph_vertex_copy: 'B(3->3)'
+dgraph_vertex_add: 'A(4)'
+dgraph_vertex_copy: 'A(4->4)'
+dgraph_vertex_add: 'B(5)'
+dgraph_vertex_copy: 'B(5->5)'
+dgraph_port_search_neighbour: Search port +C(1)^-->y
+ in virtual net: +C(1)^-->y, 
+Found port: +C(1)^-->y
+dgraph_port_search_neighbour: Search port +smx_rn(0)_<--y
+ in virtual net: +smx_rn(0)_<--y, 
+Found port: +smx_rn(0)_<--y
+ add new edge y(1->0)
+dgraph_port_search_neighbour: Search port +A(2)_-->x
+ in virtual net: +A(2)_-->x, 
+Found port: +A(2)_-->x
+dgraph_port_search_neighbour: Search port +B(3)^<--x
+ in virtual net: +B(3)_<--y, +B(3)^<--x, 
+Found port: +B(3)^<--x
+ add new edge x(2->3)
+dgraph_port_search_neighbour: Search port +smx_rn(0)_<--y
+ in virtual net: +smx_rn(0)_<--y, 
+Found port: +smx_rn(0)_<--y
+dgraph_port_search_neighbour: Search port +B(3)_<--y
+ in virtual net: +B(3)_<--y, +B(3)^<--x, 
+Found port: +B(3)_<--y
+ add new edge y(0->3)
+dgraph_port_search_neighbour: Search port +A(4)_-->x
+ in virtual net: +A(4)_-->x, 
+Found port: +A(4)_-->x
+dgraph_port_search_neighbour: Search port +B(5)^<--x
+ in virtual net: +B(5)_<--y, +B(5)^<--x, 
+Found port: +B(5)^<--x
+ add new edge x(4->5)
+dgraph_port_search_neighbour: Search port +smx_rn(0)_<--y
+ in virtual net: +smx_rn(0)_<--y, 
+Found port: +smx_rn(0)_<--y
+dgraph_port_search_neighbour: Search port +B(5)_<--y
+ in virtual net: +B(5)_<--y, +B(5)^<--x, 
+Found port: +B(5)_<--y
+ add new edge y(0->5)
+/* Created by igraph 0.7.1 */
+digraph {
+  0 [
+    label=smx_rn
+    vnet=94459220529168
+    func=smx_rn
+    symb=0
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  1 [
+    label=C
+    vnet=94459220525872
+    func=c
+    symb=94459220505600
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  2 [
+    label=A
+    vnet=94459220532160
+    func=a
+    symb=94459220504352
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  3 [
+    label=B
+    vnet=94459220539024
+    func=b
+    symb=94459220505104
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  4 [
+    label=A
+    vnet=94459220540768
+    func=a
+    symb=94459220504352
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+  5 [
+    label=B
+    vnet=94459220549248
+    func=b
+    symb=94459220505104
+    igraph=0
+    static=0
+    pure=0
+    extern=0
+    tt=0
+  ];
+
+  1 -> 0 [
+    label=y
+    psrc=94459220526656
+    pdst=94459220529648
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+  2 -> 3 [
+    label=x
+    psrc=94459220532768
+    pdst=94459220539296
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+  0 -> 3 [
+    label=y
+    psrc=94459220529648
+    pdst=94459220523504
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+  4 -> 5 [
+    label=x
+    psrc=94459220529472
+    pdst=94459220547968
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+  0 -> 5 [
+    label=y
+    psrc=94459220529648
+    pdst=94459220547264
+    nsrc=smx_null
+    ndst=smx_null
+    dsrc=0
+    ddst=0
+    len=1
+    dts=0
+    dtns=0
+    sts=0
+    stns=0
+    type=0
+  ];
+}
+virt_net_destroy_shallow:
+ serial
+virt_net_destroy_deep:
+ N(0): +N(0)_<--y, 
+instrec_destroy: delete instance N(0x55e90048f250,0)
+virt_net_destroy_deep:
+ N(1): +N(1)_<--y, 
+instrec_destroy: delete instance N(0x55e90048f7c0,1)
+virt_net_destroy_deep:
+ smx_rn(2): +smx_rn(2)_<--y, 
+instrec_destroy: delete instance smx_rn(0x55e90048eba0,2)
+virt_net_destroy_deep:
+ C(3): +C(3)^-->y, 
+instrec_destroy: delete instance C(0x55e90048f230,3)
+virt_net_destroy_deep:
+ smx_rn(0): +smx_rn(0)_<--y, 
+instrec_destroy: delete instance smx_rn(0x55e9004918c0,0)
+virt_net_destroy_deep:
+ C(1): +C(1)^-->y, 
+instrec_destroy: delete instance C(0x55e9004916c0,1)
+virt_net_destroy_deep:
+ A(2): +A(2)_-->x, 
+instrec_destroy: delete instance A(0x55e900493510,2)
+virt_net_destroy_deep:
+ B(3): +B(3)_<--y, +B(3)^<--x, 
+instrec_destroy: delete instance B(0x55e900493a80,3)
+virt_net_destroy_deep:
+ A(4): +A(4)_-->x, 
+instrec_destroy: delete instance A(0x55e900494230,4)
+virt_net_destroy_deep:
+ B(5): +B(5)_<--y, +B(5)^<--x, 
+instrec_destroy: delete instance B(0x55e900493df0,5)
+symrec_del: delete record N in scope 0
+virt_net_destroy_shallow:
+ serial
+virt_net_destroy_deep:
+ A(0): +A(0)_-->x, 
+instrec_destroy: delete instance A(0x55e90048b640,0)
+virt_net_destroy_deep:
+ B(1): +B(1)^<--x, B(1)_<--y, 
+instrec_destroy: delete instance B(0x55e90048db80,1)
+symrec_del: delete record x in scope 1
+symrec_del: delete record A in scope 0
+symrec_del: delete record x in scope 2
+symrec_del: delete record y in scope 2
+symrec_del: delete record B in scope 0
+symrec_del: delete record y in scope 3
+symrec_del: delete record C in scope 0

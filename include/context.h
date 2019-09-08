@@ -56,6 +56,16 @@ void check_connection_cp( virt_net_t* net, virt_port_t* port1,
         virt_port_t* port2, igraph_t* g, node_type_t parallel, bool is_tt );
 
 /**
+ * A special connection checker to handle parallel net instances.
+ *
+ * @param port1     pointer to the port of a virtual net of the left operator
+ * @param port2     pointer to the port of a virtual net of the right operator
+ * @param g         pointer to a the dependancy graph to be updated
+ */
+void check_connection_cp_net( virt_port_t* port1, virt_port_t* port2,
+        igraph_t* g );
+
+/**
  * @brief    Report missing connections
  *
  * Reports errors if two nets are not connected but should be according to

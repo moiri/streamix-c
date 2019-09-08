@@ -166,6 +166,22 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
 }
 
 /******************************************************************************/
+void check_connection_cp_net( virt_port_t* port1, virt_port_t* port2,
+        igraph_t* g )
+{
+    instrec_t* inst1 = port1->v_net->inst;
+    instrec_t* inst2 = port2->v_net->inst;
+    if( ( port1->attr_class == PORT_CLASS_SIDE )
+            && ( port2->attr_class == PORT_CLASS_SIDE ) )
+        return;
+    if( port1->attr_class == port2->attr_class
+            && port1->attr_mode == port2->attr_mode
+            && ( inst1->type == INSTREC_SYNC || inst2->type == INSTREC_SYNC )
+            && ( inst1->type != inst2->type ) )
+        connect_ports( port1, port2, g, false );
+}
+
+/******************************************************************************/
 void check_connection_missing( virt_net_t* v_net_l, virt_net_t* v_net_r,
         igraph_t* g )
 {

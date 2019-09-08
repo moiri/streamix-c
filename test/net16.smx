@@ -1,0 +1,7 @@
+A = box a(out x)
+B = box b(in x, in y)
+C = box c(out y)
+
+N = A.B
+
+connect (N|N).C
