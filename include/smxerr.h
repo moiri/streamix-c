@@ -87,5 +87,8 @@ void report_yyerror( const char*, int );
 #define WARNING_NO_NET_CON\
     "%s: no port connection in serial combinition '%s(%d):%s(%d)'. Use an abstract net instead of a composed net."
 
+#define WARNING_IGNORING_BUFFER\
+    "%s: operator tt resets buffer size of port '%s' in '%s(%d)' from %d to 1."
+
 #endif // ERROR_H
 
