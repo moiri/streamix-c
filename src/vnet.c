@@ -389,8 +389,9 @@ void virt_port_append_all( virt_net_t* v_net1, virt_net_t* v_net2,
 void virt_port_add_time_bound( virt_net_t* v_net, struct timespec time,
         rate_type_t rt )
 {
-    /* char error_msg[ CONST_ERROR_LEN ]; */
+    char error_msg[ CONST_ERROR_LEN ];
     virt_port_list_t* ports = v_net->ports;
+    instrec_t* inst;
     while( ports != NULL ) {
         if( ( ports->port->state < VPORT_STATE_DISABLED )
                 && ( ( rt == TIME_TT ) || ( ( rt == TIME_TB )
@@ -398,13 +399,14 @@ void virt_port_add_time_bound( virt_net_t* v_net, struct timespec time,
             ports->port->rate.time = time;
             ports->port->rate.type = rt;
             if( rt == TIME_TT ) {
-                /* if( ports->port->ch_len > 1) */
-                /* { */
-                /*     sprintf( error_msg, WARNING_IGNORING_BUFFER, ERR_WARNING, */
-                /*             ports->port->name, v_net->inst->name, */
-                /*             v_net->inst->id, ports->port->ch_len ); */
-                /*     report_yyerror( error_msg, v_net->inst->line ); */
-                /* } */
+                if( ports->port->ch_len > 1)
+                {
+                    inst = ports->port->v_net->inst;
+                    sprintf( error_msg, WARNING_IGNORING_BUFFER, ERR_WARNING,
+                            ports->port->name, inst->name,
+                            inst->id, ports->port->ch_len );
+                    report_yyerror( error_msg, inst->line );
+                }
                 ports->port->ch_len = 0;
             }
         }
