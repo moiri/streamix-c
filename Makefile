@@ -7,6 +7,26 @@ LOC_SRC_DIR = src
 SIA_LANG = sia2graph
 SIA_LANG_DIR = streamix-sia-lang
 
+VMAJ = 0
+VMIN = 4
+VREV = 0
+
+APPNAME = $(PARSER)
+
+LIB_VERSION = $(VMAJ).$(VMIN)
+UPSTREAM_VERSION = $(LIB_VERSION).$(VREV)
+DEBIAN_REVISION = 0
+VERSION = $(UPSTREAM_VERSION)-$(DEBIAN_REVISION)
+
+VAPPNAME = $(APPNAME)-$(LIB_VERSION)
+
+TGT_BIN = /opt/smx/bin
+TGT_DOC = /opt/smx/doc
+DPKG_DIR = dpkg
+DPKG_CTL_DIR = debian
+DPKG_TGT = DEBIAN
+DPKGS = $(DPKG_DIR)/$(APPNAME)_$(VERSION)_amd64
+
 SOURCES = main.c \
 		  $(LOC_SRC_DIR)/* \
 		  lex.yy.c \
@@ -162,7 +182,7 @@ $(DOT_P_CON_FILE).pdf: $(DOT_P_CON_FILE).dot
 	@gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$(DOT_P_CON_FILE).pdf dot/tmpfile*
 	@rm -f dot/tmpfile*
 
-.PHONY: clean graph run run_test run_test_all install doc move_res
+.PHONY: clean graph run run_test run_test_all install doc move_res dpkg $(DPKGS)
 
 clean:
 	rm -f $(PROJECT).tab.c
@@ -180,8 +200,8 @@ clean:
 	rm -f $(SIA_LANG_DIR)/lex.zz.c
 
 install:
-	mkdir -p /opt/smx/bin
-	cp -a $(PARSER) /opt/smx/bin/.
+	mkdir -p $(TGT_BIN)
+	cp -a $(PARSER) $(TGT_BIN)/.
 
 doc:
 	doxygen .doxygen
@@ -240,3 +260,15 @@ move_res:
 		mv -- "$$f" "$${f%.$(TEST_OUT)}.${TEST_SOL}"; \
 	done
 
+dpkg: $(DPKGS)
+$(DPKGS):
+	mkdir -p $@$(TGT_BIN)
+	cp $(APPNAME) $@$(TGT_BIN)/$(VAPPNAME)
+	ln -sf $(VAPPNAME) $@$(TGT_BIN)/$(APPNAME)
+	mkdir -p $@$(TGT_DOC)
+	cp README.md $@$(TGT_DOC)/$(VAPPNAME).md
+	mkdir -p $@/$(DPKG_TGT)
+	cp $(DPKG_CTL_DIR)/control $@/$(DPKG_TGT)/control
+	sed -i 's/<version>/$(VERSION)/g' $@/$(DPKG_TGT)/control
+	sed -i 's/<maj_version>/$(LIB_VERSION)/g' $@/$(DPKG_TGT)/control
+	dpkg-deb -b $@
