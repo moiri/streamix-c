@@ -22,6 +22,7 @@ void report_yyerror( const char* msg, int line )
  * @param: char* s:  error string
  * */
 void yyerror( void** ast, const char* s ) {
+    ( void )( ast );
     if( strlen(yytext) == 0 )
         printf( "%s: %d: %s\n", __src_file_name, yylineno, s );
     else

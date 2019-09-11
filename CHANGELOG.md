@@ -1,6 +1,11 @@
-# `v0.1.0`
+# `v0.4.0`
 
 ### Bug Fixes
+ - fix a bug where nets were not connecting properly (#15)
+ - produce a warning instead of an error when a bypass operator does not
+   connect to its immediate neighbor (#18)
+ - produce a warning when the channel length is automatically reduced due to a
+   TT net (#17)
 
 ### Changes
  - instead of compiling igraph manually use the already prepared deb package
@@ -16,6 +21,6 @@
  - introduce the keyword `open` which allows to mark that a port was
    intentionally left open.
 
-# `diss_final`
+# `v0.3.0`
 
 The initial release after completing the [dissertation](https://uhra.herts.ac.uk/handle/2299/21094).

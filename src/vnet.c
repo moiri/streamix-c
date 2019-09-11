@@ -580,7 +580,7 @@ virt_port_t* virt_port_get_equivalent_by_symb_attr( virt_net_t* v_net,
                 && ( strcmp( port->name, ports->port->name ) == 0 )
                 && ( ( ports->port->attr_mode == PORT_MODE_BI )
                     || ( port->attr_port->mode == PORT_MODE_BI )
-                    || ( ports->port->attr_mode == port->attr_port->mode ) )
+                    || ( ports->port->attr_mode == ( int )port->attr_port->mode ) )
                 ) {
             vp_net = ports->port;
             if( vp_net->v_net->type == VNET_SYNC ) break;
