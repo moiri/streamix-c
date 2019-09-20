@@ -330,6 +330,34 @@ void virt_net_destroy_shallow( virt_net_t* v_net )
 }
 
 /******************************************************************************/
+int virt_net_get_degree( virt_net_t* v_net, port_mode_t mode )
+{
+    int deg = 0;
+    virt_port_list_t* list = v_net->ports;
+    while( list != NULL ) {
+        if( list->port->state == VPORT_STATE_OPEN )
+        {
+            if( list->port->attr_mode == (int)mode )
+                deg++;
+        }
+        list = list->next;
+    }
+    return deg;
+}
+
+/******************************************************************************/
+int virt_net_get_indegree( virt_net_t* v_net)
+{
+    return virt_net_get_degree( v_net, PORT_MODE_IN );
+}
+
+/******************************************************************************/
+int virt_net_get_outdegree( virt_net_t* v_net)
+{
+    return virt_net_get_degree( v_net, PORT_MODE_OUT );
+}
+
+/******************************************************************************/
 void virt_net_update_class( virt_net_t* v_net, port_class_t port_class )
 {
     virt_port_list_t* list = v_net->ports;

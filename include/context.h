@@ -159,6 +159,18 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
         ast_node_t* ast );
 
 /**
+ * Checks wether two cp_sync nets can be merged. Two cp_syncs can only be
+ * merged if the possible paths before and after the merging remain the same.
+ *
+ * @param g         pointer to the dependency graph
+ * @param port_l    pointer to the port of a virtual net of the left operator
+ * @param port_r    pointer to the port of a virtual net of the right operator
+ * @return          true if the nets can be merged, false otherwise.
+ */
+bool check_cpsync_merge( igraph_t* g, virt_port_t* port_l,
+        virt_port_t* port_r );
+
+/**
  * @brief   check if a net has at least one triggering input
  *
  * @param ports pointer to a symbol port list

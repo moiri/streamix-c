@@ -571,6 +571,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
 {
     struct timespec tb;
     int i = 0, j = 0;
+    port_mode_t mode;
     sync_t* sync = NULL;
     virt_port_t* vp_new = NULL;
     virt_port_t* vp_net = NULL;
@@ -622,9 +623,14 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                             cp_sync->inst->id, ( uintptr_t )sp_int );
                     break;
                 }
-                vp_new = virt_port_create( vp_net->attr_class,
-                        vp_net->attr_mode, cp_sync, vp_net->name,
-                        vp_net->symb, tb, TIME_NONE, false, false, 0 );
+                mode = vp_net->attr_mode;
+                if( mode == PORT_MODE_OUT )
+                    mode = PORT_MODE_IN;
+                else if( mode == PORT_MODE_IN )
+                    mode = PORT_MODE_OUT;
+                vp_new = virt_port_create( vp_net->attr_class, mode, cp_sync,
+                        vp_net->name, vp_net->symb, tb, TIME_NONE, false,
+                        false, 0 );
                 virt_port_append( cp_sync, vp_new );
                 // unknown direction, ignore class, modes have to be equal
                 check_connection( vp_new, vp_net, g, false, true, true );

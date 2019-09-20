@@ -126,8 +126,8 @@ graph
   node
   [
     id 12
-    label "B"
-    func "B"
+    label "smx_rn"
+    func "smx_rn"
     static 0
     pure 0
     extern 0
@@ -146,6 +146,16 @@ graph
   node
   [
     id 14
+    label "B"
+    func "B"
+    static 0
+    pure 0
+    extern 0
+    tt 0
+  ]
+  node
+  [
+    id 15
     label "smx_rn"
     func "smx_rn"
     static 0
@@ -315,7 +325,7 @@ graph
   ]
   edge
   [
-    source 8
+    source 11
     target 10
     label "a"
     nsrc "smx_null"
@@ -331,7 +341,7 @@ graph
   ]
   edge
   [
-    source 8
+    source 11
     target 9
     label "a"
     nsrc "smx_null"
@@ -348,54 +358,6 @@ graph
   edge
   [
     source 10
-    target 11
-    label "p_int"
-    nsrc "smx_null"
-    ndst "smx_null"
-    dsrc 0
-    ddst 0
-    len 1
-    dts 0
-    dtns 0
-    sts 0
-    stns 0
-    type 0
-  ]
-  edge
-  [
-    source 9
-    target 11
-    label "p_int"
-    nsrc "smx_null"
-    ndst "smx_null"
-    dsrc 0
-    ddst 0
-    len 1
-    dts 0
-    dtns 0
-    sts 0
-    stns 0
-    type 0
-  ]
-  edge
-  [
-    source 11
-    target 13
-    label "p_int"
-    nsrc "smx_null"
-    ndst "smx_null"
-    dsrc 0
-    ddst 0
-    len 1
-    dts 0
-    dtns 0
-    sts 0
-    stns 0
-    type 0
-  ]
-  edge
-  [
-    source 11
     target 12
     label "p_int"
     nsrc "smx_null"
@@ -411,9 +373,9 @@ graph
   ]
   edge
   [
-    source 13
-    target 14
-    label "b"
+    source 9
+    target 12
+    label "p_int"
     nsrc "smx_null"
     ndst "smx_null"
     dsrc 0
@@ -429,7 +391,23 @@ graph
   [
     source 12
     target 14
-    label "b"
+    label "p_int"
+    nsrc "smx_null"
+    ndst "smx_null"
+    dsrc 0
+    ddst 0
+    len 1
+    dts 0
+    dtns 0
+    sts 0
+    stns 0
+    type 0
+  ]
+  edge
+  [
+    source 12
+    target 13
+    label "p_int"
     nsrc "smx_null"
     ndst "smx_null"
     dsrc 0
@@ -444,6 +422,38 @@ graph
   edge
   [
     source 14
+    target 15
+    label "b"
+    nsrc "smx_null"
+    ndst "smx_null"
+    dsrc 0
+    ddst 0
+    len 1
+    dts 0
+    dtns 0
+    sts 0
+    stns 0
+    type 0
+  ]
+  edge
+  [
+    source 13
+    target 15
+    label "b"
+    nsrc "smx_null"
+    ndst "smx_null"
+    dsrc 0
+    ddst 0
+    len 1
+    dts 0
+    dtns 0
+    sts 0
+    stns 0
+    type 0
+  ]
+  edge
+  [
+    source 15
     target 1
     label "p2"
     nsrc "smx_null"
@@ -459,9 +469,41 @@ graph
   ]
   edge
   [
-    source 14
+    source 15
     target 1
     label "p1"
+    nsrc "smx_null"
+    ndst "smx_null"
+    dsrc 0
+    ddst 0
+    len 1
+    dts 0
+    dtns 0
+    sts 0
+    stns 0
+    type 0
+  ]
+  edge
+  [
+    source 8
+    target 11
+    label "p1"
+    nsrc "smx_null"
+    ndst "smx_null"
+    dsrc 0
+    ddst 0
+    len 1
+    dts 0
+    dtns 0
+    sts 0
+    stns 0
+    type 0
+  ]
+  edge
+  [
+    source 8
+    target 11
+    label "p2"
     nsrc "smx_null"
     ndst "smx_null"
     dsrc 0

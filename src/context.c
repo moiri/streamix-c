@@ -36,9 +36,11 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
-            // merge copy synchronizers
-            if( inst_l != inst_r )
+            // either merge copy synchronizers or connect them
+            if( check_cpsync_merge( g, port_l, port_r ) )
                 cpsync_merge( port_l, port_r, g );
+            else
+                connect_ports( port_l, port_r, g, directed );
             res = true;
         }
         else if( ( inst_l->type == INSTREC_SYNC )
@@ -647,6 +649,84 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
 }
 
 /******************************************************************************/
+bool check_cpsync_merge( igraph_t* g, virt_port_t* port_l,
+        virt_port_t* port_r )
+{
+
+    int id_l = port_l->v_net->inst->id;
+    int id_r = port_r->v_net->inst->id;
+    port_mode_t mode_l = port_l->attr_mode;
+    port_mode_t mode_r = port_r->attr_mode;
+    bool res = false;
+    igraph_vector_t in, out, v;
+    igraph_vs_t vs;
+    int deg = 0;
+
+    // out:in, out:out
+    bool l2r = ( mode_l == PORT_MODE_OUT );
+    // in:out, in:in
+    bool r2l = ( mode_l == PORT_MODE_IN );
+
+    if( id_l == id_r )
+        return false;
+
+    // This following part is a bit messy. It is used to get the current degree
+    // of teh copy sync vertex. However, the graph and its corresponding the
+    // virtual net may have non-matching degrees. This is due to the following:
+    // 1. Side-port conncetions only have one port in a vnet however the graph
+    //    represents all available connections.
+    // 2. When flattening a wrapper the connections due to port renaming are
+    //    happening one at a time, hence the graph degree is lower than the vnet
+    //    degree
+    // Hence both, the vnet and the graph is used to compute the degree and the
+    // max is taken.
+    igraph_vector_init(&v, 2);
+    igraph_vs_vector_small(&vs, id_l, id_r, -1);
+    igraph_vector_init( &in, 0 );
+    igraph_vector_init( &out, 0 );
+    igraph_degree( g, &in, vs, IGRAPH_IN, false );
+    igraph_degree( g, &out, vs, IGRAPH_OUT, false );
+
+    // Note that in case of the vnet, the potentiually connecting port is not
+    // taken into account (hence the substraction).
+    deg = virt_net_get_indegree( port_l->v_net ) - (mode_l == PORT_MODE_IN);
+    if( VECTOR(in)[0] < deg )
+        VECTOR(in)[0] = deg;
+    deg = virt_net_get_indegree( port_r->v_net ) - (mode_r == PORT_MODE_IN);
+    if( VECTOR(in)[1] < deg )
+        VECTOR(in)[1] = deg;
+    deg = virt_net_get_outdegree( port_l->v_net ) - (mode_l == PORT_MODE_OUT);
+    if( VECTOR(out)[0] < deg )
+        VECTOR(out)[0] = deg;
+    deg = virt_net_get_outdegree( port_r->v_net ) - (mode_r == PORT_MODE_OUT);
+    if( VECTOR(out)[1] < deg )
+        VECTOR(out)[1] = deg;
+
+
+    // The following rules define whether two cp_sync nets may be merged: Two
+    // cp_syncs can only be merged if the possible paths before and after the
+    // merging remain the same.
+    if( VECTOR(out)[0] == 0 && VECTOR(out)[1] == 0 )
+        res = true;
+    else if( VECTOR(in)[0] == 0 && VECTOR(in)[1] == 0 )
+        res = true;
+    else if( VECTOR(out)[0] == 0 && VECTOR(in)[1] == 0 && l2r )
+        res = true;
+    else if( VECTOR(in)[0] == 0 && VECTOR(out)[1] == 0 && r2l )
+        res = true;
+    else if( VECTOR(out)[0] > 0 && VECTOR(in)[0] > 0 && VECTOR(in)[1] == 0 && l2r )
+        res = true;
+    else if( VECTOR(in)[0] == 0 && VECTOR(out)[1] > 0 && VECTOR(in)[1] > 0 && r2l )
+        res = true;
+    else if( VECTOR(out)[0] == 0 && VECTOR(in)[1] > 0 && VECTOR(out)[1] > 0 && l2r )
+        res = true;
+    else if( VECTOR(in)[0] > 0 && VECTOR(out)[0] > 0 && VECTOR(out)[1] == 0 && r2l )
+        res = true;
+
+    return res;
+}
+
+/******************************************************************************/
 void check_ports_decoupled( symrec_list_t* ports )
 {
     char error_msg[ CONST_ERROR_LEN ];
@@ -747,7 +827,25 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
     if( inst_type_r != INSTREC_SYNC ) name = port_r->name;
     virt_port_t *p_src, *p_dest;
     // set source and dest id
-    if( ( ( port_l->attr_mode == PORT_MODE_IN )
+    if( ( inst_type_l == INSTREC_SYNC ) && ( inst_type_r == INSTREC_SYNC ) )
+    {
+        // connect two cp_sync nets
+        if( ( ( port_l->attr_mode == PORT_MODE_IN )
+                    && ( port_r->attr_mode == PORT_MODE_OUT ) )
+                || ( ( port_l->attr_mode == PORT_MODE_IN )
+                        && ( port_r->attr_mode == PORT_MODE_IN ) ) ) {
+            // both are input or the connection is r2l
+            p_dest = port_l;
+            p_src = port_r;
+        }
+        else
+        {
+            // both are output or the connection is r2l
+            p_dest = port_r;
+            p_src = port_l;
+        }
+    }
+    else if( ( ( port_l->attr_mode == PORT_MODE_IN )
                 && ( port_r->attr_mode == PORT_MODE_OUT ) )
             || ( ( inst_type_l == INSTREC_SYNC )
                 && ( port_r->attr_mode == PORT_MODE_OUT ) )

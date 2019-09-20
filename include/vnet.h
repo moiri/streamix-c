@@ -276,6 +276,32 @@ void virt_net_destroy( virt_net_t* v_net, bool shallow );
 void virt_net_destroy_shallow( virt_net_t* v_net );
 
 /**
+ * Get either the in or out degree of a vertex considering only non-connected
+ * ports.
+ *
+ * @param v_net a pointer to the virtual net
+ * @param mode  use PORT_MODE_IN for indegree and PORT_MODE_OUT for outdegree
+ * @return      the requested vertex degree
+ */
+int virt_net_get_degree( virt_net_t* v_net, port_mode_t mode );
+
+/**
+ * Get the indegree of a vertex, considering only non-connected ports.
+ *
+ * @param v_net a pointer to the virtual net
+ * @return      the vertex indegree
+ */
+int virt_net_get_indegree( virt_net_t* v_net);
+
+/**
+ * Get the outdegree of a vertex, considering only non-connected ports.
+ *
+ * @param v_net a pointer to the virtual net
+ * @return      the vertex outdegree
+ */
+int virt_net_get_outdegree( virt_net_t* v_net);
+
+/**
  * @brief   update the port class of all open ports in the v_net
  *
  * @param v_net         a pointer to a virtual net to update the ports
