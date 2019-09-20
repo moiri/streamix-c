@@ -3,9 +3,9 @@ Version: <version>
 Section: base
 Priority: optional
 Architecture: amd64
-Depends: libsmxrts-0.1 (>= 0.1.0-0)
+Depends: libigraph0v5 (>= 0.7.1)
 Maintainer: Simon Maurer <tpf@humdek.unibe.ch>
-Description: Streamix Compiler 'esmxc'
+Description: Streamix Compiler 'smxc'
  This is a compiler for the coordination language Streamix. It takes a file
  containing Streamix syntax and produces a dependency graph in either the
  `graphml` (default) or `gml` format.
