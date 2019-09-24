@@ -1,0 +1,18 @@
+Ctrl = box ctrl( side in event, out trigger )
+Prod2 = box prod2( side out event )
+
+wrapper WD( in trigger(events), side in event(events) )
+{
+    Db = box db( in events )
+    connect Db
+} net( left in events )
+
+wrapper WP( side out event, in trigger )
+{
+    Prod1 = box prod1( side out event, out data )
+    Sink = box sink( in data, in trigger )
+
+    connect Prod1:Sink
+} net( side out event, left in trigger )
+
+connect Prod2|Ctrl.(WP|WD)
