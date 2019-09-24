@@ -830,8 +830,10 @@ void connect_ports( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
     if( ( inst_type_l == INSTREC_SYNC ) && ( inst_type_r == INSTREC_SYNC ) )
     {
         // connect two cp_sync nets
-        if( ( ( port_l->attr_mode == PORT_MODE_IN )
-                    && ( port_r->attr_mode == PORT_MODE_OUT ) )
+        if( ( ( port_l->attr_mode == PORT_MODE_IN
+                        || port_l->attr_mode == PORT_MODE_BI )
+                    && ( port_r->attr_mode == PORT_MODE_OUT
+                        || port_r->attr_mode == PORT_MODE_BI ) )
                 || ( ( port_l->attr_mode == PORT_MODE_IN )
                         && ( port_r->attr_mode == PORT_MODE_IN ) ) ) {
             // both are input or the connection is r2l
