@@ -673,6 +673,10 @@ virt_net_t* wrap_connect_int( symrec_list_t* wrap_ports, virt_net_t* v_net_n,
     // group ports in order to create copy synchronizers
     igraph_vector_ptr_init( &syncs, 0 );
     wrap_sync_init( &syncs, wrap_ports );
+#if defined(DEBUG) || defined(DEBUG_CONNECT_WRAP)
+    printf( "check_wrap:\n" );
+    debug_print_syncs( &syncs );
+#endif // DEBUG
     wrap_sync_merge( &syncs );
 #if defined(DEBUG) || defined(DEBUG_CONNECT_WRAP)
     printf( "connect_wrap:\n" );
@@ -746,6 +750,7 @@ void wrap_sync_merge( igraph_vector_ptr_t* syncs )
                 igraph_vector_ptr_destroy( &sync2->p_ext );
                 free( sync2 );
                 if( i > 0 ) i--;
+                j--;
             }
         }
     }

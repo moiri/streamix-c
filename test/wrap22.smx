@@ -1,0 +1,11 @@
+A = box a(out x)
+B = box b(out y)
+C = box c(out z)
+
+wrapper W(in x(log), in y(log), in z(log))
+{
+    D = box d(in log)
+    connect D
+} net(left in log)
+
+connect (A|B|C).W
