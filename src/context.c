@@ -597,7 +597,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                 }
                 list = list->next;
             }
-            check_ports_decoupled( port_list );
+            /* check_ports_decoupled( port_list ); */
             res = ( void* )port_list;   // return pointer to the port list
             break;
         case AST_PORT:
