@@ -41,7 +41,8 @@ attr_net_t* symrec_attr_create_net( virt_net_t* v_net, igraph_t* g )
 
 /******************************************************************************/
 attr_port_t* symrec_attr_create_port( symrec_list_t* port_int, port_mode_t mode,
-        port_class_t collection, bool decoupled, bool is_open, int ch_len )
+        port_class_t collection, bool decoupled, bool is_open, bool is_dynamic,
+        int ch_len )
 {
     attr_port_t* new_attr = malloc( sizeof( attr_port_t ) );
     new_attr->ports_int = port_int;
@@ -49,6 +50,7 @@ attr_port_t* symrec_attr_create_port( symrec_list_t* port_int, port_mode_t mode,
     new_attr->collection = collection;
     new_attr->decoupled = decoupled;
     new_attr->is_open = is_open;
+    new_attr->is_dynamic = is_dynamic;
     new_attr->ch_len = ch_len;
     new_attr->alt_name = NULL;
     return new_attr;

@@ -153,7 +153,8 @@ void check_connection_cp( virt_net_t* v_net, virt_port_t* port1,
             // channel length is set to zero: the connecting box port might
             // overwrite this due to the max function
             port_new = virt_port_create( port_class, port_mode, v_net_sync,
-                    port1->name, port1->symb, tb, TIME_NONE, false, false, 0 );
+                    port1->name, port1->symb, tb, TIME_NONE, false, false,
+                    false, 0 );
             virt_port_append( v_net_sync, port_new );
             virt_port_append( v_net, port_new );
             connect_ports( port_new, port1, g, false );
@@ -603,15 +604,20 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
         case AST_PORT:
             // prepare symbol attributes and create symbol
             p_attr = symrec_attr_create_port( NULL, PORT_MODE_BI,
-                    PORT_CLASS_NONE, false, false, 0 );
+                    PORT_CLASS_NONE, false, false, false, 0 );
             if( ast->port->ch_len != NULL )
                 p_attr->ch_len = ast->port->ch_len->attr->val;
             if( ast->port->mode != NULL )
                 p_attr->mode = ast->port->mode->attr->val;
             if( ast->port->collection != NULL )
                 p_attr->collection = ast->port->collection->attr->val;
-            if( ast->port->open != NULL )
-                p_attr->is_open = true;
+            if( ast->port->connection != NULL )
+            {
+                p_attr->is_open = ( ast->port->connection->attr->val
+                        == PARSE_ATTR_OPEN );
+                p_attr->is_dynamic = ( ast->port->connection->attr->val
+                        == PARSE_ATTR_DYNAMIC );
+            }
             if( ( ast->port->coupling != NULL
                         && ast->port->coupling->attr->val == PARSE_ATTR_DECOUPLED )
                     || ( ( p_attr->collection == PORT_CLASS_SIDE )

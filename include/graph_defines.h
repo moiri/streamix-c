@@ -42,6 +42,8 @@
 #define GE_DTS      "dts"
 #define GE_DTNS     "dtns"
 #define GE_TYPE     "type"
+#define GE_DYNDST   "dyndst"
+#define GE_DYNSRC   "dynsrc"
 
 enum rate_type_e {
     TIME_NONE,

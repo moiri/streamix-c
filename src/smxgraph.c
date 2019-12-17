@@ -81,7 +81,8 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
     dgraph_edge_add_attr( g, id, name, p_src, p_dest, name_src, name_dst,
             p_src->descoupled, p_dest->descoupled, get_ch_len( p_dest, p_src ),
             p_src->rate.time.tv_sec, p_src->rate.time.tv_nsec,
-            p_dest->rate.time.tv_sec, p_dest->rate.time.tv_nsec, type );
+            p_dest->rate.time.tv_sec, p_dest->rate.time.tv_nsec, type,
+            p_src->is_dynamic, p_dest->is_dynamic );
     return id;
 }
 
@@ -89,7 +90,8 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
 void dgraph_edge_add_attr( igraph_t* g, int id, const char* name,
         virt_port_t* p_src, virt_port_t* p_dst, const char* n_src,
         const char* n_dst, bool d_src, bool d_dst, int len, int ts_src,
-        int tns_src, int ts_dst, int tns_dst, rate_type_t type )
+        int tns_src, int ts_dst, int tns_dst, rate_type_t type,
+        bool is_dyn_src, bool is_dyn_dst )
 {
     igraph_cattribute_EAS_set( g, GE_LABEL, id, name );
     igraph_cattribute_EAN_set( g, GE_PSRC, id, ( uintptr_t )p_src );
@@ -99,11 +101,14 @@ void dgraph_edge_add_attr( igraph_t* g, int id, const char* name,
     igraph_cattribute_EAN_set( g, GE_DSRC, id, d_src );
     igraph_cattribute_EAN_set( g, GE_DDST, id, d_dst );
     igraph_cattribute_EAN_set( g, GE_LEN, id, len );
+    igraph_cattribute_EAN_set( g, GE_LEN, id, len );
     igraph_cattribute_EAN_set( g, GE_DTS, id, ts_dst );
     igraph_cattribute_EAN_set( g, GE_DTNS, id, tns_dst );
     igraph_cattribute_EAN_set( g, GE_STS, id, ts_src );
     igraph_cattribute_EAN_set( g, GE_STNS, id, tns_src );
     igraph_cattribute_EAN_set( g, GE_TYPE, id, type );
+    igraph_cattribute_EAN_set( g, GE_DYNSRC, id, is_dyn_src );
+    igraph_cattribute_EAN_set( g, GE_DYNDST, id, is_dyn_dst );
 }
 
 /******************************************************************************/
@@ -591,7 +596,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
             vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
                     vp_net->v_net, vp_net->name, vp_net->symb,
                     vp_net->rate.time, vp_net->rate.type, vp_net->descoupled,
-                    vp_net->is_open, vp_net->ch_len );
+                    vp_net->is_open, vp_net->is_dynamic, vp_net->ch_len );
             virt_port_append( v_net, vp_new );
         }
         else {
@@ -605,7 +610,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                 // not decoupled and have no rate control
                 vp_net = virt_port_create( sp_src->attr_port->collection,
                         sp_src->attr_port->mode, cp_sync, sp_src->name,
-                        sp_src, tb, TIME_NONE, false, false, 0 );
+                        sp_src, tb, TIME_NONE, false, false, false, 0 );
                 virt_port_append( v_net, vp_net );
                 virt_port_append( cp_sync, virt_port_copy( vp_net ) );
             }
@@ -630,7 +635,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                     mode = PORT_MODE_OUT;
                 vp_new = virt_port_create( vp_net->attr_class, mode, cp_sync,
                         vp_net->name, vp_net->symb, tb, TIME_NONE, false,
-                        false, 0 );
+                        false, false, 0 );
                 virt_port_append( cp_sync, vp_new );
                 // unknown direction, ignore class, modes have to be equal
                 check_connection( vp_new, vp_net, g, false, true, true );

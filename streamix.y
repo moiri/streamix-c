@@ -29,13 +29,13 @@
 };
 /* keywods */
 %token CONNECT TT TB TF
-%token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED COUPLED STATELESS STATIC EXTERN OPEN BUFLEN
+%token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED COUPLED STATELESS STATIC EXTERN OPEN DYNAMIC BUFLEN
 %token <tval> TIME_SEC TIME_MSEC TIME_USEC TIME_NSEC
 
 /* optional and variable keyword tokens */
 %type <nval> kw_opt_state
 %type <nval> kw_opt_extern
-%type <nval> kw_opt_open
+%type <nval> kw_opt_connection
 %type <nval> kw_opt_static
 %type <nval> kw_opt_decoupled
 %type <nval> kw_port_class
@@ -187,7 +187,7 @@ net_port_decl:
             $2,
             ( ast_node_t* )0, // no coupling
             ( ast_node_t* )0, // no channel length
-            ( ast_node_t* )0, // cannot be open
+            ( ast_node_t* )0, // cannot be open or dynamic
             PORT_NET
         );
     }
@@ -219,7 +219,7 @@ opt_box_port_list:
 ;
 
 box_port_decl:
-    kw_opt_decoupled kw_opt_port_class kw_port_mode IDENTIFIER opt_alt_port_name opt_channel_len kw_opt_open {
+    kw_opt_decoupled kw_opt_port_class kw_port_mode IDENTIFIER opt_alt_port_name opt_channel_len kw_opt_connection {
         $$ = ast_add_port(
             ast_add_symbol( $4, @3.last_line, ID_PORT ),
             $5, // alternative port name
@@ -227,7 +227,7 @@ box_port_decl:
             $3, // port mode
             $1, // port coupling
             $6, // channel length
-            $7, // open attr
+            $7, // connection attr
             PORT_BOX
         );
     }
@@ -279,7 +279,7 @@ wrap_port_decl:
             $2,
             ( ast_node_t* )0, // no coupling
             ( ast_node_t* )0, // no channel length
-            ( ast_node_t* )0, // cannot be open
+            ( ast_node_t* )0, // cannot be open nor dynamic
             PORT_WRAP
         );
     }
@@ -292,7 +292,7 @@ wrap_port_decl:
             ( ast_node_t* )0, // no mode
             ( ast_node_t* )0, // no coupling
             ( ast_node_t* )0, // no channel length
-            ( ast_node_t* )0, // cannot be open
+            ( ast_node_t* )0, // cannot be open nor dynamic
             PORT_WRAP_NULL
         );
     }
@@ -329,16 +329,17 @@ alt_port_decl:
             ( ast_node_t* )0, // no mode
             ( ast_node_t* )0, // no coupling
             ( ast_node_t* )0, // no channel length
-            ( ast_node_t* )0, // cannot be open
+            ( ast_node_t* )0, // cannot be open nor dynamic
             PORT_BOX
         );
     }
 ;
 
 /* keywords */
-kw_opt_open:
+kw_opt_connection:
     %empty { $$ = ( ast_node_t* )0; }
 |   OPEN   { $$ = ast_add_attr( $1, ATTR_OTHER ); }
+|   DYNAMIC   { $$ = ast_add_attr( $1, ATTR_OTHER ); }
 ;
 
 kw_opt_extern:

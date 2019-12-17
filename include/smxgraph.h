@@ -58,26 +58,29 @@ int dgraph_edge_add( igraph_t* g, virt_port_t* p_src, virt_port_t* p_dest,
 /**
  * Add edge attributes to an edge of the dependecy graph.
  *
- * @param g         pointer to the dependancy graph
- * @param id        id of the edge
- * @param name      name of the edge
- * @param p_src     pointer to the source port
- * @param p_dest    pointer to the destination port
- * @param n_src     alt name of the source port
- * @param n_dst     alt name of the destination port
- * @param d_src     decoupling of source port
- * @param d_dst     decoupling of destination port
- * @param len       lengths of the channel
- * @param ts_src    rate in seconds of the source port
- * @param tns_src   rate in nanoseconds of the source port
- * @param ts_dst    rate in seconds of the destination port
- * @param tns_dst   rate in nanoseconds of the destinantion port
- * @param type      the rate type of the edge
+ * @param g          pointer to the dependancy graph
+ * @param id         id of the edge
+ * @param name       name of the edge
+ * @param p_src      pointer to the source port
+ * @param p_dest     pointer to the destination port
+ * @param n_src      alt name of the source port
+ * @param n_dst      alt name of the destination port
+ * @param d_src      decoupling of source port
+ * @param d_dst      decoupling of destination port
+ * @param len        lengths of the channel
+ * @param ts_src     rate in seconds of the source port
+ * @param tns_src    rate in nanoseconds of the source port
+ * @param ts_dst     rate in seconds of the destination port
+ * @param tns_dst    rate in nanoseconds of the destinantion port
+ * @param type       the rate type of the edge
+ * @param is_dyn_src has the source port a dynamic conncetion
+ * @param is_dyn_dst has the destination port a dynamic conncetion
  */
 void dgraph_edge_add_attr( igraph_t* g, int id, const char* name,
         virt_port_t* p_src, virt_port_t* p_dst, const char* n_src,
         const char* n_dst, bool d_src, bool d_dst, int len, int ts_src,
-        int tns_src, int ts_dst, int tns_dst, rate_type_t type );
+        int tns_src, int ts_dst, int tns_dst, rate_type_t type,
+        bool is_dyn_src, bool is_dyn_dst );
 
 /**
  * @brief   destroy the attributes of a graph
