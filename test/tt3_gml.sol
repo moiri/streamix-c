@@ -48,6 +48,8 @@ graph
     sts 0
     stns 0
     type 1
+    dynsrc 0
+    dyndst 0
   ]
   edge
   [
@@ -64,5 +66,7 @@ graph
     sts 1
     stns 0
     type 1
+    dynsrc 0
+    dyndst 0
   ]
 ]

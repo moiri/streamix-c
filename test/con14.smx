@@ -1,0 +1,9 @@
+/**
+ * Use dynamic ports to check wether the flag is propagated as expected
+ */
+
+A = box fa( out x dynamic )
+B = box fb( in x dynamic, out y )
+C = box fc( in y )
+
+connect A.B.C

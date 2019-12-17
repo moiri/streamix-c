@@ -38,5 +38,7 @@ graph
     sts 0
     stns 0
     type 1
+    dynsrc 0
+    dyndst 0
   ]
 ]

@@ -148,6 +148,8 @@ graph
     sts 0
     stns 0
     type 0
+    dynsrc 0
+    dyndst 0
   ]
   edge
   [
@@ -164,6 +166,8 @@ graph
     sts 0
     stns 0
     type 0
+    dynsrc 0
+    dyndst 0
   ]
   edge
   [
@@ -180,6 +184,8 @@ graph
     sts 0
     stns 0
     type 0
+    dynsrc 0
+    dyndst 0
   ]
   edge
   [
@@ -196,6 +202,8 @@ graph
     sts 0
     stns 0
     type 0
+    dynsrc 0
+    dyndst 0
   ]
   edge
   [
@@ -212,6 +220,8 @@ graph
     sts 0
     stns 0
     type 0
+    dynsrc 0
+    dyndst 0
   ]
   edge
   [
@@ -228,6 +238,8 @@ graph
     sts 0
     stns 0
     type 0
+    dynsrc 0
+    dyndst 0
   ]
   edge
   [
@@ -244,6 +256,8 @@ graph
     sts 0
     stns 0
     type 0
+    dynsrc 0
+    dyndst 0
   ]
   edge
   [
@@ -260,6 +274,8 @@ graph
     sts 0
     stns 0
     type 0
+    dynsrc 0
+    dyndst 0
   ]
   edge
   [
@@ -276,6 +292,8 @@ graph
     sts 0
     stns 0
     type 0
+    dynsrc 0
+    dyndst 0
   ]
   edge
   [
@@ -292,6 +310,8 @@ graph
     sts 0
     stns 0
     type 0
+    dynsrc 0
+    dyndst 0
   ]
   edge
   [
@@ -308,6 +328,8 @@ graph
     sts 0
     stns 0
     type 0
+    dynsrc 0
+    dyndst 0
   ]
   edge
   [
@@ -324,6 +346,8 @@ graph
     sts 0
     stns 0
     type 0
+    dynsrc 0
+    dyndst 0
   ]
   edge
   [
@@ -340,6 +364,8 @@ graph
     sts 0
     stns 0
     type 0
+    dynsrc 0
+    dyndst 0
   ]
   edge
   [
@@ -356,5 +382,7 @@ graph
     sts 0
     stns 0
     type 0
+    dynsrc 0
+    dyndst 0
   ]
 ]
