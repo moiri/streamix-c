@@ -1,9 +1,25 @@
-# `v0.5.0`
+# `v0.5.0` (latest)
 
 ### New Features
 
  - introduce the keyword `dynamic` which allows to mark that a port is generated
    dynamically and has no name association through macros.
+
+
+-------------------
+# `v0.4.1`
+
+### Changes
+
+ - disable error when all inputs are decoupled
+
+### Bug Fixes
+
+ - fix a bug when merging more than two internal ports in a wrapper
+ - Fix merging of routing nodes (cp_sync)
+ - fix dependencies
+ - fix testcase: add warning messages when changing ch length
+
 
 -------------------
 # `v0.4.0`
