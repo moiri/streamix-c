@@ -20,7 +20,7 @@ VERSION = $(UPSTREAM_VERSION)-$(DEBIAN_REVISION)
 
 VAPPNAME = $(APPNAME)-$(LIB_VERSION)
 
-TGT_BIN = /opt/smx/bin
+TGT_BIN = /usr/bin
 TGT_DOC = /opt/smx/doc
 DPKG_DIR = dpkg
 DPKG_CTL_DIR = debian
