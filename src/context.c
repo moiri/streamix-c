@@ -334,7 +334,8 @@ void check_connections_open( virt_net_t* vnet_l, virt_net_t* vnet_r )
     instrec_t *inst;
     while( ports != NULL ) {
         if( ( ports->port->state < VPORT_STATE_CONNECTED )
-                && ( ports->port->attr_class == PORT_CLASS_DOWN ) ) {
+                && ( ports->port->attr_class == PORT_CLASS_DOWN )
+                && !ports->port->is_open ) {
             // a left opernad must have all ports with class down connected
             inst = ports->port->v_net->inst;
             sprintf( error_msg, ERROR_NO_PORT_CON_CLASS, ERR_ERROR,
@@ -347,7 +348,8 @@ void check_connections_open( virt_net_t* vnet_l, virt_net_t* vnet_r )
     ports = vnet_r->ports;
     while( ports != NULL ) {
         if( ( ports->port->state < VPORT_STATE_CONNECTED )
-                && ( ports->port->attr_class == PORT_CLASS_UP ) ) {
+                && ( ports->port->attr_class == PORT_CLASS_UP )
+                && !ports->port->is_open ) {
             // a right opernad must have all ports with class up connected
             inst = ports->port->v_net->inst;
             sprintf( error_msg, ERROR_NO_PORT_CON_CLASS, ERR_ERROR,
