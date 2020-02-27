@@ -37,7 +37,7 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
             printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
             // either merge copy synchronizers or connect them
-            if( check_cpsync_merge( g, port_l, port_r, false ) )
+            if( check_cpsync_merge_pre_connect( g, port_l, port_r ) )
                 cpsync_merge( port_l, port_r, g );
             else
                 connect_ports( port_l, port_r, g, directed );
@@ -657,15 +657,38 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
 }
 
 /******************************************************************************/
-bool check_cpsync_merge( igraph_t* g, virt_port_t* port_l,
-        virt_port_t* port_r, bool is_post_connect )
+bool check_cpsync_merge_post_connect( igraph_t* g, int eid )
 {
 
+    int id_l;
+    int id_r;
+    igraph_vector_t in, out, v;
+    igraph_vs_t vs;
+
+    igraph_edge( g, eid, &id_l, &id_r );
+
+    igraph_vector_init( &v, 2 );
+    igraph_vs_vector_small( &vs, id_l, id_r, -1 );
+    igraph_vector_init( &in, 0 );
+    igraph_vector_init( &out, 0 );
+    igraph_degree( g, &in, vs, IGRAPH_IN, false );
+    igraph_degree( g, &out, vs, IGRAPH_OUT, false );
+
+    VECTOR(out)[0]--;
+    VECTOR(in)[1]--;
+
+    return check_cpsync_merge( VECTOR(out)[0], VECTOR(in)[0], VECTOR(out)[1],
+            VECTOR(in)[1], true, false );
+}
+
+/******************************************************************************/
+bool check_cpsync_merge_pre_connect( igraph_t* g, virt_port_t* port_l,
+        virt_port_t* port_r )
+{
     int id_l = port_l->v_net->inst->id;
     int id_r = port_r->v_net->inst->id;
     port_mode_t mode_l = port_l->attr_mode;
     port_mode_t mode_r = port_r->attr_mode;
-    bool res = false;
     igraph_vector_t in, out, v;
     igraph_vs_t vs;
     int deg = 0;
@@ -694,13 +717,6 @@ bool check_cpsync_merge( igraph_t* g, virt_port_t* port_l,
     igraph_vector_init( &out, 0 );
     igraph_degree( g, &in, vs, IGRAPH_IN, false );
     igraph_degree( g, &out, vs, IGRAPH_OUT, false );
-    if( is_post_connect )
-    {
-        VECTOR(in)[0] -= (mode_l == PORT_MODE_IN);
-        VECTOR(in)[1] -= (mode_r == PORT_MODE_IN);
-        VECTOR(out)[0] -= (mode_l == PORT_MODE_OUT);
-        VECTOR(out)[1] -= (mode_r == PORT_MODE_OUT);
-    }
 
     // Note that in case of the vnet, the potentiually connecting port is not
     // taken into account (hence the substraction).
@@ -717,24 +733,33 @@ bool check_cpsync_merge( igraph_t* g, virt_port_t* port_l,
     if( VECTOR(out)[1] < deg )
         VECTOR(out)[1] = deg;
 
+    return check_cpsync_merge( VECTOR(out)[0], VECTOR(in)[0], VECTOR(out)[1],
+            VECTOR(in)[1], l2r, r2l );
+}
+
+/******************************************************************************/
+bool check_cpsync_merge( double v1_out, double v1_in, double v2_out,
+        double v2_in, bool l2r, bool r2l )
+{
+    bool res = false;
     // The following rules define whether two cp_sync nets may be merged: Two
     // cp_syncs can only be merged if the possible paths before and after the
     // merging remain the same.
-    if( VECTOR(out)[0] == 0 && VECTOR(out)[1] == 0 )
+    if( v1_out == 0 && v2_out == 0 )
         res = true;
-    else if( VECTOR(in)[0] == 0 && VECTOR(in)[1] == 0 )
+    else if( v1_in == 0 && v2_in == 0 )
         res = true;
-    else if( VECTOR(out)[0] == 0 && VECTOR(in)[1] == 0 && l2r )
+    else if( v1_out == 0 && v2_in == 0 && l2r )
         res = true;
-    else if( VECTOR(in)[0] == 0 && VECTOR(out)[1] == 0 && r2l )
+    else if( v1_in == 0 && v2_out == 0 && r2l )
         res = true;
-    else if( VECTOR(out)[0] > 0 && VECTOR(in)[0] > 0 && VECTOR(in)[1] == 0 && l2r )
+    else if( v1_out > 0 && v1_in > 0 && v2_in == 0 && l2r )
         res = true;
-    else if( VECTOR(in)[0] == 0 && VECTOR(out)[1] > 0 && VECTOR(in)[1] > 0 && r2l )
+    else if( v1_in == 0 && v2_out > 0 && v2_in > 0 && r2l )
         res = true;
-    else if( VECTOR(out)[0] == 0 && VECTOR(in)[1] > 0 && VECTOR(out)[1] > 0 && l2r )
+    else if( v1_out == 0 && v2_in > 0 && v2_out > 0 && l2r )
         res = true;
-    else if( VECTOR(in)[0] > 0 && VECTOR(out)[0] > 0 && VECTOR(out)[1] == 0 && r2l )
+    else if( v1_in > 0 && v1_out > 0 && v2_out == 0 && r2l )
         res = true;
 
     return res;
@@ -1175,7 +1200,7 @@ void post_process( igraph_t* g )
             if( ( p_src ->v_net->type == VNET_SYNC )
                     && ( p_dest->v_net->type == VNET_SYNC ) )
             {
-                if( check_cpsync_merge( g, p_src, p_dest, true ) )
+                if( check_cpsync_merge_post_connect( g, IGRAPH_VIT_GET( eit ) ) )
                 {
                     cpsync_merge( p_src, p_dest, g );
                     has_changed = true;

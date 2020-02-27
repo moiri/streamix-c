@@ -169,8 +169,19 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
  *  true if the check occures after connection, false before
  * @return          true if the nets can be merged, false otherwise.
  */
-bool check_cpsync_merge( igraph_t* g, virt_port_t* port_l,
-        virt_port_t* port_r, bool is_post_connect );
+bool check_cpsync_merge_pre_connect( igraph_t* g, virt_port_t* port_l,
+        virt_port_t* port_r );
+
+/**
+ *
+ */
+bool check_cpsync_merge_post_connect( igraph_t* g, int eid );
+
+/**
+ *
+ */
+bool check_cpsync_merge( double v1_out, double v1_in, double v2_out,
+        double v2_in, bool l2r, bool r2l );
 
 /**
  * @brief   check if a net has at least one triggering input
