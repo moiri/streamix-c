@@ -165,10 +165,12 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
  * @param g         pointer to the dependency graph
  * @param port_l    pointer to the port of a virtual net of the left operator
  * @param port_r    pointer to the port of a virtual net of the right operator
+ * @param is_post_connect
+ *  true if the check occures after connection, false before
  * @return          true if the nets can be merged, false otherwise.
  */
 bool check_cpsync_merge( igraph_t* g, virt_port_t* port_l,
-        virt_port_t* port_r );
+        virt_port_t* port_r, bool is_post_connect );
 
 /**
  * @brief   check if a net has at least one triggering input

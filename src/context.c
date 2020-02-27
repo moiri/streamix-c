@@ -37,7 +37,7 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
             printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
             // either merge copy synchronizers or connect them
-            if( check_cpsync_merge( g, port_l, port_r ) )
+            if( check_cpsync_merge( g, port_l, port_r, false ) )
                 cpsync_merge( port_l, port_r, g );
             else
                 connect_ports( port_l, port_r, g, directed );
@@ -658,7 +658,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
 
 /******************************************************************************/
 bool check_cpsync_merge( igraph_t* g, virt_port_t* port_l,
-        virt_port_t* port_r )
+        virt_port_t* port_r, bool is_post_connect )
 {
 
     int id_l = port_l->v_net->inst->id;
@@ -694,6 +694,13 @@ bool check_cpsync_merge( igraph_t* g, virt_port_t* port_l,
     igraph_vector_init( &out, 0 );
     igraph_degree( g, &in, vs, IGRAPH_IN, false );
     igraph_degree( g, &out, vs, IGRAPH_OUT, false );
+    if( is_post_connect )
+    {
+        VECTOR(in)[0] -= (mode_l == PORT_MODE_IN);
+        VECTOR(in)[1] -= (mode_r == PORT_MODE_IN);
+        VECTOR(out)[0] -= (mode_l == PORT_MODE_OUT);
+        VECTOR(out)[1] -= (mode_r == PORT_MODE_OUT);
+    }
 
     // Note that in case of the vnet, the potentiually connecting port is not
     // taken into account (hence the substraction).
@@ -709,7 +716,6 @@ bool check_cpsync_merge( igraph_t* g, virt_port_t* port_l,
     deg = virt_net_get_outdegree( port_r->v_net ) - (mode_r == PORT_MODE_OUT);
     if( VECTOR(out)[1] < deg )
         VECTOR(out)[1] = deg;
-
 
     // The following rules define whether two cp_sync nets may be merged: Two
     // cp_syncs can only be merged if the possible paths before and after the
@@ -1120,10 +1126,15 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
 void post_process( igraph_t* g )
 {
     igraph_vs_t vs;
+    igraph_es_t es;
+    igraph_es_t esd;
     igraph_vit_t vit;
+    igraph_eit_t eit;
     igraph_vector_t dids;
     virt_net_t *v_net;
-    int inst_id;
+    int inst_id, eid;
+    virt_port_t *p_src, *p_dest;
+    bool has_changed = true;
 
     vs = igraph_vss_all();
     igraph_vit_create( g, vs, &vit );
@@ -1149,4 +1160,38 @@ void post_process( igraph_t* g )
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
     igraph_vector_destroy( &dids );
+
+    while( has_changed )
+    {
+        has_changed = false;
+        es = igraph_ess_all( IGRAPH_EDGEORDER_ID );
+        igraph_eit_create( g, es, &eit );
+        // iterate through all edges of the graph
+        while( !IGRAPH_EIT_END( eit ) ) {
+            p_src = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
+                    GE_PSRC, IGRAPH_EIT_GET( eit ) );
+            p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
+                    GE_PDST, IGRAPH_EIT_GET( eit ) );
+            if( ( p_src ->v_net->type == VNET_SYNC )
+                    && ( p_dest->v_net->type == VNET_SYNC ) )
+            {
+                if( check_cpsync_merge( g, p_src, p_dest, true ) )
+                {
+                    cpsync_merge( p_src, p_dest, g );
+                    has_changed = true;
+                    eid = IGRAPH_VIT_GET( eit );
+                    break;
+                }
+            }
+            IGRAPH_EIT_NEXT( eit );
+        }
+        igraph_eit_destroy( &eit );
+        igraph_es_destroy( &es );
+        if( has_changed )
+        {
+            esd = igraph_ess_1( eid );
+            igraph_delete_edges( g, esd );
+            igraph_es_destroy( &esd );
+        }
+    }
 }
