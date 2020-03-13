@@ -673,6 +673,7 @@ void debug_print_vport( virt_port_t* port )
     if( port->state == VPORT_STATE_CONNECTED ) printf("+");
     else if( port->state == VPORT_STATE_CP_OPEN ) printf("-");
     else if( port->state == VPORT_STATE_DISABLED ) printf("!");
+    else if( port->is_open ) printf("/");
     if( port->v_net->inst == NULL ) printf( "UNDEF" );
     else printf( "%s(%d)", port->v_net->inst->name, port->v_net->inst->id );
     if( port->attr_class == PORT_CLASS_DOWN ) printf( "_" );
