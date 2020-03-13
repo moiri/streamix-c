@@ -993,12 +993,13 @@ bool do_port_cnts_match( symrec_list_t* r_ports, virt_port_list_t* v_ports )
     int r_count = 0;
 
     while( r_port_ptr != NULL  ) {
-        r_count++;
+        if( !r_port_ptr->rec->attr_port->is_open ) r_count++;
         r_port_ptr = r_port_ptr->next;
     }
 
     while( v_port_ptr != NULL  ) {
-        if( v_port_ptr->port->state == VPORT_STATE_OPEN ) v_count++;
+        if( v_port_ptr->port->state == VPORT_STATE_OPEN
+                && !v_port_ptr->port->is_open ) v_count++;
         v_port_ptr = v_port_ptr->next;
     }
 
@@ -1015,6 +1016,12 @@ bool do_port_attrs_match( symrec_list_t* r_ports, virt_port_list_t* v_ports )
 
     r_port_ptr = r_ports;
     while( r_port_ptr != NULL  ) {
+        if( r_port_ptr->rec->attr_port->is_open )
+        {
+            // ignore open ports
+            r_port_ptr = r_port_ptr->next;
+            continue;
+        }
         match = false;
         v_port_ptr = v_ports;
         r_port_attr = r_port_ptr->rec->attr_port;
