@@ -659,37 +659,42 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
 /******************************************************************************/
 bool check_cpsync_merge_post_connect( igraph_t* g, int eid )
 {
-
+    bool res;
     int id_l;
     int id_r;
-    igraph_vector_t in, out, v;
+    igraph_vector_t in, out;
     igraph_vs_t vs;
 
     igraph_edge( g, eid, &id_l, &id_r );
 
-    igraph_vector_init( &v, 2 );
     igraph_vs_vector_small( &vs, id_l, id_r, -1 );
     igraph_vector_init( &in, 0 );
     igraph_vector_init( &out, 0 );
     igraph_degree( g, &in, vs, IGRAPH_IN, false );
     igraph_degree( g, &out, vs, IGRAPH_OUT, false );
+    igraph_vs_destroy( &vs );
 
     VECTOR(out)[0]--;
     VECTOR(in)[1]--;
 
-    return check_cpsync_merge( VECTOR(out)[0], VECTOR(in)[0], VECTOR(out)[1],
+    res = check_cpsync_merge( VECTOR(out)[0], VECTOR(in)[0], VECTOR(out)[1],
             VECTOR(in)[1], true, false );
+    igraph_vector_destroy( &in );
+    igraph_vector_destroy( &out );
+
+    return res;
 }
 
 /******************************************************************************/
 bool check_cpsync_merge_pre_connect( igraph_t* g, virt_port_t* port_l,
         virt_port_t* port_r )
 {
+    bool res;
     int id_l = port_l->v_net->inst->id;
     int id_r = port_r->v_net->inst->id;
     port_mode_t mode_l = port_l->attr_mode;
     port_mode_t mode_r = port_r->attr_mode;
-    igraph_vector_t in, out, v;
+    igraph_vector_t in, out;
     igraph_vs_t vs;
     int deg = 0;
 
@@ -711,12 +716,12 @@ bool check_cpsync_merge_pre_connect( igraph_t* g, virt_port_t* port_l,
     //    degree
     // Hence both, the vnet and the graph is used to compute the degree and the
     // max is taken.
-    igraph_vector_init(&v, 2);
     igraph_vs_vector_small(&vs, id_l, id_r, -1);
     igraph_vector_init( &in, 0 );
     igraph_vector_init( &out, 0 );
     igraph_degree( g, &in, vs, IGRAPH_IN, false );
     igraph_degree( g, &out, vs, IGRAPH_OUT, false );
+    igraph_vs_destroy( &vs );
 
     // Note that in case of the vnet, the potentiually connecting port is not
     // taken into account (hence the substraction).
@@ -733,8 +738,12 @@ bool check_cpsync_merge_pre_connect( igraph_t* g, virt_port_t* port_l,
     if( VECTOR(out)[1] < deg )
         VECTOR(out)[1] = deg;
 
-    return check_cpsync_merge( VECTOR(out)[0], VECTOR(in)[0], VECTOR(out)[1],
+    res = check_cpsync_merge( VECTOR(out)[0], VECTOR(in)[0], VECTOR(out)[1],
             VECTOR(in)[1], l2r, r2l );
+
+    igraph_vector_destroy( &in );
+    igraph_vector_destroy( &out );
+    return res;
 }
 
 /******************************************************************************/
@@ -1181,10 +1190,12 @@ void post_process( igraph_t* g )
         }
         else if( v_net->type == VNET_SYNC ) {
             if( check_single_mode_cp( g, inst_id ) )
+            {
                 if( cpsync_reduce( g, inst_id ) ) {
                     igraph_vector_push_back( &dids, inst_id );
                     dgraph_vertex_destroy_attr( g, inst_id, true );
                 }
+            }
         }
         IGRAPH_VIT_NEXT( vit );
     }
