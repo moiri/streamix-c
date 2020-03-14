@@ -250,17 +250,20 @@ bool check_connection_on_open_ports( virt_port_t* port_l, virt_port_t* port_r,
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
         printf( "\n  => connection is invalid (port is open)\n" );
 #endif // DEBUG_CONNECT
-        if( !is_parallel && port_r->is_open )
+        if( port_r->is_open != port_l->is_open )
         {
-            sprintf( error_msg, ERROR_CONNECT_OPEN, ERR_ERROR, port_r->name,
-                    inst_r->name, inst_r->id );
-            report_yyerror( error_msg, inst_r->line );
-        }
-        if( !is_parallel && port_l->is_open )
-        {
-            sprintf( error_msg, ERROR_CONNECT_OPEN, ERR_ERROR, port_l->name,
-                    inst_l->name, inst_l->id );
-            report_yyerror( error_msg, inst_l->line );
+            if( !is_parallel && port_r->is_open )
+            {
+                sprintf( error_msg, ERROR_CONNECT_OPEN, ERR_ERROR, port_r->name,
+                        inst_r->name, inst_r->id );
+                report_yyerror( error_msg, inst_r->line );
+            }
+            if( !is_parallel && port_l->is_open )
+            {
+                sprintf( error_msg, ERROR_CONNECT_OPEN, ERR_ERROR, port_l->name,
+                        inst_l->name, inst_l->id );
+                report_yyerror( error_msg, inst_l->line );
+            }
         }
         return false;
     }

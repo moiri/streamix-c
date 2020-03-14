@@ -1,6 +1,6 @@
 /**
  * A simple serial connection between two boxes to test bad connections on open
- * ports
+ * ports: The serial connection expects at least one connection.
  */
 
 A = box a( out x open )
