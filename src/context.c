@@ -1177,33 +1177,6 @@ void post_process( igraph_t* g )
     virt_port_t *p_src, *p_dest;
     bool has_changed = true;
 
-    vs = igraph_vss_all();
-    igraph_vit_create( g, vs, &vit );
-    igraph_vector_init( &dids, 0 );
-    // iterate through all net instances of the graph
-    while( !IGRAPH_VIT_END( vit ) ) {
-        inst_id = IGRAPH_VIT_GET( vit );
-        v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
-                GV_VNET, inst_id );
-        if( v_net->type == VNET_BOX ) {
-            check_ports_open( v_net );
-        }
-        else if( v_net->type == VNET_SYNC ) {
-            if( check_single_mode_cp( g, inst_id ) )
-            {
-                if( cpsync_reduce( g, inst_id ) ) {
-                    igraph_vector_push_back( &dids, inst_id );
-                    dgraph_vertex_destroy_attr( g, inst_id, true );
-                }
-            }
-        }
-        IGRAPH_VIT_NEXT( vit );
-    }
-    igraph_delete_vertices( g, igraph_vss_vector( &dids ) );
-    igraph_vit_destroy( &vit );
-    igraph_vs_destroy( &vs );
-    igraph_vector_destroy( &dids );
-
     while( has_changed )
     {
         has_changed = false;
@@ -1237,4 +1210,36 @@ void post_process( igraph_t* g )
             igraph_es_destroy( &esd );
         }
     }
+
+    // note that the reduction must be done AFTER the merge. The merge process
+    // carefully rearranges IDs such that no conflicts occurr, however, the
+    // reduction does not. This is because after the reduction vnet IDs don't
+    // matter anymore. This is rather sloppy but it works if the reduction is
+    // the very last process applied to the graph.
+    vs = igraph_vss_all();
+    igraph_vit_create( g, vs, &vit );
+    igraph_vector_init( &dids, 0 );
+    // iterate through all net instances of the graph
+    while( !IGRAPH_VIT_END( vit ) ) {
+        inst_id = IGRAPH_VIT_GET( vit );
+        v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
+                GV_VNET, inst_id );
+        if( v_net->type == VNET_BOX ) {
+            check_ports_open( v_net );
+        }
+        else if( v_net->type == VNET_SYNC ) {
+            if( check_single_mode_cp( g, inst_id ) )
+            {
+                if( cpsync_reduce( g, inst_id ) ) {
+                    igraph_vector_push_back( &dids, inst_id );
+                    dgraph_vertex_destroy_attr( g, inst_id, true );
+                }
+            }
+        }
+        IGRAPH_VIT_NEXT( vit );
+    }
+    igraph_delete_vertices( g, igraph_vss_vector( &dids ) );
+    igraph_vit_destroy( &vit );
+    igraph_vs_destroy( &vs );
+    igraph_vector_destroy( &dids );
 }
