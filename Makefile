@@ -8,7 +8,7 @@ SIA_LANG = sia2graph
 SIA_LANG_DIR = streamix-sia-lang
 
 VMAJ = 0
-VMIN = 4
+VMIN = 5
 VREV = 0
 
 APPNAME = $(PARSER)
