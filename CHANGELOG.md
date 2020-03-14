@@ -1,9 +1,22 @@
 # `v0.5.0` (latest)
 
+### Bug Fixes
+
+ - don't throw an error on unconnected `open` ports.
+ - ignore open ports in prototype checking
+ - don't print error when two matching ports are open, just don't connect (#19)
+
+### Changes
+
+ - change the installation path from `/opt/smx/bin` to `/usr/bin`
+
 ### New Features
 
  - introduce the keyword `dynamic` which allows to mark that a port is generated
    dynamically and has no name association through macros.
+ - reduce routing nodes in post process
+ - when merging routing nodes, distinguish between pre and post connect
+ - print '/' in front of open ports
 
 
 -------------------
