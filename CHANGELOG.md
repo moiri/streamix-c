@@ -1,3 +1,12 @@
+# `v0.5.1` (in progress)
+
+### New Features
+
+ - allow port decoupling in a wrapper which enables to decouple ports on
+   routing nodes
+
+
+-------------------
 # `v0.5.0` (latest)
 
 ### Bug Fixes
