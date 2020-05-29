@@ -221,7 +221,7 @@ opt_box_port_list:
 box_port_decl:
     kw_opt_decoupled kw_opt_port_class kw_port_mode IDENTIFIER opt_alt_port_name opt_channel_len kw_opt_connection {
         $$ = ast_add_port(
-            ast_add_symbol( $4, @3.last_line, ID_PORT ),
+            ast_add_symbol( $4, @4.last_line, ID_PORT ),
             $5, // alternative port name
             $2, // port collection
             $3, // port mode
@@ -271,13 +271,13 @@ opt_wrap_port_list:
 ;
 
 wrap_port_decl:
-    kw_opt_port_class kw_port_mode IDENTIFIER opt_alt_ports {
+    kw_opt_decoupled kw_opt_port_class kw_port_mode IDENTIFIER opt_alt_ports {
         $$ = ast_add_port(
-            ast_add_symbol( $3, @3.last_line, ID_PORT ),
-            $4,
-            $1,
+            ast_add_symbol( $4, @4.last_line, ID_PORT ),
+            $5,
             $2,
-            ( ast_node_t* )0, // no coupling
+            $3,
+            $1, // port coupling
             ( ast_node_t* )0, // no channel length
             ( ast_node_t* )0, // cannot be open nor dynamic
             PORT_WRAP

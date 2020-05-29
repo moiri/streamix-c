@@ -606,11 +606,12 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                 sp_src = VECTOR( sync->p_ext )[j];
                 igraph_cattribute_VAN_set( g, GV_SYMB, cp_sync->inst->id,
                         ( uintptr_t )sp_src );
-                // create a new external virtual port, cp_sync ports are
-                // not decoupled and have no rate control
+                // create a new external virtual port, cp_sync ports have no
+                // rate control
                 vp_net = virt_port_create( sp_src->attr_port->collection,
                         sp_src->attr_port->mode, cp_sync, sp_src->name,
-                        sp_src, tb, TIME_NONE, false, false, false, 0 );
+                        sp_src, tb, TIME_NONE, sp_src->attr_port->decoupled,
+                        false, false, 0 );
                 virt_port_append( v_net, vp_net );
                 virt_port_append( cp_sync, virt_port_copy( vp_net ) );
             }
@@ -634,8 +635,8 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
                 else if( mode == PORT_MODE_IN )
                     mode = PORT_MODE_OUT;
                 vp_new = virt_port_create( vp_net->attr_class, mode, cp_sync,
-                        vp_net->name, vp_net->symb, tb, TIME_NONE, false,
-                        false, false, 0 );
+                        vp_net->name, vp_net->symb, tb, TIME_NONE,
+                        false, false, false, 0 );
                 virt_port_append( cp_sync, vp_new );
                 // unknown direction, ignore class, modes have to be equal
                 check_connection( vp_new, vp_net, g, false, true, true );

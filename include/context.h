@@ -325,4 +325,18 @@ bool is_connected( instrec_t* rec1, instrec_t* rec2, igraph_t* g );
  */
 void post_process( igraph_t* g );
 
+/**
+ * Helper function to propagate decoupleing attributes when merging routing
+ * nodes.
+ *
+ * @param g
+ *  A pointer to the dependency graph
+ * @param port1
+ *  A pointer to a port of one routing node to be merged
+ * @param port2
+ *  A pointer to a matching port of anouther routing node to be merged
+ */
+void propagate_decoupling_attributes( igraph_t* g, virt_port_t* port1,
+        virt_port_t* port2 );
+
 #endif // CONTEXT_H

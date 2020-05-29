@@ -679,6 +679,8 @@ void debug_print_vport( virt_port_t* port )
     if( port->attr_class == PORT_CLASS_DOWN ) printf( "_" );
     else if( port->attr_class == PORT_CLASS_UP ) printf( "^" );
     else if( port->attr_class == PORT_CLASS_SIDE ) printf( "|" );
+    if( port->descoupled )
+        printf("d");
     if( port->attr_mode == PORT_MODE_IN ) {
         printf( "<--" );
         if( port->rate.time.tv_sec > 0 )

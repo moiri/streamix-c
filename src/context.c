@@ -38,7 +38,10 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
 #endif // DEBUG_CONNECT
             // either merge copy synchronizers or connect them
             if( check_cpsync_merge_pre_connect( g, port_l, port_r ) )
+            {
+                propagate_decoupling_attributes( g, port_l, port_r );
                 cpsync_merge( port_l, port_r, g );
+            }
             else
                 connect_ports( port_l, port_r, g, directed );
             res = true;
@@ -1196,6 +1199,7 @@ void post_process( igraph_t* g )
             {
                 if( check_cpsync_merge_post_connect( g, IGRAPH_VIT_GET( eit ) ) )
                 {
+                    propagate_decoupling_attributes( g, p_src, p_dest );
                     cpsync_merge( p_src, p_dest, g );
                     has_changed = true;
                     eid = IGRAPH_VIT_GET( eit );
@@ -1245,4 +1249,46 @@ void post_process( igraph_t* g )
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
     igraph_vector_destroy( &dids );
+}
+
+/******************************************************************************/
+void propagate_decoupling_attributes( igraph_t* g, virt_port_t* port1,
+        virt_port_t* port2 )
+{
+    virt_port_t* p_src = port2;
+    virt_port_t* p_dest = port1;
+    virt_port_t* pg;
+    igraph_es_t es;
+    igraph_eit_t eit;
+    int eid;
+
+    if( port1->attr_mode == PORT_MODE_OUT )
+    {
+        p_src = port1;
+        p_dest = port2;
+    }
+
+    igraph_es_incident( &es, p_dest->v_net->inst->id, IGRAPH_OUT );
+    igraph_eit_create( g, es, &eit );
+    // for each edge connect to the actual nets form the graph
+    while( !IGRAPH_EIT_END( eit ) ) {
+        eid = IGRAPH_EIT_GET( eit );
+        if( p_src->descoupled )
+        {
+            pg = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
+                    GE_PSRC, IGRAPH_EIT_GET( eit ) );
+            pg->descoupled = true;
+            igraph_cattribute_EAN_set( g, GE_DSRC, eid, true );
+        }
+        if( p_dest->descoupled )
+        {
+            pg = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
+                    GE_PDST, IGRAPH_EIT_GET( eit ) );
+            pg->descoupled = true;
+            igraph_cattribute_EAN_set( g, GE_DDST, eid, true );
+        }
+        IGRAPH_EIT_NEXT( eit );
+    }
+    igraph_eit_destroy( &eit );
+    igraph_es_destroy( &es );
 }
