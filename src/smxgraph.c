@@ -207,7 +207,7 @@ void dgraph_flatten( igraph_t* g_new, igraph_t* g )
 /******************************************************************************/
 void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, virt_net_t* v_net )
 {
-    virt_port_t *p_src, *p_dest, *port, *port_net;
+    virt_port_t *p_src, *p_dest, *port, *port_net, *port_net_open;
     igraph_t g;
     igraph_es_t es;
     igraph_eit_t eit;
@@ -243,22 +243,26 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, virt_net_t* v_net )
             port_net = p_src;
         }
         // get open port with same symbol pointer from child graph
-        port_net = dgraph_port_search_child( g_child, port_net );
+        port_net_open = dgraph_port_search_child( g_child, port_net );
+        if( port_net_open == NULL )
+        {
+            printf("no matching open port to port '%s'\n", port_net->name );
+        }
         if( id_from == id_to )
             port = dgraph_port_search_child( g_child, port );
         // connect this port to the matching port of the virtual net
         if( v_net->type == VNET_NET ) {
             // unknown direction, class matters, modes have to be different
-            check_connection( port_net, port, g_new, false, false, false );
+            check_connection( port_net_open, port, g_new, false, false, false );
             // connect rn of parallel nets to children
-            check_connection_cp_net( port_net, port, g_new );
+            check_connection_cp_net( port_net_open, port, g_new );
             // spawn rn if necessary and connect side ports
-            check_connection_cp( NULL, port_net, port, g_new, AST_NET,
+            check_connection_cp( NULL, port_net_open, port, g_new, AST_NET,
                 igraph_cattribute_VAN( g_new, GV_TT, v_net->inst->id ) );
         }
         else if( v_net->type == VNET_WRAP ) {
             // unknown direction, ignore class, modes have to be different
-            check_connection( port_net, port, g_new, false, true, false );
+            check_connection( port_net_open, port, g_new, false, true, false );
         }
         IGRAPH_EIT_NEXT( eit );
     }
