@@ -704,6 +704,9 @@ bool check_cpsync_merge_pre_connect( igraph_t* g, virt_port_t* port_l,
     igraph_vs_t vs;
     int deg = 0;
 
+    if( mode_l == PORT_MODE_BI && mode_r == PORT_MODE_BI )
+        return true;
+
     // out:in, out:out
     bool l2r = ( mode_l == PORT_MODE_OUT );
     // in:out, in:in
