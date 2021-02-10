@@ -246,7 +246,9 @@ void dgraph_flatten_net( igraph_t* g_new, igraph_t* g_child, virt_net_t* v_net )
         port_net_open = dgraph_port_search_child( g_child, port_net );
         if( port_net_open == NULL )
         {
-            printf("no matching open port to port '%s'\n", port_net->name );
+            IGRAPH_EIT_NEXT( eit );
+            continue;
+            /* printf("no matching open port to port '%s'\n", port_net->name ); */
         }
         if( id_from == id_to )
             port = dgraph_port_search_child( g_child, port );
@@ -597,6 +599,11 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
             sp_src = VECTOR( sync->p_ext )[0];
             // search for the port in the virtual net of the connection
             vp_net = virt_port_get_equivalent_by_symb_attr( v_net_i, sp_src );
+            if( vp_net == NULL )
+            {
+                // This wrapper port is not connected
+                continue;
+            }
             vp_new = virt_port_create( vp_net->attr_class, vp_net->attr_mode,
                     vp_net->v_net, vp_net->name, vp_net->symb,
                     vp_net->rate.time, vp_net->rate.type, vp_net->descoupled,

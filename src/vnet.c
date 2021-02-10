@@ -526,7 +526,10 @@ virt_port_list_t* virt_ports_copy_symb( symrec_list_t* ports,
         if( v_net_i != NULL ) {
             // for wrappers, propagate the port symbol of the child nets
             port_net = virt_port_get_equivalent_in_wrap( v_net_i, new_port );
-            new_port->symb = port_net->symb;
+            if( port_net != NULL )
+            {
+                new_port->symb = port_net->symb;
+            }
         }
         vports->port = new_port;
         vports->next = list_last;
