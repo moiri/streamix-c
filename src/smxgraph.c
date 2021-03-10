@@ -12,6 +12,8 @@
 #include "insttab.h"
 #include "context.h"
 
+extern int __smxc_min_ch_len;
+
 /******************************************************************************/
 void dgraph_append( igraph_t* g, igraph_t* g_tpl, bool deep )
 {
@@ -660,7 +662,7 @@ void dgraph_wrap_sync_create( igraph_t* g, igraph_vector_ptr_t* syncs,
 int get_ch_len( virt_port_t* p1, virt_port_t* p2 )
 {
     int res = p1->ch_len + p2->ch_len;
-    if( res == 0 ) res = 1;
+    if( res == 0 ) res = __smxc_min_ch_len;
     return res;
 }
 

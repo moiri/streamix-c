@@ -20,6 +20,8 @@ extern FILE *zzin;
 extern int zzparse( void** );
 extern int zzlex_destroy();
 
+int __smxc_min_ch_len = 1;
+
 int get_path_size( const char* str )
 {
     const char* slash;
@@ -57,13 +59,14 @@ int main( int argc, char **argv ) {
     igraph_t g;
     int c;
 
-    while( ( c = getopt( argc, argv, "hvs:Sp:o:f:" ) ) != -1 )
+    while( ( c = getopt( argc, argv, "hvs:Sp:o:f:l:" ) ) != -1 )
         switch( c ) {
             case 'h':
                 printf( "Usage:\n  %s [OPTION...] FILE\n\n", argv[0] );
                 printf( "Options:\n" );
                 printf( "  -h            This message\n" );
                 printf( "  -v            Version\n" );
+                printf( "  -l 'length'   The minimal channel length if no lenght is provided\n" );
                 printf( "  -s 'path'     Path to input file with SIA descriptions\n" );
                 printf( "  -S            Skip the SIA generation\n" );
                 printf( "  -p 'path'     Build path to folder where the output files will be stored\n" );
@@ -75,6 +78,9 @@ int main( int argc, char **argv ) {
                 return 0;
             case 's':
                 sia_desc_file = optarg;
+                break;
+            case 'l':
+                __smxc_min_ch_len = atoi( optarg );
                 break;
             case 'S':
                 skip_sia = true;
@@ -106,6 +112,13 @@ int main( int argc, char **argv ) {
         fprintf( stderr, "Missing argument!\n" );
         return -1;
     }
+
+    if( __smxc_min_ch_len <= 0 ) {
+        fprintf( stderr, "The argument of '-l' must be a positive integer,"
+                " '%d' provided\n", __smxc_min_ch_len );
+        return -1;
+    }
+
     __src_file_name = argv[ optind ];
     path_size = get_path_size( __src_file_name );
     name_size = strlen( __src_file_name ) - path_size - 4;
