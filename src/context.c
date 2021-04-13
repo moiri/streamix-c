@@ -414,7 +414,7 @@ void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g )
     igraph_vector_ptr_init( &__rm_cp, 0 );
     utarray_new( scope_stack, &ut_int_icd );
     utarray_push_back( scope_stack, &scope );
-    n_attr = check_context_ast( symtab, scope_stack, ast );
+    n_attr = check_context_ast( symtab, scope_stack, ast, &scope );
 
     utarray_free( scope_stack );
     if( n_attr->v_net != NULL ) {
@@ -436,7 +436,7 @@ void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g )
 
 /******************************************************************************/
 void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
-        ast_node_t* ast )
+        ast_node_t* ast, int* scope )
 {
     ast_list_t* list = NULL;
     attr_box_t* b_attr = NULL;
@@ -451,7 +451,6 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
     symrec_list_t* port_list_net = NULL;
     virt_net_t* v_net;
     void* res = NULL;
-    static int _scope = 0;
     igraph_t g_net;
 
     if( ast == NULL ) return NULL;
@@ -459,19 +458,19 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
     switch( ast->type ) {
         case AST_PROGRAM:
             // install net instances
-            check_context_ast( symtab, scope_stack, ast->program->stmts );
-            res = check_context_ast( symtab, scope_stack, ast->program->net );
+            check_context_ast( symtab, scope_stack, ast->program->stmts, scope );
+            res = check_context_ast( symtab, scope_stack, ast->program->net, scope );
             break;
         case AST_STMTS:
             list = ast->list;
             while (list != NULL) {
-                check_context_ast( symtab, scope_stack, list->node );
+                check_context_ast( symtab, scope_stack, list->node, scope );
                 list = list->next;
             }
             break;
         case AST_ASSIGN:
             // get the attributes
-            attr = check_context_ast( symtab, scope_stack, ast->assign->op );
+            attr = check_context_ast( symtab, scope_stack, ast->assign->op, scope );
             if( ast->assign->type == AST_NET ) {
                 // check prototype if available
                 rec = symrec_search( symtab, scope_stack,
@@ -479,7 +478,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                 if( rec == NULL ) {
                     // no prototype, install the symbol
                     rec = symrec_create_net( ast->assign->id->symbol->name,
-                        *utarray_back( scope_stack ),
+                        *( int* )utarray_back( scope_stack ),
                         ast->assign->id->symbol->line, attr );
                     res = symrec_put( symtab, rec );
                 }
@@ -498,7 +497,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             }
             if( ast->assign->type == AST_BOX ) {
                 rec = symrec_create_box( ast->assign->id->symbol->name,
-                        *utarray_back( scope_stack ),
+                        *( int* )utarray_back( scope_stack ),
                         ast->assign->id->symbol->line, attr );
                 // install the symbol
                 if( symrec_put( symtab, rec ) == NULL ) {
@@ -508,15 +507,15 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             }
             break;
         case AST_NET_PROTO:
-            _scope++;
-            utarray_push_back( scope_stack, &_scope );
+            ( *scope )++;
+            utarray_push_back( scope_stack, scope );
             port_list = ( symrec_list_t* )check_context_ast( symtab,
-                    scope_stack, ast->proto->ports );
+                    scope_stack, ast->proto->ports, scope );
             utarray_pop_back( scope_stack );
             // prepare symbol attribute and create symbol
             np_attr = symrec_attr_create_proto( port_list );
             rec = symrec_create_proto( ast->proto->id->symbol->name,
-                    *utarray_back( scope_stack ), ast->proto->id->symbol->line,
+                    *( int* )utarray_back( scope_stack ), ast->proto->id->symbol->line,
                     np_attr );
             // install the symbol (use port list as attributes)
             res = ( void* )symrec_put( symtab, rec );
@@ -536,16 +535,16 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             res = ( void* )n_attr;
             break;
         case AST_WRAP:
-            _scope++;
-            utarray_push_back( scope_stack, &_scope );
-            n_attr = check_context_ast( symtab, scope_stack, ast->wrap->stmts );
+            ( *scope )++;
+            utarray_push_back( scope_stack, scope );
+            n_attr = check_context_ast( symtab, scope_stack, ast->wrap->stmts, scope );
             if( n_attr == NULL ) return NULL;
             port_list = ( symrec_list_t* )check_context_ast( symtab,
-                    scope_stack, ast->wrap->ports_wrap );
-            _scope++;
-            utarray_push_back( scope_stack, &_scope );
+                    scope_stack, ast->wrap->ports_wrap, scope );
+            ( *scope )++;
+            utarray_push_back( scope_stack, scope );
             port_list_net = ( symrec_list_t* )check_context_ast( symtab,
-                    scope_stack, ast->wrap->ports_net );
+                    scope_stack, ast->wrap->ports_net, scope );
             utarray_pop_back( scope_stack );
             utarray_pop_back( scope_stack );
 
@@ -553,7 +552,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             w_attr = symrec_attr_create_wrap( false, port_list, NULL, NULL );
             if( ast->wrap->attr_static != NULL ) w_attr->attr_static = true;
             rec = symrec_create_wrap( ast->wrap->id->symbol->name,
-                    *utarray_back( scope_stack ), ast->wrap->id->symbol->line,
+                    *( int* )utarray_back( scope_stack ), ast->wrap->id->symbol->line,
                     w_attr );
             if( check_prototype( port_list_net, n_attr->v_net, rec->name ) ) {
                 // create virtual port list of the prototyped net with instances
@@ -580,10 +579,10 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             }
             break;
         case AST_BOX:
-            _scope++;
-            utarray_push_back( scope_stack, &_scope );
+            ( *scope )++;
+            utarray_push_back( scope_stack, scope );
             port_list = ( symrec_list_t* )check_context_ast( symtab,
-                    scope_stack, ast->box->ports );
+                    scope_stack, ast->box->ports, scope );
             utarray_pop_back( scope_stack );
             // prepare symbol attributes and create symbol
             b_attr = symrec_attr_create_box( false, false,
@@ -597,7 +596,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
         case AST_INT_PORTS:
             list = ast->list;
             while (list != NULL) {
-                res = check_context_ast( symtab, scope_stack, list->node );
+                res = check_context_ast( symtab, scope_stack, list->node, scope );
                 if( res != NULL ) {
                     ptr = ( symrec_list_t* )malloc( sizeof( symrec_list_t ) );
                     ptr->rec = ( symrec_t* )res;
@@ -635,10 +634,10 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
             if( ( ast->port->int_id != NULL )
                     && ( ast->port->int_id->type == AST_INT_PORTS ) ) {
                 // internal port list
-                _scope++;
-                utarray_push_back( scope_stack, &_scope );
+                ( *scope )++;
+                utarray_push_back( scope_stack, scope );
                 p_attr->ports_int = ( symrec_list_t* )check_context_ast( symtab,
-                        scope_stack, ast->port->int_id );
+                        scope_stack, ast->port->int_id, scope );
                 utarray_pop_back( scope_stack );
             }
             else if( ( ast->port->int_id != NULL )
@@ -647,7 +646,7 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                 p_attr->alt_name = ast->port->int_id->symbol->name;
             }
             rec = symrec_create_port( ast->port->id->symbol->name,
-                    *utarray_back( scope_stack ), ast->port->id->symbol->line,
+                    *( int* )utarray_back( scope_stack ), ast->port->id->symbol->line,
                     p_attr );
             // install symbol and return pointer to the symbol record
             res = ( void* )symrec_put( symtab, rec );

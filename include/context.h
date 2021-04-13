@@ -156,7 +156,7 @@ void check_context( ast_node_t* ast, symrec_t** symtab, igraph_t* g );
  * @return              pointer to a symrec net attribute (cast to void*)
  */
 void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
-        ast_node_t* ast );
+        ast_node_t* ast, int* scope );
 
 /**
  * Checks wether two cp_sync nets can be merged. Two cp_syncs can only be
