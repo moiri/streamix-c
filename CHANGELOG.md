@@ -1,13 +1,20 @@
-# `v0.5.1` (in progress)
+# `v0.5.1` (latest)
+
+### Bug Fixes
+
+ - fix scope handling (cast required otherwise char is assumed)
+ - fix segfault when defining unused wrapper ports (#20)
+ - fix routing node connection of two bi-directional ports
 
 ### New Features
 
  - allow port decoupling in a wrapper which enables to decouple ports on
    routing nodes
+ - add compiler option to set the minimal channel length
 
 
 -------------------
-# `v0.5.0` (latest)
+# `v0.5.0`
 
 ### Bug Fixes
 
