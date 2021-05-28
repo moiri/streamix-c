@@ -96,10 +96,10 @@ int main( int argc, char **argv )
     int i;
     int option_index = 0;
     struct option long_options[] = {
-        { "tt-prio-single",  required_argument, 0,  0  },
-        { "tt-prio-network", required_argument, 0,  0  },
-        { "rt-prio-single",  required_argument, 0,  0  },
         { "rt-prio-network", required_argument, 0,  0  },
+        { "rt-prio-single",  required_argument, 0,  0  },
+        { "tt-prio-network", required_argument, 0,  0  },
+        { "tt-prio-single",  required_argument, 0,  0  },
         { "help",            no_argument,       0, 'h' },
         { "version",         no_argument,       0, 'V' },
         { "channel-len",     required_argument, 0, 'l' },
