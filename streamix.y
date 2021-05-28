@@ -28,7 +28,7 @@
     struct timespec    tval;
 };
 /* keywods */
-%token CONNECT TT TB TF
+%token CONNECT TT TB TF RT
 %token <ival> BOX WRAPPER NET IN OUT UP DOWN SIDE DECOUPLED COUPLED STATELESS STATIC EXTERN OPEN DYNAMIC BUFLEN
 %token <tval> TIME_SEC TIME_MSEC TIME_USEC TIME_NSEC
 
@@ -144,6 +144,12 @@ net:
 |   net '!' net { $$ = ast_add_op( $1, $3, AST_PARALLEL ); }
 |   net '|' net { $$ = ast_add_op( $1, $3, AST_PARALLEL_DET ); }
 |   '(' net ')' { $$ = $2; }
+|   RT '(' net ')' {
+        struct timespec time;
+        time.tv_sec = 0;
+        time.tv_nsec = 0;
+        $$ = ast_add_time( $3, time, AST_RT, @3.last_line );
+    }
 |   TT '[' kw_time ']' '(' net ')' {
         $$ = ast_add_time( $6, $3, AST_TT, @3.last_line );
     }

@@ -54,6 +54,7 @@ extern          {yylval.ival = PARSE_ATTR_EXTERN;return EXTERN;}
 open            {yylval.ival = PARSE_ATTR_OPEN;return OPEN;}
 dynamic         {yylval.ival = PARSE_ATTR_DYNAMIC;return DYNAMIC;}
 tt              return TT;
+rt              return RT;
 tb              return TB;
 tf              return TF;
 

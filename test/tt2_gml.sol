@@ -21,7 +21,7 @@ graph
     static 0
     pure 0
     extern 0
-    tt 2
+    tt 3
   ]
   edge
   [

@@ -1,0 +1,5 @@
+A = box fa( out x )
+B = box fb( in x )
+
+N = A.B
+connect rt(N)

@@ -1,4 +1,15 @@
-# `v0.5.1` (latest)
+# `v0.5.2` (latest)
+
+### New Features
+
+ - add long versions of the program arguments
+ - add program arguments to set different rt priorities
+ - add the new net operator `rt` to allow to run a non-tt net with rt
+   priorities
+
+
+-------------------
+# `v0.5.1`
 
 ### Bug Fixes
 

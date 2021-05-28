@@ -266,6 +266,7 @@ void ast_destroy( ast_node_t* ast )
             free( ast );
             break;
         case AST_TT:
+        case AST_RT:
         case AST_TB:
         case AST_TF:
             ast_destroy( ast->time->op );

@@ -88,6 +88,7 @@ enum node_type_e
     AST_SYNCS,
     AST_TB,
     AST_TT,
+    AST_RT,
     AST_TF,
     AST_WRAP,
     AST_ATTR,

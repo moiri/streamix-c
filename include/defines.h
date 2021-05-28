@@ -34,6 +34,22 @@
 #define CONST_SCOPE_LEN 9
 #define CONST_ID_LEN 9
 
+typedef enum time_criticality_e
+{
+    TIME_CTITICALITY_TT,
+    TIME_CTITICALITY_RT,
+    TIME_CTITICALITY_NONE
+} time_criticality_t;
+
+enum time_criticality_idx_e
+{
+    TIME_CTITICALITY_RT_NETWORK,
+    TIME_CTITICALITY_RT_SINGLE,
+    TIME_CTITICALITY_TT_NETWORK,
+    TIME_CTITICALITY_TT_SINGLE,
+    TIME_CTITICALITY_COUNT
+};
+
 /**
  * @brief   Port collections
  */

@@ -21,6 +21,7 @@ extern int zzparse( void** );
 extern int zzlex_destroy();
 
 int __smxc_min_ch_len = 1;
+int __smxc_time_criticality_prio[TIME_CTITICALITY_COUNT] = { 1, 1, 2, 3 };
 
 int get_path_size( const char* str )
 {
@@ -36,7 +37,41 @@ int get_path_size( const char* str )
     return path_size;
 }
 
-int main( int argc, char **argv ) {
+void print_usage( const char* name )
+{
+    printf( "Usage:\n  %s [OPTION...] FILE\n", name );
+    printf( "\nMiscellaneous:\n" );
+    printf( "  -h, --help                  display this help text and exit\n" );
+    printf( "  -V, --version               display version information and"
+            " exit\n" );
+    printf( "\nChannels:\n" );
+    printf( "  -l, --channel-len=LENGTH    set the default channel length\n" );
+    printf( "\nReal-time Priorities:\n" );
+    printf( "      --tt-prio-single=PRIO   set the rt-thread priority of"
+            " isolated tt nets\n" );
+    printf( "      --tt-prio-network=PRIO  set the rt-thread priority of"
+            " networked tt nets\n" );
+    printf( "      --rt-prio-single=PRIO   set the rt-thread priority of"
+            " isolated rt nets\n" );
+    printf( "      --rt-prio-network=PRIO  set the rt-thread priority of"
+            " networked rt nets\n" );
+    printf( "\nOutput Control:\n" );
+    printf( "  -s, --sia-path=PATH         set the path to the input file with"
+            " SIA\n" );
+    printf( "                              descriptions\n" );
+    printf( "  -S, --skip-sia              skip the SIA generation\n" );
+    printf( "  -p, --build-path=PATH       set the build path to folder where"
+            " the output\n" );
+    printf( "                              files will be stored\n" );
+    printf( "  -o, --graph-name=FILE       set the filename of the SMX graph"
+            " output file\n" );
+    printf( "  -f, --graph-format=FROMAT   set the format of the graph to"
+            " either 'gml' or\n" );
+    printf( "                              'graphml'\n" );
+}
+
+int main( int argc, char **argv )
+{
     void* ast = NULL;
     void* sias = NULL;
     symrec_t* symtab = NULL;        // hash table to store the symbols
@@ -58,23 +93,44 @@ int main( int argc, char **argv ) {
     igraph_i_set_attribute_table( &igraph_cattribute_table );
     igraph_t g;
     int c;
+    int i;
+    int option_index = 0;
+    struct option long_options[] = {
+        { "tt-prio-single",  required_argument, 0,  0  },
+        { "tt-prio-network", required_argument, 0,  0  },
+        { "rt-prio-single",  required_argument, 0,  0  },
+        { "rt-prio-network", required_argument, 0,  0  },
+        { "help",            no_argument,       0, 'h' },
+        { "version",         no_argument,       0, 'V' },
+        { "channel-len",     required_argument, 0, 'l' },
+        { "sia-path",        required_argument, 0, 's' },
+        { "skip-sia",        required_argument, 0, 'S' },
+        { "build-path",      required_argument, 0, 'p' },
+        { "graph-name",      required_argument, 0, 'o' },
+        { "graph-format",    required_argument, 0, 'f' },
+        { 0,                 0,                 0,  0  }
+    };
 
-    while( ( c = getopt( argc, argv, "hvs:Sp:o:f:l:" ) ) != -1 )
+    while( 1 )
+    {
+        option_index = 0;
+        c = getopt_long( argc, argv, "hVs:Sp:o:f:l:", long_options,
+                &option_index );
+        if( c == -1 )
+            break;
+
         switch( c ) {
             case 'h':
-                printf( "Usage:\n  %s [OPTION...] FILE\n\n", argv[0] );
-                printf( "Options:\n" );
-                printf( "  -h            This message\n" );
-                printf( "  -v            Version\n" );
-                printf( "  -l 'length'   The minimal channel length if no lenght is provided\n" );
-                printf( "  -s 'path'     Path to input file with SIA descriptions\n" );
-                printf( "  -S            Skip the SIA generation\n" );
-                printf( "  -p 'path'     Build path to folder where the output files will be stored\n" );
-                printf( "  -o 'file'     Filename of the SMX graph output file\n" );
-                printf( "  -f 'format'   Format of the graph either 'gml' or 'graphml'\n" );
+                print_usage( argv[0] );
                 return 0;
-            case 'v':
-                printf( "smxc-v0.3.0\n" );
+            case 0:
+                if( option_index < 4 )
+                {
+                    __smxc_time_criticality_prio[option_index] = atoi( optarg );
+                }
+                break;
+            case 'V':
+                printf( "smxc-v0.5.1\n" );
                 return 0;
             case 's':
                 sia_desc_file = optarg;
@@ -95,21 +151,25 @@ int main( int argc, char **argv ) {
                 format = optarg;
                 break;
             case '?':
-                if( ( optopt == 'o' ) || ( optopt == 'f' )
-                        || ( optopt == 's' ) || ( optopt == 'p' ) )
-                    fprintf ( stderr, "Option -%c requires an argument.\n",
-                            optopt );
-                else if ( isprint (optopt) )
-                    fprintf ( stderr, "Unknown option `-%c'.\n", optopt );
-                else
-                    fprintf ( stderr, "Unknown option character `\\x%x'.\n",
-                            optopt );
-                return 1;
+                break;
             default:
                 abort();
         }
-    if( argc <= optind ) {
-        fprintf( stderr, "Missing argument!\n" );
+    }
+    __src_file_name = argv[ optind++ ];
+    if( __src_file_name == NULL )
+    {
+        fprintf( stderr, "Missing FILE argument!\n" );
+        print_usage( argv[0] );
+        return -1;
+    }
+
+    if (optind < argc) {
+        printf("non-option ARGV-elements: ");
+        while (optind < argc)
+            printf("%s ", argv[optind++]);
+        printf("\n");
+        print_usage( argv[0] );
         return -1;
     }
 
@@ -119,7 +179,16 @@ int main( int argc, char **argv ) {
         return -1;
     }
 
-    __src_file_name = argv[ optind ];
+    for( i = 0; i < 4; i++ )
+    {
+        if( __smxc_time_criticality_prio[i] <= 0 )
+        {
+            fprintf( stderr, "An RT thread priority must be a positive integer,"
+                    " '%d' provided\n", __smxc_time_criticality_prio[i] );
+            return -1;
+        }
+    }
+
     path_size = get_path_size( __src_file_name );
     name_size = strlen( __src_file_name ) - path_size - 4;
     file_name = malloc( name_size + 1 ); // minus ".smx"
