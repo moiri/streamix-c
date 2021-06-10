@@ -842,9 +842,9 @@ bool check_prototype( symrec_list_t* r_ports, virt_net_t* v_net, char *name )
         || !do_port_attrs_match( r_ports, v_net->ports ) ) {
         sprintf( error_msg, ERROR_TYPE_CONFLICT, ERR_ERROR, name );
         report_yyerror( error_msg, r_ports->rec->line );
-        printf( " net:       " );
+        printf( " net:\n  " );
         debug_print_vports_s( v_net, false );
-        printf( " prototype: " );
+        printf( " prototype:\n  " );
         debug_print_rports( r_ports, name );
         res = false;
     }

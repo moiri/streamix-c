@@ -352,7 +352,7 @@ void debug_print_rports( symrec_list_t* rports, char* name )
     symrec_list_t* ports = rports;
     while( ports != NULL ) {
         debug_print_rport( ports->rec, name );
-        printf(", ");
+        printf("\n  ");
         ports = ports->next;
     }
     printf("\n");
