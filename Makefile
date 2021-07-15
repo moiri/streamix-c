@@ -1,31 +1,27 @@
 SHELL := /bin/bash
 PROJECT = streamix
-PARSER = smxc
 
 LOC_INC_DIR = include
 LOC_SRC_DIR = src
 SIA_LANG = sia2graph
 SIA_LANG_DIR = streamix-sia-lang
 
-VMAJ = 0
-VMIN = 5
-VREV = 0
+include config.mk
 
-APPNAME = $(PARSER)
-
+PARSER = $(APPNAME)
 LIB_VERSION = $(VMAJ).$(VMIN)
 UPSTREAM_VERSION = $(LIB_VERSION).$(VREV)
-DEBIAN_REVISION = 0
+DEBIAN_REVISION = $(VDEB)
 VERSION = $(UPSTREAM_VERSION)-$(DEBIAN_REVISION)
 
 VAPPNAME = $(APPNAME)-$(LIB_VERSION)
+VPKGNAME = $(APPNAME)$(LIB_VERSION)
 
-TGT_BIN = /usr/bin
-TGT_DOC = /opt/smx/doc
-DPKG_DIR = dpkg
-DPKG_CTL_DIR = debian
-DPKG_TGT = DEBIAN
-DPKGS = $(DPKG_DIR)/$(APPNAME)_$(VERSION)_amd64
+TGT_INCLUDE = $(DESTDIR)/usr/include/smx
+TGT_LIB = $(DESTDIR)/usr/lib/x86_64-linux-gnu
+TGT_BIN = $(DESTDIR)/usr/bin
+TGT_DOC = $(DESTDIR)/usr/share/doc/$(VPKGNAME)
+TGT_CONF = $(DESTDIR)/etc/smx/$(VPKGNAME)
 
 SOURCES = main.c \
 		  $(LOC_SRC_DIR)/* \
@@ -182,7 +178,7 @@ $(DOT_P_CON_FILE).pdf: $(DOT_P_CON_FILE).dot
 	@gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$(DOT_P_CON_FILE).pdf dot/tmpfile*
 	@rm -f dot/tmpfile*
 
-.PHONY: clean graph run run_test run_test_all install doc move_res dpkg $(DPKGS)
+.PHONY: clean graph run run_test run_test_all install uninstall doc move_res
 
 clean:
 	rm -f $(PROJECT).tab.c
@@ -200,8 +196,13 @@ clean:
 	rm -f $(SIA_LANG_DIR)/lex.zz.c
 
 install:
-	mkdir -p $(TGT_BIN)
-	cp -a $(PARSER) $(TGT_BIN)/.
+	mkdir -p $(TGT_BIN) $(TGT_DOC)
+	cp -a $(APPNAME) $(TGT_BIN)/$(VAPPNAME)
+	cp -a README.md $(TGT_DOC)/README.md
+
+uninstall:
+	rm $(TGT_BIN)/$(VAPPNAME)
+	rm -rf $(TGT_DOC)
 
 doc:
 	doxygen .doxygen
@@ -259,16 +260,3 @@ move_res:
 	@for f in $(TEST_PATH)/*_gml.$(TEST_OUT); do \
 		mv -- "$$f" "$${f%.$(TEST_OUT)}.${TEST_SOL}"; \
 	done
-
-dpkg: $(DPKGS)
-$(DPKGS):
-	mkdir -p $@$(TGT_BIN)
-	cp $(APPNAME) $@$(TGT_BIN)/$(VAPPNAME)
-	ln -sf $(VAPPNAME) $@$(TGT_BIN)/$(APPNAME)
-	mkdir -p $@$(TGT_DOC)
-	cp README.md $@$(TGT_DOC)/$(VAPPNAME).md
-	mkdir -p $@/$(DPKG_TGT)
-	cp $(DPKG_CTL_DIR)/control $@/$(DPKG_TGT)/control
-	sed -i 's/<version>/$(VERSION)/g' $@/$(DPKG_TGT)/control
-	sed -i 's/<maj_version>/$(LIB_VERSION)/g' $@/$(DPKG_TGT)/control
-	dpkg-deb -b $@
