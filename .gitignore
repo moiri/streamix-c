@@ -16,3 +16,4 @@ test/*.log
 test/*.valgrind
 *.gml
 dpkg
+.ycm_extra_conf.py
