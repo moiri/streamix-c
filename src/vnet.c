@@ -709,7 +709,7 @@ void debug_print_vports_s( virt_net_t* v_net, bool all )
     while( ports != NULL ) {
         if( all || ( ports->port->state < VPORT_STATE_CONNECTED ) ) {
             debug_print_vport( ports->port );
-            printf(", ");
+            printf("\n  ");
         }
         ports = ports->next;
     }
