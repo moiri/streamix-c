@@ -57,7 +57,7 @@ INCLUDES_DIR = -I$(UTHASH_DIR)/src \
 LINK_DIR = -L/usr/local/lib
 LINK_FILE = -ligraph
 
-CFLAGS = -Wall
+CFLAGS = -Wall -DAPP_VERSION=\"$(UPSTREAM_VERSION)\"
 DEBUG_FLAGS = -g -O0
 BFLAGS = -d -Wall
 BDEBUG_FLAGS = --verbose

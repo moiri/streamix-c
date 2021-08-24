@@ -20,6 +20,11 @@ extern FILE *zzin;
 extern int zzparse( void** );
 extern int zzlex_destroy();
 
+#ifndef APP_VERSION
+#define APP_VERSION "unknown"
+#endif
+
+
 int __smxc_min_ch_len = 1;
 int __smxc_time_criticality_prio[TIME_CTITICALITY_COUNT] = { 1, 1, 2, 3 };
 
@@ -130,7 +135,7 @@ int main( int argc, char **argv )
                 }
                 break;
             case 'V':
-                printf( "smxc-v0.5.1\n" );
+                printf( "smxc-v%s\n", APP_VERSION );
                 return 0;
             case 's':
                 sia_desc_file = optarg;
