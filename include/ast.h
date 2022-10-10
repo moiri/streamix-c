@@ -134,7 +134,7 @@ struct ast_box_s
     ast_node_t*   impl;         /**< ::ast_symb_t */
     ast_node_t*   ports;        /**< ::ast_list_t */
     ast_node_t*   attr_pure;    /**< ::ast_attr_t */
-    ast_node_t*   attr_ext;     /**< ::ast_attr_t */
+    ast_node_t*   attr_location;     /**< ::ast_attr_t */
 };
 
 /**

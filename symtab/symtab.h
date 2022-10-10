@@ -24,6 +24,7 @@ typedef struct attr_wrap_s attr_wrap_t;     /**< ::attr_wrap_s */
 typedef enum symrec_type_e symrec_type_t;   /**< ::symrec_type_e */
 typedef enum port_mode_e port_mode_t;       /**< ::port_mode_e */
 typedef enum port_class_e port_class_t;     /**< ::port_class_e */
+typedef enum location_type_e location_type_t; /**< ::location_type_e */
 
 // INCLUDES -------------------------------------------------------------------
 #include <stdbool.h>
@@ -81,7 +82,7 @@ struct symrec_list_s
 struct attr_box_s
 {
     bool            attr_pure;  /**< a box can be pure (functional) */
-    bool            attr_ext;   /**< location of the box signature */
+    location_type_t attr_location;   /**< location of the box signature */
     char*           impl_name;  /**< implementation name */
     symrec_list_t*  ports;      /**< pointer to the port list of the net */
 };
@@ -133,14 +134,19 @@ struct attr_wrap_s
 /**
  * @brief   Create a box attribute structure
  *
- * @param attr_pure flag indicating whether a box is pure or not
- * @param attr_ext  flag indicating whether a box signature is external defined
- * @param impl_name name of the box implementation
- * @param ports     pointer to a port list
- * @return          pointer to the new structure
+ * @param attr_pure
+ *  flag indicating whether a box is pure or not
+ * @param attr_location
+ *  the location of the box signature
+ * @param impl_name
+ *  name of the box implementation
+ * @param ports
+ *  pointer to a port list
+ * @return
+ *  pointer to the new structure
  */
-attr_box_t* symrec_attr_create_box( bool attr_pure, bool attr_ext,
-        char* impl_name, symrec_list_t* ports );
+attr_box_t* symrec_attr_create_box( bool attr_pure,
+        location_type_t attr_location, char* impl_name, symrec_list_t* ports );
 
 /**
  * @brief   Create a net attribute structure

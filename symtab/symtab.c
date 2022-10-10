@@ -18,12 +18,12 @@
 #endif
 
 /******************************************************************************/
-attr_box_t* symrec_attr_create_box( bool attr_pure, bool attr_ext,
-        char* impl_name, symrec_list_t* ports )
+attr_box_t* symrec_attr_create_box( bool attr_pure,
+        location_type_t attr_location, char* impl_name, symrec_list_t* ports )
 {
     attr_box_t* new_attr = malloc( sizeof( attr_box_t ) );
     new_attr->attr_pure = attr_pure;
-    new_attr->attr_ext = attr_ext;
+    new_attr->attr_location = attr_location;
     new_attr->impl_name = malloc( strlen( impl_name ) + 1 );
     strcpy( new_attr->impl_name, impl_name );
     new_attr->ports = ports;

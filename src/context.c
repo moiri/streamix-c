@@ -587,10 +587,20 @@ void* check_context_ast( symrec_t** symtab, UT_array* scope_stack,
                     scope_stack, ast->box->ports, scope );
             utarray_pop_back( scope_stack );
             // prepare symbol attributes and create symbol
-            b_attr = symrec_attr_create_box( false, false,
+            b_attr = symrec_attr_create_box( false, LOCATION_LOCAL,
                     ast->box->impl->symbol->name, port_list );
             if( ast->box->attr_pure != NULL ) b_attr->attr_pure = true;
-            if( ast->box->attr_ext != NULL ) b_attr->attr_ext = true;
+            if( ast->box->attr_location != NULL ) {
+                if( ast->box->attr_location->attr->val == PARSE_ATTR_EXTERN )
+                {
+                    b_attr->attr_location = LOCATION_EXTERN;
+                }
+                else if( ast->box->attr_location->attr->val
+                        == PARSE_ATTR_INTERN )
+                {
+                    b_attr->attr_location = LOCATION_INTERN;
+                }
+            }
             // return box attributes
             res = ( void* )b_attr;
             break;

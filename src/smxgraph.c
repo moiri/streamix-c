@@ -346,7 +346,7 @@ int dgraph_vertex_add( igraph_t* g, const char* name )
 /******************************************************************************/
 void dgraph_vertex_add_attr( igraph_t* g, int id, const char* func,
         symrec_t* symb, virt_net_t* v_net, igraph_t* g_net, bool attr_static,
-        bool attr_pure, bool attr_ext )
+        bool attr_pure, location_type_t attr_location )
 {
     const char* f_name = TEXT_NULL;
     if( func != NULL ) f_name = func;
@@ -356,7 +356,7 @@ void dgraph_vertex_add_attr( igraph_t* g, int id, const char* func,
     igraph_cattribute_VAN_set( g, GV_GRAPH, id, ( uintptr_t )g_net );
     igraph_cattribute_VAN_set( g, GV_STATIC, id, attr_static );
     igraph_cattribute_VAN_set( g, GV_PURE, id, attr_pure );
-    igraph_cattribute_VAN_set( g, GV_EXT, id, attr_ext );
+    igraph_cattribute_VAN_set( g, GV_LOCATION, id, attr_location );
     igraph_cattribute_VAN_set( g, GV_TT, id, false );
 }
 
@@ -373,7 +373,8 @@ virt_net_t* dgraph_vertex_add_box( igraph_t* g, symrec_t* symb, int line )
     instrec_t* inst = instrec_create( symb->name, id, line, INSTREC_BOX );
     virt_net_t* v_net = virt_net_create_box( symb, inst );
     dgraph_vertex_add_attr( g, id, symb->attr_box->impl_name, symb, v_net,
-            NULL, false, symb->attr_box->attr_pure, symb->attr_box->attr_ext );
+            NULL, false, symb->attr_box->attr_pure,
+            symb->attr_box->attr_location );
     return v_net;
 }
 
@@ -458,9 +459,9 @@ instrec_t* dgraph_vertex_copy( igraph_t* g_src, igraph_t* g_dest, int id,
         igraph_cattribute_VAN_set( g_dest, GV_PURE, new_id,
             igraph_cattribute_VAN( g_src, GV_PURE, id ) );
     if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
-                GV_EXT ) )
-        igraph_cattribute_VAN_set( g_dest, GV_EXT, new_id,
-            igraph_cattribute_VAN( g_src, GV_EXT, id ) );
+                GV_LOCATION ) )
+        igraph_cattribute_VAN_set( g_dest, GV_LOCATION, new_id,
+            igraph_cattribute_VAN( g_src, GV_LOCATION, id ) );
     if( igraph_cattribute_has_attr( g_src, IGRAPH_ATTRIBUTE_VERTEX,
                 GV_TT ) )
         igraph_cattribute_VAN_set( g_dest, GV_TT, new_id,
@@ -507,7 +508,7 @@ int dgraph_vertex_merge( igraph_t* g, int id1, int id2 )
             GV_GRAPH, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
             GV_STATIC, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
             GV_PURE, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
-            GV_EXT, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
+            GV_LOCATION, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
             GV_TT, IGRAPH_ATTRIBUTE_COMBINE_FIRST,
             IGRAPH_NO_MORE_ATTRIBUTES );
     igraph_contract_vertices( g, &v_new, &comb );

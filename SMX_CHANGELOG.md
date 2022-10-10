@@ -1,4 +1,14 @@
-# `v0.5.2` (latest)
+# `v0.5.3` (latest)
+
+### New Features
+
+ - introduce the keyword `intern` which allows to mark boxes which are defined
+   in the RTS. For boxes with the keyword `intern` no signature will be
+   generated and no dependencies will be fetched.
+
+
+-------------------
+# `v0.5.2`
 
 ### New Features
 

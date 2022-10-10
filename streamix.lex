@@ -51,6 +51,7 @@ decoupled       {yylval.ival = PARSE_ATTR_DECOUPLED;return DECOUPLED;}
 coupled         {yylval.ival = PARSE_ATTR_COUPLED;return COUPLED;}
 static          {yylval.ival = PARSE_ATTR_STATIC;return STATIC;}
 extern          {yylval.ival = PARSE_ATTR_EXTERN;return EXTERN;}
+intern          {yylval.ival = PARSE_ATTR_INTERN;return INTERN;}
 open            {yylval.ival = PARSE_ATTR_OPEN;return OPEN;}
 dynamic         {yylval.ival = PARSE_ATTR_DYNAMIC;return DYNAMIC;}
 tt              return TT;
