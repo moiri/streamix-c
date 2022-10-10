@@ -10,7 +10,7 @@ graph
     func "fa"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   edge

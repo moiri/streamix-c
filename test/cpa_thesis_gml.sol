@@ -10,7 +10,7 @@ graph
     func "f_log"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -20,7 +20,7 @@ graph
     func "f_com"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -30,7 +30,7 @@ graph
     func "smx_rn"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -40,7 +40,7 @@ graph
     func "f_com"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -50,7 +50,7 @@ graph
     func "f_rs"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -60,7 +60,7 @@ graph
     func "fb"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -70,7 +70,7 @@ graph
     func "f_mb"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -80,7 +80,7 @@ graph
     func "f_abs"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -90,7 +90,7 @@ graph
     func "f_cpa"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -100,7 +100,7 @@ graph
     func "f_dc"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -110,7 +110,7 @@ graph
     func "f_ds"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -120,7 +120,7 @@ graph
     func "smx_rn"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   edge

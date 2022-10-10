@@ -10,7 +10,7 @@ graph
     func "funcY"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -20,7 +20,7 @@ graph
     func "funcY"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -30,7 +30,7 @@ graph
     func "smx_rn"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -40,7 +40,7 @@ graph
     func "funcA"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -50,7 +50,7 @@ graph
     func "funcA"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   edge

@@ -10,7 +10,7 @@ graph
     func "CarS"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -20,7 +20,7 @@ graph
     func "CarE"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -30,7 +30,7 @@ graph
     func "DC"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -40,7 +40,7 @@ graph
     func "smx_rn"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -50,7 +50,7 @@ graph
     func "CPA"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -60,7 +60,7 @@ graph
     func "ABS"
     static 1
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -70,7 +70,7 @@ graph
     func "RS"
     static 1
     pure 1
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -80,7 +80,7 @@ graph
     func "B"
     static 1
     pure 1
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -90,7 +90,7 @@ graph
     func "MB"
     static 1
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -100,7 +100,7 @@ graph
     func "DS"
     static 1
     pure 1
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -110,7 +110,7 @@ graph
     func "DC"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -120,7 +120,7 @@ graph
     func "smx_rn"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -130,7 +130,7 @@ graph
     func "CPA"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -140,7 +140,7 @@ graph
     func "ABS"
     static 1
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -150,7 +150,7 @@ graph
     func "RS"
     static 1
     pure 1
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -160,7 +160,7 @@ graph
     func "B"
     static 1
     pure 1
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -170,7 +170,7 @@ graph
     func "MB"
     static 1
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -180,7 +180,7 @@ graph
     func "DS"
     static 1
     pure 1
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -190,7 +190,7 @@ graph
     func "DC"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -200,7 +200,7 @@ graph
     func "smx_rn"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -210,7 +210,7 @@ graph
     func "CPA"
     static 0
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -220,7 +220,7 @@ graph
     func "ABS"
     static 1
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -230,7 +230,7 @@ graph
     func "RS"
     static 1
     pure 1
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -240,7 +240,7 @@ graph
     func "B"
     static 1
     pure 1
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -250,7 +250,7 @@ graph
     func "MB"
     static 1
     pure 0
-    extern 0
+    location 0
     tt 0
   ]
   node
@@ -260,7 +260,7 @@ graph
     func "DS"
     static 1
     pure 1
-    extern 0
+    location 0
     tt 0
   ]
   edge
