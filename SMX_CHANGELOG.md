@@ -6,6 +6,10 @@
    in the RTS. For boxes with the keyword `intern` no signature will be
    generated and no dependencies will be fetched.
 
+### Changes
+
+ - link to the library `libsmxutils` in order to use shared graph definitions.
+
 
 -------------------
 # `v0.5.2`

@@ -53,9 +53,9 @@ INCLUDES_DIR = -I$(UTHASH_DIR)/src \
 			   -I$(SYMTAB_DIR) \
 			   -I$(LOC_INC_DIR) \
 			   -I$(SIA_LANG_DIR)/$(LOC_INC_DIR) \
-			   -I.
+			   -I. $(INC_SMXUTILS)
 LINK_DIR = -L/usr/local/lib
-LINK_FILE = -ligraph
+LINK_FILE = -ligraph $(LIB_SMXUTILS)
 
 CFLAGS = -Wall -DAPP_VERSION=\"$(UPSTREAM_VERSION)\"
 DEBUG_FLAGS = -g -O0
