@@ -1,10 +1,16 @@
 # `v0.5.3` (latest)
 
+### Bug Fixes
+
+ - Fix formatting issue in testcase `proto4_n`.
+
 ### New Features
 
  - introduce the keyword `intern` which allows to mark boxes which are defined
    in the RTS. For boxes with the keyword `intern` no signature will be
    generated and no dependencies will be fetched.
+ - push deoucoupling of output ports through routing nodes to the corresponding
+   output port of the last consecutive routing node.
 
 ### Changes
 
