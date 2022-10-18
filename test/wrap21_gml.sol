@@ -108,7 +108,7 @@ graph
     label "event"
     nsrc "smx_null"
     ndst "smx_null"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
     dts 0
@@ -126,7 +126,7 @@ graph
     label "event"
     nsrc "smx_null"
     ndst "smx_null"
-    dsrc 1
+    dsrc 0
     ddst 0
     len 1
     dts 0
@@ -162,7 +162,7 @@ graph
     label "event"
     nsrc "smx_null"
     ndst "smx_null"
-    dsrc 1
+    dsrc 0
     ddst 0
     len 1
     dts 0
@@ -198,7 +198,7 @@ graph
     label "events"
     nsrc "smx_null"
     ndst "smx_null"
-    dsrc 0
+    dsrc 1
     ddst 0
     len 1
     dts 0

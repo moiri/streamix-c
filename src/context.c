@@ -1229,6 +1229,7 @@ void post_process( igraph_t* g )
     int inst_id, eid;
     virt_port_t *p_src, *p_dest;
     bool has_changed = true;
+    bool is_decoupled = false;
 
     while( has_changed )
     {
@@ -1296,6 +1297,57 @@ void post_process( igraph_t* g )
     igraph_vit_destroy( &vit );
     igraph_vs_destroy( &vs );
     igraph_vector_destroy( &dids );
+
+    // move box output port decoupling to last consecutive routing node
+    // along the path. This step does only change the graph attributes but not
+    // the port attributes in the corresponding vnets. This results from the
+    // same sloppyness as described above but works because vnets are no longer
+    // used afterwards.
+    has_changed = true;
+    while( has_changed )
+    {
+        vs = igraph_vss_all();
+        igraph_vit_create( g, vs, &vit );
+        has_changed = false;
+        while( !IGRAPH_VIT_END( vit ) ) {
+            inst_id = IGRAPH_VIT_GET( vit );
+            v_net = ( virt_net_t* )( uintptr_t )igraph_cattribute_VAN( g,
+                    GV_VNET, inst_id );
+            if( v_net->type == VNET_SYNC ) {
+                is_decoupled = false;
+                igraph_es_incident( &es, inst_id, IGRAPH_IN );
+                igraph_eit_create( g, es, &eit );
+                while( !IGRAPH_EIT_END( eit ) ) {
+                    eid = IGRAPH_EIT_GET( eit );
+                    if( igraph_cattribute_EAN( g, GE_DSRC, eid ) )
+                    {
+                        is_decoupled = true;
+                        has_changed = true;
+                        igraph_cattribute_EAN_set( g, GE_DSRC, eid, false );
+                    }
+                    IGRAPH_EIT_NEXT( eit );
+                }
+                igraph_eit_destroy( &eit );
+                igraph_es_destroy( &es );
+                if( is_decoupled )
+                {
+                    igraph_es_incident( &es, inst_id, IGRAPH_OUT );
+                    igraph_eit_create( g, es, &eit );
+                    while( !IGRAPH_EIT_END( eit ) ) {
+                        eid = IGRAPH_EIT_GET( eit );
+                        igraph_cattribute_EAN_set( g, GE_DSRC, eid, true );
+                        IGRAPH_EIT_NEXT( eit );
+                    }
+                    igraph_eit_destroy( &eit );
+                    igraph_es_destroy( &es );
+                }
+            }
+            IGRAPH_VIT_NEXT( vit );
+        }
+        igraph_vit_destroy( &vit );
+        igraph_vs_destroy( &vs );
+    }
+
 }
 
 /******************************************************************************/
