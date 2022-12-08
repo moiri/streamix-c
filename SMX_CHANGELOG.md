@@ -1,4 +1,4 @@
-# `v0.5.3` (latest)
+# `v0.6.0` (latest)
 
 ### Bug Fixes
 
@@ -15,6 +15,10 @@
 ### Changes
 
  - link to the library `libsmxutils` in order to use shared graph definitions.
+
+
+-------------------
+# `v0.5.3` (deprecated)
 
 
 -------------------

@@ -8,8 +8,8 @@
 
 # The version number of the app ($(VMAJ).$(VMIN).$(VREV))
 VMAJ = 0
-VMIN = 5
-VREV = 3
+VMIN = 6
+VREV = 0
 VDEB = 1
 
 # the utility library
