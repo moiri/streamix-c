@@ -334,6 +334,7 @@ bool is_connected( instrec_t* rec1, instrec_t* rec2, igraph_t* g );
  * @param g pointer to the dependancy graph
  */
 void post_process( igraph_t* g );
+void post_process_merge( igraph_t* g );
 
 /**
  * Helper function to propagate decoupleing attributes when merging routing

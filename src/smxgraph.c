@@ -515,6 +515,10 @@ int dgraph_vertex_merge( igraph_t* g, int id1, int id2 )
     igraph_attribute_combination_destroy( &comb );
     igraph_vector_destroy( &v_new );
 
+#if defined(DEBUG) || defined(DEBUG_CONNECT_GRAPH)
+    printf( "dgraph_vertex_merge: '%d, %d -> %d'\n", id1, id2, id_low );
+#endif // DEBUG
+
     // id of deleted element
     return id_high;
 }

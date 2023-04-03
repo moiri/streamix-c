@@ -36,14 +36,7 @@ bool check_connection( virt_port_t* port_l, virt_port_t* port_r, igraph_t* g,
 #if defined(DEBUG) || defined(DEBUG_CONNECT)
             printf( "\n  => connection is valid\n" );
 #endif // DEBUG_CONNECT
-            // either merge copy synchronizers or connect them
-            if( check_cpsync_merge_pre_connect( g, port_l, port_r ) )
-            {
-                propagate_decoupling_attributes( g, port_l, port_r );
-                cpsync_merge( port_l, port_r, g );
-            }
-            else
-                connect_ports( port_l, port_r, g, directed );
+            connect_ports( port_l, port_r, g, directed );
             res = true;
         }
         else if( ( inst_l->type == INSTREC_SYNC )
@@ -1145,6 +1138,7 @@ virt_net_t* install_nets( symrec_t** symtab, UT_array* scope_stack,
             }
             // check connections and update virtual net
             check_connections( v_net1, v_net2, g );
+            post_process_merge( g );
             /* force = ( ast->type == AST_SERIAL); */
             if( ast->type == AST_SERIAL ) {
                 virt_net_update_class( v_net1, PORT_CLASS_UP );
@@ -1221,50 +1215,15 @@ void post_process( igraph_t* g )
 {
     igraph_vs_t vs;
     igraph_es_t es;
-    igraph_es_t esd;
     igraph_vit_t vit;
     igraph_eit_t eit;
     igraph_vector_t dids;
     virt_net_t *v_net;
     int inst_id, eid;
-    virt_port_t *p_src, *p_dest;
     bool has_changed = true;
     bool is_decoupled = false;
 
-    while( has_changed )
-    {
-        has_changed = false;
-        es = igraph_ess_all( IGRAPH_EDGEORDER_ID );
-        igraph_eit_create( g, es, &eit );
-        // iterate through all edges of the graph
-        while( !IGRAPH_EIT_END( eit ) ) {
-            p_src = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
-                    GE_PSRC, IGRAPH_EIT_GET( eit ) );
-            p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
-                    GE_PDST, IGRAPH_EIT_GET( eit ) );
-            if( ( p_src ->v_net->type == VNET_SYNC )
-                    && ( p_dest->v_net->type == VNET_SYNC ) )
-            {
-                if( check_cpsync_merge_post_connect( g, IGRAPH_VIT_GET( eit ) ) )
-                {
-                    propagate_decoupling_attributes( g, p_src, p_dest );
-                    cpsync_merge( p_src, p_dest, g );
-                    has_changed = true;
-                    eid = IGRAPH_VIT_GET( eit );
-                    break;
-                }
-            }
-            IGRAPH_EIT_NEXT( eit );
-        }
-        igraph_eit_destroy( &eit );
-        igraph_es_destroy( &es );
-        if( has_changed )
-        {
-            esd = igraph_ess_1( eid );
-            igraph_delete_edges( g, esd );
-            igraph_es_destroy( &esd );
-        }
-    }
+    post_process_merge( g );
 
     // note that the reduction must be done AFTER the merge. The merge process
     // carefully rearranges IDs such that no conflicts occurr, however, the
@@ -1348,6 +1307,52 @@ void post_process( igraph_t* g )
         igraph_vs_destroy( &vs );
     }
 
+}
+
+/******************************************************************************/
+void post_process_merge( igraph_t* g )
+{
+    igraph_es_t es;
+    igraph_es_t esd;
+    igraph_eit_t eit;
+    int eid;
+    virt_port_t *p_src, *p_dest;
+    bool has_changed = true;
+
+    while( has_changed )
+    {
+        has_changed = false;
+        es = igraph_ess_all( IGRAPH_EDGEORDER_ID );
+        igraph_eit_create( g, es, &eit );
+        // iterate through all edges of the graph
+        while( !IGRAPH_EIT_END( eit ) ) {
+            p_src = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
+                    GE_PSRC, IGRAPH_EIT_GET( eit ) );
+            p_dest = ( virt_port_t* )( uintptr_t ) igraph_cattribute_EAN( g,
+                    GE_PDST, IGRAPH_EIT_GET( eit ) );
+            if( ( p_src ->v_net->type == VNET_SYNC )
+                    && ( p_dest->v_net->type == VNET_SYNC ) )
+            {
+                if( check_cpsync_merge_post_connect( g, IGRAPH_VIT_GET( eit ) ) )
+                {
+                    propagate_decoupling_attributes( g, p_src, p_dest );
+                    cpsync_merge( p_src, p_dest, g );
+                    has_changed = true;
+                    eid = IGRAPH_VIT_GET( eit );
+                    break;
+                }
+            }
+            IGRAPH_EIT_NEXT( eit );
+        }
+        igraph_eit_destroy( &eit );
+        igraph_es_destroy( &es );
+        if( has_changed )
+        {
+            esd = igraph_ess_1( eid );
+            igraph_delete_edges( g, esd );
+            igraph_es_destroy( &esd );
+        }
+    }
 }
 
 /******************************************************************************/
