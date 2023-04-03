@@ -1,4 +1,14 @@
-# `v0.6.0` (latest)
+# `v0.6.1` (latest)
+
+### Bug Fixes
+
+ - Fix an issue where a routing nodes were removed due to merging while access
+   was still needed. This was fixed by removing immediate merging on connection
+   and executing a post processing at a later point.
+
+
+-------------------
+# `v0.6.0`
 
 ### Bug Fixes
 
